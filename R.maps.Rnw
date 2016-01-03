@@ -1,0 +1,251 @@
+\chapter{Plotting maps with ggmap}\label{chap:R:maps}
+
+\section{Plotting data onto maps}
+
+<<>>=
+library(ggmap)
+library(rgdal)
+@
+
+Another extension to package \code{ggplot2} is package \code{ggmap}. Package \code{ggmap} makes it possible to plot data using normal \code{ggplot2} syntax on top of a map. Maps can be easily retrieved from the internet through different services. Some of these services require the user to register and obtain a key for access. As Google Maps do not require such a key for normal resolution maps, we use this service in the examples.
+
+The first step is to fetch the desired map. One can fetch the maps base on any valid Google Maps search term, or by giving the coordinates at the center of the map. Although \code{zoom} defaults to "auto", frequently the best result is obtained by providing this argument. Valid values for \code{zoom} are integers in the range 1 to 20.
+
+
+\begin{framed}
+
+We will fetch maps from Google Maps. We have disabled the messages, to avoid repeated messages about Google's terms of use.
+
+\begin{description}
+\item[Google Maps API Terms of Service:] \url{http://developers.google.com/maps/terms}
+\item[Information from URL:] \url{http://maps.googleapis.com/maps/api/geocode/json?address=Europe&sensor=false}
+\item[Map from URL:] \url{http://maps.googleapis.com/maps/api/staticmap?center=Europe&zoom=3&size=%20640x640&scale=%202&maptype=terrain&sensor=false}
+\end{description}
+
+\end{framed}
+
+We start by fetching and plotting a map of Europe of type  \code{satellite}. We use the default extent \code{panel}, and also the extent \code{device} and \code{normal}. The \code{normal} plot includes axes showing the coordinates, while \code{device} does not show them, while \code{panel} shows axes but the map fits tightly into the drawing area:
+
+<<plot-maps-1, echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_very_narrow)
+@
+
+<<plot-maps-2, message=FALSE, cache=TRUE>>=
+Europe1 <- get_map("Europe", zoom=3, maptype="satellite")
+ggmap(Europe1)
+
+ggmap(Europe1, extent = "device")
+
+ggmap(Europe1, extent = "normal")
+
+@
+
+To demonstrate the option to fetch a map in black and white instead of the default colour version, we use a map of Europe of type \code{terrain}.
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+<<plot-maps-3, message=FALSE, cache=TRUE>>=
+Europe2 <- get_map("Europe", zoom=3,
+                  maptype="terrain")
+ggmap(Europe2)
+
+Europe3 <- get_map("Europe", zoom=3,
+                  maptype="terrain",
+                  color="bw")
+ggmap(Europe3)
+@
+
+To demonstrate the difference between type \code{roadmap} and the default type \code{terrain}, we use the map of Finland. Note that we search for ``Oulu'' instead of ``Finland'' as Google Maps takes the position of the label ``Finland'' as the center of the map, and clips the northern part. By means of \code{zoom} we override the default automatic zooming onto the city of Oulu.
+
+
+<<plot-maps-4, message=FALSE, cache=TRUE>>=
+Finland1 <- get_map("Oulu", zoom=5, maptype="terrain")
+ggmap(Finland1)
+
+Finland2 <- get_map("Oulu", zoom=5, maptype="roadmap")
+ggmap(Finland2)
+@
+
+We can even search for a street address, and in this case with high zoom value, we can see the building where one of us works:
+
+<<plot-maps-5, message=FALSE, cache=TRUE>>=
+BIO3 <- get_map("Viikinkaari 1, 00790 Helsinki",
+                zoom=18,
+                maptype="satellite")
+ggmap(BIO3)
+@
+
+We will now show a simple example of plotting data on a map, first by explicitly giving the coordinates, and in the second example we show how to fetch from Google Maps coordinate values that can be then plotted. We use function \code{geocode}. In one example we use \code{geom\_point} and \code{geom\_text}, while in the second example we use \code{annotate}, but either approach could have been used for both plots:
+
+<<plot-maps-6, message=FALSE, cache=TRUE>>=
+viikki <- get_map("Viikki",
+                  zoom=15,
+                  maptype="satellite")
+
+our_location <- data.frame(lat=c(60.225, 60.227),
+                           lon=c(25.017, 25.018),
+                           label=c("BIO3", "field"))
+ggmap(viikki, extent = "normal") +
+  geom_point(data=our_location, aes(y=lat, x=lon),
+             size=4, colour="yellow") +
+  geom_text(data=our_location, aes(y=lat, x=lon, label=label),
+            hjust=-0.3, colour="yellow")
+
+our_geocode <- geocode("Viikinkaari 1, 00790 Helsinki")
+ggmap(viikki, extent = "normal") +
+  annotate(geom="point",
+           y=our_geocode[ 1, "lat"], x=our_geocode[ 1, "lon"],
+           size=4, colour="yellow") +
+  annotate(geom="text",
+           y=our_geocode[ 1, "lat"], x=our_geocode[ 1, "lon"],
+           label="BIO3", hjust=-0.3, colour="yellow")
+@
+
+Using \code{get\_map} from package \code{ggmap} for drawing a world map is not possible at the time of writing. In addition a worked out example of how to plot shape files, and how to download them from a repository is suitable as our final example. We also show how to change the map projection. The example is adapted from a blog post at \url{http://rpsychologist.com/working-with-shapefiles-projections-and-world-maps-in-ggplot}.
+
+We start by downloading the map data archive files from \url{http://www.naturalearthdata.com} which is available in different layers. We only use three of the available layers: `physical' which describes the coastlines and a grid and bounding box, and `cultural' which gives country borders. We save them in a folder with name `maps', which is expected to already exist. After downloading each file, we unzip it.
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<plot-maps-7, cache=TRUE>>=
+oldwd <- setwd("./maps")
+
+url_path <-
+#  "http://www.naturalearthdata.com/download/110m/"
+  "http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/"
+
+download.file(paste(url_path,
+                    "physical/ne_110m_land.zip",
+                    sep=""), "ne_110m_land.zip")
+unzip("ne_110m_land.zip")
+
+download.file(paste(url_path,
+                    "cultural/ne_110m_admin_0_countries.zip",
+                    sep=""), "ne_110m_admin_0_countries.zip")
+unzip("ne_110m_admin_0_countries.zip")
+
+download.file(paste(url_path,
+                    "physical/ne_110m_graticules_all.zip",
+                    sep=""), "ne_110m_graticules_all.zip")
+unzip("ne_110m_graticules_all.zip")
+
+setwd(oldwd)
+@
+
+We list the layers that we have downloaded.
+
+<<>>=
+ogrListLayers(dsn="./maps")
+@
+
+Next we read the layer for the coastline, and use \code{fortify} to convert it into a data frame. We also create a second version of the data using the Robinson projection.
+
+<<>>=
+wmap <- readOGR(dsn="./maps", layer="ne_110m_land")
+wmap.data <- fortify(wmap)
+wmap_robin <- spTransform(wmap, CRS("+proj=robin"))
+wmap_robin.data <- fortify(wmap_robin)
+@
+
+We do the same for country borders,
+
+<<>>=
+countries <- readOGR("./maps", layer="ne_110m_admin_0_countries")
+countries.data <- fortify(countries)
+countries_robin <- spTransform(countries, CRS("+init=ESRI:54030"))
+countries_robin.data <- fortify(countries_robin)
+@
+
+and for the graticule at $15^\circ$ intervals, and the bounding box.
+
+<<>>=
+grat <- readOGR("./maps", layer="ne_110m_graticules_15")
+grat.data <- fortify(grat)
+grat_robin <- spTransform(grat, CRS("+proj=robin"))
+grat_robin.data <- fortify(grat_robin)
+
+bbox <- readOGR("./maps", layer="ne_110m_wgs84_bounding_box")
+bbox.data <- fortify(bbox)
+bbox_robin <- spTransform(bbox, CRS("+proj=robin"))
+bbox_robin.data <- fortify(bbox_robin)
+@
+
+Now we plot the world map of the coastlines, on a longitude and latitude scale, as a \code{ggplot} using \code{geom\_polygon}.
+
+<<>>=
+ggplot(wmap.data, aes(long,lat, group=group)) +
+  geom_polygon() +
+  labs(title="World map (longlat)") +
+  coord_equal()
+@
+
+There is one noticeable problem in the map shown above: the Caspian sea is missing. We need to use aesthetic \code{fill} and a manual scale to correct this.
+
+<<>>=
+ggplot(wmap.data, aes(long,lat, group=group, fill=hole)) +
+  geom_polygon() +
+  labs(title="World map (longlat)") +
+  scale_fill_manual(values=c("#262626", "#e6e8ed"),
+                    guide="none") +
+  coord_equal()
+@
+
+
+<<echo=FALSE, eval=FALSE>>=
+# does not work as expected
+ggplot(wmap.data, aes(long,lat, group=group)) +
+  geom_polygon() +
+  labs(title="World map (longlat)") +
+  scale_fill_manual(values=c("#262626", "#e6e8ed"),
+                    guide="none") +
+  coord_map()
+@
+
+When plotting a map using a projection, many default elements of the \code{ggplot} theme need to be removed, as the data is no longer in units of degrees of latitude and longitude and axes and their labels are no longer meaningful.
+
+<<>>=
+theme_map_opts <-
+  list(theme(panel.grid.minor = element_blank(),
+             panel.grid.major = element_blank(),
+             panel.background = element_blank(),
+             plot.background = element_rect(fill="#e6e8ed"),
+             panel.border = element_blank(),
+             axis.line = element_blank(),
+             axis.text.x = element_blank(),
+             axis.text.y = element_blank(),
+             axis.ticks = element_blank(),
+             axis.title.x = element_blank(),
+             axis.title.y = element_blank()))
+@
+
+Finally we plot all the layers using the Robinson projection. This is still a \code{ggplot} and consequently one can plot data on top of the map, being aware of the transformation of the scale needed to make the data location match locations in a map using a certain projection.
+
+<<>>=
+ggplot(bbox_robin.data, aes(long,lat, group=group)) +
+  geom_polygon(fill="white") +
+  geom_polygon(data=countries_robin.data,
+               aes(long,lat, group=group,
+                   fill=hole)) +
+  geom_path(data=countries_robin.data,
+            aes(long,lat, group=group, fill=hole),
+            color="white",
+            size=0.3) +
+  geom_path(data=grat_robin.data,
+            aes(long, lat, group=group, fill=NULL),
+            linetype="dashed",
+            color="grey50") +
+  labs(title="World map (Robinson)") +
+  coord_equal() +
+  theme_map_opts +
+  scale_fill_manual(values=c("black", "white"),
+                    guide="none")
+@
+
+<<>>=
+try(detach(package:ggmap))
+try(detach(package:rgdal))
+@

@@ -1,0 +1,600 @@
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+opts_knit$set(concordance=TRUE)
+@
+
+\chapter{R as a powerful calculator}\label{chap:R:as:calc}
+
+\section{Working at the R console}
+
+I assume that you are already familiar with RStudio. These examples use only the console window, and results are printed to the console. The values stored in the different variables are also visible in the Environment tab in RStudio.
+
+In the console you can type commands at the \texttt{>} prompt.
+When you end a line by pressing the return key, if the line can be interpreted as an R command, the result will be printed in the console, followed by a new \texttt{>} prompt.
+If the command is incomplete a \texttt{+} continuation prompt will be shown, and you will be able to type-in the rest of the command. For example if the whole calculation that you would like to do is $1 + 2 + 4$, if you enter in the console \texttt{1 + 2 +} in one line, you will get a continuation prompt where you will be able to type \texttt{3}. However, if you type \texttt{1 + 2}, the result will be calculated, and printed.
+
+When working at the command prompt, results are printed by default, but in other cases you may need to use the function \texttt{print} explicitly. The examples here rely on the automatic printing.
+
+The idea with these examples is that you learn by working out how different commands work based on the results of the example calculations listed. The examples are designed so that they allow the rules, and also a few quirks, to be found by `detective work'. This should hopefully lead to better understanding than just studying rules.
+
+\section{Examples with numbers}
+
+When working with arithmetic expression the normal precedence rules are followed and parentheses can be used to alter this order. In addition parentheses can be nested.
+
+<<numbers-1>>=
+1 + 1
+2 * 2
+2 + 10 / 5
+(2 + 10) / 5
+10^2 + 1
+sqrt(9)
+pi # whole precision not shown when printing
+print(pi, digits=22)
+sin(pi) # oops! Read on for explanation.
+log(100)
+log10(100)
+log2(8)
+exp(1)
+@
+
+One can use variables to store values. Variable names and all other names in R are case sensitive. Variables \texttt{a} and \texttt{A} are two different variables. Variable names can be quite long, but usually it is not a good idea to use very long names. Here I am using very short names, that is usually a very bad idea. However, in cases like these examples where the stored values have no real connection to the real world and are used just once or twice, these names emphasize the abstract nature.
+
+
+<<numbers-2>>=
+a <- 1
+a + 1
+a
+b <- 10
+b <- a + b
+b
+3e-2 * 2.0
+@
+
+There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The important thing is that you write commands consistently. \texttt{1 -> a} is valid but almost never used.
+
+<<numbers-3, tidy=FALSE>>=
+a <- b <- c <- 0.0
+a
+b
+c
+1 -> a
+a
+a = 3
+a
+@
+
+Numeric variables can contain more than one value. Even single numbers are vectors of length one. We will later see why this is important. As you have seen above the results of calculations were printed preceded with \texttt{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the line.
+
+One can use \texttt{c} `concatenate' to create a vector of numbers from individual numbers.
+
+<<numbers-4>>=
+a <- c(3,1,2)
+a
+b <- c(4,5,0)
+b
+c <- c(a, b)
+c
+d <- c(b, a)
+d
+@
+
+One can also create sequences, or repeat values:
+
+<<numbers-5>>=
+a <- -1:5
+a
+b <- 5:-1
+b
+c <- seq(from = -1, to = 1, by = 0.1)
+c
+d <- rep(-5, 4)
+d
+@
+
+Now something that makes R different from most other programming languages: vectorized arithmetic.
+
+<<numbers-6>>=
+a + 1 # we add one to vector a defined above
+(a + 1) * 2
+a + b
+a - a
+@
+
+It can be seen in first line above, another peculiarity of R, that frequently called recycling: as vector \texttt{a} is of length 6, but the constant 1 is a vector of length 1, this 1 is extended by recycling into a vector of the same length as the longest vector in the statement.
+
+Make sure you understand what calculations are taking place in the chunk above, and also the one below.
+
+<<numbers-6a>>=
+a <- rep(1, 6)
+a
+a + 1:2
+a + 1:3
+a + 1:4
+@
+
+
+A couple on useful things to know: a vector can have length zero. One can remove variables from the workspace with \texttt{rm}. One can use \texttt{ls()} to list all objects in the environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}. The pattern is given as a regular expression, with \verb|[]| enclosing alternative matching characters, \verb|^| and \verb|$| indicating the extremes of the name. For example \verb|"^z$"| matches only the single character `z' while \verb|"^z"| matches any name starting with `z'. In contrast \verb|"^[zy]$"| matches both `z' and `y' but neither `zy' nor `yz', and \verb|"^[a-z]"| matches any name starting with a lower case ASCII letter. If you are using RStudio, all objects are listed in the Environment pane, and the search box of the panel can be used to find a given object.
+
+<<numbers-7>>=
+z <- numeric(0)
+z
+ls(pattern="^z$")
+rm(z)
+try(z)
+ls(pattern="^z$")
+@
+
+There are some special values available for numbers. \texttt{NA} meaning `not available' is used for missing values. Calculations can yield also the following values \texttt{NaN} `not a number', \texttt{Inf} and \texttt{-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid.
+
+<<numbers-8>>=
+a <- NA
+a
+-1 / 0
+1 / 0
+Inf / Inf
+Inf + 4
+@
+
+One thing to be aware of, and which we will discuss again later, is that numbers in computers are almost always stored with finite precision. This means that they not always behave as Real numbers as defined in mathematics. In R the usual numbers are stored as \texttt{double-precision floats}, which means that there are limits to the largest and smallest numbers that can be represented (approx. $-1 \cdot 10^{308}$ and $1 \cdot 10^{308})$, and the number of significant digits that can be stored (usually described as $\epsilon$ (epsilon, abbreviated \texttt{eps}, defined as the largest number for which $ 1 + \epsilon = 1$)). This can be sometimes important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1. \label{par:float}
+
+<<numbers-9>>=
+1 - 1e-20
+@
+
+It is usually safer not to test for equality to zero when working with numeric values. One alternative is comparing against a suitably small number, which will depend on the situation, although \code{eps} is usualy a safe bet, unless the expected range of values is known to be small.
+
+<<numbers-10, eval=FALSE>>=
+abs(x) < eps
+abs(x) < 1e-100
+@
+
+The same applies to tests for equality, so whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be treated as above, for example replacing \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|.
+
+When comparing integer values these problems do not exist, as integer arithmetic is not afected by loss of precision in  calculations restricted to integers (the \code{L} comes from `long' a name sometimes used for a machine represenation of intergers):
+
+<<integers-1>>=
+1L + 3L
+1L * 3L
+1L %/% 3L
+1L / 3L
+@
+
+The last example above, using the `usual' division operator yields a floating-point \code{numeric} result, while the integer division operator \verb|%/%| yields an integer result.
+
+\section{Examples with logical values}
+
+What in maths are usually called Boolean values, are called \texttt{logical} values in R. They can have only two values \texttt{TRUE} and \texttt{FALSE}, in addition to \texttt{NA}. They are vectors. There are also logical operators that allow boolean algebra (and some support for set operations that we will not describe here).
+
+<<logical-1>>=
+a <- TRUE
+b <- FALSE
+a
+!a # negation
+a && b # logical AND
+a || b # logical OR
+@
+
+Again vectorization is possible. I present this here, and will come back again to this, because this is one of the most troublesome aspects of the R language. The two types of `equivalent' logical operators behave very differently, but use very similar syntax! The vectorized operators have single-character names \verb|&| and \verb:|:, while the non vectorized ones have two double-character names \verb|&&| and \verb:||:. There is only one version of the negation operator \verb|!| that is vectorized.
+
+<<logical-2>>=
+a <- c(TRUE,FALSE)
+b <- c(TRUE,TRUE)
+a
+b
+a & b # vectorized AND
+a | b # vectorized OR
+a && b # not vectorized
+a || b # not vectorized
+@
+
+Functions \code{any} and \code{all} take a logical vector as argument, and return a single logical value `summarizing' the logical values in the vector. \code{all} returns \code{TRUE} only if every value in the argument is \code{TRUE}, and \code{any} returns \code{TRUE} unless every value in the argument is \code{FALSE}.
+
+<<>>=
+any(a)
+all(a)
+any(a & b)
+all(a & b)
+@
+
+Another important thing to know about logical operators is that they `short-cut' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands.
+
+<<logical-3>>=
+TRUE || NA
+FALSE || NA
+TRUE && NA
+FALSE && NA
+TRUE && FALSE && NA
+TRUE && TRUE && NA
+@
+
+When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained.
+
+<<logical-4>>=
+a & b & NA
+a & b & c(NA, NA)
+a | b | c(NA, NA)
+@
+
+
+\section{Comparison operators}
+
+Comparison operators yield as a result logical values.
+
+<<comparison-1>>=
+1.2 > 1.0
+1.2 >= 1.0
+1.2 == 1.0 # be aware that here we use two = symbols
+1.2 != 1.0
+1.2 <= 1.0
+1.2 < 1.0
+a <- 20
+a < 100 && a > 10
+@
+
+Again these operators can be used on vectors of any length, the result is a logical vector.
+
+<<comparison-2>>=
+a <- 1:10
+a > 5
+a < 5
+a == 5
+all(a > 5)
+any(a > 5)
+b <- a > 5
+b
+any(b)
+all(b)
+@
+
+Be once more aware of `short-cut evaluation'. If the result would not be affected by the missing value then the result is returned. If the presence of the NA makes the end result unknown, then NA is returned.
+
+<<comparison-3>>=
+c <- c(a, NA)
+c > 5
+all(c > 5)
+any(c > 5)
+all(c < 20)
+any(c > 20)
+is.na(a)
+is.na(c)
+any(is.na(c))
+all(is.na(c))
+@
+
+This behaviour can be changed by using the optional argument \texttt{na.rm} which removes NA values \textbf{before} the function is applied. (Many functions in R have this optional parameter.)
+
+<<comparison-4>>=
+all(c < 20)
+any(c > 20)
+all(c < 20, na.rm=TRUE)
+any(c > 20, na.rm=TRUE)
+@
+
+You may skip this on first read, see page \pageref{par:float}.
+
+<<comparison-5>>=
+1e20 == 1 + 1e20
+1 == 1 + 1e-20
+0 == 1e-20
+@
+
+In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors.
+
+<<comparion-6>>=
+a == 0.0 # may not always work
+abs(a) < 1e-15 # is safer
+sin(pi) == 0.0 # angle in radians, not degrees!
+sin(2 * pi) == 0.0
+abs(sin(pi)) < 1e-15
+abs(sin(2 * pi)) < 1e-15
+sin(pi)
+sin(2 * pi)
+.Machine$double.eps # see help for .Machine for explanation
+.Machine$double.neg.eps
+@
+
+\section{Character values}
+
+Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \texttt{"}, single quotes \texttt{'}, and back ticks \texttt{`}. The first two types of quotes can be used for delimiting characters.
+
+<<char-1>>=
+a <- "A"
+b <- letters[2]
+c <- letters[1]
+a
+b
+c
+d <- c(a, b, c)
+d
+e <- c(a, b, "c")
+e
+h <- "1"
+try(h + 2)
+@
+
+Vectors of characters are not the same as character strings.
+
+<<char-2>>=
+f <- c("1", "2", "3")
+g <- "123"
+f == g
+f
+g
+@
+
+One can use the `other' type of quotes as delimiter when one want to include quotes in a string. Pretty-printing is changing what I typed into how the string is stored in R: I typed \texttt{b <- 'He said "hello" when he came in'}, try it.
+
+<<char-3>>=
+a <- "He said 'hello' when he came in"
+a
+b <- 'He said "hello" when he came in'
+b
+@
+
+The outer quotes are not part of the string, they are `delimiters' used to mark the boundaries. As you can see when \texttt{b} is printed special characters can be represented using `escape sequences'. There are several of them, and here we will show just a few.
+
+<<char-4>>=
+c <- "abc\ndef\txyz"
+print(c)
+cat(c)
+@
+
+Above, you will not see any effect of these escapes when using \code{print}: \verb|\n| represents `new line' and \verb|\t| means `tab' (tabulator). The \textit{scape codes} work only in some contexts, as when using \code{cat} to generate the output. They also are very useful when one wants to split an axis-label, title or label in a plot into two or more lines.
+
+\section{Finding the `mode' of objects}
+
+Variables have \emph{mode} that determines what can be stored in them. But differently to other languages, assignment of a variable of a different mode is allowed. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode, while this is not required for lists. Functions with names starting with \code{is.} are tests returning \code{TRUE}, \code{FALSE} or \code{NA}.
+
+<<mode-1>>=
+my_var <- 1:5
+mode(my_var)
+is.numeric(my_var)
+is.logical(my_var)
+is.character(my_var)
+my_var <- "abc"
+mode(my_var)
+@
+
+\section{Type conversions}
+
+The least intuitive ones are those related to logical values. All others are as one would expect. By convention, functions used to convert objects from one mode to a different one have names starting with \code{as.}.
+
+<<convert-1>>=
+as.character(1)
+as.character(3.0e10)
+as.numeric("1")
+as.numeric("5E+5")
+as.numeric("A")
+as.numeric(TRUE)
+as.numeric(FALSE)
+TRUE + TRUE
+TRUE + FALSE
+TRUE * 2
+FALSE * 2
+as.logical("T")
+as.logical("t")
+as.logical("TRUE")
+as.logical("true")
+as.logical(100)
+as.logical(0)
+as.logical(-1)
+@
+
+<<convert-2>>=
+f <- c("1", "2", "3")
+g <- "123"
+as.numeric(f)
+as.numeric(g)
+@
+
+Some tricks useful when dealing with results. Be aware that the printing is being done by default, these functions return numerical values.
+
+<<convert-3, tidy=FALSE>>=
+round(0.0124567, 3)
+round(0.0124567, 1)
+round(0.0124567, 5)
+signif(0.0124567, 3)
+round(1789.1234, 3)
+signif(1789.1234, 3)
+a <- 0.12345
+b <- round(a, 2)
+a == b
+a - b
+b
+@
+
+\section{Vectors}
+
+You already know how to create a vector. Now we are going to see how to get individual numbers out of a vector. They are accessed using an index. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. What in maths would be $x_i$ for a vector $x$, in R is represented as \texttt{x[i]}. (In R indexes (or subscripts) always start from one, while in some other programming languages indexes start from zero.)
+
+<<vectors-1>>=
+a <- letters[1:10]
+a
+a[2]
+a[c(3,2)]
+a[10:1]
+@
+
+The examples below demonstrate what is the result of using a longer vector of indexes than the indexed vector. The length of the indexing vector has no restriction, but the acceptable range of values for the indexes is given by the length of the indexed vector.
+
+<<vectors-2>>=
+a[c(3,3,3,3)]
+a[c(10:1, 1:10)]
+@
+
+Negative indexes have a special meaning, they indicate the positions at which values should be excluded.
+
+<<vectors-3>>=
+a[-2]
+a[-c(3,2)]
+@
+
+Results from indexing with out-of-range values may be surprising.
+
+<<vectors-4>>=
+a[11]
+a[1:11]
+@
+
+Results from indexing with special values may be surprising.
+
+<<vectors-5>>=
+a[ ]
+a[numeric(0)]
+a[NA]
+a[c(1, NA)]
+a[NULL]
+a[c(1, NULL)]
+@
+
+Another way of indexing, which is very handy, but not available in most other programming languages, is indexing with a vector of logical values. In practice, the vector of logical values used for `indexing' is in most cases of the same length as the vector from which elements are going to be selected. However, this is not a requirement, and if the logical vector is shorter it is `recycled' as discussed above in relation to operators.
+
+<<vectors-6>>=
+a[TRUE]
+a[FALSE]
+a[c(TRUE, FALSE)]
+a[c(FALSE, TRUE)]
+a > "c"
+a[a > "c"]
+selector <- a > "c"
+a[selector]
+which(a > "c")
+indexes <- which(a > "c")
+a[indexes]
+b <- 1:10
+b[selector]
+b[indexes]
+@
+
+\section{Factors}
+
+Factors are used for indicating categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \code{factor} are unordered or categorical. R has ordered factors, that can be created with function \code{ordered}.
+
+<<facors-1>>=
+my.vector <- c("treated", "treated", "control", "control", "control", "treated")
+my.factor <- factor(my.vector)
+my.factor <- factor(my.vector, levels=c("treatment", "control"))
+@
+
+It is always preferable to use meaningful names for levels, although it is possible to use numbers. The order of levels becomes important when plotting data, as it affects the order of the levels along the axes, or in legends. Converting factors to numbers, even if the levels look like numbers when displayed, they are just character strings.
+
+<<factors-2>>=
+my.vector2 <- rep(3:5, 4)
+my.factor2 <- factor(my.vector2)
+as.numeric(my.factor2)
+as.numeric(as.character(my.factor2))
+@
+
+Internally factor levels are stored as running numbers starting from zero, and those are the numbers returned by \code{as.numeric} applied to a factor.
+
+Factors are very important in R. In contrast to other statistical software in which the role of a variable is set when defining a model to be fitted or setting up a test, in R models are specified exactly in the same way for ANOVA and regression analysis, as linear models. What `decides' what type of model is fitted is whether the explanatory variable is a factor (giving ANOVA) or a numerical variable (giving regression). This makes a lot of sense, as in most cases, considering an explanatory variable as categorical or not, depends on the design of the experiment or survey, in other words, is a property of the data rather than of the analysis.
+
+\section{Lists}
+
+Elements of a \code{list} are not ordered, and can be of different type. Lists can be also nested. Elements in list are named, and normally are accessed by name. List are defined using function \code{list}.
+
+<<lists-1>>=
+a.list <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
+a.list
+str(a.list)
+a.list$x
+a.list[["x"]]
+a.list[[1]]
+a.list[1]
+a.list[c(1,3)]
+try(a.list[[c(1,3)]])
+@
+
+Using double square brackets for indexing gives the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, \code{a.list[[c(1,3)]]}.
+
+\section{Data frames}
+
+Data frames are a special type of list, in which each element is a vector or a factor of the same length. The are crested with function \code{data.frame} with a syntax similar to that used for lists. When a shorter vector is supplied as argument, it is recycled, until the full length of the variable is filled. This is very different to what we obtained in the previous section when we created a list.
+
+<<data-frames-1>>=
+a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
+a.df
+str(a.df)
+a.df$x
+a.df[["x"]]
+a.df[[1]]
+class(a.df)
+@
+
+R is an object oriented language, and objects belong to classes. With function \code{class} we can query the class of an object. As we saw in the two previous chunks lists and data frames objects belong to two different classes.
+
+We can add also to lists and data frames.
+
+<<data-frames-2>>=
+a.df$x2 <- 6:1
+a.df$x3 <- "b"
+a.df
+@
+
+We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. Data frames are extremely important to anyone analysing or plotting data in R. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can to some extent be treated as elements in a list, and can be accessed both by name or index (position). When accessed by name, using \code{\$} or double square brackets a single column is returned as a vector or factor. In contrast to lists, data frames are `rectangular' and for this reason the values stored can be also accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors indexes can be vectors of integer numbers or vectors of logical values. For columns they can be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
+
+<<data-frames-3>>=
+a.df[ , 1]   # first column
+a.df[ , "x"] # first column
+a.df[1, ]    # first row
+a.df[1:2, c(FALSE, FALSE, TRUE, FALSE, FALSE)]
+             # first two rows of the third column
+a.df[a.df$z , ] # the rows for which z is true
+a.df[a.df$x > 3, -3] # the rows for which x > 3 for
+                 # all columns except the third one
+@
+
+When the names of data frames are long, complex conditions become awkward to write. In such cases \code{subset} is handy because evaluation is done in the `environment' of the data frame, i.e.\ the names of the columns are recognized if entered directly.
+
+<<data-frames-4>>=
+subset(a.df, x > 3)
+@
+
+When calling functions that return a vector, data farme, or other structure, the square brackets can be appended to the rightmost parenthesis of the function call, in the same way as to the name of a variable holding the same data.
+
+<<data-frames-5>>=
+subset(a.df, x > 3)[ , -3]
+subset(a.df, x > 3)$x
+@
+
+None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original \code{a.df}. The next to examples do assignment to \code{a.df}, but either to only one columns, or by indexing the individual values in both the `right side' and `left side' of the assignment.
+Another way to delete a column from a data frame is to assign \code{NULL} to it.
+
+<<data-frames-6>>=
+a.df[["x2"]] <- NULL
+a.df$x3 <- NULL
+a.df
+@
+
+In the previous code chuck we deleted the last two columns of the data frame \code{a.df}.
+Finally an esoteric trick for you think about.
+
+<<data-frames-7>>=
+a.df[1:6, c(1,3)] <- a.df[6:1, c(3,1)]
+a.df
+@
+
+
+\section{Simple built-in statistical functions}
+
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. we will start with the simple ones.
+
+<<stat-fun-1>>=
+x <- 1:20
+mean(x)
+var(x)
+median(x)
+mad(x)
+sd(x)
+range(x)
+max(x)
+min(x)
+length(x)
+@
+
+\section{Functions and execution flow control}
+
+Although functions can be defined and used at the command prompt, we will discuss them when looking at scripts. We will do the same in the case of flow-control statements (e.g.\ repetition and conditional execution).
+

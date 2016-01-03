@@ -1,0 +1,542 @@
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, cache=FALSE>>=
+set_parent('r4p.main.Rnw')
+opts_knit$set(concordance=TRUE)
+@
+
+\chapter{R Scripts and Programming}\label{chap:R:scripts}
+
+\section{What is a script?}
+
+We call \textit{script} to a text file that contains the same commands that you would type at the console prompt. A true script is not for example an MS-Word file where you have pasted or typed some R commands. A script file has the following characteristics.
+\begin{itemize}
+  \item The script is a text file (ASCII or some other encoding e.g. UTF-8 that R uses in your set-up).
+  \item The file contains valid R statements (including comments) and nothing else.
+  \item Comments start at a \texttt{\#} and end at the end of the line. (True end-of line as coded in file, the editor may wrap it or not at the edge of the screen).
+  \item The R statements are in the file in the order that they must be executed.
+  \item R scripts have file names ending in \texttt{.r}
+\end{itemize}
+
+It is good practice to write scripts so that they will run in a new R session, which means that the script should include library commands to load all the required packages.
+
+<<setup-scripts, include=FALSE, cache=FALSE>>=
+show.results <- FALSE
+@
+
+\section{How do we use a scrip?}
+
+A script can be sourced.
+
+If we have a text file called \texttt{my.first.script.r}
+\begin{verbatim}
+# this is my first R script
+print(3+4)
+\end{verbatim}
+
+And then source this file:
+
+<<evaluate=FALSE>>=
+source("my.first.script.r")
+@
+
+The results of executing the statements contained in the file will appear in the console. The commands themselves are not shown (the sourced file is not echoed) and the results will not be printed unless you include an explicit \texttt{print} command. This also applies in many cases also to plots. A fig created with \texttt{ggplot} needs to be printed if we want to see it when the script is run.
+
+From within RStudio, if you have an R script open in the editor, there will a ``source'' drop box ($\neq$ DropBox) visible from where you can choose ``source'' as described above, or ``source with echo'' for the currently open file.
+
+When a script is sourced, the output can be saved to a text file instead of being shown in the console. It is also easy to call R with the script file as argument directly at the command prompt of the operating system.
+
+\begin{verbatim}
+RScript my.first.script.r
+\end{verbatim}
+
+You can open a `shell' from the Tools menu in RStudio, to run this command. The output will be printed to the shell console. If you would like to save the output to a file, use redirection.
+
+\begin{verbatim}
+RScript my.first.script.r > my.output.txt
+\end{verbatim}
+
+Sourcing is very useful when the script is ready, however, while developing a script, or sometimes when testing things, one usually wants to run ($=$ execute) one or a few statements at a time. This can be done using the ``run'' button after either locating the cursor in the line to be executed, or selecting the text that one would like to run (the selected text can be part of a line, a whole line, or a group of lines, as long as it is syntactically valid).
+
+\section{How to write a script?}
+
+The approach used, or mix of approaches will depend on your preferences, and on how confident you are that the statements will work as expected.
+\begin{description}
+\item[If one is very familiar with similar problems] One would just create a new text file and write the whole thing in the editor, and then test it. This is rather unusual.
+\item[If one if moderately familiar with the problem] One would write the script as above, but testing it, part by part as one is writing it. This is usually what I do.
+\item[If ones mostly playing around] Then if one is using RStudio, one type statements at the console prompt. As you should know by now, everything you run at the console is saved to the ``History''. In RStudio the History is displayed in its own pane, and in this pane one can select any previous statement and by pressing a single having copy and pasted to either the console prompt, or the cursor position in the file visible in the editor. In this way one can build a script by copying and pasting from the history to your script file the bits that have worked as you wanted.
+\end{description}
+
+\section{The need to be understandable to people}
+
+When you write a script, it is either because you want to document what you have done or you want re-use it at a later time. In either case, the script itself although still meaningful for the computer could become very obscure to you, and even more to someone seeing it for the first time.
+
+How does one achieve an understandable script or program?
+\begin{itemize}
+  \item Avoid the unusual. People using a certain programming language tend to use some implicit or explicit rules of style. As a minimum try to be consistent with yourself.
+  \item Use meaningful names for variables, and any other object. What is meaningful depends on the context. Depending on common use a single letter may be more meaningful than a long word. However self explaining names are better: e.g. using \texttt{n.rows} and \texttt{n.cols} is much clearer than using \texttt{n1} and \texttt{n2} when dealing with a matrix of data. Probably \texttt{number.of.rows} and \texttt{number.of.columns} would just increase the length of the lines in the script, and one would spend more time typing without getting much in return.
+  \item How to make the words visible in names: traditionally in R one would use dots to separate the words and use only lower case. Some years ago, it became possible to use underscores. The use of underscores is quite common nowadays because in some contexts is ``safer'' as in special situations a dot may have a special meaning. What we call ``camel case'' is very rarely used in R programming but is common in other languages like Pascal. An example of camel case is \texttt{NumCols}. In some cases it can become a bit confusing as in \texttt{UVMean} or \texttt{UvMean}.
+\end{itemize}
+
+\section{Exercises}
+
+By now you should be familiar enough with R to be able to write your own script.
+\begin{enumerate}
+  \item Create a new R script (in RStudio, from `File' menu, ``+'' button, or by typing ``Ctrl + Shift + N'').
+  \item Save the file as ``my.second.script.r''.
+  \item Use the editor pane in RStudio to type some R commands and comments.
+  \item \textbf{Run} individual commands.
+  \item \textbf{Source} the whole file.
+\end{enumerate}
+
+\section{Functions}
+
+When writing scripts, or any program, one should avoid repeating code (groups of statements). The reasons for this are: 1) if the code needs to be changed, you have to make changes in more than one place in the file, or in more than one file. Sooner or later, some copies will remain unchanged by mistake. 2) it makes the script file longer, and this makes debugging, commenting, etc. more tedious, and error prone.
+
+How do we avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and then \texttt{call} the function in their place.
+
+Functions are defined by means of \textbf{function}, and saved like any other object in R by assignment a variable. \texttt{x} is a parameter, the name used within the function for an object that will be supplied as ``argument'' when the function is called. One can think of parameter names as place-holders.
+
+<<fun-00>>=
+my.prod <- function(x, y){x * y}
+my.prod(4, 3)
+@
+
+First some basic knowledge. In R, arguments are passed by copy. This is something very important to remember. Whatever you do within a function to the passed argument, its value outside the function will remain unchanged.
+
+<<fun-01>>=
+my.change <- function(x){x <- NA}
+a <- 1
+my.change(a)
+a
+@
+
+Any result that needs to be made available outside the function must be returned by the function. If the function \texttt{return} is not explicitly used, the value returned by the last statement within the body of the function will be returned.
+
+<<fun-02>>=
+print.x.1 <- function(x){print(x)}
+print.x.1("test")
+print.x.2 <- function(x){print(x); return(x)}
+print.x.2("test")
+print.x.3 <- function(x){return(x); print(x)}
+print.x.3("test")
+print.x.4 <- function(x){return(); print(x)}
+print.x.4("test")
+@
+
+We can assign to a variable defined outside a function with operator \texttt{<<-} but the usual recommendation is to avoid its use. This type of effects of calling a function are frequently called `side-effects'.
+
+Now we will define a useful function: a function for calculating the standard error of the mean from a numeric vector.
+
+<<fun-1>>=
+SEM <- function(x){sqrt(var(x)/length(x))}
+a <- c(1, 2, 3, -5)
+a.na <- c(a, NA)
+SEM(x=a)
+SEM(a)
+SEM(a.na)
+@
+
+For example in \texttt{SEM(a)} we are calling function \texttt{SEM} with \texttt{a} as argument.
+
+The function we defined above may sometimes give a wrong answer because NAs will be counted by \texttt{length}, so we need to remove NAs before calling \texttt{length}.
+
+<<fun-1-safe>>=
+SEM <- function(x) sqrt(var(x, na.rm=TRUE)/length(na.omit(x)))
+a <- c(1, 2, 3, -5)
+a.na <- c(a, NA)
+SEM(x=a)
+SEM(a)
+SEM(a.na)
+@
+
+R does not have a function for standard error, so the function above would be generally useful. If we would like to make this function both safe, and consistent with other R functions, one could define it as follows, allowing the user to provide a second argument which is passed as an argument to \texttt{var}:
+
+<<fun-2>>=
+SEM <- function(x, na.rm=FALSE){sqrt(var(x, na.rm=na.rm)/length(na.omit(x)))}
+SEM(a)
+SEM(a.na)
+SEM(a.na, TRUE)
+SEM(x=a.na, na.rm=TRUE)
+SEM(TRUE, a.na)
+SEM(na.rm=TRUE, x=a.na)
+@
+
+In this example you can see that functions can have more than one parameter, and that parameters can have default values to be used if no argument is supplied. In addition if the name of the parameter is indicated, then arguments can be supplied in any order, but if parameter names are not supplied, then arguments are assigned to parameters based on their position. Once one parameter name is given, all later arguments need also to be explicitly matched to parameters. Obviously if given by position, then arguments should be supplied explicitly for all parameters at `intermediate' positions.
+
+\section{R built-in functions}
+
+\subsection{Plotting}
+
+The built-in generic function \texttt{plot} can be used to plot data. It is a generic function, that has suitable methods for different kinds of objects.
+
+Before we can plot anything, we need some data.
+
+<<plot-1>>=
+data(cars)
+names(cars)
+head(cars)
+tail(cars)
+@
+
+\texttt{cars} is an example data set that is included in R. It is stored as a dataframe. Data frames are used for storing data, they consist in columns of equal length. The different columns can be different types (e.g. numeric and character). With \texttt{data} we load it; with \texttt{names} we obtain the names of the variables or columns. With head with can see the top several lines, and with tail the lines at the end.
+
+<<plot-2>>=
+plot(dist ~ speed, data=cars)
+@
+
+\subsection{Fitting linear models}
+
+\subsubsection{Regression}
+
+The R function \texttt{lm} is used next to fit a linear regression.
+
+<<models-1>>=
+fm1 <- lm(dist ~ speed, data=cars) # we fit a model, and then save the result
+plot(fm1) # we produce diagnosis plots
+summary(fm1) # we inspect the results from the fit
+anova(fm1) # we calculate an ANOVA
+@
+
+Let's look at each step separately: \texttt{dist ~ speed} is the specification of the model to be fitted. The intercept is always implicitly included. To `remove' this implicit intercept from the earlier model we can use \texttt{dist ~ speed - 1}.
+
+<<models-2>>=
+fm2 <- lm(dist ~ speed - 1, data=cars) # we fit a model, and then save the result
+plot(fm2) # we produce diagnosis plots
+summary(fm2) # we inspect the results from the fit
+anova(fm2) # we calculate an ANOVA
+@
+
+We now we fit a second degree polynomial.
+
+<<models-3>>=
+fm3 <- lm(dist ~ speed + I(speed^2), data=cars) # we fit a model, and then save the result
+plot(fm3) # we produce diagnosis plots
+summary(fm3) # we inspect the results from the fit
+anova(fm3) # we calculate an ANOVA
+@
+
+We can also compare the two models.
+
+<<models-4>>=
+anova(fm2, fm1)
+@
+
+Or three or more models. But be careful, as the order of the arguments matters.
+
+<<models-5>>=
+anova(fm2, fm1, fm3)
+@
+
+We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC) that penalize the result based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
+
+\section{Control of execution flow}
+
+\subsection{Conditional execution}
+
+\subsubsection{Non-vectorized}
+
+R has two types of ``if'' statements, non-vectorized and vectorized. We will start with the non-vectorized one, which is similar to what is available in most other computer programming languages.
+
+Before this we need to explain compound statements. Individual statements can be grouped into compound statements by enclosed them in curly braces.
+
+<<if-1>>=
+print("A")
+{
+  print("B")
+  print("C")
+}
+@
+
+The example above is pretty useless, but becomes useful when used together with `control' constructs. The \texttt{if} construct controls the execution of one statement, however, this statement can be a compound statement of almost any length or complexity. Play with the code below by changing the value assigned to \texttt{printing}, including NA, and logical(0).
+
+<<if-2>>=
+printing <- TRUE
+if (printing) {
+  print("A")
+  print("B")
+}
+@
+
+The condition `(\ \ )' can be anything yielding a logical vector, however, as this is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \texttt{a}.
+
+<<if-3>>=
+a <- 10.0
+if (a < 0.0) print("'a' is negative") else print("'a' is not negative")
+print("This is always printed")
+@
+
+As you can see above the statement immediately following \texttt{else} is executed if the condition is false. Later statements are executed independently of the condition.
+
+Do you still remember the rules about continuation lines?
+
+<<auxiliary, echo=FALSE, eval=TRUE>>=
+if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
+@
+
+<<if-4, eval=eval.if.4>>=
+# 1
+if (a < 0.0)
+  print("'a' is negative") else
+    print("'a' is not negative")
+# 2 (not evaluated here)
+if (a < 0.0) print("'a' is negative")
+else print("'a' is not negative")
+@
+
+Why does only the second example above trigger an error?
+
+Play with the use conditional execution, with both simple and compound statements, and also think how to combine \texttt{if} and \texttt{else} to select among more than two options.
+
+There is in R a \texttt{switch} statement, that we will not describe here, that can be used to select among ``cases'', or several alternative statements, based on an expression evaluating to a number or a character string.
+
+\subsubsection{Vectorized}
+
+The vectorized conditional execution is coded by means of a \textbf{function} called \texttt{ifelse} (one word). This function takes three arguments: a logical vector, a result vector for TRUE, a result vector for FALSE. All three can be any construct giving the necessary argument as their result. In the case of result vectors, recycling will apply if they are not of the correct length. \textcolor{red}{The length of the result is determined by the length of the logical vector in the first argument!}.
+
+<<ifelse-1>>=
+a <- 1:10
+ifelse(a > 5, 1, -1)
+ifelse(a > 5, a + 1, a - 1)
+ifelse(any(a>5), a + 1, a - 1) # tricky
+ifelse(logical(0), a + 1, a - 1) # even more tricky
+ifelse(NA, a + 1, a - 1) # as expected
+@
+
+Try to understand what is going on in the previous example. Create your own examples to test how \texttt{ifelse} works.
+
+Exercise: write using \texttt{ifelse} a single statement to combine numbers from a and b into a result vector d, based on whether the corresponding value in c is the character "a" or "b".
+
+<<ifelse-2>>=
+a <- rep(-1, 10)
+b <- rep(+1, 10)
+c <- c(rep("a", 5), rep("b", 5))
+# your code
+@
+
+If you do not understand how the three vectors are built, or you cannot guess the values they contain by reading the code, print them, and play with the arguments, until you have clear what each parameter does.
+
+\subsection{Why using vectorized functions and operators is important}
+
+If you have written programs in other languages, it would feel to you natural to use loops (for, repeat while, repeat until) for many of the things for which we have been using vectorization. When using the R language it is best to use vectorization whenever possible, because it keeps the listing of scripts and programs shorter and easier to understand (at least for those with experience in R). However, there is another very important reason: execution speed. The reason behind this is that R is an interpreted language. In current versions of R it is possible to byte-compile functions, but this is rarely used for scripts, and even byte-compiled loops are much slower and vectorized functions.
+
+However, there are cases were we need to repeatedly execute statements in a way that cannot be vectorized, or when we do not need to maximize execution speed. The R language does have loop constructs, and we will describe them next.
+
+\subsection{Repetition}
+
+The most frequently used type of loop is a \texttt{for} loop. These loops work in R are based on lists or vectors of values to act upon.
+
+<<for-0>>=
+b <- 0
+for (a in 1:5) b <- b + a
+b
+b <- sum(1:5) # built-in function
+b
+@
+
+Here the statement \texttt{b <- b + a} is executed five times, with a sequentially taking each of the values in \texttt{1:5}. Instead of a simple statement used here, also a compound statement could have been used.
+
+Here are a few examples that show some of the properties of \texttt{for} loops and functions, combined with the use of a function.
+
+<<for-3>>=
+test.for <- function(x) {
+  for (i in x) {print(i)}
+}
+test.for(numeric(0))
+test.for(1:3)
+test.for(NA)
+test.for(c("A", "B"))
+test.for(c("A", NA))
+test.for(list("A", 1))
+test.for(c("z", letters[1:4]))
+@
+
+In contrast to other languages, in R function arguments are not checked for `type' when the function is called. The only requirement is that the function code can handle the argument provided. In this example you can see that the same function works with numeric and character vectors, and with lists. We haven't seen lists before. As earlier discussed all elements in a vector should have the same type. This is not the case for lists. It is also interesting to note that a list or vector of length zero is a valid argument, that triggers no error, but that as one would expect, causes the statements in the loop body to be skipped.
+
+Some examples of use of \texttt{for} loops --- and of how to avoid there use.
+
+<<for-1>>=
+a <- c(1, 4, 3, 6, 8)
+for(x in a) x*2 # result is lost
+for(x in a) print(x*2) # print is needed!
+b <- for(x in a) x*2 # doesn't work as expected, but triggers no error
+b
+for(x in a) b <- x*2 # a bit of a surprise, as b is not a vector!
+b
+for(i in seq(along=a)) {
+  b[i] <- a[i]^2
+  print(b)
+}
+b # is a vector!
+# a bit faster if we first allocate a vector of the required length
+b <- numeric(length(a))
+for(i in seq(along=a)) {
+  b[i] <- a[i]^2
+  print(b)
+}
+b # is a vector!
+# vectorization is simplest and fastest
+b <- a^2
+b
+@
+
+Look at the results from the above examples, and try to understand where does the returned value come from in each case.
+
+We sometimes may not be able to use vectorization, or may be easiest to not use it. However, whenever working with large data sets, or many similar datasets, we will need to take performance into account. As vectorization usually also makes code simpler, it is good style to use it whenever possible.
+
+<<for-2>>=
+b <- numeric(length(a)-1)
+for(i in seq(along=b)) {
+  b[i] <- a[i+1] - a[i]
+  print(b)
+}
+# although in this case there were alternatives, there
+# are other cases when we need to use indexes explicitly
+b <- a[2:length(a)] - a[1:length(a)-1]
+b
+# or even better
+b <- diff(a)
+b
+@
+
+\texttt{seq(along=b)} builds a new numeric vector with a sequence of the same length as the length as the vector given as argument for parameter `along'.
+
+\texttt{while} loops are quite frequently also useful. Instead of a list or vector, they take a logical argument, which is usually an expression, but which can also be a variable. For example the previous calculation could be also done as follows.
+
+<<while-1>>=
+a <- c(1, 4, 3, 6, 8)
+i <- 1
+while (i < length(a)) {
+  b[i] <- a[i]^2
+  print(b)
+  i <- i + 1
+}
+b
+@
+
+Here is another example. In this case we use the result of the previous iteration in the current one. In this example you can also see, that it is allowed to put more than one statement in a single line, in which case the statements should be separated by a semicolon (;).
+
+<<while-2>>=
+a <- 2
+while (a < 50) {print(a); a <- a^2}
+print(a)
+@
+
+Make sure that you understand why the final value of \texttt{a} is larger than 50.
+
+\texttt{repeat} is seldom used, but adds flexibility as \texttt{break} can be in the middle of the compound statement.
+
+<<repeat-1>>=
+a <- 2
+repeat{
+  print(a)
+  a <- a^2
+  if (a > 50) {print(a); break()}
+}
+# or more elegantly
+a <- 2
+repeat{
+  print(a)
+  if (a > 50) break()
+  a <- a^2
+}
+@
+
+Please, make sure you understand what is happening in the previous examples.
+
+\subsection{Nesting}
+
+All the execution-flow control statements seen above can be nested. We will show an example with two \texttt{for} loops. We first need a matrix of data to work with:
+
+<<nested-1>>=
+A <- matrix(1:50, 10)
+A
+A <- matrix(1:50, 10, 5)
+A
+# argument names used for clarity
+A <- matrix(1:50, nrow = 10)
+A
+A <- matrix(1:50, ncol = 5)
+A
+A <- matrix(1:50, nrow = 10, ncol = 5)
+A
+@
+
+All the statements above are equivalent, but some are easier to read than others.
+
+<<nested-21>>=
+row.sum <- numeric() # slower as size needs to be expanded
+for (i in 1:nrow(A)) {
+  row.sum[i] <- 0
+  for (j in 1:ncol(A))
+    row.sum[i] <- row.sum[i] + A[i, j]
+}
+print(row.sum)
+@
+
+<<nested-22>>=
+row.sum <- numeric(nrow(A)) # faster
+for (i in 1:nrow(A)) {
+  row.sum[i] <- 0
+  for (j in 1:ncol(A))
+    row.sum[i] <- row.sum[i] + A[i, j]
+}
+print(row.sum)
+@
+
+Look at the output of these two examples to understand what is happening differently with \texttt{row.sum}.
+
+The code above is very general, it will work with any size of two dimensional matrix, which is good programming practice. However, sometimes we need more specific calculations. \texttt{A[1, 2]} selects one cell in the matrix, the one on the first row of the second column. \texttt{A[1, ]} selects row one, and  \texttt{A[ , 2]} selects column two. In the example above the value of \texttt{i} changes for each iteration of the outer loop. The value of \texttt{j} changes for each iteration of the inner loop, and the inner loop is run in full for each iteration of the outer loop. The inner loop index \texttt{j} changes fastest.
+
+Exercises: 1) modify the example above to add up only the first three columns of A, 2) modify the example above to add the last three columns of A.
+
+Will the code you wrote continue working as expected if the number of rows in A changed? and what if the number of columns in A changed, and the required results still needed to be calculated for relative positions? What would happen if A had fewer than three columns? Try to think first what to expect based on the code you wrote. Then create matrices of different sizes and test your code. After that think how to improve the code, at least so that wrong results are not produced.
+
+Vectorization can be achieved in this case easily for the inner loop.
+
+<<nested-3>>=
+row.sum <- numeric(nrow(A)) # faster
+for (i in 1:nrow(A)) {
+  row.sum[i] <- sum(A[i, ])
+}
+print(row.sum)
+@
+
+\texttt{A[i, ]} selects row \texttt{i} and all columns. In R, the row index always comes first, which is not the case in all programming languages.
+
+Full vectorization can be achieved with \texttt{apply} functions.
+
+<<nested-4>>=
+row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 inidcates rows
+print(row.sum)
+@
+
+How would you change this last example, so that only the last three columns are added up? (Think about use of subscripts to select a part of the matrix.)
+
+There are many variants of \texttt{apply} functions, both in base R and in contributed packages.
+
+\section{Packages}
+
+In R speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an R session to make them available so that they can be used in the same way as built-in R functions and data. The function \texttt{library} is used to load packages, already installed in the local R library, into the current session, while the function \texttt{install.packages} is used to install packages, either from a file, or directly from the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \texttt{install.packages} and \texttt{update.packages}) to install and update packages.
+
+<<packages-1>>=
+library(graphics)
+@
+
+Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible.
+
+R packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under MS-Windows, very rarely the needed shell, commands and compilers are already available. Installing then is not too difficult (you will need RTools, and MiKTeX). For this reason it is the norm to install packages from binary .zip files. Under Linux most tools will be available, or very easy to install, so it is not unusual to install from sources. For OS X (Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from source from within RStudio.
+
+The development of packages is beyond the scope of the current course, but it is still interesting to know a few things about packages. Using RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folder for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the R help system when the package is loaded. In addition to R code, packages can call C, C++, FORTRAN, Java, etc. functions and routines, but some kind of `glue' is needed, as data is stored differently. At least for C++, the recently developed Rcpp R package makes the gluing extremely easy.
+
+In addition to some packages from CRAN, later in the course we will use a suite of packages for photobiology that I have developed during the last couple of years. Some of the functions in these packages are very simple, and others more complex. In one of the packages, I included some C++ functions to improve performance. Replacing some R for loops with C++ for loops and iterators, resulted in a huge speed increase. The reason for this is that R is an interpreted language and C++ is compiled into machine code. Recent versions of R allow byte-compilation which can give some speed improvement, without need to switch to another language.
+
+The source code for the photobiology and many other packages is freely available, so if you are interested you can study it. For any function defined in R, typing at the command prompt the name of the function without the parentheses lists the code.
+
+<<packages-2>>=
+length  # a function defined in C within R itself
+SEM # the function we defined earlier
+@
+
+One good way of learning how R works, is by experimenting with it, and whenever using a certain function looking at the help, to check what are all the available options.
+

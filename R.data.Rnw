@@ -1,0 +1,113 @@
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+opts_knit$set(concordance=TRUE)
+@
+
+\chapter{Storing and manipulating data with R}\label{chap:R:data}
+
+\section{Packages used in this chapter}
+
+For executing the examples listed in this chapter you need first to load the following packages from the library:
+<<>>=
+library(data.table)
+@
+
+<<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
+opts_knit$get()
+search()
+getwd()
+@
+
+\section{Introduction}
+
+Data frames have been discussed in \ref{chap:R:as:calc} and data tables are also data frames. In other words they are `derived' from data frames, so they can be used whenever data frames are expected as input. Package \code{data.frame} is under active development but it is already a better option than data frames in many contexts, specially when working with large data sets. The reason for this is that because of the way the R language is defined, data frames are are very frequently copied in whole even when a small part of the data is altered, or when passed as arguments to many functions. This has a very large impact on performance. The \code{data.table} avoids or delays copying as much as possible, and also implements fast search, sort, etc. operations. This makes a huge difference for large data sets. For smaller data set the main advantage is the new (additional) syntax that is more concise, though not in all cases easier to understand.
+
+\section[Differences between data.tables and data.frames]{Differences between \code{data.tables} and \code{data.frames}}
+
+Data tables are also data frames, and if one operates on them with the usual data-frame syntax, in most cases they behave identically to data frames. To achieve the full advantage in performance one should be careful of one codes scripts and functions. Data tables can created in a similar way as data frames.
+
+<<>>=
+my.dt <- data.table(x = 1:10, y = rnorm(10))
+class(my.dt)
+@
+
+We can `convert' in place, without any copying, a data frame into a data table using \code{setDT}, and with \code{setDF} `convert' a data table into a data frame.
+
+<<>>=
+my.df <- data.frame(x = 1:10, y = rnorm(10))
+class(my.df)
+setDT(my.df)
+class(my.df)
+setDF(my.df)
+class(my.df)
+@
+
+An assignment of a data frame is equivalent to a copy, and in most cases results in the whole data frame being copyed from one location in memory to a different one.
+
+<<>>=
+my.cp.df <- my.df
+identical(my.cp.df, my.df)
+my.cp.df$y <- 1
+identical(my.cp.df, my.df)
+@
+
+With data tables, assignment with \code{<-} just creates a new name for the same object. However, if we use `data.frame' syntax to alter the new name, a copy is done at that moment, and yields the same result as a true data frame.
+
+<<>>=
+my.cp.dt <- my.dt
+identical(my.cp.dt, my.dt)
+my.cp.dt$y <- my.cp.dt$y + 1
+identical(my.cp.dt, my.dt)
+@
+
+However, if we use the special syntax introduced by the \code{data.frame} package, no copy is done, and both names continue pointing to the same, now modified data table.
+
+<<>>=
+my.cp.dt <- my.dt
+identical(my.cp.dt, my.dt)
+my.cp.dt[ , y := y + 1]
+identical(my.cp.dt, my.dt)
+my.cp.dt
+my.dt
+@
+
+The assignemnt of the value `1' using the new syntax, changed the only object, pointed at by both names. When using data table syntax, if we really want a copy, then we should use the function \code{copy}.
+
+<<>>=
+my.cp.dt <- copy(my.dt)
+identical(my.cp.dt, my.dt)
+my.cp.dt[ , y := y - 1]
+identical(my.cp.dt, my.dt)
+my.cp.dt
+my.dt
+@
+
+For fast access of large data sets one can set a 'key' based on one or more columns, using function \code{setkey}.
+
+<<>>=
+setkey(my.dt, y)
+my.dt
+setkey(my.dt, x)
+my.dt
+@
+
+There is also an special \code{print} method for datables, that is used automatically by default, that instead of printing the whole data.table, only prints the `head' and the `tail' of the tables, unless the table has few rows.
+In the examples above all rows were printed because, there were not many of them.
+
+<<>>=
+data.table(x = 1:1000, y = runif(1000))
+@
+
+\section[Using data.frames and data.tables]{Using \code{data.frames} and \code{data.tables}}
+
+Adding new columns based on other columns, or other variables, uses the same syntax shown above for modifying column `y'.
+
+<<>>=
+my.cp.dt[ , z := y + x * 2]
+@
+
+<<>>=
+try(detach(package:data.table))
+@
