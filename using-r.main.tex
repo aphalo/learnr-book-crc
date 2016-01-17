@@ -49,6 +49,7 @@
 %\usepackage{imakeidx}
 
 \addbibresource{rbooks.bib}
+\addbibresource{references.bib}
 
 %\makeindex
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -97,11 +98,13 @@ are short and terse. We do not discuss here statistics, just R as a tool and lan
 
 
 
+
+
 % !Rnw root = appendix.main.Rnw
 
 
 
-\chapter[Plots with ggpplot]{Plots with \ggplot}\label{chap:R:plotting}
+\chapter[Plots with ggpplot, ggrepel and ggpmisc]{Plots with \ggplot, \ggrepel and \ggpmisc}\label{chap:R:plotting}
 
 \section{Packages used in this chapter}
 
@@ -110,76 +113,51 @@ For executing the examples listed in this chapter you need first to load the fol
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{library}\hlstd{(plyr)}
-\hlkwd{library}\hlstd{(grid)}
-\hlkwd{library}\hlstd{(Hmisc)}
-\end{alltt}
-
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: lattice\\\#\# Loading required package: survival\\\#\# Loading required package: Formula\\\#\# Loading required package: ggplot2\\\#\# \\\#\# Attaching package: 'Hmisc'\\\#\# \\\#\# The following objects are masked from 'package:plyr':\\\#\# \\\#\#\ \ \ \  is.discrete, summarize\\\#\# \\\#\# The following objects are masked from 'package:base':\\\#\# \\\#\#\ \ \ \  format.pval, round.POSIXt, trunc.POSIXt,\\\#\#\ \ \ \  units}}\begin{alltt}
 \hlkwd{library}\hlstd{(ggplot2)}
-\hlkwd{library}\hlstd{(scales)}
-\hlkwd{library}\hlstd{(rgdal)}
-\end{alltt}
-
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: methods\\\#\# Loading required package: sp\\\#\# rgdal: version: 1.1-3, (SVN revision 594)\\\#\#\ \ Geospatial Data Abstraction Library extensions to R successfully loaded\\\#\#\ \ Loaded GDAL runtime: GDAL 2.0.1, released 2015/09/15\\\#\#\ \ Path to GDAL shared files: C:/Program Files/R/R-3.2.3/library/rgdal/gdal\\\#\#\ \ GDAL does not use iconv for recoding strings.\\\#\#\ \ Loaded PROJ.4 runtime: Rel. 4.9.1, 04 March 2015, [PJ\_VERSION: 491]\\\#\#\ \ Path to PROJ.4 shared files: C:/Program Files/R/R-3.2.3/library/rgdal/proj\\\#\#\ \ Linking to sp version: 1.2-1}}\end{kframe}
-\end{knitrout}
-
-
-
-
-
-\section{Introduction}
-
-Being R extensible, in addition to the built-in plotting functions, there are several alternatives provided by packages. Of the general purpose ones, the most extensively used are \code{Lattice} and \ggplot. There are additional packages that add extra functionality to these packages.
-
-In the examples in this handbook we mainly use \ggplot, \ggmap and \ggtern. In this chapter we give an introduction to the `grammar of graphics' and \ggplot. There is ample literature on the use of ggplot2, starting with very good reference documentation at \url{http://ggplot2.org/}. The book `R Graphics Cookbook' \cite{Chang2013} is very useful and should be always near you, when using the package, as it contains many worked out examples. Much of the literature available at this time is for older versions of \ggplot but we here describe version 2.0.0, and highlight the most important incompatibilities that need to be taken into account when using older code as example. There is little well-organized literature on packages extending ggplot2 so we will describe some of them in later chapters.
-
-\section{Bases of plotting with \ggplot}
-
-What separates ggplot2 from base-R and trellis/lattice plotting functions is the use of a grammar of graphics (the reason behind `gg' in the name of the package). What is meant by grammar in this case is that plots are assembled piece by piece from different `nouns' and `verbs'. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the constructions is mostly semantic-based and to a large extent how the plot looks when is printed, displayed or exported to a bitmap or vector graphics file is controlled by themes.
-
-The grammar of graphics is based on aesthetics (\code{aes}) as for example color, geometric elements \code{geom\_\ldots} such as lines, and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, labels \code{labs}, and themes \code{theme\_\ldots}. Plots are assembled from these elements, we start with a plot with two aesthetics, and one geometry. In the examples that follow we will use the \code{mtcars} data set included in R.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
+\hlkwd{library}\hlstd{(ggrepel)}
+\hlkwd{library}\hlstd{(ggpmisc)}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-9-1} 
-
-}
-
-
-
 \end{knitrout}
 
-Aesthetics can be `linked' to data variables, either continuous (numeric) or categorical (factor). Variable \code{cyl} is encoded in the \code{mtcars} dataframe as numeric values. Even though only three values are present, a continuous color scale is used.
-
+We set a font larger size than the default
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{= cyl))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
+\hlkwd{theme_set}\hlstd{(}\hlkwd{theme_grey}\hlstd{(}\hlnum{16}\hlstd{))}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-10-1} 
-
-}
-
-
-
 \end{knitrout}
 
-We can convert \code{cyl} into a factor `on-the-fly' to force the use of a discrete color scale.
 
+
+
+\section[ggpmisc]{\ggpmisc}
+
+\subsection{New stats}
+
+Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()}, and \code{stat\_poly\_eq()}. Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
+
+\subsection{Peaks and valleys}
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
+\hlstd{lynx.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{year} \hlstd{=} \hlkwd{as.numeric}\hlstd{(}\hlkwd{time}\hlstd{(lynx)),} \hlkwc{lynx} \hlstd{=} \hlkwd{as.matrix}\hlstd{(lynx))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+ 
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{vjust} \hlstd{=} \hlopt{-}\hlnum{0.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{,}
+               \hlkwc{vjust} \hlstd{=} \hlnum{1.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylim}\hlstd{(}\hlopt{-}\hlnum{100}\hlstd{,} \hlnum{7300}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -191,15 +169,15 @@ We can convert \code{cyl} into a factor `on-the-fly' to force the use of a discr
 
 \end{knitrout}
 
-Each aesthetic, involves mapping of values in the data to aesthetic values such as colours. The mapping is defined by means of scales. If we now consider the \code{colour} aesthetic in the previous statement, a default discrete colour scale was used. In this case if we would like different colours used for the three values, but still have then selected automatically, we can select a different colour palette:
-
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{fill} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{shape} \hlstd{=} \hlnum{21}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2}\hlstd{))} \hlopt{+}
-  \hlkwd{scale_fill_brewer}\hlstd{(}\hlkwc{type} \hlstd{=} \hlstr{"div"}\hlstd{,} \hlkwc{palette} \hlstd{=} \hlnum{8}\hlstd{)} \hlopt{+}
-  \hlkwd{theme_bw}\hlstd{()}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{vjust} \hlstd{=} \hlopt{-}\hlnum{0.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylim}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{7300}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -211,12 +189,14 @@ Each aesthetic, involves mapping of values in the data to aesthetic values such 
 
 \end{knitrout}
 
-Data assigned to an aesthetic can be the `result of a computation'.
-
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg} \hlopt{/} \hlstd{disp))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -228,13 +208,25 @@ Data assigned to an aesthetic can be the `result of a computation'.
 
 \end{knitrout}
 
-Within \code{aes} the aesthetics are interpreted as being a function of the values in the data. If given outside \code{aes} they are interpreted as constants, which apply to one geom if given within the call to \code{geom\_xxx} but outside \code{aes} or to the whole plot if given within \code{ggplot} but outside \code{aes}. The aesthetics and data given as \code{ggplot}'s arguments become the defaults for all the geoms, but geoms also accept aesthetics and data as arguments, which when supplied as arguments override the defaults.
-
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= hp,} \hlkwc{fill} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{shape}\hlstd{=}\hlnum{21}\hlstd{,} \hlkwc{colour}\hlstd{=}\hlstr{"grey10"}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
+             \hlkwc{hjust} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{,}
+             \hlkwc{angle} \hlstd{=} \hlnum{90}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2}\hlstd{),}
+             \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(..y.label..,}
+                               \hlstr{"skins in year"}\hlstd{, ..x.label..)))} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{,}
+             \hlkwc{hjust} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{vjust} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{,}
+             \hlkwc{angle} \hlstd{=} \hlnum{90}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2}\hlstd{),}
+             \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(..y.label..,}
+                               \hlstr{"skins in year"}\hlstd{, ..x.label..)))} \hlopt{+}
+  \hlkwd{ylim}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{10000}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -246,13 +238,13 @@ Within \code{aes} the aesthetics are interpreted as being a function of the valu
 
 \end{knitrout}
 
-In the next example we override the \code{color} aesthetic in \code{geom\_smooth}\footnote{Smoothing and curve fitted is discussed in more detail in section \ref{sec:???}.}, causing all the data to be fitted together
+Of course, if one finds use for it, the peaks and/or valleys can be plotted on their own.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=hp,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+}
+  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"line"}\hlstd{)} \hlopt{+} \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"line"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -263,14 +255,22 @@ In the next example we override the \code{color} aesthetic in \code{geom\_smooth
 
 
 \end{knitrout}
+\subsection{Learning and/or debugging}
 
-We can assign the same variable to more than one aesthetic, and the combined key will be produced automatically.
+A very simple stat named \code{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \code{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This stat may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=hp,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl),} \hlkwc{shape}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_debug}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.8}\hlstd{)}
 \end{alltt}
+\begin{verbatim}
+##        x    y nrow ncol           colnames group
+## 1 1877.5 3515  114    4 x, y, PANEL, group    -1
+##   PANEL
+## 1     1
+\end{verbatim}
 \end{kframe}
 
 {\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-16-1} 
@@ -281,19 +281,24 @@ We can assign the same variable to more than one aesthetic, and the combined key
 
 \end{knitrout}
 
-We can change the labels for the different aesthetics, and give a title (\verb!\n! means `new line' and can be used to continue a label in the next line). In this case, if two aesthetics are linked to the same variable, the labels supplied should be identical, otherwise two separate keys will be produced.
-
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=hp,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl),} \hlkwc{shape}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-    \hlkwd{labs}\hlstd{(}\hlkwc{x}\hlstd{=}\hlstr{"Engine displacement)"}\hlstd{,}
-       \hlkwc{y}\hlstd{=}\hlstr{"Gross horsepower"}\hlstd{,}
-       \hlkwc{colour}\hlstd{=}\hlstr{"Number of\textbackslash{}ncylinders"}\hlstd{,}
-       \hlkwc{shape}\hlstd{=}\hlstr{"Number of\textbackslash{}ncylinders"}\hlstd{,}
-       \hlkwc{title}\hlstd{=}\hlstr{"Motor Trend Car Road Tests (1973-74 models)"}\hlstd{)}
+\hlstd{lynx.df}\hlopt{$}\hlstd{century} \hlkwb{<-} \hlkwd{ifelse}\hlstd{(lynx.df}\hlopt{$}\hlstd{year} \hlopt{>=} \hlnum{1900}\hlstd{,} \hlstr{"XX"}\hlstd{,} \hlstr{"XIX"}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx,} \hlkwc{color} \hlstd{= century))} \hlopt{+}
+  \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{stat_debug}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.8}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2.5}\hlstd{))}
 \end{alltt}
+\begin{verbatim}
+##      x    y nrow ncol                   colnames
+## 1 1860 3380   79    5 x, y, colour, PANEL, group
+##   group PANEL
+## 1     1     1
+##      x      y nrow ncol
+## 1 1917 3535.5   35    5
+##                     colnames group PANEL
+## 1 x, y, colour, PANEL, group     2     1
+\end{verbatim}
 \end{kframe}
 
 {\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-17-1} 
@@ -304,1175 +309,19 @@ We can change the labels for the different aesthetics, and give a title (\verb!\
 
 \end{knitrout}
 
-We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
+\section[ggrepel]{\ggrepel}
 
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=mpg,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()}
-\hlstd{mylabs} \hlkwb{<-} \hlkwd{labs}\hlstd{(}\hlkwc{x}\hlstd{=}\hlstr{"Engine displacement)"}\hlstd{,}
-       \hlkwc{y}\hlstd{=}\hlstr{"Gross horsepower"}\hlstd{,}
-       \hlkwc{colour}\hlstd{=}\hlstr{"Number of\textbackslash{}ncylinders"}\hlstd{,}
-       \hlkwc{shape}\hlstd{=}\hlstr{"Number of\textbackslash{}ncylinders"}\hlstd{,}
-       \hlkwc{title}\hlstd{=}\hlstr{"Motor Trend Car Road Tests (1973-74 models)"}\hlstd{)}
-\hlstd{myplot}
-\hlstd{myplot} \hlopt{+} \hlstd{mylabs}
-\end{alltt}
-\end{kframe}
+\subsection{New geoms}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-18-1} 
-\includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-18-2} 
-
-}
-
-
-
-\end{knitrout}
-
-And now we can assemble them into plots.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlstd{mylabs} \hlopt{+} \hlkwd{theme_bw}\hlstd{()}
-\hlstd{myplot} \hlopt{+} \hlstd{mylabs} \hlopt{+} \hlkwd{theme_bw}\hlstd{()} \hlopt{+} \hlkwd{ylim}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{NA}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-19-1} 
-\includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-19-2} 
-
-}
-
-
-
-\end{knitrout}
-
-We can also save intermediate results.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{mylogplot} \hlkwb{<-} \hlstd{myplot} \hlopt{+} \hlkwd{scale_y_log10}\hlstd{(}\hlkwc{breaks}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,}\hlnum{20}\hlstd{,}\hlnum{40}\hlstd{),} \hlkwc{limits}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{8}\hlstd{,}\hlnum{45}\hlstd{))}
-\hlstd{mylogplot} \hlopt{+} \hlstd{mylabs} \hlopt{+} \hlkwd{theme_bw}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-20-1} 
-
-}
-
-
-
-\end{knitrout}
-
-The are a few predefined themes, even the default \code{theme\_grey} can come in handy because the first parameter to themes is the point size used as reference to calculate all other font sizes. You can see in the two examples bellow, that the size of all text elements changes proportionally.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlstd{mylabs} \hlopt{+} \hlkwd{theme_grey}\hlstd{(}\hlnum{10}\hlstd{)}
-\hlstd{myplot} \hlopt{+} \hlstd{mylabs} \hlopt{+} \hlkwd{theme_grey}\hlstd{(}\hlnum{16}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-21-1} 
-\includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-21-2} 
-
-}
-
-
-
-\end{knitrout}
-
-Be aware that the different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. We use the \code{alpha} aesthetic to make the confidence band less transparent so that the example is easier to see in print.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=mpg,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+} \hlkwd{geom_smooth}\hlstd{(}\hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-22-1} 
-
-}
-
-
-
-\end{knitrout}
-
-The plot looks different if the order of the geoms is swapped. The data points overlapping the confidence band are more clearly visible in this second example because they are above the shaded area instead of bellow it.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=disp,} \hlkwc{y}\hlstd{=mpg,} \hlkwc{colour}\hlstd{=}\hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-   \hlkwd{geom_smooth}\hlstd{(}\hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-23-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Adding fitted curves, including splines}
-
-We will now show an example of use of \code{stat\_smooth} using the default spline smoothing.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlkwd{stat_smooth}\hlstd{(}\hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-24-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Instead of using the default spline, we can use a linear model fit. In this example we use a linear model, fitted by lm, as smoother:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlkwd{stat_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{,} \hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-25-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Instead of using the default linear regression as smoother, we can use a linear model fit. In this example we use a polynomial of order 2 fitted by lm.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlkwd{stat_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{,} \hlkwc{formula}\hlstd{=y}\hlopt{~}\hlkwd{poly}\hlstd{(x,}\hlnum{2}\hlstd{),} \hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-26-1} 
-
-}
-
-
-
-\end{knitrout}
-
-If we do not use \code{colour="black"} then the colour aesthetics supplied to \code{ggplot} is used, and splits the data into three groups to which the model is fitted separately.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{myplot} \hlopt{+} \hlkwd{stat_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-27-1} 
-
-}
-
-
-
-\end{knitrout}
-
-It is possible to use other types of models, including GAM and GLM, as smoothers, but we will not give examples of the use these more advanced models.
-
-\section{Adding statistical ``summaries''}
-
-It is also possible to summarize data on-the-fly when plotting, but before showing this we will generate some normally distributed artificial data:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fake.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
-  \hlkwc{y} \hlstd{=} \hlkwd{c}\hlstd{(}\hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{,} \hlkwc{mean}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{sd}\hlstd{=}\hlnum{0.5}\hlstd{),} \hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{,} \hlkwc{mean}\hlstd{=}\hlnum{4}\hlstd{,} \hlkwc{sd}\hlstd{=}\hlnum{0.7}\hlstd{)),}
-  \hlkwc{group} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlnum{20}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlstr{"B"}\hlstd{,} \hlnum{20}\hlstd{)))}
-  \hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Now we use these data to plot means and confidence intervals by group:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(}\hlkwc{data}\hlstd{=fake.data,} \hlkwd{aes}\hlstd{(}\hlkwc{y}\hlstd{=y,} \hlkwc{x}\hlstd{=group))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
-\hlstd{fig2}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-29-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We have saved the base figure in \code{fig2}, so now we can play with different summaries. We first add just the mean. In this case we need to add as argument to \code{stat\_summary} the geom to use, as the default one expects data for plotting error bars, in later examples, this is not needed.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.y} \hlstd{=} \hlstr{"mean"}\hlstd{,} \hlkwc{geom}\hlstd{=}\hlstr{"point"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{shape}\hlstd{=}\hlstr{"-"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{20}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-30-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.y} \hlstd{=} \hlstr{"median"}\hlstd{,} \hlkwc{geom}\hlstd{=}\hlstr{"point"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{shape}\hlstd{=}\hlstr{"-"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{20}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-31-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can add the means and $p = 0.95$ confidence intervals not assuming normality (using the actual distribution of the data by bootstrapping):
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_boot"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-32-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can instead add the means and $p = 0.90$ confidence intervals, by supplying a value to parameter \code{conf.int}:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_boot"}\hlstd{,}
-                    \hlkwc{fun.args} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{conf.int} \hlstd{=} \hlnum{0.90}\hlstd{),}
-                    \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{alpha} \hlstd{=} \hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-33-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can add the mean and $p = 0.95$ confidence intervals assuming normality (using the $t$ distribution):
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_normal"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-34-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can plot error bars corresponding to $\pm$s.e. (standard errors). The function \code{mean\_se} was first available in ggplot2 2.0.0.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_se"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-35-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Or also one could use.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_normal"}\hlstd{,} \hlkwc{fun.args} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{mult} \hlstd{=} \hlnum{1}\hlstd{),}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-36-1} 
-
-}
-
-
-
-\end{knitrout}
-
-However, be aware that the code below, as used in earlier versions of ggplot2, needs to be rewritten as above.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_normal"}\hlstd{,} \hlkwc{mult} \hlstd{=} \hlnum{1}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Finally we can plot error bars showing $\pm$s.d. (standard deviation).
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+} \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_sdl"}\hlstd{,}
-                    \hlkwc{fun.args} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{mult} \hlstd{=} \hlnum{1}\hlstd{),}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.7}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-38-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We do not show it here, but instead of using these functions (from package \code{Hmisc}) it is possible to define one's own functions, and remember that arguments to all functions, except for the first one containing the actual data should be supplied as a list through formal argument \code{fun.args}.
-
-Finally we plot the means in a bar plot, with the observations superimposed and $p = 0.95$ C.I. (the order in which the geoms are added is important: by having \code{geom\_point} last it is plotted on top of the bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets they can be assigned to factors in the data set.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwc{data}\hlstd{=fake.data,} \hlkwd{aes}\hlstd{(}\hlkwc{y}\hlstd{=y,} \hlkwc{x}\hlstd{=group))} \hlopt{+}
-  \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.y} \hlstd{=} \hlstr{"mean"}\hlstd{,} \hlkwc{geom} \hlstd{=} \hlstr{"bar"}\hlstd{,}
-               \hlkwc{fill}\hlstd{=}\hlstr{"yellow"}\hlstd{,} \hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_normal"}\hlstd{,}
-               \hlkwc{geom} \hlstd{=} \hlstr{"errorbar"}\hlstd{,}
-               \hlkwc{width}\hlstd{=}\hlnum{0.1}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{size}\hlstd{=}\hlnum{3}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{0.3}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-39-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Plotting functions}
-
-We can also directly plot functions, without need to generate data beforehand:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlopt{-}\hlnum{3}\hlopt{:}\hlnum{3}\hlstd{),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun}\hlstd{=dnorm)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-40-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can even pass additional arguments to a function:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlopt{-}\hlnum{3}\hlopt{:}\hlnum{3}\hlstd{),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun} \hlstd{= dnorm,} \hlkwc{args} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{mean} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{.5}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-41-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Of course, user-defined functions (not shown), and anonymous functions can also be used:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlnum{0}\hlopt{:}\hlnum{1}\hlstd{),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,} \hlkwc{a}\hlstd{,} \hlkwc{b}\hlstd{)\{a} \hlopt{+} \hlstd{b} \hlopt{*} \hlstd{x}\hlopt{^}\hlnum{2}\hlstd{\},}
-                \hlkwc{args} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{1.4}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-42-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Here is another example of a predefined function, but in this case the default scale is not the best:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{2} \hlopt{*} \hlstd{pi)),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun}\hlstd{=sin)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-43-1} 
-
-}
-
-
-
-\end{knitrout}
-
-In this case we need to change the x-axis scale to better suit the sin function and the use of radians as angular units\footnote{The use of \code{expression} is explained in detail in section \ref{sec:??}, an the use of \code{scales} in section \ref{sec:???}.}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{2} \hlopt{*} \hlstd{pi)),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun}\hlstd{=sin)} \hlopt{+}
-  \hlkwd{scale_x_continuous}\hlstd{(}
-    \hlkwc{breaks}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1.5}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{*} \hlstd{pi,}
-    \hlkwc{labels}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"0"}\hlstd{,} \hlkwd{expression}\hlstd{(}\hlnum{0.5}\hlopt{~}\hlstd{pi),} \hlkwd{expression}\hlstd{(pi),}
-             \hlkwd{expression}\hlstd{(}\hlnum{1.5}\hlopt{~}\hlstd{pi),} \hlkwd{expression}\hlstd{(}\hlnum{2}\hlopt{~}\hlstd{pi)))} \hlopt{+}
-  \hlkwd{labs}\hlstd{(}\hlkwc{y}\hlstd{=}\hlstr{"sin(x)"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-44-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Plotting text}
-
-One can use \code{geom\_text} to add text labels to observations. The aesthetic \code{label} gives text and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{colour} aesthetic can be also used for text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of zero for both \code{hjust} and \code{vjust} centres the label. The centre of the text is at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Negative justification values, shift the label left or down, and positive values right or up. A value of 1 or -1 sets the text so that its edge is at the supplied coordinate. Values outside the range $-1\ldots 1$ sift the text even further away.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.data} \hlkwb{<-}
-  \hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{y}\hlstd{=}\hlkwd{rep}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{5}\hlstd{),} \hlkwc{label}\hlstd{=}\hlkwd{paste}\hlstd{(letters[}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{],} \hlstr{" "}\hlstd{))}
-\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x,y,}\hlkwc{label}\hlstd{=label))} \hlopt{+}
-  \hlkwd{geom_text}\hlstd{(}\hlkwc{angle}\hlstd{=}\hlnum{45}\hlstd{,} \hlkwc{hjust}\hlstd{=}\hlnum{1}\hlstd{)} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-45-1} 
-
-}
-
-
-
-\end{knitrout}
-
-In this example we use \code{paste} (which uses recycling here) to add a space at the end of each label. Justification values outside the range $-1\ldots 1$ are allowed, but are relative to the with of the label. As the default font used in this case has variable with characters, the justification would be inconsistent (e.g. try the code above but using \code{hjust} set to 3 instead of to 1 without pasting a space character to the labels.)
-
-
-\section{Scales}
-
-Scales map data onto aesthetics. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted object, such as \code{colour}, \code{size}, position (\code{x, y, z}), \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most elemental mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \code{scale\_x\_continuous}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the x-axis will be based on the logarithm of the original data. A continuous data variable can, if we think it useful for describing our data, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
-
-Discrete scales work in a similar way. We can use \code{scale\_colour\_identity} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also assign the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from the default palette, unless we chose a different one, or even use \code{scale\_colour\_manual} to assign whatever colour we want to each level to be mapped. The same is true for other discrete scales like symbol \code{shape} and \code{linetype}. Be aware that for example for colour, and `numbers' there are both discrete and continuous scales available.
-
-Advanced scale manipulation requires the package \code{scales} to be loaded. Some simple examples follow.
-
+Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom\_label\_repel}. They are used similarly to \code{geom\_text} and \code{geom\_label} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded. 
 
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{fake2.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
-  \hlkwc{y} \hlstd{=} \hlkwd{c}\hlstd{(}\hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{,} \hlkwc{mean}\hlstd{=}\hlnum{20}\hlstd{,} \hlkwc{sd}\hlstd{=}\hlnum{5}\hlstd{),} \hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{,} \hlkwc{mean}\hlstd{=}\hlnum{40}\hlstd{,} \hlkwc{sd}\hlstd{=}\hlnum{10}\hlstd{)),}
-  \hlkwc{group} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{c}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlnum{20}\hlstd{),} \hlkwd{rep}\hlstd{(}\hlstr{"B"}\hlstd{,} \hlnum{20}\hlstd{))),}
-  \hlkwc{z} \hlstd{=} \hlkwd{rnorm}\hlstd{(}\hlnum{40}\hlstd{,} \hlkwc{mean}\hlstd{=}\hlnum{12}\hlstd{,} \hlkwc{sd}\hlstd{=}\hlnum{6}\hlstd{)}
-  \hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlkwb{<-}
-  \hlkwd{ggplot}\hlstd{(}\hlkwc{data}\hlstd{=fake2.data,}
-         \hlkwd{aes}\hlstd{(}\hlkwc{y}\hlstd{=y,} \hlkwc{x}\hlstd{=group,} \hlkwc{shape}\hlstd{=group,} \hlkwc{colour}\hlstd{=group,} \hlkwc{size}\hlstd{=z))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{alpha}\hlstd{=}\hlnum{0.3}\hlstd{)} \hlopt{+} \hlkwd{ylim}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{NA}\hlstd{)}
-\hlstd{fig2}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-48-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig2} \hlopt{+}
-  \hlkwd{scale_y_log10}\hlstd{(}\hlkwc{breaks}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,}\hlnum{20}\hlstd{,}\hlnum{30}\hlstd{,}\hlnum{40}\hlstd{,}\hlnum{50}\hlstd{,}\hlnum{60}\hlstd{))} \hlopt{+}
-       \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_cl_normal"}\hlstd{,}
-                    \hlkwc{colour}\hlstd{=}\hlstr{"black"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{1}\hlstd{,} \hlkwc{alpha}\hlstd{=}\hlnum{1}\hlstd{)}
-\end{alltt}
-
-
-{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Scale for 'y' is already present. Adding\\\#\# another scale for 'y', which will replace the\\\#\# existing scale.}}\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-49-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Adding annotations}
-
-Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the ggplot.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{2} \hlopt{*} \hlstd{pi)),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun}\hlstd{=sin)} \hlopt{+}
-  \hlkwd{scale_x_continuous}\hlstd{(}
-    \hlkwc{breaks}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1.5}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{*} \hlstd{pi,}
-    \hlkwc{labels}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"0"}\hlstd{,} \hlkwd{expression}\hlstd{(}\hlnum{0.5}\hlopt{~}\hlstd{pi),} \hlkwd{expression}\hlstd{(pi),}
-             \hlkwd{expression}\hlstd{(}\hlnum{1.5}\hlopt{~}\hlstd{pi),} \hlkwd{expression}\hlstd{(}\hlnum{2}\hlopt{~}\hlstd{pi)))} \hlopt{+}
-  \hlkwd{labs}\hlstd{(}\hlkwc{y}\hlstd{=}\hlstr{"sin(x)"}\hlstd{)} \hlopt{+}
-  \hlkwd{annotate}\hlstd{(}\hlkwc{geom}\hlstd{=}\hlstr{"text"}\hlstd{,}
-           \hlkwc{label}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"+"}\hlstd{,} \hlstr{"-"}\hlstd{),}
-           \hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0.5}\hlstd{,} \hlnum{1.5}\hlstd{)} \hlopt{*} \hlstd{pi,} \hlkwc{y}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0.5}\hlstd{,} \hlopt{-}\hlnum{0.5}\hlstd{),}
-           \hlkwc{size}\hlstd{=}\hlnum{20}\hlstd{)} \hlopt{+}
-  \hlkwd{annotate}\hlstd{(}\hlkwc{geom}\hlstd{=}\hlstr{"point"}\hlstd{,}
-           \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,}
-           \hlkwc{shape}\hlstd{=}\hlnum{21}\hlstd{,}
-           \hlkwc{fill}\hlstd{=}\hlstr{"white"}\hlstd{,}
-           \hlkwc{x}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{*} \hlstd{pi,} \hlkwc{y}\hlstd{=}\hlnum{0}\hlstd{,}
-           \hlkwc{size}\hlstd{=}\hlnum{6}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-50-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Using facets}
-
-Sets of coordinated plots are a very useful tool for visualizing data. These became popular through the \code{trellis} graphs in S, and the \code{lattice} package in R. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets on along a single `axis' but wrapped into several rows. In the examples below we use \code{geom\_point} but faceting can be used with any geom, and even with maps and ternary plots.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(mpg, wt))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
-\hlcom{# With one variable}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{cyl)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-51-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(cyl} \hlopt{~} \hlstd{.)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-52-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{cyl,} \hlkwc{scales} \hlstd{=} \hlstr{"free"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-53-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{cyl,} \hlkwc{scales} \hlstd{=} \hlstr{"free"}\hlstd{,} \hlkwc{space} \hlstd{=} \hlstr{"free"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-54-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(vs} \hlopt{~} \hlstd{am)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-55-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(vs} \hlopt{~} \hlstd{am,} \hlkwc{margins}\hlstd{=}\hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-56-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{vs} \hlopt{+} \hlstd{am)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-57-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{vs} \hlopt{+} \hlstd{am,} \hlkwc{labeller} \hlstd{= label_both)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-58-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{vs} \hlopt{+} \hlstd{am,} \hlkwc{margins}\hlstd{=}\hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-59-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(cyl} \hlopt{~} \hlstd{vs,} \hlkwc{labeller} \hlstd{= label_both)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-60-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{mtcars}\hlopt{$}\hlstd{cyl12} \hlkwb{<-} \hlkwd{factor}\hlstd{(mtcars}\hlopt{$}\hlstd{cyl,} \hlkwc{labels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"alpha"}\hlstd{,} \hlstr{"beta"}\hlstd{,} \hlstr{"sqrt(x, y)"}\hlstd{))}
-\hlstd{p1} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(mpg, wt))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
-\hlstd{p1} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{cyl12,} \hlkwc{labeller} \hlstd{= label_parsed)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-61-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_grid}\hlstd{(.} \hlopt{~} \hlstd{vs,} \hlkwc{labeller} \hlstd{=} \hlkwd{label_bquote}\hlstd{(alpha} \hlopt{^} \hlkwd{.}\hlstd{(x)))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-62-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_wrap}\hlstd{(}\hlopt{~} \hlstd{cyl)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-63-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p} \hlopt{+} \hlkwd{facet_wrap}\hlstd{(}\hlopt{~} \hlstd{vs} \hlopt{+} \hlstd{am,} \hlkwc{ncol}\hlstd{=}\hlnum{2}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-64-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Circular plots}
-
-A funny example stolen from the ggplot2 website at \url{http://docs.ggplot2.org/current/coord_polar.html}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# Hadley's favourite pie chart}
-\hlstd{df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
-  \hlkwc{variable} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"resembles"}\hlstd{,} \hlstr{"does not resemble"}\hlstd{),}
-  \hlkwc{value} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{80}\hlstd{,} \hlnum{20}\hlstd{)}
-\hlstd{)}
-\hlkwd{ggplot}\hlstd{(df,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlstr{""}\hlstd{,} \hlkwc{y} \hlstd{= value,} \hlkwc{fill} \hlstd{= variable))} \hlopt{+}
-  \hlkwd{geom_bar}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{stat} \hlstd{=} \hlstr{"identity"}\hlstd{)} \hlopt{+}
-  \hlkwd{scale_fill_manual}\hlstd{(}\hlkwc{values} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,} \hlstr{"yellow"}\hlstd{))} \hlopt{+}
-  \hlkwd{coord_polar}\hlstd{(}\hlstr{"y"}\hlstd{,} \hlkwc{start} \hlstd{= pi} \hlopt{/} \hlnum{3}\hlstd{)} \hlopt{+}
-  \hlkwd{labs}\hlstd{(}\hlkwc{title} \hlstd{=} \hlstr{"Pac man"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-65-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Something just a bit more useful, also stolen from the same page:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# A pie chart = stacked bar chart + polar coordinates}
-\hlstd{pie} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlnum{1}\hlstd{),} \hlkwc{fill} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
- \hlkwd{geom_bar}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{1}\hlstd{)}
-\hlstd{pie} \hlopt{+} \hlkwd{coord_polar}\hlstd{(}\hlkwc{theta} \hlstd{=} \hlstr{"y"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-66-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Pie charts vs.\ bar plots example}
-
-There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}). %The original figure was created with the following code (not run):
-
-
-
-Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{example.data} \hlkwb{<-}
-  \hlkwd{data.frame}\hlstd{(}\hlkwc{values} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{17}\hlstd{,} \hlnum{18}\hlstd{,} \hlnum{20}\hlstd{,} \hlnum{22}\hlstd{,} \hlnum{23}\hlstd{,}
-                        \hlnum{20}\hlstd{,} \hlnum{20}\hlstd{,} \hlnum{19}\hlstd{,} \hlnum{21}\hlstd{,} \hlnum{20}\hlstd{,}
-                        \hlnum{23}\hlstd{,} \hlnum{22}\hlstd{,} \hlnum{20}\hlstd{,} \hlnum{18}\hlstd{,} \hlnum{17}\hlstd{),}
-             \hlkwc{examples}\hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{),} \hlkwd{c}\hlstd{(}\hlnum{5}\hlstd{,}\hlnum{5}\hlstd{,}\hlnum{5}\hlstd{)),}
-             \hlkwc{cols} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"red"}\hlstd{,} \hlstr{"blue"}\hlstd{,} \hlstr{"green"}\hlstd{,} \hlstr{"yellow"}\hlstd{,} \hlstr{"black"}\hlstd{),} \hlnum{3}\hlstd{)}
-  \hlstd{)}
-
-\hlkwd{ggplot}\hlstd{(example.data,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=cols,} \hlkwc{y}\hlstd{=values,} \hlkwc{fill}\hlstd{=cols))} \hlopt{+}
-  \hlkwd{geom_bar}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{stat}\hlstd{=}\hlstr{"identity"}\hlstd{)} \hlopt{+}
-  \hlkwd{facet_grid}\hlstd{(.}\hlopt{~}\hlstd{examples)} \hlopt{+}
-  \hlkwd{scale_fill_identity}\hlstd{()}
-\hlkwd{ggplot}\hlstd{(example.data,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{factor}\hlstd{(}\hlnum{1}\hlstd{),} \hlkwc{y}\hlstd{=values,} \hlkwc{fill}\hlstd{=cols))} \hlopt{+}
-  \hlkwd{geom_bar}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{stat}\hlstd{=}\hlstr{"identity"}\hlstd{)} \hlopt{+}
-  \hlkwd{facet_grid}\hlstd{(.}\hlopt{~}\hlstd{examples)} \hlopt{+}
-  \hlkwd{scale_fill_identity}\hlstd{()} \hlopt{+}
-  \hlkwd{coord_polar}\hlstd{(}\hlkwc{theta}\hlstd{=}\hlstr{"y"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-68-1} 
-\includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-68-2} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{A classical example about regression}
-
-This is another figure from Wikipedia \url{http://commons.wikimedia.org/wiki/File:Anscombe.svg?uselang=en-gb}. The original code (not run):
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
- \hlkwd{svg}\hlstd{(}\hlstr{"anscombe.svg"}\hlstd{,} \hlkwc{width}\hlstd{=}\hlnum{10.5}\hlstd{,} \hlkwc{height}\hlstd{=}\hlnum{7}\hlstd{)}
- \hlkwd{par}\hlstd{(}\hlkwc{las}\hlstd{=}\hlnum{1}\hlstd{)}
-
- \hlcom{##-- some "magic" to do the 4 regressions in a loop:}
- \hlstd{ff} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x}
- \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlnum{4}\hlstd{) \{}
-   \hlstd{ff[}\hlnum{2}\hlopt{:}\hlnum{3}\hlstd{]} \hlkwb{<-} \hlkwd{lapply}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"y"}\hlstd{,}\hlstr{"x"}\hlstd{), i,} \hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{), as.name)}
-   \hlcom{## or   ff2 <- as.name(paste("y", i, sep=""))}
-   \hlcom{##      ff3 <- as.name(paste("x", i, sep=""))}
-   \hlkwd{assign}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlstr{"lm."}\hlstd{,i,}\hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{), lmi} \hlkwb{<-} \hlkwd{lm}\hlstd{(ff,} \hlkwc{data}\hlstd{= anscombe))}
- \hlstd{\}}
-
- \hlcom{## Now, do what you should have done in the first place: PLOTS}
- \hlstd{op} \hlkwb{<-} \hlkwd{par}\hlstd{(}\hlkwc{mfrow}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,}\hlnum{2}\hlstd{),} \hlkwc{mar}\hlstd{=}\hlnum{1.5}\hlopt{+}\hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{3.5}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{),} \hlkwc{oma}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{0}\hlstd{),}
-           \hlkwc{lab}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{6}\hlstd{,}\hlnum{6}\hlstd{,}\hlnum{7}\hlstd{),} \hlkwc{cex.lab}\hlstd{=}\hlnum{1.5}\hlstd{,} \hlkwc{cex.axis}\hlstd{=}\hlnum{1.3}\hlstd{,} \hlkwc{mgp}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{0}\hlstd{))}
- \hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlnum{4}\hlstd{) \{}
-   \hlstd{ff[}\hlnum{2}\hlopt{:}\hlnum{3}\hlstd{]} \hlkwb{<-} \hlkwd{lapply}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"y"}\hlstd{,}\hlstr{"x"}\hlstd{), i,} \hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{), as.name)}
-   \hlkwd{plot}\hlstd{(ff,} \hlkwc{data} \hlstd{=anscombe,} \hlkwc{col}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{pch}\hlstd{=}\hlnum{21}\hlstd{,} \hlkwc{bg} \hlstd{=} \hlstr{"orange"}\hlstd{,} \hlkwc{cex} \hlstd{=} \hlnum{2.5}\hlstd{,}
-        \hlkwc{xlim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{19}\hlstd{),} \hlkwc{ylim}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{13}\hlstd{),}
-        \hlkwc{xlab}\hlstd{=}\hlkwd{eval}\hlstd{(}\hlkwd{substitute}\hlstd{(}\hlkwd{expression}\hlstd{(x[i]),} \hlkwd{list}\hlstd{(}\hlkwc{i}\hlstd{=i))),}
-        \hlkwc{ylab}\hlstd{=}\hlkwd{eval}\hlstd{(}\hlkwd{substitute}\hlstd{(}\hlkwd{expression}\hlstd{(y[i]),} \hlkwd{list}\hlstd{(}\hlkwc{i}\hlstd{=i))))}
-   \hlkwd{abline}\hlstd{(}\hlkwd{get}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlstr{"lm."}\hlstd{,i,}\hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{)),} \hlkwc{col}\hlstd{=}\hlstr{"blue"}\hlstd{)}
- \hlstd{\}}
-
- \hlkwd{dev.off}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-My version using \ggplot:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# we rearrange the data}
-\hlstd{my.mat} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{as.matrix}\hlstd{(anscombe),} \hlkwc{ncol}\hlstd{=}\hlnum{2}\hlstd{)}
-\hlstd{my.anscombe} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{= my.mat[ ,} \hlnum{1}\hlstd{],}
-                          \hlkwc{y} \hlstd{= my.mat[ ,} \hlnum{2}\hlstd{],}
-                          \hlkwc{case}\hlstd{=}\hlkwd{factor}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{4}\hlstd{,} \hlkwd{rep}\hlstd{(}\hlnum{11}\hlstd{,}\hlnum{4}\hlstd{))))}
-\hlcom{# we draw the figure}
-\hlkwd{ggplot}\hlstd{(my.anscombe,} \hlkwd{aes}\hlstd{(x,y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{)} \hlopt{+}
-  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{case,} \hlkwc{ncol}\hlstd{=}\hlnum{2}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-70-1} 
-
-}
-
-
-
-\end{knitrout}
-
-It is not much more difficult to make it look similar to the original
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(my.anscombe,} \hlkwd{aes}\hlstd{(x,y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{shape}\hlstd{=}\hlnum{21}\hlstd{,} \hlkwc{fill}\hlstd{=}\hlstr{"orange"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{3}\hlstd{)} \hlopt{+}
-  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{,} \hlkwc{se}\hlstd{=}\hlnum{FALSE}\hlstd{)} \hlopt{+}
-  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{case,} \hlkwc{ncol}\hlstd{=}\hlnum{2}\hlstd{)} \hlopt{+}
-  \hlkwd{theme_bw}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-71-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Although I think that the confidence bands make the point of the example much clearer
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(my.anscombe,} \hlkwd{aes}\hlstd{(x,y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{shape}\hlstd{=}\hlnum{21}\hlstd{,} \hlkwc{fill}\hlstd{=}\hlstr{"orange"}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{3}\hlstd{)} \hlopt{+}
-  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"lm"}\hlstd{)} \hlopt{+}
-  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{case,} \hlkwc{ncol}\hlstd{=}\hlnum{2}\hlstd{)} \hlopt{+}
-  \hlkwd{theme_bw}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-72-1} 
-
-}
-
-
-
-\end{knitrout}
-
-This classical example form Anscombe \cite{xxx} demonstrates four very different data sets that yield exactly the same results when a linear regression model is fit to them, including $R^2 = 0.666$. It is usually presented as a warning about the need to check model fits beyond looking at $R^2$ and other parameter's estimates.
-
-
-\section{Advanced topics}
-
-\section{Using \code{plotmath} expressions}
-
-Expressions are very useful but rather tricky to use because the syntax is unusual. In \code{ggplot} one can either use expressions explicitly, or supply them as character string labels, and tell \code{ggplot} to parse them. For titles, axis-labels, etc. (anything that is defined with \code{labs}) the expressions have to entered explicitly, or saved as such into a variable, and the variable supplied as argument. When plotting expressions using \code{geom\_text} expression arguments should be supplied as character strings and the optional argument \code{parse=TRUE} used to tell the geom to interpret the labels as expressions. We will go through a few useful examples.
-
-We will revisit the example from the previous section, but now using subscripted Greek $\alpha$ for labels. In this example we use as subscripts numeric values from another variable in the same dataframe.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.data}\hlopt{$}\hlstd{greek.label} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"alpha["}\hlstd{, my.data}\hlopt{$}\hlstd{x,} \hlstr{"]"}\hlstd{,} \hlkwc{sep}\hlstd{=}\hlstr{""}\hlstd{)}
-\hlstd{(fig} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x,y,}\hlkwc{label}\hlstd{=greek.label))} \hlopt{+}
-   \hlkwd{geom_text}\hlstd{(}\hlkwc{angle}\hlstd{=}\hlnum{45}\hlstd{,} \hlkwc{hjust}\hlstd{=}\hlnum{1.2}\hlstd{,} \hlkwc{parse}\hlstd{=}\hlnum{TRUE}\hlstd{)} \hlopt{+} \hlkwd{geom_point}\hlstd{())}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-73-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Setting an axis label with superscripts. The easiest way to deal with spaces is to use `~' or `~~'. One can connect pieces that would otherwise cause errors using `*'. If we
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig} \hlopt{+} \hlkwd{labs}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{expression}\hlstd{(alpha),} \hlkwc{y}\hlstd{=}\hlkwd{expression}\hlstd{(Speed}\hlopt{~~}\hlstd{(m}\hlopt{~}\hlstd{s}\hlopt{^}\hlstd{\{}\hlopt{-}\hlnum{1}\hlstd{\})))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-74-1} 
-
-}
-
-
-
-\end{knitrout}
-
-It is possible to store expressions in variables.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.title} \hlkwb{<-} \hlkwd{expression}\hlstd{(}\hlkwd{sqrt}\hlstd{(alpha[}\hlnum{1}\hlstd{]} \hlopt{+} \hlkwd{frac}\hlstd{(beta, gamma)))}
-\hlstd{fig} \hlopt{+} \hlkwd{labs}\hlstd{(}\hlkwc{title}\hlstd{=my.title)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-75-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Annotations are plotted ignoring the default aesthetics, but still make use of geoms, so labels for annotations also have to be supplied as character strings and parsed.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig} \hlopt{+} \hlkwd{ylim}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{3}\hlstd{)} \hlopt{+}
-  \hlkwd{annotate}\hlstd{(}\hlstr{"text"}\hlstd{,} \hlkwc{label}\hlstd{=}\hlstr{"sqrt(alpha[1] + frac(beta, gamma))"}\hlstd{,}
-           \hlkwc{y}\hlstd{=}\hlnum{2.5}\hlstd{,} \hlkwc{x}\hlstd{=}\hlnum{3}\hlstd{,} \hlkwc{size}\hlstd{=}\hlnum{8}\hlstd{,} \hlkwc{colour}\hlstd{=}\hlstr{"red"}\hlstd{,} \hlkwc{parse}\hlstd{=}\hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-76-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We discuss how to use expressions as facet labels in section \ref{sec:facet}.
-
-\section{Generating output files}
-
-It is possible, when using RStudio, to directly export the displayed plot to a file. However, if the file will have to be generated again at a later time, or a series of plots need to be produced with consistent format, it is best to include the commands to export the plot in the script.
-
-In R, files are created by printing to different devices. Printing is directed to a currently open device. Some devices produce screen output, others files. Devices depend on drivers. There are both devices that or part of R, and devices that can be added through packages.
-
-A very simple example of PDF output (width and height in inches):
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fig1} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(}\hlkwd{data.frame}\hlstd{(}\hlkwc{x}\hlstd{=}\hlopt{-}\hlnum{3}\hlopt{:}\hlnum{3}\hlstd{),} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=x))} \hlopt{+}
-  \hlkwd{stat_function}\hlstd{(}\hlkwc{fun}\hlstd{=dnorm)}
-\hlkwd{pdf}\hlstd{(}\hlkwc{file}\hlstd{=}\hlstr{"fig1.pdf"}\hlstd{,} \hlkwc{width}\hlstd{=}\hlnum{8}\hlstd{,} \hlkwc{height}\hlstd{=}\hlnum{6}\hlstd{)}
-\hlkwd{print}\hlstd{(fig1)}
-\hlkwd{dev.off}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Encapsulated Postscript output (width and height in inches):
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{postscript}\hlstd{(}\hlkwc{file}\hlstd{=}\hlstr{"fig1.eps"}\hlstd{,} \hlkwc{width}\hlstd{=}\hlnum{8}\hlstd{,} \hlkwc{height}\hlstd{=}\hlnum{6}\hlstd{)}
-\hlkwd{print}\hlstd{(fig1)}
-\hlkwd{dev.off}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-There are Graphics devices for BMP, JPEG, PNG and TIFF format bitmap files. In this case the default units for width and height is pixels. For example we can generate TIFF output:
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{tiff}\hlstd{(}\hlkwc{file}\hlstd{=}\hlstr{"fig1.tiff"}\hlstd{,} \hlkwc{width}\hlstd{=}\hlnum{1000}\hlstd{,} \hlkwc{height}\hlstd{=}\hlnum{800}\hlstd{)}
-\hlkwd{print}\hlstd{(fig1)}
-\hlkwd{dev.off}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{scales))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{plyr))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{Hmisc))}
+\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggpmisc))}
+\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggrepel))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggplot2))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{grid))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -1480,21 +329,24 @@ There are Graphics devices for BMP, JPEG, PNG and TIFF format bitmap files. In t
 
 
 
-\end{document}
 
 \chapter{Further reading about R}\label{chap:R:readings}
 
 \section{Introductory texts}
 
+\nocite{Dalgaard2008,Zuur2009,Teetor2011}
+
 \section{Texts on specific aspects}
+
+\nocite{Chang2013,Fox2002,Fox2010,Faraway2004,Faraway2006,Everitt2011}
 
 \section{Advanced texts}
 
-\section{Application-specific texts}
-
-\nocite{*}
+\nocite{Xie2013,wickham2015,wickham2014advanced,Pinheiro2000,Murrell2011,Matloff2011,Ihaka1996}
 
 \printbibliography
+
+\end{document}
 
 \appendix
 
@@ -1546,29 +398,26 @@ There are Graphics devices for BMP, JPEG, PNG and TIFF format bitmap files. In t
 ## [5] LC_TIME=English_United Kingdom.1252    
 ## 
 ## attached base packages:
-## [1] methods   tools     stats     graphics 
-## [5] grDevices utils     datasets  base     
+## [1] tools     stats     graphics  grDevices
+## [5] utils     datasets  base     
 ## 
 ## other attached packages:
-## [1] rgdal_1.1-3     sp_1.2-1       
-## [3] Formula_1.2-1   survival_2.38-3
-## [5] lattice_0.20-33 stringr_1.0.0  
-## [7] knitr_1.11     
+## [1] stringr_1.0.0 knitr_1.12   
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.2         cluster_2.0.3      
-##  [3] magrittr_1.5        splines_3.2.3      
-##  [5] munsell_0.4.2       colorspace_1.2-6   
-##  [7] highr_0.5.1         plyr_1.8.3         
-##  [9] nnet_7.3-11         grid_3.2.3         
-## [11] gtable_0.1.2        latticeExtra_0.6-26
-## [13] digest_0.6.8        gridExtra_2.0.0    
-## [15] reshape2_1.4.1      RColorBrewer_1.1-2 
-## [17] ggplot2_2.0.0       formatR_1.2.1      
-## [19] acepack_1.3-3.3     rpart_4.1-10       
-## [21] evaluate_0.8        labeling_0.3       
-## [23] stringi_1.0-1       scales_0.3.0       
-## [25] Hmisc_3.17-1        foreign_0.8-66
+##  [1] ggrepel_0.4.2    Rcpp_0.12.3     
+##  [3] splus2R_1.2-0    digest_0.6.9    
+##  [5] assertthat_0.1   dplyr_0.4.3     
+##  [7] R6_2.1.1         grid_3.2.3      
+##  [9] plyr_1.8.3       DBI_0.3.1       
+## [11] ggpmisc_0.2.0    gtable_0.1.2    
+## [13] formatR_1.2.1    magrittr_1.5    
+## [15] evaluate_0.8     scales_0.3.0    
+## [17] highr_0.5.1      ggplot2_2.0.0   
+## [19] stringi_1.0-1    lazyeval_0.1.10 
+## [21] labeling_0.3     munsell_0.4.2   
+## [23] parallel_3.2.3   colorspace_1.2-6
+## [25] methods_3.2.3
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
