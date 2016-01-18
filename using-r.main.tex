@@ -89,242 +89,1917 @@
 \chapter*{Preface}
 
 This series of Notes cover different aspects of the use of R. They are meant to be use as a complement to a course or book, as explanations
-are short and terse. We do not discuss here statistics, just R as a tool and language for data manipulation and display.
+are short and terse. We do not discuss here statistics, just R as a tool and language for data manipulation and display. The idea is a bit like how children learn a language: they work-out what the rules are simply by listening to people speak. I do give some explanations and comments, but the idea of this notes is mainly for you to use the numerous examples to find-out by yourself the overall patterns and coding philosophy behind the R language.
 
-
-
-
-
-
-
-
-
+This is work-in-progress. I will appreciate suggestions for further examples, notification of errors and unclear things and any bigger contributions. Many of the examples here have been collected from diverse sources over many years and because of this not all sources are acknowledged. If you recognize any example as yours or someone else's please let me know so that I can add a proper acknowledgement.
+ 
 
 % !Rnw root = appendix.main.Rnw
 
 
 
-\chapter[Plots with ggpplot, ggrepel and ggpmisc]{Plots with \ggplot, \ggrepel and \ggpmisc}\label{chap:R:plotting}
+\chapter{R as a powerful calculator}\label{chap:R:as:calc}
 
-\section{Packages used in this chapter}
+\section{Working at the R console}
 
-For executing the examples listed in this chapter you need first to load the following packages from the library:
+I assume that you are already familiar with RStudio. These examples use only the console window, and results are printed to the console. The values stored in the different variables are also visible in the Environment tab in RStudio.
 
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{library}\hlstd{(ggplot2)}
-\hlkwd{library}\hlstd{(ggrepel)}
-\hlkwd{library}\hlstd{(ggpmisc)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+In the console you can type commands at the \texttt{>} prompt.
+When you end a line by pressing the return key, if the line can be interpreted as an R command, the result will be printed in the console, followed by a new \texttt{>} prompt.
+If the command is incomplete a \texttt{+} continuation prompt will be shown, and you will be able to type-in the rest of the command. For example if the whole calculation that you would like to do is $1 + 2 + 4$, if you enter in the console \texttt{1 + 2 +} in one line, you will get a continuation prompt where you will be able to type \texttt{3}. However, if you type \texttt{1 + 2}, the result will be calculated, and printed.
 
-We set a font larger size than the default
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{theme_set}\hlstd{(}\hlkwd{theme_grey}\hlstd{(}\hlnum{16}\hlstd{))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
+When working at the command prompt, results are printed by default, but in other cases you may need to use the function \texttt{print} explicitly. The examples here rely on the automatic printing.
 
+The idea with these examples is that you learn by working out how different commands work based on the results of the example calculations listed. The examples are designed so that they allow the rules, and also a few quirks, to be found by `detective work'. This should hopefully lead to better understanding than just studying rules.
 
+\section{Examples with numbers}
 
-
-\section[ggpmisc]{\ggpmisc}
-
-\subsection{New stats}
-
-Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()}, and \code{stat\_poly\_eq()}. Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
-
-\subsection{Peaks and valleys}
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{lynx.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{year} \hlstd{=} \hlkwd{as.numeric}\hlstd{(}\hlkwd{time}\hlstd{(lynx)),} \hlkwc{lynx} \hlstd{=} \hlkwd{as.matrix}\hlstd{(lynx))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
- 
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
-             \hlkwc{vjust} \hlstd{=} \hlopt{-}\hlnum{0.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{,}
-               \hlkwc{vjust} \hlstd{=} \hlnum{1.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
-  \hlkwd{ylim}\hlstd{(}\hlopt{-}\hlnum{100}\hlstd{,} \hlnum{7300}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-11-1} 
-
-}
-
-
-
-\end{knitrout}
+When working with arithmetic expression the normal precedence rules are followed and parentheses can be used to alter this order. In addition parentheses can be nested.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
-             \hlkwc{vjust} \hlstd{=} \hlopt{-}\hlnum{0.5}\hlstd{,} \hlkwc{x.label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{)} \hlopt{+}
-  \hlkwd{ylim}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{7300}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-12-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-13-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
-             \hlkwc{hjust} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{,}
-             \hlkwc{angle} \hlstd{=} \hlnum{90}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2}\hlstd{),}
-             \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(..y.label..,}
-                               \hlstr{"skins in year"}\hlstd{, ..x.label..)))} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"rug"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
-  \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"text"}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{,}
-             \hlkwc{hjust} \hlstd{=} \hlopt{-}\hlnum{0.1}\hlstd{,} \hlkwc{vjust} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{label.fmt} \hlstd{=} \hlstr{"%4.0f"}\hlstd{,}
-             \hlkwc{angle} \hlstd{=} \hlnum{90}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2}\hlstd{),}
-             \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(..y.label..,}
-                               \hlstr{"skins in year"}\hlstd{, ..x.label..)))} \hlopt{+}
-  \hlkwd{ylim}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{10000}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-14-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Of course, if one finds use for it, the peaks and/or valleys can be plotted on their own.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+}
-  \hlkwd{stat_peaks}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"line"}\hlstd{)} \hlopt{+} \hlkwd{stat_valleys}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"line"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-15-1} 
-
-}
-
-
-
-\end{knitrout}
-\subsection{Learning and/or debugging}
-
-A very simple stat named \code{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \code{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This stat may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx))} \hlopt{+} \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_debug}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.8}\hlstd{)}
+\hlnum{1} \hlopt{+} \hlnum{1}
 \end{alltt}
 \begin{verbatim}
-##        x    y nrow ncol           colnames group
-## 1 1877.5 3515  114    4 x, y, PANEL, group    -1
-##   PANEL
-## 1     1
+## [1] 2
 \end{verbatim}
-\end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-16-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{lynx.df}\hlopt{$}\hlstd{century} \hlkwb{<-} \hlkwd{ifelse}\hlstd{(lynx.df}\hlopt{$}\hlstd{year} \hlopt{>=} \hlnum{1900}\hlstd{,} \hlstr{"XX"}\hlstd{,} \hlstr{"XIX"}\hlstd{)}
-\hlkwd{ggplot}\hlstd{(lynx.df,} \hlkwd{aes}\hlstd{(year, lynx,} \hlkwc{color} \hlstd{= century))} \hlopt{+}
-  \hlkwd{geom_line}\hlstd{()} \hlopt{+}
-  \hlkwd{stat_debug}\hlstd{(}\hlkwc{alpha} \hlstd{=} \hlnum{0.8}\hlstd{,} \hlkwc{size} \hlstd{=} \hlkwd{rel}\hlstd{(}\hlnum{2.5}\hlstd{))}
+\hlnum{2} \hlopt{*} \hlnum{2}
 \end{alltt}
 \begin{verbatim}
-##      x    y nrow ncol                   colnames
-## 1 1860 3380   79    5 x, y, colour, PANEL, group
-##   group PANEL
-## 1     1     1
-##      x      y nrow ncol
-## 1 1917 3535.5   35    5
-##                     colnames group PANEL
-## 1 x, y, colour, PANEL, group     2     1
+## [1] 4
+\end{verbatim}
+\begin{alltt}
+\hlnum{2} \hlopt{+} \hlnum{10} \hlopt{/} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+## [1] 4
+\end{verbatim}
+\begin{alltt}
+\hlstd{(}\hlnum{2} \hlopt{+} \hlnum{10}\hlstd{)} \hlopt{/} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.4
+\end{verbatim}
+\begin{alltt}
+\hlnum{10}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}
+\end{alltt}
+\begin{verbatim}
+## [1] 101
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sqrt}\hlstd{(}\hlnum{9}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\begin{alltt}
+\hlstd{pi} \hlcom{# whole precision not shown when printing}
+\end{alltt}
+\begin{verbatim}
+## [1] 3.141593
+\end{verbatim}
+\begin{alltt}
+\hlkwd{print}\hlstd{(pi,} \hlkwc{digits}\hlstd{=}\hlnum{22}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3.1415926535897931
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sin}\hlstd{(pi)} \hlcom{# oops! Read on for explanation.}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.224606e-16
+\end{verbatim}
+\begin{alltt}
+\hlkwd{log}\hlstd{(}\hlnum{100}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 4.60517
+\end{verbatim}
+\begin{alltt}
+\hlkwd{log10}\hlstd{(}\hlnum{100}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+\begin{alltt}
+\hlkwd{log2}\hlstd{(}\hlnum{8}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{exp}\hlstd{(}\hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.718282
 \end{verbatim}
 \end{kframe}
-
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-17-1} 
-
-}
-
-
-
 \end{knitrout}
 
-\section[ggrepel]{\ggrepel}
-
-\subsection{New geoms}
-
-Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom\_label\_repel}. They are used similarly to \code{geom\_text} and \code{geom\_label} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded. 
+One can use variables to store values. Variable names and all other names in R are case sensitive. Variables \texttt{a} and \texttt{A} are two different variables. Variable names can be quite long, but usually it is not a good idea to use very long names. Here I am using very short names, that is usually a very bad idea. However, in cases like these examples where the stored values have no real connection to the real world and are used just once or twice, these names emphasize the abstract nature.
 
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggpmisc))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggrepel))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ggplot2))}
+\hlstd{a} \hlkwb{<-} \hlnum{1}
+\hlstd{a} \hlopt{+} \hlnum{1}
+\end{alltt}
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+\begin{alltt}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlnum{10}
+\hlstd{b} \hlkwb{<-} \hlstd{a} \hlopt{+} \hlstd{b}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 11
+\end{verbatim}
+\begin{alltt}
+\hlnum{3e-2} \hlopt{*} \hlnum{2.0}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.06
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The important thing is that you write commands consistently. \texttt{1 -> a} is valid but almost never used.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlstd{b} \hlkwb{<-} \hlstd{c} \hlkwb{<-} \hlnum{0.0}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{c}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlnum{1} \hlkwb{->} \hlstd{a}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlkwb{=} \hlnum{3}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Numeric variables can contain more than one value. Even single numbers are vectors of length one. We will later see why this is important. As you have seen above the results of calculations were printed preceded with \texttt{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the line.
+
+One can use \texttt{c} `concatenate' to create a vector of numbers from individual numbers.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{2}\hlstd{)}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 3 1 2
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,}\hlnum{5}\hlstd{,}\hlnum{0}\hlstd{)}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 4 5 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{c} \hlkwb{<-} \hlkwd{c}\hlstd{(a, b)}
+\hlstd{c}
+\end{alltt}
+\begin{verbatim}
+## [1] 3 1 2 4 5 0
+\end{verbatim}
+\begin{alltt}
+\hlstd{d} \hlkwb{<-} \hlkwd{c}\hlstd{(b, a)}
+\hlstd{d}
+\end{alltt}
+\begin{verbatim}
+## [1] 4 5 0 3 1 2
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+One can also create sequences, or repeat values:
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlopt{-}\hlnum{1}\hlopt{:}\hlnum{5}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] -1  0  1  2  3  4  5
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlnum{5}\hlopt{:-}\hlnum{1}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1]  5  4  3  2  1  0 -1
+\end{verbatim}
+\begin{alltt}
+\hlstd{c} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{by} \hlstd{=} \hlnum{0.1}\hlstd{)}
+\hlstd{c}
+\end{alltt}
+\begin{verbatim}
+##  [1] -1.0 -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2
+## [10] -0.1  0.0  0.1  0.2  0.3  0.4  0.5  0.6  0.7
+## [19]  0.8  0.9  1.0
+\end{verbatim}
+\begin{alltt}
+\hlstd{d} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlopt{-}\hlnum{5}\hlstd{,} \hlnum{4}\hlstd{)}
+\hlstd{d}
+\end{alltt}
+\begin{verbatim}
+## [1] -5 -5 -5 -5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Now something that makes R different from most other programming languages: vectorized arithmetic.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlopt{+} \hlnum{1} \hlcom{# we add one to vector a defined above}
+\end{alltt}
+\begin{verbatim}
+## [1] 0 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{(a} \hlopt{+} \hlnum{1}\hlstd{)} \hlopt{*} \hlnum{2}
+\end{alltt}
+\begin{verbatim}
+## [1]  0  2  4  6  8 10 12
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{+} \hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 4 4 4 4 4 4 4
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{-} \hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 0 0 0 0 0 0 0
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+It can be seen in first line above, another peculiarity of R, that frequently called recycling: as vector \texttt{a} is of length 6, but the constant 1 is a vector of length 1, this 1 is extended by recycling into a vector of the same length as the longest vector in the statement.
+
+Make sure you understand what calculations are taking place in the chunk above, and also the one below.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{6}\hlstd{)}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 1 1 1 1 1
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{+} \hlnum{1}\hlopt{:}\hlnum{2}
+\end{alltt}
+\begin{verbatim}
+## [1] 2 3 2 3 2 3
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{+} \hlnum{1}\hlopt{:}\hlnum{3}
+\end{alltt}
+\begin{verbatim}
+## [1] 2 3 4 2 3 4
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{+} \hlnum{1}\hlopt{:}\hlnum{4}
+\end{alltt}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning in a + 1:4: longer object length is not a multiple of shorter object length}}\begin{verbatim}
+## [1] 2 3 4 5 2 3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+A couple on useful things to know: a vector can have length zero. One can remove variables from the workspace with \texttt{rm}. One can use \texttt{ls()} to list all objects in the environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}. The pattern is given as a regular expression, with \verb|[]| enclosing alternative matching characters, \verb|^| and \verb|$| indicating the extremes of the name. For example \verb|"^z$"| matches only the single character `z' while \verb|"^z"| matches any name starting with `z'. In contrast \verb|"^[zy]$"| matches both `z' and `y' but neither `zy' nor `yz', and \verb|"^[a-z]"| matches any name starting with a lower case ASCII letter. If you are using RStudio, all objects are listed in the Environment pane, and the search box of the panel can be used to find a given object.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{z} \hlkwb{<-} \hlkwd{numeric}\hlstd{(}\hlnum{0}\hlstd{)}
+\hlstd{z}
+\end{alltt}
+\begin{verbatim}
+## numeric(0)
+\end{verbatim}
+\begin{alltt}
+\hlkwd{ls}\hlstd{(}\hlkwc{pattern}\hlstd{=}\hlstr{"^z$"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "z"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{rm}\hlstd{(z)}
+\hlkwd{try}\hlstd{(z)}
+\hlkwd{ls}\hlstd{(}\hlkwc{pattern}\hlstd{=}\hlstr{"^z$"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## character(0)
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+There are some special values available for numbers. \texttt{NA} meaning `not available' is used for missing values. Calculations can yield also the following values \texttt{NaN} `not a number', \texttt{Inf} and \texttt{-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlnum{NA}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlopt{-}\hlnum{1} \hlopt{/} \hlnum{0}
+\end{alltt}
+\begin{verbatim}
+## [1] -Inf
+\end{verbatim}
+\begin{alltt}
+\hlnum{1} \hlopt{/} \hlnum{0}
+\end{alltt}
+\begin{verbatim}
+## [1] Inf
+\end{verbatim}
+\begin{alltt}
+\hlnum{Inf} \hlopt{/} \hlnum{Inf}
+\end{alltt}
+\begin{verbatim}
+## [1] NaN
+\end{verbatim}
+\begin{alltt}
+\hlnum{Inf} \hlopt{+} \hlnum{4}
+\end{alltt}
+\begin{verbatim}
+## [1] Inf
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+One thing to be aware of, and which we will discuss again later, is that numbers in computers are almost always stored with finite precision. This means that they not always behave as Real numbers as defined in mathematics. In R the usual numbers are stored as \texttt{double-precision floats}, which means that there are limits to the largest and smallest numbers that can be represented (approx. $-1 \cdot 10^{308}$ and $1 \cdot 10^{308})$, and the number of significant digits that can be stored (usually described as $\epsilon$ (epsilon, abbreviated \texttt{eps}, defined as the largest number for which $ 1 + \epsilon = 1$)). This can be sometimes important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1. \label{par:float}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlnum{1} \hlopt{-} \hlnum{1e-20}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+It is usually safer not to test for equality to zero when working with numeric values. One alternative is comparing against a suitably small number, which will depend on the situation, although \code{eps} is usualy a safe bet, unless the expected range of values is known to be small.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{abs}\hlstd{(x)} \hlopt{<} \hlstd{eps}
+\hlkwd{abs}\hlstd{(x)} \hlopt{<} \hlnum{1e-100}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+
+The same applies to tests for equality, so whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be treated as above, for example replacing \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|.
+
+When comparing integer values these problems do not exist, as integer arithmetic is not afected by loss of precision in  calculations restricted to integers (the \code{L} comes from `long' a name sometimes used for a machine represenation of intergers):
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlnum{1L} \hlopt{+} \hlnum{3L}
+\end{alltt}
+\begin{verbatim}
+## [1] 4
+\end{verbatim}
+\begin{alltt}
+\hlnum{1L} \hlopt{*} \hlnum{3L}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\begin{alltt}
+\hlnum{1L} \hlopt{%/%} \hlnum{3L}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlnum{1L} \hlopt{/} \hlnum{3L}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.3333333
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The last example above, using the `usual' division operator yields a floating-point \code{numeric} result, while the integer division operator \verb|%/%| yields an integer result.
+
+\section{Examples with logical values}
+
+What in maths are usually called Boolean values, are called \texttt{logical} values in R. They can have only two values \texttt{TRUE} and \texttt{FALSE}, in addition to \texttt{NA}. They are vectors. There are also logical operators that allow boolean algebra (and some support for set operations that we will not describe here).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlnum{TRUE}
+\hlstd{b} \hlkwb{<-} \hlnum{FALSE}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlopt{!}\hlstd{a} \hlcom{# negation}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{&&} \hlstd{b} \hlcom{# logical AND}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{||} \hlstd{b} \hlcom{# logical OR}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Again vectorization is possible. I present this here, and will come back again to this, because this is one of the most troublesome aspects of the R language. The two types of `equivalent' logical operators behave very differently, but use very similar syntax! The vectorized operators have single-character names \verb|&| and \verb:|:, while the non vectorized ones have two double-character names \verb|&&| and \verb:||:. There is only one version of the negation operator \verb|!| that is vectorized.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{TRUE}\hlstd{,}\hlnum{FALSE}\hlstd{)}
+\hlstd{b} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{TRUE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1]  TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{&} \hlstd{b} \hlcom{# vectorized AND}
+\end{alltt}
+\begin{verbatim}
+## [1]  TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{|} \hlstd{b} \hlcom{# vectorized OR}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{&&} \hlstd{b} \hlcom{# not vectorized}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{||} \hlstd{b} \hlcom{# not vectorized}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Functions \code{any} and \code{all} take a logical vector as argument, and return a single logical value `summarizing' the logical values in the vector. \code{all} returns \code{TRUE} only if every value in the argument is \code{TRUE}, and \code{any} returns \code{TRUE} unless every value in the argument is \code{FALSE}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{any}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(a} \hlopt{&} \hlstd{b)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(a} \hlopt{&} \hlstd{b)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Another important thing to know about logical operators is that they `short-cut' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{||} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{FALSE} \hlopt{||} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{&&} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlnum{FALSE} \hlopt{&&} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{&&} \hlnum{FALSE} \hlopt{&&} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{&&} \hlnum{TRUE} \hlopt{&&} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlopt{&} \hlstd{b} \hlopt{&} \hlnum{NA}
+\end{alltt}
+\begin{verbatim}
+## [1]    NA FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{&} \hlstd{b} \hlopt{&} \hlkwd{c}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{NA}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1]    NA FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{|} \hlstd{b} \hlopt{|} \hlkwd{c}\hlstd{(}\hlnum{NA}\hlstd{,} \hlnum{NA}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\section{Comparison operators}
+
+Comparison operators yield as a result logical values.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlnum{1.2} \hlopt{>} \hlnum{1.0}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1.2} \hlopt{>=} \hlnum{1.0}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1.2} \hlopt{==} \hlnum{1.0} \hlcom{# be aware that here we use two = symbols}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1.2} \hlopt{!=} \hlnum{1.0}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1.2} \hlopt{<=} \hlnum{1.0}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1.2} \hlopt{<} \hlnum{1.0}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlnum{20}
+\hlstd{a} \hlopt{<} \hlnum{100} \hlopt{&&} \hlstd{a} \hlopt{>} \hlnum{10}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Again these operators can be used on vectors of any length, the result is a logical vector.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{10}
+\hlstd{a} \hlopt{>} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE
+##  [8]  TRUE  TRUE  TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{<} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+##  [1]  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE
+##  [8] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{==} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE  TRUE FALSE FALSE
+##  [8] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(a} \hlopt{>} \hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(a} \hlopt{>} \hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlstd{a} \hlopt{>} \hlnum{5}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE
+##  [8]  TRUE  TRUE  TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(b)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(b)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Be once more aware of `short-cut evaluation'. If the result would not be affected by the missing value then the result is returned. If the presence of the NA makes the end result unknown, then NA is returned.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{c} \hlkwb{<-} \hlkwd{c}\hlstd{(a,} \hlnum{NA}\hlstd{)}
+\hlstd{c} \hlopt{>} \hlnum{5}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE
+##  [8]  TRUE  TRUE  TRUE    NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(c} \hlopt{>} \hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(c} \hlopt{>} \hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(c} \hlopt{<} \hlnum{20}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(c} \hlopt{>} \hlnum{20}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.na}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+##  [8] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.na}\hlstd{(c)}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+##  [8] FALSE FALSE FALSE  TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(}\hlkwd{is.na}\hlstd{(c))}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(}\hlkwd{is.na}\hlstd{(c))}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+This behaviour can be changed by using the optional argument \texttt{na.rm} which removes NA values \textbf{before} the function is applied. (Many functions in R have this optional parameter.)
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{all}\hlstd{(c} \hlopt{<} \hlnum{20}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(c} \hlopt{>} \hlnum{20}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{all}\hlstd{(c} \hlopt{<} \hlnum{20}\hlstd{,} \hlkwc{na.rm}\hlstd{=}\hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{any}\hlstd{(c} \hlopt{>} \hlnum{20}\hlstd{,} \hlkwc{na.rm}\hlstd{=}\hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+You may skip this on first read, see page \pageref{par:float}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlnum{1e20} \hlopt{==} \hlnum{1} \hlopt{+} \hlnum{1e20}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{1} \hlopt{==} \hlnum{1} \hlopt{+} \hlnum{1e-20}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlnum{0} \hlopt{==} \hlnum{1e-20}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlopt{==} \hlnum{0.0} \hlcom{# may not always work}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+##  [8] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{abs}\hlstd{(a)} \hlopt{<} \hlnum{1e-15} \hlcom{# is safer}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+##  [8] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sin}\hlstd{(pi)} \hlopt{==} \hlnum{0.0} \hlcom{# angle in radians, not degrees!}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sin}\hlstd{(}\hlnum{2} \hlopt{*} \hlstd{pi)} \hlopt{==} \hlnum{0.0}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{abs}\hlstd{(}\hlkwd{sin}\hlstd{(pi))} \hlopt{<} \hlnum{1e-15}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{abs}\hlstd{(}\hlkwd{sin}\hlstd{(}\hlnum{2} \hlopt{*} \hlstd{pi))} \hlopt{<} \hlnum{1e-15}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sin}\hlstd{(pi)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.224606e-16
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sin}\hlstd{(}\hlnum{2} \hlopt{*} \hlstd{pi)}
+\end{alltt}
+\begin{verbatim}
+## [1] -2.449213e-16
+\end{verbatim}
+\begin{alltt}
+\hlstd{.Machine}\hlopt{$}\hlstd{double.eps} \hlcom{# see help for .Machine for explanation}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.220446e-16
+\end{verbatim}
+\begin{alltt}
+\hlstd{.Machine}\hlopt{$}\hlstd{double.neg.eps}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.110223e-16
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Character values}
+
+Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \texttt{"}, single quotes \texttt{'}, and back ticks \texttt{`}. The first two types of quotes can be used for delimiting characters.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlstr{"A"}
+\hlstd{b} \hlkwb{<-} \hlstd{letters[}\hlnum{2}\hlstd{]}
+\hlstd{c} \hlkwb{<-} \hlstd{letters[}\hlnum{1}\hlstd{]}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] "A"
+\end{verbatim}
+\begin{alltt}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] "b"
+\end{verbatim}
+\begin{alltt}
+\hlstd{c}
+\end{alltt}
+\begin{verbatim}
+## [1] "a"
+\end{verbatim}
+\begin{alltt}
+\hlstd{d} \hlkwb{<-} \hlkwd{c}\hlstd{(a, b, c)}
+\hlstd{d}
+\end{alltt}
+\begin{verbatim}
+## [1] "A" "b" "a"
+\end{verbatim}
+\begin{alltt}
+\hlstd{e} \hlkwb{<-} \hlkwd{c}\hlstd{(a, b,} \hlstr{"c"}\hlstd{)}
+\hlstd{e}
+\end{alltt}
+\begin{verbatim}
+## [1] "A" "b" "c"
+\end{verbatim}
+\begin{alltt}
+\hlstd{h} \hlkwb{<-} \hlstr{"1"}
+\hlkwd{try}\hlstd{(h} \hlopt{+} \hlnum{2}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Vectors of characters are not the same as character strings.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{f} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"1"}\hlstd{,} \hlstr{"2"}\hlstd{,} \hlstr{"3"}\hlstd{)}
+\hlstd{g} \hlkwb{<-} \hlstr{"123"}
+\hlstd{f} \hlopt{==} \hlstd{g}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{f}
+\end{alltt}
+\begin{verbatim}
+## [1] "1" "2" "3"
+\end{verbatim}
+\begin{alltt}
+\hlstd{g}
+\end{alltt}
+\begin{verbatim}
+## [1] "123"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+One can use the `other' type of quotes as delimiter when one want to include quotes in a string. Pretty-printing is changing what I typed into how the string is stored in R: I typed \texttt{b <- 'He said "hello" when he came in'}, try it.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlstr{"He said 'hello' when he came in"}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+## [1] "He said 'hello' when he came in"
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlstr{'He said "hello" when he came in'}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] "He said \"hello\" when he came in"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The outer quotes are not part of the string, they are `delimiters' used to mark the boundaries. As you can see when \texttt{b} is printed special characters can be represented using `escape sequences'. There are several of them, and here we will show just a few.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{c} \hlkwb{<-} \hlstr{"abc\textbackslash{}ndef\textbackslash{}txyz"}
+\hlkwd{print}\hlstd{(c)}
+\end{alltt}
+\begin{verbatim}
+## [1] "abc\ndef\txyz"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cat}\hlstd{(c)}
+\end{alltt}
+\begin{verbatim}
+## abc
+## def	xyz
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Above, you will not see any effect of these escapes when using \code{print}: \verb|\n| represents `new line' and \verb|\t| means `tab' (tabulator). The \textit{scape codes} work only in some contexts, as when using \code{cat} to generate the output. They also are very useful when one wants to split an axis-label, title or label in a plot into two or more lines.
+
+\section{Finding the `mode' of objects}
+
+Variables have \emph{mode} that determines what can be stored in them. But differently to other languages, assignment of a variable of a different mode is allowed. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode, while this is not required for lists. Functions with names starting with \code{is.} are tests returning \code{TRUE}, \code{FALSE} or \code{NA}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my_var} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{5}
+\hlkwd{mode}\hlstd{(my_var)}
+\end{alltt}
+\begin{verbatim}
+## [1] "numeric"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.numeric}\hlstd{(my_var)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.logical}\hlstd{(my_var)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.character}\hlstd{(my_var)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{my_var} \hlkwb{<-} \hlstr{"abc"}
+\hlkwd{mode}\hlstd{(my_var)}
+\end{alltt}
+\begin{verbatim}
+## [1] "character"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Type conversions}
+
+The least intuitive ones are those related to logical values. All others are as one would expect. By convention, functions used to convert objects from one mode to a different one have names starting with \code{as.}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{as.character}\hlstd{(}\hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "1"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.character}\hlstd{(}\hlnum{3.0e10}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "3e+10"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlstr{"1"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlstr{"5E+5"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 5e+05
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlstr{"A"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: NAs introduced by coercion}}\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{+} \hlnum{TRUE}
+\end{alltt}
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{+} \hlnum{FALSE}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlnum{TRUE} \hlopt{*} \hlnum{2}
+\end{alltt}
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+\begin{alltt}
+\hlnum{FALSE} \hlopt{*} \hlnum{2}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlstr{"T"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlstr{"t"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlstr{"TRUE"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlstr{"true"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlnum{100}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlnum{0}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.logical}\hlstd{(}\hlopt{-}\hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{f} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"1"}\hlstd{,} \hlstr{"2"}\hlstd{,} \hlstr{"3"}\hlstd{)}
+\hlstd{g} \hlkwb{<-} \hlstr{"123"}
+\hlkwd{as.numeric}\hlstd{(f)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(g)}
+\end{alltt}
+\begin{verbatim}
+## [1] 123
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Some tricks useful when dealing with results. Be aware that the printing is being done by default, these functions return numerical values.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{round}\hlstd{(}\hlnum{0.0124567}\hlstd{,} \hlnum{3}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.012
+\end{verbatim}
+\begin{alltt}
+\hlkwd{round}\hlstd{(}\hlnum{0.0124567}\hlstd{,} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+\begin{alltt}
+\hlkwd{round}\hlstd{(}\hlnum{0.0124567}\hlstd{,} \hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.01246
+\end{verbatim}
+\begin{alltt}
+\hlkwd{signif}\hlstd{(}\hlnum{0.0124567}\hlstd{,} \hlnum{3}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.0125
+\end{verbatim}
+\begin{alltt}
+\hlkwd{round}\hlstd{(}\hlnum{1789.1234}\hlstd{,} \hlnum{3}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1789.123
+\end{verbatim}
+\begin{alltt}
+\hlkwd{signif}\hlstd{(}\hlnum{1789.1234}\hlstd{,} \hlnum{3}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1790
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlnum{0.12345}
+\hlstd{b} \hlkwb{<-} \hlkwd{round}\hlstd{(a,} \hlnum{2}\hlstd{)}
+\hlstd{a} \hlopt{==} \hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{-} \hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.00345
+\end{verbatim}
+\begin{alltt}
+\hlstd{b}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.12
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Vectors}
+
+You already know how to create a vector. Now we are going to see how to get individual numbers out of a vector. They are accessed using an index. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. What in maths would be $x_i$ for a vector $x$, in R is represented as \texttt{x[i]}. (In R indexes (or subscripts) always start from one, while in some other programming languages indexes start from zero.)
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlstd{letters[}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{]}
+\hlstd{a}
+\end{alltt}
+\begin{verbatim}
+##  [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlnum{2}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## [1] "b"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{2}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "c" "b"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlnum{10}\hlopt{:}\hlnum{1}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+##  [1] "j" "i" "h" "g" "f" "e" "d" "c" "b" "a"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The examples below demonstrate what is the result of using a longer vector of indexes than the indexed vector. The length of the indexing vector has no restriction, but the acceptable range of values for the indexes is given by the length of the indexed vector.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{3}\hlstd{,}\hlnum{3}\hlstd{,}\hlnum{3}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "c" "c" "c" "c"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{10}\hlopt{:}\hlnum{1}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+##  [1] "j" "i" "h" "g" "f" "e" "d" "c" "b" "a" "a"
+## [12] "b" "c" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Negative indexes have a special meaning, they indicate the positions at which values should be excluded.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[}\hlopt{-}\hlnum{2}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## [1] "a" "c" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlopt{-}\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{2}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "a" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Results from indexing with out-of-range values may be surprising.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[}\hlnum{11}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlnum{1}\hlopt{:}\hlnum{11}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+##  [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j" NA
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Results from indexing with special values may be surprising.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[ ]}
+\end{alltt}
+\begin{verbatim}
+##  [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{numeric}\hlstd{(}\hlnum{0}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## character(0)
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlnum{NA}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+##  [1] NA NA NA NA NA NA NA NA NA NA
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{NA}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "a" NA
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwa{NULL}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## character(0)
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwa{NULL}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "a"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Another way of indexing, which is very handy, but not available in most other programming languages, is indexing with a vector of logical values. In practice, the vector of logical values used for `indexing' is in most cases of the same length as the vector from which elements are going to be selected. However, this is not a requirement, and if the logical vector is shorter it is `recycled' as discussed above in relation to operators.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[}\hlnum{TRUE}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+##  [1] "a" "b" "c" "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlnum{FALSE}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## character(0)
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{TRUE}\hlstd{,} \hlnum{FALSE}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "a" "c" "e" "g" "i"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[}\hlkwd{c}\hlstd{(}\hlnum{FALSE}\hlstd{,} \hlnum{TRUE}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1] "b" "d" "f" "h" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{a} \hlopt{>} \hlstr{"c"}
+\end{alltt}
+\begin{verbatim}
+##  [1] FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE
+##  [8]  TRUE  TRUE  TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a[a} \hlopt{>} \hlstr{"c"}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## [1] "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{selector} \hlkwb{<-} \hlstd{a} \hlopt{>} \hlstr{"c"}
+\hlstd{a[selector]}
+\end{alltt}
+\begin{verbatim}
+## [1] "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{which}\hlstd{(a} \hlopt{>} \hlstr{"c"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1]  4  5  6  7  8  9 10
+\end{verbatim}
+\begin{alltt}
+\hlstd{indexes} \hlkwb{<-} \hlkwd{which}\hlstd{(a} \hlopt{>} \hlstr{"c"}\hlstd{)}
+\hlstd{a[indexes]}
+\end{alltt}
+\begin{verbatim}
+## [1] "d" "e" "f" "g" "h" "i" "j"
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{10}
+\hlstd{b[selector]}
+\end{alltt}
+\begin{verbatim}
+## [1]  4  5  6  7  8  9 10
+\end{verbatim}
+\begin{alltt}
+\hlstd{b[indexes]}
+\end{alltt}
+\begin{verbatim}
+## [1]  4  5  6  7  8  9 10
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Factors}
+
+Factors are used for indicating categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \code{factor} are unordered or categorical. R has ordered factors, that can be created with function \code{ordered}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.vector} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"treated"}\hlstd{,} \hlstr{"treated"}\hlstd{,} \hlstr{"control"}\hlstd{,} \hlstr{"control"}\hlstd{,} \hlstr{"control"}\hlstd{,} \hlstr{"treated"}\hlstd{)}
+\hlstd{my.factor} \hlkwb{<-} \hlkwd{factor}\hlstd{(my.vector)}
+\hlstd{my.factor} \hlkwb{<-} \hlkwd{factor}\hlstd{(my.vector,} \hlkwc{levels}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"treatment"}\hlstd{,} \hlstr{"control"}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+It is always preferable to use meaningful names for levels, although it is possible to use numbers. The order of levels becomes important when plotting data, as it affects the order of the levels along the axes, or in legends. Converting factors to numbers, even if the levels look like numbers when displayed, they are just character strings.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.vector2} \hlkwb{<-} \hlkwd{rep}\hlstd{(}\hlnum{3}\hlopt{:}\hlnum{5}\hlstd{,} \hlnum{4}\hlstd{)}
+\hlstd{my.factor2} \hlkwb{<-} \hlkwd{factor}\hlstd{(my.vector2)}
+\hlkwd{as.numeric}\hlstd{(my.factor2)}
+\end{alltt}
+\begin{verbatim}
+##  [1] 1 2 3 1 2 3 1 2 3 1 2 3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.numeric}\hlstd{(}\hlkwd{as.character}\hlstd{(my.factor2))}
+\end{alltt}
+\begin{verbatim}
+##  [1] 3 4 5 3 4 5 3 4 5 3 4 5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Internally factor levels are stored as running numbers starting from zero, and those are the numbers returned by \code{as.numeric} applied to a factor.
+
+Factors are very important in R. In contrast to other statistical software in which the role of a variable is set when defining a model to be fitted or setting up a test, in R models are specified exactly in the same way for ANOVA and regression analysis, as linear models. What `decides' what type of model is fitted is whether the explanatory variable is a factor (giving ANOVA) or a numerical variable (giving regression). This makes a lot of sense, as in most cases, considering an explanatory variable as categorical or not, depends on the design of the experiment or survey, in other words, is a property of the data rather than of the analysis.
+
+\section{Lists}
+
+Elements of a \code{list} are not ordered, and can be of different type. Lists can be also nested. Elements in list are named, and normally are accessed by name. List are defined using function \code{list}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.list} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlkwc{y} \hlstd{=} \hlstr{"a"}\hlstd{,} \hlkwc{z} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{TRUE}\hlstd{,} \hlnum{FALSE}\hlstd{))}
+\hlstd{a.list}
+\end{alltt}
+\begin{verbatim}
+## $x
+## [1] 1 2 3 4 5 6
+## 
+## $y
+## [1] "a"
+## 
+## $z
+## [1]  TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{str}\hlstd{(a.list)}
+\end{alltt}
+\begin{verbatim}
+## List of 3
+##  $ x: int [1:6] 1 2 3 4 5 6
+##  $ y: chr "a"
+##  $ z: logi [1:2] TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.list}\hlopt{$}\hlstd{x}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.list[[}\hlstr{"x"}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.list[[}\hlnum{1}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.list[}\hlnum{1}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## $x
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.list[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{3}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## $x
+## [1] 1 2 3 4 5 6
+## 
+## $z
+## [1]  TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{try}\hlstd{(a.list[[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{3}\hlstd{)]])}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Using double square brackets for indexing gives the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, \code{a.list[[c(1,3)]]}.
+
+\section{Data frames}
+
+Data frames are a special type of list, in which each element is a vector or a factor of the same length. The are crested with function \code{data.frame} with a syntax similar to that used for lists. When a shorter vector is supplied as argument, it is recycled, until the full length of the variable is filled. This is very different to what we obtained in the previous section when we created a list.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlkwc{y} \hlstd{=} \hlstr{"a"}\hlstd{,} \hlkwc{z} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{TRUE}\hlstd{,} \hlnum{FALSE}\hlstd{))}
+\hlstd{a.df}
+\end{alltt}
+\begin{verbatim}
+##   x y     z
+## 1 1 a  TRUE
+## 2 2 a FALSE
+## 3 3 a  TRUE
+## 4 4 a FALSE
+## 5 5 a  TRUE
+## 6 6 a FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{str}\hlstd{(a.df)}
+\end{alltt}
+\begin{verbatim}
+## 'data.frame':	6 obs. of  3 variables:
+##  $ x: int  1 2 3 4 5 6
+##  $ y: Factor w/ 1 level "a": 1 1 1 1 1 1
+##  $ z: logi  TRUE FALSE TRUE FALSE TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df}\hlopt{$}\hlstd{x}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[[}\hlstr{"x"}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[[}\hlnum{1}\hlstd{]]}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlkwd{class}\hlstd{(a.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] "data.frame"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+R is an object oriented language, and objects belong to classes. With function \code{class} we can query the class of an object. As we saw in the two previous chunks lists and data frames objects belong to two different classes.
+
+We can add also to lists and data frames.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.df}\hlopt{$}\hlstd{x2} \hlkwb{<-} \hlnum{6}\hlopt{:}\hlnum{1}
+\hlstd{a.df}\hlopt{$}\hlstd{x3} \hlkwb{<-} \hlstr{"b"}
+\hlstd{a.df}
+\end{alltt}
+\begin{verbatim}
+##   x y     z x2 x3
+## 1 1 a  TRUE  6  b
+## 2 2 a FALSE  5  b
+## 3 3 a  TRUE  4  b
+## 4 4 a FALSE  3  b
+## 5 5 a  TRUE  2  b
+## 6 6 a FALSE  1  b
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. Data frames are extremely important to anyone analysing or plotting data in R. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can to some extent be treated as elements in a list, and can be accessed both by name or index (position). When accessed by name, using \code{\$} or double square brackets a single column is returned as a vector or factor. In contrast to lists, data frames are `rectangular' and for this reason the values stored can be also accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors indexes can be vectors of integer numbers or vectors of logical values. For columns they can be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.df[ ,} \hlnum{1}\hlstd{]}   \hlcom{# first column}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[ ,} \hlstr{"x"}\hlstd{]} \hlcom{# first column}
+\end{alltt}
+\begin{verbatim}
+## [1] 1 2 3 4 5 6
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[}\hlnum{1}\hlstd{, ]}    \hlcom{# first row}
+\end{alltt}
+\begin{verbatim}
+##   x y    z x2 x3
+## 1 1 a TRUE  6  b
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[}\hlnum{1}\hlopt{:}\hlnum{2}\hlstd{,} \hlkwd{c}\hlstd{(}\hlnum{FALSE}\hlstd{,} \hlnum{FALSE}\hlstd{,} \hlnum{TRUE}\hlstd{,} \hlnum{FALSE}\hlstd{,} \hlnum{FALSE}\hlstd{)]}
+\end{alltt}
+\begin{verbatim}
+## [1]  TRUE FALSE
+\end{verbatim}
+\begin{alltt}
+             \hlcom{# first two rows of the third column}
+\hlstd{a.df[a.df}\hlopt{$}\hlstd{z , ]} \hlcom{# the rows for which z is true}
+\end{alltt}
+\begin{verbatim}
+##   x y    z x2 x3
+## 1 1 a TRUE  6  b
+## 3 3 a TRUE  4  b
+## 5 5 a TRUE  2  b
+\end{verbatim}
+\begin{alltt}
+\hlstd{a.df[a.df}\hlopt{$}\hlstd{x} \hlopt{>} \hlnum{3}\hlstd{,} \hlopt{-}\hlnum{3}\hlstd{]} \hlcom{# the rows for which x > 3 for}
+\end{alltt}
+\begin{verbatim}
+##   x y x2 x3
+## 4 4 a  3  b
+## 5 5 a  2  b
+## 6 6 a  1  b
+\end{verbatim}
+\begin{alltt}
+                 \hlcom{# all columns except the third one}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+When the names of data frames are long, complex conditions become awkward to write. In such cases \code{subset} is handy because evaluation is done in the `environment' of the data frame, i.e.\ the names of the columns are recognized if entered directly.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{subset}\hlstd{(a.df, x} \hlopt{>} \hlnum{3}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   x y     z x2 x3
+## 4 4 a FALSE  3  b
+## 5 5 a  TRUE  2  b
+## 6 6 a FALSE  1  b
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+When calling functions that return a vector, data farme, or other structure, the square brackets can be appended to the rightmost parenthesis of the function call, in the same way as to the name of a variable holding the same data.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{subset}\hlstd{(a.df, x} \hlopt{>} \hlnum{3}\hlstd{)[ ,} \hlopt{-}\hlnum{3}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+##   x y x2 x3
+## 4 4 a  3  b
+## 5 5 a  2  b
+## 6 6 a  1  b
+\end{verbatim}
+\begin{alltt}
+\hlkwd{subset}\hlstd{(a.df, x} \hlopt{>} \hlnum{3}\hlstd{)}\hlopt{$}\hlstd{x}
+\end{alltt}
+\begin{verbatim}
+## [1] 4 5 6
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original \code{a.df}. The next to examples do assignment to \code{a.df}, but either to only one columns, or by indexing the individual values in both the `right side' and `left side' of the assignment.
+Another way to delete a column from a data frame is to assign \code{NULL} to it.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.df[[}\hlstr{"x2"}\hlstd{]]} \hlkwb{<-} \hlkwa{NULL}
+\hlstd{a.df}\hlopt{$}\hlstd{x3} \hlkwb{<-} \hlkwa{NULL}
+\hlstd{a.df}
+\end{alltt}
+\begin{verbatim}
+##   x y     z
+## 1 1 a  TRUE
+## 2 2 a FALSE
+## 3 3 a  TRUE
+## 4 4 a FALSE
+## 5 5 a  TRUE
+## 6 6 a FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In the previous code chuck we deleted the last two columns of the data frame \code{a.df}.
+Finally an esoteric trick for you think about.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a.df[}\hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{3}\hlstd{)]} \hlkwb{<-} \hlstd{a.df[}\hlnum{6}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,}\hlnum{1}\hlstd{)]}
+\hlstd{a.df}
+\end{alltt}
+\begin{verbatim}
+##   x y z
+## 1 0 a 6
+## 2 1 a 5
+## 3 0 a 4
+## 4 1 a 3
+## 5 0 a 2
+## 6 1 a 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\section{Simple built-in statistical functions}
+
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. we will start with the simple ones.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{x} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{20}
+\hlkwd{mean}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 10.5
+\end{verbatim}
+\begin{alltt}
+\hlkwd{var}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 35
+\end{verbatim}
+\begin{alltt}
+\hlkwd{median}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 10.5
+\end{verbatim}
+\begin{alltt}
+\hlkwd{mad}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 7.413
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sd}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 5.91608
+\end{verbatim}
+\begin{alltt}
+\hlkwd{range}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1]  1 20
+\end{verbatim}
+\begin{alltt}
+\hlkwd{max}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 20
+\end{verbatim}
+\begin{alltt}
+\hlkwd{min}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1
+\end{verbatim}
+\begin{alltt}
+\hlkwd{length}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] 20
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Functions and execution flow control}
+
+Although functions can be defined and used at the command prompt, we will discuss them when looking at scripts. We will do the same in the case of flow-control statements (e.g.\ repetition and conditional execution).
+
+
+
+
+
+
+
+
 
 
 
@@ -405,19 +2080,8 @@ Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom
 ## [1] stringr_1.0.0 knitr_1.12   
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] ggrepel_0.4.2    Rcpp_0.12.3     
-##  [3] splus2R_1.2-0    digest_0.6.9    
-##  [5] assertthat_0.1   dplyr_0.4.3     
-##  [7] R6_2.1.1         grid_3.2.3      
-##  [9] plyr_1.8.3       DBI_0.3.1       
-## [11] ggpmisc_0.2.0    gtable_0.1.2    
-## [13] formatR_1.2.1    magrittr_1.5    
-## [15] evaluate_0.8     scales_0.3.0    
-## [17] highr_0.5.1      ggplot2_2.0.0   
-## [19] stringi_1.0-1    lazyeval_0.1.10 
-## [21] labeling_0.3     munsell_0.4.2   
-## [23] parallel_3.2.3   colorspace_1.2-6
-## [25] methods_3.2.3
+## [1] magrittr_1.5  formatR_1.2.1 stringi_1.0-1
+## [4] highr_0.5.1   methods_3.2.3 evaluate_0.8
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
