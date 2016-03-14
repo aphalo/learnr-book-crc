@@ -128,7 +128,7 @@ We can assign to a variable defined outside a function with operator \texttt{<<-
 
 Now we will define a useful function: a function for calculating the standard error of the mean from a numeric vector.
 
-<<fun-1>>=
+<<fun-1NN>>=
 SEM <- function(x){sqrt(var(x)/length(x))}
 a <- c(1, 2, 3, -5)
 a.na <- c(a, NA)
@@ -193,7 +193,7 @@ The R function \texttt{lm} is used next to fit a linear regression.
 
 <<models-1>>=
 fm1 <- lm(dist ~ speed, data=cars) # we fit a model, and then save the result
-plot(fm1) # we produce diagnosis plots
+plot(fm1, which = 2) # we produce diagnosis plots
 summary(fm1) # we inspect the results from the fit
 anova(fm1) # we calculate an ANOVA
 @
@@ -202,7 +202,7 @@ Let's look at each step separately: \texttt{dist ~ speed} is the specification o
 
 <<models-2>>=
 fm2 <- lm(dist ~ speed - 1, data=cars) # we fit a model, and then save the result
-plot(fm2) # we produce diagnosis plots
+plot(fm2, which = 2) # we produce diagnosis plots
 summary(fm2) # we inspect the results from the fit
 anova(fm2) # we calculate an ANOVA
 @
@@ -211,12 +211,21 @@ We now we fit a second degree polynomial.
 
 <<models-3>>=
 fm3 <- lm(dist ~ speed + I(speed^2), data=cars) # we fit a model, and then save the result
-plot(fm3) # we produce diagnosis plots
+plot(fm3, which = 3) # we produce diagnosis plots
 summary(fm3) # we inspect the results from the fit
 anova(fm3) # we calculate an ANOVA
 @
 
-We can also compare the two models.
+The ``same'' fit using an orthogonal polynomial.
+
+<<models-3a>>=
+fm3a <- lm(dist ~ poly(speed, 2), data=cars) # we fit a model, and then save the result
+plot(fm3a, which = 3) # we produce diagnosis plots
+summary(fm3a) # we inspect the results from the fit
+anova(fm3a) # we calculate an ANOVA
+@
+
+We can also compare two models.
 
 <<models-4>>=
 anova(fm2, fm1)
@@ -225,10 +234,22 @@ anova(fm2, fm1)
 Or three or more models. But be careful, as the order of the arguments matters.
 
 <<models-5>>=
-anova(fm2, fm1, fm3)
+anova(fm2, fm1, fm3, fm3a)
 @
 
 We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC) that penalize the result based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
+
+<<>>=
+BIC(fm2, fm1, fm3, fm3a)
+AIC(fm2, fm1, fm3, fm3a)
+@
+
+One can see above that these three criteria ``select'' different models as best.
+\begin{description}
+\item[anova] \code{fm1}
+\item[BIC] \code{fm1}
+\item[AIC] \code{fm3}
+\end{description}
 
 \section{Control of execution flow}
 
@@ -271,28 +292,50 @@ As you can see above the statement immediately following \texttt{else} is execut
 Do you still remember the rules about continuation lines?
 
 <<auxiliary, echo=FALSE, eval=TRUE>>=
+show.results <- TRUE
 if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
+eval.if.4
+show.results <- FALSE
+if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
+eval.if.4
 @
 
-<<if-4, eval=eval.if.4>>=
+<<if-4>>=
 # 1
+a <- 1
 if (a < 0.0)
   print("'a' is negative") else
     print("'a' is not negative")
+@
+
+Why does the statement below (not here) trigger an error?
+
+<<if-4a, eval=FALSE>>=
 # 2 (not evaluated here)
 if (a < 0.0) print("'a' is negative")
 else print("'a' is not negative")
 @
 
-Why does only the second example above trigger an error?
-
 Play with the use conditional execution, with both simple and compound statements, and also think how to combine \texttt{if} and \texttt{else} to select among more than two options.
 
-There is in R a \texttt{switch} statement, that we will not describe here, that can be used to select among ``cases'', or several alternative statements, based on an expression evaluating to a number or a character string.
+There is in R a \texttt{switch} statement, that we describe here, which can be used to select among ``cases'', or several alternative statements, based on an expression evaluating to a number or a character string. The switch statement returns a value, the value returned by the code corresponding to the matching switch value, or the default if there is no match, and a default has been included in the code. Both character values or numeric values can used.
+
+<<>>=
+my.object <- "two"
+b <- switch(my.object,
+            one = 1,
+            two = 1 / 2,
+            three = 1/ 4,
+            0
+)
+b
+@
+
+Do play with the use of the switch statement.
 
 \subsubsection{Vectorized}
 
-The vectorized conditional execution is coded by means of a \textbf{function} called \texttt{ifelse} (one word). This function takes three arguments: a logical vector, a result vector for TRUE, a result vector for FALSE. All three can be any construct giving the necessary argument as their result. In the case of result vectors, recycling will apply if they are not of the correct length. \textcolor{red}{The length of the result is determined by the length of the logical vector in the first argument!}.
+Vectorized conditional execution is coded by means of a \textbf{function} called \texttt{ifelse} (one word). This function takes three arguments: a logical vector, a result vector for TRUE, a result vector for FALSE. All three can be any construct giving the necessary argument as their return value. In the case of result vectors, recycling will apply if they are not of the correct length. \textcolor{red}{The length of the result is determined by the length of the logical vector in the first argument!}.
 
 <<ifelse-1>>=
 a <- 1:10
@@ -523,20 +566,11 @@ In R speak `library' is the location where `packages' are installed. Packages ar
 library(graphics)
 @
 
-Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible.
+Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \code{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repos. These later installations are always installations from source (see below).
 
 R packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under MS-Windows, very rarely the needed shell, commands and compilers are already available. Installing then is not too difficult (you will need RTools, and MiKTeX). For this reason it is the norm to install packages from binary .zip files. Under Linux most tools will be available, or very easy to install, so it is not unusual to install from sources. For OS X (Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from source from within RStudio.
 
 The development of packages is beyond the scope of the current course, but it is still interesting to know a few things about packages. Using RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folder for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the R help system when the package is loaded. In addition to R code, packages can call C, C++, FORTRAN, Java, etc. functions and routines, but some kind of `glue' is needed, as data is stored differently. At least for C++, the recently developed Rcpp R package makes the gluing extremely easy.
-
-In addition to some packages from CRAN, later in the course we will use a suite of packages for photobiology that I have developed during the last couple of years. Some of the functions in these packages are very simple, and others more complex. In one of the packages, I included some C++ functions to improve performance. Replacing some R for loops with C++ for loops and iterators, resulted in a huge speed increase. The reason for this is that R is an interpreted language and C++ is compiled into machine code. Recent versions of R allow byte-compilation which can give some speed improvement, without need to switch to another language.
-
-The source code for the photobiology and many other packages is freely available, so if you are interested you can study it. For any function defined in R, typing at the command prompt the name of the function without the parentheses lists the code.
-
-<<packages-2>>=
-length  # a function defined in C within R itself
-SEM # the function we defined earlier
-@
 
 One good way of learning how R works, is by experimenting with it, and whenever using a certain function looking at the help, to check what are all the available options.
 
