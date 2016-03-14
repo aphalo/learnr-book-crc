@@ -6,13 +6,13 @@
 \author{Pedro J. Aphalo}
 \date{Git: tag\gitVtagn , committed with hash \gitAbbrevHash\ on \gitAuthorIsoDate}
 
-% using Lucida bright using now free package from PC TeX
-\usepackage[lucidasmallscale,nofontinfo,seriftt=true,math-style=iso]{lucimatx}
-% replace option altbullet
-\renewcommand{\labelitemi}{%
-{\UseTextSymbol{OMS}\textbullet}}
-% needed for Lucida
-\linespread{1.04}
+%% using Lucida bright using now free package from PC TeX
+%\usepackage[lucidasmallscale,nofontinfo,seriftt=true,math-style=iso]{lucimatx}
+%% replace option altbullet
+%\renewcommand{\labelitemi}{%
+%{\UseTextSymbol{OMS}\textbullet}}
+%% needed for Lucida
+%\linespread{1.04}
 
 \usepackage[footinfo, missing={`none'}]{gitinfo} % remember to setup Git hooks
 
@@ -106,7 +106,7 @@ This is work-in-progress. I will appreciate suggestions for further examples, no
 
 
 
-\chapter[Plots with ggpplot, ggrepel and ggpmisc]{Plots with \ggplot, \ggrepel and \ggpmisc}\label{chap:R:plotting}
+\chapter[Plots with ggpplot, ggrepel and ggpmisc]{Plots with `ggplot', `ggrepel' and `ggpmisc'}\label{chap:R:plotting}
 
 \section{Packages used in this chapter}
 
@@ -118,6 +118,7 @@ For executing the examples listed in this chapter you need first to load the fol
 \hlkwd{library}\hlstd{(ggplot2)}
 \hlkwd{library}\hlstd{(ggrepel)}
 \hlkwd{library}\hlstd{(ggpmisc)}
+\hlkwd{library}\hlstd{(xts)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -136,11 +137,62 @@ We set a font larger size than the default
 
 \section[ggpmisc]{\ggpmisc}
 
+Package \ggpmisc is a small package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching.
+
+\subsection{Plotting time-series}
+
+Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_data\_frame()} accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a very simple wrapper to obtain a data frame.
+
+We exemplify this with some of the time series data included in R. In the first example we use the default format for time.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwd{try_data_frame}\hlstd{(austres),}
+       \hlkwd{aes}\hlstd{(time, V.austres))} \hlopt{+}
+  \hlkwd{geom_line}\hlstd{()}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-10-1} 
+
+}
+
+
+
+\end{knitrout}
+
+In the second example we use years in numeric format for expressing `time'.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwd{try_data_frame}\hlstd{(lynx,} \hlstr{"year"}\hlstd{,} \hlkwc{as.numeric} \hlstd{=} \hlnum{TRUE}\hlstd{),}
+       \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= time,} \hlkwc{y} \hlstd{= V.lynx))} \hlopt{+}
+  \hlkwd{geom_line}\hlstd{()}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-11-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Multivariate time series are also supported.
+
 \subsection{New stats}
 
 Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()}, and \code{stat\_poly\_eq()}. Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
 
 \subsection{Peaks and valleys}
+
+There are many cases, for example in physics and chemistry, but also when plotting time-series data when we need to automatically locate and label local maxima (peaks) or local minima (valleys) in curves. The statistics presented here are useful only for dense data as they do not fit a peak function but instead simply search for the local maxima or minima in the observed data. However, they allow flexible generation of labels on both $x$ and $y$ peak or valley coordinates.
+
+We use as example the same time series as above. In the next several examples we demonstrate some of this flexibility.
+
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -163,7 +215,7 @@ Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-11-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-13-1} 
 
 }
 
@@ -183,7 +235,7 @@ Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-12-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-14-1} 
 
 }
 
@@ -202,7 +254,7 @@ Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-13-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-15-1} 
 
 }
 
@@ -232,7 +284,7 @@ Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-14-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-16-1} 
 
 }
 
@@ -250,7 +302,327 @@ Of course, if one finds use for it, the peaks and/or valleys can be plotted on t
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-15-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-17-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\subsection{Equations as labels in plots}
+
+How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \code{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
+
+We first generate some artificial data.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{4321}\hlstd{)}
+\hlcom{# generate artificial data}
+\hlstd{x} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{100}
+\hlstd{y} \hlkwb{<-} \hlstd{(x} \hlopt{+} \hlstd{x}\hlopt{^}\hlnum{2} \hlopt{+} \hlstd{x}\hlopt{^}\hlnum{3}\hlstd{)} \hlopt{+}
+  \hlkwd{rnorm}\hlstd{(}\hlkwd{length}\hlstd{(x),} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlkwd{mean}\hlstd{(x}\hlopt{^}\hlnum{3}\hlstd{)} \hlopt{/} \hlnum{4}\hlstd{)}
+\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(x, y,}
+                      \hlkwc{group} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{),}
+                      \hlkwc{y2} \hlstd{= y} \hlopt{*} \hlkwd{c}\hlstd{(}\hlnum{0.5}\hlstd{,}\hlnum{2}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+First an example using default arguments.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-19-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\code{stat\_poly\_eq()} makes available five different labels in the returned data frame. $R^2$, $R_mathrm{adj}^2$, AIC, BIC and the polynomial equation. $R^2$ is used by default, but \code{aes()} can be used to select a different one.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..adj.rr.label..),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-20-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+  \hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..AIC.label..),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-21-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-22-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Within \code{aes()} it is possible to \textit{compute} new labels based on those returned plus ``arbitrary'' text. The supplied labels are meant to be \textit{parsed} into R expressions, so any text added should be valid for a string that will be parsed.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(..eq.label..,}
+                                 \hlstd{..adj.rr.label..,}
+                                 \hlkwc{sep} \hlstd{=} \hlstr{"~~~~"}\hlstd{)),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-23-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(}\hlstr{"atop("}\hlstd{, ..AIC.label..,} \hlstr{","}\hlstd{,}
+                                       \hlstd{..BIC.label..,} \hlstr{")"}\hlstd{,}
+
+                                       \hlkwc{sep} \hlstd{=} \hlstr{""}\hlstd{)),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-24-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Two examples of removing or changing the \textit{lhs} and/or the \textit{rhs} of the equation. (Be aware that the equals sign must be always enclosed in backticks in a string that will be parsed.)
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{eq.with.lhs} \hlstd{=} \hlstr{"italic(hat(y))~`=`~"}\hlstd{,}
+\hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-25-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{labs}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{expression}\hlstd{(}\hlkwd{italic}\hlstd{(z)),} \hlkwc{y} \hlstd{=} \hlkwd{expression}\hlstd{(}\hlkwd{italic}\hlstd{(h)) )} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{eq.with.lhs} \hlstd{=} \hlstr{"italic(h)~`=`~"}\hlstd{,}
+               \hlkwc{eq.x.rhs} \hlstd{=} \hlstr{"~italic(z)"}\hlstd{,}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-26-1} 
+
+}
+
+
+
+\end{knitrout}
+
+As any valid R expression can be used, Greek letters are also supported, as well as the inclusion in the label of variable transformations used in the model formula.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{2}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x,} \hlkwd{log10}\hlstd{(y} \hlopt{+} \hlnum{1e6}\hlstd{)))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{eq.with.lhs} \hlstd{=} \hlstr{"plain(log)[10](italic(y)+10^6)~`=`~"}\hlstd{,}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-27-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Example of a polynomial of fifth order.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{5}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-28-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Intercept forced to zero---line through the origin.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x} \hlopt{+} \hlkwd{I}\hlstd{(x}\hlopt{^}\hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{I}\hlstd{(x}\hlopt{^}\hlnum{3}\hlstd{)} \hlopt{-} \hlnum{1}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-29-1} 
+
+}
+
+
+
+\end{knitrout}
+
+We give some additional examples to demonstrate how other components of the \code{ggplot}
+object affect the behaviour of this statistic.
+
+Facets work as expected either with fixed or free scales. Although bellow we
+had to adjust the size of the font used for the equation.
+
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y2))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),} \hlcom{# size = rel(2.8),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{group)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.95\textwidth]{figure/pos-unnamed-chunk-31-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Grouping, in this example using colour aesthetic also works as expected, but we
+need to use vjust to prevent the two equation labels to overlap.
+
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{3}\hlstd{,} \hlkwc{raw} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(my.data,} \hlkwd{aes}\hlstd{(x, y2,} \hlkwc{colour} \hlstd{= group))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_smooth}\hlstd{(}\hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= formula)} \hlopt{+}
+  \hlkwd{stat_poly_eq}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= ..eq.label..),} \hlkwc{vjust} \hlstd{=} \hlkwd{c}\hlstd{(}\hlopt{-}\hlnum{8}\hlstd{,} \hlnum{0}\hlstd{),}
+               \hlkwc{formula} \hlstd{= formula,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
+  \hlkwd{theme_bw}\hlstd{()} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{legend.position} \hlstd{=} \hlstr{"top"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-33-1} 
 
 }
 
@@ -270,7 +642,7 @@ A very simple stat named \code{stat\_debug()} can save the work of adding print 
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-16-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-34-1} 
 
 }
 
@@ -288,7 +660,7 @@ A very simple stat named \code{stat\_debug()} can save the work of adding print 
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-17-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-35-1} 
 
 }
 
@@ -297,6 +669,13 @@ A very simple stat named \code{stat\_debug()} can save the work of adding print 
 \end{knitrout}
 
 \section[ggrepel]{\ggrepel}
+
+Package \ggrepel is under development by Kamil Slowikowski. It does a single
+thing, relocates text labels so that they do not overlap. This is achieved through
+two geometries that work similarly to those provided by \ggplot except for the
+relocation. This is incredibly useful both when labeling peaks and valleys and when
+labeling points in scatter-plots. This is a significant problem in bioinformatics
+plots and in maps.
 
 \subsection{New geoms}
 
@@ -311,7 +690,77 @@ Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-18-1} 
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-36-1} 
+
+}
+
+
+
+\end{knitrout}
+
+For the time being I reproduce here a couple of examples from the package
+vignette.
+
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(mtcars,} \hlkwd{aes}\hlstd{(wt, mpg))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{color} \hlstd{=} \hlstr{'red'}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_text_repel}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{rownames}\hlstd{(mtcars)))}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-38-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{42}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(mtcars)} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwd{aes}\hlstd{(wt, mpg),} \hlkwc{size} \hlstd{=} \hlnum{5}\hlstd{,} \hlkwc{color} \hlstd{=} \hlstr{'grey'}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_label_repel}\hlstd{(}
+  \hlkwd{aes}\hlstd{(wt, mpg,} \hlkwc{fill} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{label} \hlstd{=} \hlkwd{rownames}\hlstd{(mtcars)),}
+      \hlkwc{fontface} \hlstd{=} \hlstr{'bold'}\hlstd{,} \hlkwc{color} \hlstd{=} \hlstr{'white'}\hlstd{,}
+      \hlkwc{box.padding} \hlstd{=} \hlkwd{unit}\hlstd{(}\hlnum{0.25}\hlstd{,} \hlstr{"lines"}\hlstd{),}
+      \hlkwc{point.padding} \hlstd{=} \hlkwd{unit}\hlstd{(}\hlnum{0.5}\hlstd{,} \hlstr{"lines"}\hlstd{))} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{legend.position} \hlstd{=} \hlstr{"top"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-39-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{42}\hlstd{)}
+\hlkwd{ggplot}\hlstd{(Orange,} \hlkwd{aes}\hlstd{(age, circumference,} \hlkwc{color} \hlstd{= Tree))} \hlopt{+}
+  \hlkwd{geom_line}\hlstd{()} \hlopt{+}
+  \hlkwd{coord_cartesian}\hlstd{(}\hlkwc{xlim} \hlstd{=} \hlkwd{c}\hlstd{(}\hlkwd{min}\hlstd{(Orange}\hlopt{$}\hlstd{age),} \hlkwd{max}\hlstd{(Orange}\hlopt{$}\hlstd{age)} \hlopt{+} \hlnum{90}\hlstd{))} \hlopt{+}
+  \hlkwd{geom_text_repel}\hlstd{(}\hlkwc{data} \hlstd{=} \hlkwd{subset}\hlstd{(Orange, age} \hlopt{==} \hlkwd{max}\hlstd{(age)),}
+                  \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{=} \hlkwd{paste}\hlstd{(}\hlstr{"Tree"}\hlstd{, Tree)),}
+                  \hlkwc{size} \hlstd{=} \hlnum{6}\hlstd{,}
+                  \hlkwc{nudge_x} \hlstd{=} \hlnum{45}\hlstd{,}
+                  \hlkwc{segment.color} \hlstd{=} \hlnum{NA}\hlstd{)} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{legend.position} \hlstd{=} \hlstr{"none"}\hlstd{)} \hlopt{+}
+  \hlkwd{labs}\hlstd{(}\hlkwc{x} \hlstd{=} \hlstr{"Age (days)"}\hlstd{,} \hlkwc{y} \hlstd{=} \hlstr{"Circumference (mm)"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.63\textwidth]{figure/pos-unnamed-chunk-40-1} 
 
 }
 
@@ -362,7 +811,7 @@ Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom
 \end{alltt}
 \begin{verbatim}
 ##        sysname        release        version 
-##      "Windows"       "10 x64"  "build 10240" 
+##      "Windows"       "10 x64"  "build 10586" 
 ##       nodename        machine          login 
 ##        "MUSTI"       "x86-64"       "aphalo" 
 ##           user effective_user 
@@ -379,9 +828,9 @@ Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom
 \hlkwd{sessionInfo}\hlstd{()}
 \end{alltt}
 \begin{verbatim}
-## R version 3.2.3 Patched (2016-01-26 r70013)
+## R version 3.2.4 (2016-03-10)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 10240)
+## Running under: Windows 10 x64 (build 10586)
 ## 
 ## locale:
 ## [1] LC_COLLATE=English_United States.1252 
@@ -395,22 +844,24 @@ Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom
 ## [5] utils     datasets  base     
 ## 
 ## other attached packages:
-## [1] stringr_1.0.0 knitr_1.12.3 
+## [1] xts_0.9-7     zoo_1.7-12    stringr_1.0.0
+## [4] knitr_1.12.3 
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] ggrepel_0.5        Rcpp_0.12.3       
-##  [3] splus2R_1.2-0      digest_0.6.9      
-##  [5] assertthat_0.1     dplyr_0.4.3       
-##  [7] R6_2.1.2           grid_3.2.3        
-##  [9] plyr_1.8.3         DBI_0.3.1         
-## [11] ggpmisc_0.2.5.9000 gtable_0.1.2      
-## [13] formatR_1.2.1      magrittr_1.5      
-## [15] evaluate_0.8       scales_0.3.0      
-## [17] highr_0.5.1        ggplot2_2.0.0     
-## [19] stringi_1.0-1      lazyeval_0.1.10   
-## [21] labeling_0.3       munsell_0.4.3     
-## [23] parallel_3.2.3     colorspace_1.2-6  
-## [25] methods_3.2.3
+##  [1] Rcpp_0.12.3        magrittr_1.5      
+##  [3] munsell_0.4.3      colorspace_1.2-6  
+##  [5] lattice_0.20-33    R6_2.1.2          
+##  [7] highr_0.5.1        plyr_1.8.3        
+##  [9] dplyr_0.4.3        splus2R_1.2-0     
+## [11] ggpmisc_0.2.6.9001 parallel_3.2.4    
+## [13] grid_3.2.4         gtable_0.2.0      
+## [15] DBI_0.3.1          digest_0.6.9      
+## [17] lazyeval_0.1.10    assertthat_0.1    
+## [19] ggplot2_2.1.0      formatR_1.3       
+## [21] ggrepel_0.5.1      evaluate_0.8.3    
+## [23] labeling_0.3       stringi_1.0-1     
+## [25] methods_3.2.4      scales_0.4.0      
+## [27] polynom_1.3-8      lubridate_1.5.0
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
