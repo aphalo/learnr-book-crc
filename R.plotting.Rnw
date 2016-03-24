@@ -42,7 +42,7 @@ What separates \ggplot from base-R and trellis/lattice plotting functions is the
 The grammar of graphics is based on aesthetics (\code{aes}) as for example color, geometric elements \code{geom\_\ldots} such as lines, and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, labels \code{labs}, and themes \code{theme\_\ldots}. Plots are assembled from these elements, we start with a plot with two aesthetics, and one geometry. In the examples that follow we will use the \code{mtcars} data set included in R. To learn more about this data set, \code{help("mtcars")} at the R command prompt.
 
 <<>>=
-ggplot(data = mtcars, aes(x = disp, y = mpg)) + 
+ggplot(data = mtcars, aes(x = disp, y = mpg)) +
   geom_point()
 @
 
@@ -61,15 +61,15 @@ ggplot(mtcars, aes(disp, mpg)) +
 Data variables can be `mapped' to \textit{aesthetics}, variables can be either continuous (numeric) or discrete (categorical, factor). Variable \code{cyl} is encoded in the \code{mtcars} dataframe as numeric values. Even though only three values are present, a continuous color scale is used by default.
 
 <<>>=
-ggplot(data = mtcars, 
-       aes(x = disp, y = mpg, colour = cyl)) + 
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = cyl)) +
   geom_point()
 @
 
 Some scales exist in two `flavours', one suitable for continuous variables and another for discrete variables. For now we will just use the default scales, but later on we will see how to alter them. We can convert \code{cyl} into a factor `on-the-fly' to force the use of a discrete color scale.
 
 <<>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = disp, y = mpg, colour = factor(cyl))) +
   geom_point()
 @
@@ -77,7 +77,7 @@ ggplot(data = mtcars,
 Using an aesthetic, involves mapping of values in the data to aesthetic values such as colours. The mapping is defined by means of scales. If we now consider the \code{colour} aesthetic in the previous statement, a default discrete colour scale was used. In this case if we would like different colours used for the three values, but still have them selected automatically, we can select a different colour palette:
 
 <<>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = disp, y = mpg, fill = factor(cyl))) +
   geom_point(size = rel(2)) +
   scale_color_brewer(type = "div", palette = 8) +
@@ -87,7 +87,7 @@ ggplot(data = mtcars,
 Data assigned to an aesthetic can be the `result of a computation'. In other words, the values to be plotted do not need to be stored in the data frame passed as argument to \code{data}, the first formal parameter of \code{ggplot()}
 
 <<>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = factor(cyl), y = mpg / disp)) +
   geom_point()
 @
@@ -95,13 +95,13 @@ ggplot(data = mtcars,
 Within \code{aes()} the aesthetics are interpreted as being a function of the values in the data. If given outside \code{aes()} they are interpreted as constants values, which apply to one geom if given within the call to \code{geom\_xxx} but outside \code{aes()}. The aesthetics and data given as \code{ggplot()}'s arguments become the defaults for all the geoms, but geoms also accept aesthetics and data as arguments, which when supplied as arguments override the whole-plot defaults. In the example below, we override the default colour of the points.
 
 <<>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = factor(cyl), y = mpg / disp)) +
   geom_point(color = "red")
 @
 
 <<>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = factor(cyl), y = mpg / disp, color = factor(cyl))) +
   geom_point()
 @
@@ -218,7 +218,11 @@ ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
    geom_smooth(colour="black", alpha=0.7) + geom_point()
 @
 
-\section{Adding fitted curves, including splines}
+\section{Plotting summaries}
+
+The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \code{xlim()} and \code{ylim}. See section \ref{???} for a way of constraining the viewport (the region visible in the plot) while keeping the scale limits on a wider range of $x$ and $y$ values.
+
+\subsection{Fitted curves, including splines}
 
 We will now show an example of the use of \code{stat\_smooth} accepting the default spline smoothing.
 
@@ -246,7 +250,7 @@ myplot + stat_smooth(method="lm")
 
 It is possible to use other types of models, including GAM and GLM, as smoothers, but we will not give examples of the use these more advanced models.
 
-\section{Adding statistical ``summaries''}
+\subsection{Statistical ``summaries''}
 
 It is also possible to summarize data on-the-fly when plotting, but before showing this we will generate some normally distributed artificial data:
 
@@ -426,6 +430,197 @@ ggplot(my.data, aes(x, y, label = label)) +
 
 See R's `plotmath' demo for more information on the syntax of expressions.
 
+\section{Circular plots}
+
+Under circular plots I include pie charts. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
+
+Pie charts are more difficult to read: our brain is more comfortable at comparing
+lengths than angles. If used, they should only be used to show composition, or
+fractional components that add up to a total. In this case only if the number of
+“pie slices” is small (rule of thumb: less seven).
+
+A funny example stolen from the \ggplot website at \url{http://docs.ggplot2.org/current/coord_polar.html}.
+
+<<>>=
+# Hadley's favourite pie chart
+df <- data.frame(
+  variable = c("resembles", "does not resemble"),
+  value = c(80, 20)
+)
+ggplot(df, aes(x = "", y = value, fill = variable)) +
+  geom_bar(width = 1, stat = "identity") +
+  scale_fill_manual(values = c("red", "yellow")) +
+  coord_polar("y", start = pi / 3) +
+  labs(title = "Pac man")
+@
+
+Something just a bit more useful, also stolen from the same page:
+
+<<>>=
+# A pie chart = stacked bar chart + polar coordinates
+pie <- ggplot(data = mtcars, aes(x = factor(1), fill = factor(cyl))) +
+         geom_bar(width = 1)
+pie + coord_polar(theta = "y")
+@
+
+\section{Bar plots}
+
+\section{Pie charts vs.\ bar plots example}
+
+There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
+
+Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
+
+<<>>=
+example.data <-
+  data.frame(values = c(17, 18, 20, 22, 23,
+                        20, 20, 19, 21, 20,
+                        23, 22, 20, 18, 17),
+             examples= rep(c("A", "B", "C"), c(5,5,5)),
+             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
+  )
+
+ggplot(example.data, aes(x=cols, y=values, fill=cols)) +
+  geom_bar(width = 1, stat="identity") +
+  facet_grid(.~examples) +
+  scale_fill_identity()
+ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
+  geom_bar(width = 1, stat="identity") +
+  facet_grid(.~examples) +
+  scale_fill_identity() +
+  coord_polar(theta="y")
+@
+
+\section{Frequencies and densities}
+
+\subsection{Marginal rug plots}
+
+Rarely rug-plots are used by themselves. Instead they are usually an addition to
+scatter plots. An example follows. They make it easier to see the distribution
+along the $x$- and $y$-axes.
+
+We generate new fake data by random sampling from the normal distribution. We use \code{set.seed(1234)} to initialize the pseudo-random number generator so that
+the same data are generated each time the code is run.
+
+<<>>=
+set.seed(1234)
+my.data <-
+  data.frame(x = rnorm(100),
+             y = c(rnorm(50, -1, 1), rnorm(50, 1, 1)),
+             group = factor(rep(c("A", "B"), c(50, 50))) )
+@
+
+<<>>=
+ggplot(my.data, aes(x, y, colour = group)) +
+  geom_point() +
+  geom_rug()
+@
+
+\subsection{Histograms}
+
+<<>>=
+ggplot(my.data, aes(x)) +
+  geom_histogram(bins = 15)
+@
+
+<<>>=
+ggplot(my.data, aes(y, fill = group)) +
+  geom_histogram(bins = 15, position = "dodge")
+@
+
+<<>>=
+ggplot(my.data, aes(y, fill = group)) +
+  geom_histogram(bins = 15, position = "stack")
+@
+
+<<>>=
+ggplot(my.data, aes(y, fill = group)) +
+  geom_histogram(bins = 15, position = "identity", alpha = 0.5) +
+  theme_bw(16)
+@
+
+\subsection{Density plots}
+
+<<>>=
+ggplot(my.data, aes(x, colour = group)) +
+  geom_density()
+@
+
+<<>>=
+ggplot(my.data, aes(y, colour = group)) +
+  geom_density()
+@
+
+<<>>=
+ggplot(my.data, aes(y, fill = group)) +
+  geom_density(alpha = 0.5)
+@
+
+<<>>=
+ggplot(my.data, aes(x, y, colour = group)) +
+  geom_point() +
+  geom_rug() +
+  geom_density_2d()
+@
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<>>=
+ggplot(my.data, aes(x, y)) +
+  geom_density_2d() +
+  facet_wrap(~group)
+@
+
+<<>>=
+ggplot(my.data, aes(x, y)) +
+stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  facet_wrap(~group)
+@
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+\subsection{Box and whiskers plots}
+
+<<>>=
+ggplot(my.data, aes(group, y)) +
+  geom_boxplot()
+@
+
+\subsection{Violin plots}
+
+<<>>=
+ggplot(my.data, aes(group, y)) +
+  geom_violin()
+@
+
+<<>>=
+ggplot(my.data, aes(group, y, fill = group)) +
+  geom_violin(alpha = 0.16) +
+  geom_point(alpha = 0.33, size = rel(4),
+             colour = "black", shape = 21)
+@
+
+\section{Special plots}
+
+In this section we present some bare-bones examples of specialized plots. More elaborate versions are presented in later chapters using extensions to \ggplot.
+
+\subsection{Heat maps}
+
+
+
+\subsection{Volcano plots}
+
+A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
+
+<<>>=
+fake_expression.data <- NA
+
+@
+
 \section{Using facets}
 
 Sets of coordinated plots are a very useful tool for visualizing data. These became popular through the \code{trellis} graphs in S, and the \code{lattice} package in R. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets along a single `axis' but wrapped into several rows. In the examples below we use \code{geom\_point} but faceting can be used with any \code{ggplot} object (even with maps, spectra and ternary plots produced by functions in packages \ggmap, \ggspectra and \ggtern.
@@ -583,159 +778,6 @@ fig2log <- ggplot(fake2.data, aes(z, log10(y))) + geom_point()
 
 When combining scale transformations and summaries, one should be aware of which data are used, transformed or not.
 
-\section{Circular plots}
-
-Under circular plots I include pie charts. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
-
-Pie charts are more difficult to read: our brain is more comfortable at comparing
-lengths than angles. If used, they should only be used to show composition, or
-fractional components that add up to a total. In this case only if the number of
-“pie slices” is small (rule of thumb: less seven).
-
-A funny example stolen from the \ggplot website at \url{http://docs.ggplot2.org/current/coord_polar.html}.
-
-<<>>=
-# Hadley's favourite pie chart
-df <- data.frame(
-  variable = c("resembles", "does not resemble"),
-  value = c(80, 20)
-)
-ggplot(df, aes(x = "", y = value, fill = variable)) +
-  geom_bar(width = 1, stat = "identity") +
-  scale_fill_manual(values = c("red", "yellow")) +
-  coord_polar("y", start = pi / 3) +
-  labs(title = "Pac man")
-@
-
-Something just a bit more useful, also stolen from the same page:
-
-<<>>=
-# A pie chart = stacked bar chart + polar coordinates
-pie <- ggplot(data = mtcars, aes(x = factor(1), fill = factor(cyl))) +
-         geom_bar(width = 1)
-pie + coord_polar(theta = "y")
-@
-
-\section{Bar plots}
-
-\section{Pie charts vs.\ bar plots example}
-
-There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
-
-Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
-
-<<>>=
-example.data <-
-  data.frame(values = c(17, 18, 20, 22, 23,
-                        20, 20, 19, 21, 20,
-                        23, 22, 20, 18, 17),
-             examples= rep(c("A", "B", "C"), c(5,5,5)),
-             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
-  )
-
-ggplot(example.data, aes(x=cols, y=values, fill=cols)) +
-  geom_bar(width = 1, stat="identity") +
-  facet_grid(.~examples) +
-  scale_fill_identity()
-ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
-  geom_bar(width = 1, stat="identity") +
-  facet_grid(.~examples) +
-  scale_fill_identity() +
-  coord_polar(theta="y")
-@
-
-\section{Frequencies and densities}
-
-\subsection{Marginal rug plots}
-
-Rarely rug-plots are used by themselves. Instead they are usually an addition to
-scatter plots. An example follows. They make it easier to see the distribution
-along the $x$- and $y$-axes.
-
-We generate new fake data by random sampling from the normal distribution. We use \code{set.seed(1234)} to initialize the pseudo-random number generator so that
-the same data are generated each time the code is run.
-
-<<>>=
-set.seed(1234)
-my.data <-
-  data.frame(x = rnorm(100),
-             y = c(rnorm(50, -1, 1), rnorm(50, 1, 1)),
-             group = factor(rep(c("A", "B"), c(50, 50))) )
-@
-
-<<>>=
-ggplot(my.data, aes(x, y, colour = group)) +
-  geom_point() +
-  geom_rug()
-@
-
-\subsection{Histograms}
-
-<<>>=
-ggplot(my.data, aes(x)) +
-  geom_histogram(bins = 15)
-@
-
-<<>>=
-ggplot(my.data, aes(y, fill = group)) +
-  geom_histogram(bins = 15, position = "dodge")
-@
-
-<<>>=
-ggplot(my.data, aes(y, fill = group)) +
-  geom_histogram(bins = 15, position = "stack")
-@
-
-<<>>=
-ggplot(my.data, aes(y, fill = group)) +
-  geom_histogram(bins = 15, position = "identity", alpha = 0.5) +
-  theme_bw(16)
-@
-
-\subsection{Density plots}
-
-<<>>=
-ggplot(my.data, aes(x, colour = group)) +
-  geom_density()
-@
-
-<<>>=
-ggplot(my.data, aes(y, colour = group)) +
-  geom_density()
-@
-
-<<>>=
-ggplot(my.data, aes(y, fill = group)) +
-  geom_density(alpha = 0.5)
-@
-
-<<>>=
-ggplot(my.data, aes(x, y, colour = group)) +
-  geom_point() +
-  geom_rug() +
-  geom_density_2d()
-@
-
-\subsection{Box and whiskers plots}
-
-<<>>=
-ggplot(my.data, aes(group, y)) +
-  geom_boxplot()
-@
-
-\subsection{Violin plots}
-
-<<>>=
-ggplot(my.data, aes(group, y)) +
-  geom_violin()
-@
-
-<<>>=
-ggplot(my.data, aes(group, y, fill = group)) +
-  geom_violin(alpha = 0.16) +
-  geom_point(alpha = 0.33, size = rel(4),
-             colour = "black", shape = 21)
-@
 
 \section{Adding annotations}
 
@@ -776,7 +818,7 @@ We will revisit the example from the previous section, but now using subscripted
 
 <<>>=
 my.data <-
-  data.frame(x = 1:5, y = rep(2, 5), 
+  data.frame(x = 1:5, y = rep(2, 5),
              label = paste("alpha[", 1:5, "]", sep = ""))
 my.data$greek.label <- paste("alpha[", my.data$x, "]", sep="")
 (fig <- ggplot(my.data, aes(x,y,label=greek.label)) +
@@ -890,10 +932,6 @@ ggplot(my.anscombe, aes(x,y)) +
   facet_wrap(~case, ncol=2) +
   theme_bw(16)
 @
-
-\subsection{Volcano plots}
-
-A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
 
 
 
