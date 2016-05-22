@@ -1,0 +1,145 @@
+\chapter{R built-in functions}
+
+
+\section{Loading data}
+
+To start with we need some data. Here we use \texttt{cars}, a data set included in base R.
+
+<<data-1>>=
+data(cars)
+@
+
+\section{Looking at the data}
+
+<<plot-1>>=
+names(cars)
+head(cars)
+tail(cars)
+str(cars)
+@
+
+The \texttt{cars} data are stored as a data frame. Data frames consist in columns of equal length. The different columns can be different types (e.g.\ numeric and character). With \texttt{data()} we load it; with \texttt{names()} we obtain the names of the variables or columns. With head with can see the top several lines, and with tail the lines at the end. In general \texttt{data()} is used load R objects saved in a file format used by R. Text files con be read with functions \texttt{scan()}, \texttt{read.table()}, \texttt{read.csv()} and their variants.
+
+It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in R urls are accepted as arguments to the \texttt{file} argument.
+
+\section{Plotting}
+
+The built-in generic function \texttt{plot} can be used to plot data. It is a generic function, that has suitable methods for different kinds of objects. In this section we only very briefly demonstrate the use of the most common base R's graphics functions.
+
+<<plot-2>>=
+plot(dist ~ speed, data=cars)
+@
+
+\section{Fitting linear models}
+
+One important thing to remember is that model `formulas' are used in different contexts: plotting, fitting of models, and tests like $t$-test. The basic syntax is rather consistently followed, although there are some exceptions.
+
+\subsection{Regression}
+
+The R function \texttt{lm} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. In the example below, \texttt{speed} is a numeric variable (floating point in this case). In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \texttt{speed} has only one degree of freedom (df) for the denominator.
+
+We first fit the model and save the output as \texttt{fm1} (A name I invented to remind myself that this is the first fitted-model in this chapter.
+
+<<models-1>>=
+fm1 <- lm(dist ~ speed, data=cars)
+@
+
+The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably fulfilled? In R it is most common to use plots to this end. We show here only one of the four plots normally produced. This quantile vs.\ quantile plot allows to assess how much the residuals deviate from being normally distributed.
+
+<<models-1a>>=
+plot(fm1, which = 2)
+@
+
+In the case of a regression, calling \texttt{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. \texttt{anova()} applied to the same fitted object, returns the ANOVA table.
+
+<<models-1b>>=
+summary(fm1) # we inspect the results from the fit
+anova(fm1) # we calculate an ANOVA
+@
+
+Let's look at each argument separately: \texttt{dist ~ speed} is the specification of the model to be fitted. The intercept is always implicitly included. To `remove' this implicit intercept from the earlier model we can use \texttt{dist ~ speed - 1}. In what follows we fit a straight line through the origin ($x = 0$, $y = 0$).
+
+<<models-2>>=
+fm2 <- lm(dist ~ speed - 1, data=cars)
+plot(fm2, which = 2)
+summary(fm2)
+anova(fm2)
+@
+
+We now we fit a second degree polynomial.
+
+<<models-3>>=
+fm3 <- lm(dist ~ speed + I(speed^2), data=cars) # we fit a model, and then save the result
+plot(fm3, which = 3) # we produce diagnosis plots
+summary(fm3) # we inspect the results from the fit
+anova(fm3) # we calculate an ANOVA
+@
+
+The ``same'' fit using an orthogonal polynomial. Higher degrees can be obtained by supplying as second argument to \texttt{poly()} a different positive integer value.
+
+<<models-3a>>=
+fm3a <- lm(dist ~ poly(speed, 2), data=cars) # we fit a model, and then save the result
+plot(fm3a, which = 3) # we produce diagnosis plots
+summary(fm3a) # we inspect the results from the fit
+anova(fm3a) # we calculate an ANOVA
+@
+
+We can also compare two models, to test whether one of models describes the data better than the other.
+
+<<models-4>>=
+anova(fm2, fm1)
+@
+
+Or three or more models. But be careful, as the order of the arguments matters.
+
+<<models-5>>=
+anova(fm2, fm1, fm3, fm3a)
+@
+
+We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC and BIC penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
+
+<<>>=
+BIC(fm2, fm1, fm3, fm3a)
+AIC(fm2, fm1, fm3, fm3a)
+@
+
+One can see above that these three criteria not necessarily agree on which is the model to be chosen.
+
+\begin{description}
+\item[anova] \code{fm1}
+\item[BIC] \code{fm1}
+\item[AIC] \code{fm3}
+\end{description}
+
+\subsection{Analysis of variance, ANOVA}\label{sec:anova}
+
+We use as the \texttt{InsectSpray} data set, giving insect counts in plots sprayed with different insecticides. In these data \texttt{spray} is a factor with six levels.
+
+<<models-6>>=
+fm4 <- lm(count ~ spray, data = InsectSprays)
+@
+
+<<model-6a>>=
+plot(fm4, which = 2)
+@
+
+<<model-6b>>=
+anova(fm4)
+@
+
+\subsection{Analysis of covariance, ANCOVA}
+
+When a linear model includes both explanatory factors and continuous explanatory variables, we say that analysis of covariance (ANCOVA) is used. The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
+
+\section{Generalized linear models}
+
+Linear models make the assumption of normally distributed residuals. Generalized linear models are more flexible, and allow the assumed distribution to be selected as well as the link function.
+For the analysis of the \texttt{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
+
+For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal.
+
+<<model-10>>=
+fm10 <- glm(count ~ spray, data = InsectSprays, family = quasipoisson)
+plot(fm10, which = 2)
+anova(fm10, test = "F")
+@
