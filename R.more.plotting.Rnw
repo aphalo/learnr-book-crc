@@ -5,7 +5,7 @@ opts_chunk$set(opts_fig_wide)
 opts_knit$set(concordance=TRUE)
 @
 
-\chapter[ggrepel and ggpmisc]{Packages `ggrepel' and `ggpmisc'}\label{chap:R:plotting}
+\chapter[Extensions to ggplot]{Extensions to \ggplot}\label{chap:R:more:ggplotting}
 
 \section{Packages used in this chapter}
 
@@ -16,6 +16,7 @@ library(ggplot2)
 library(ggrepel)
 library(ggpmisc)
 library(xts)
+library(MASS)
 @
 
 We set a font larger size than the default
@@ -34,7 +35,8 @@ getwd()
 
 \section[ggpmisc]{\ggpmisc}
 
-Package \ggpmisc is a small package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching.
+\sloppy
+Package \ggpmisc is a package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching. It provides new stats for everyday use: \code{stat\_peaks()}, \code{stat\_valleys()}, \code{stat\_poly\_eq()}, \code{stat\_fit\_glance()}, \code{stat\_fit\_deviations()}, and \code{stat\_fit\_augment()}. A function for converting time-series data to a data frame that can be easily plotted with `ggplot2'. It also provides some debugging tools that echo the data received as input: \code{stat\_debug\_group()}, \code{stat\_debug\_panel()}, and code{geom\_debug()}, and \code{geom\_null()} that does not plot its input.
 
 \subsection{Plotting time-series}
 
@@ -58,11 +60,9 @@ ggplot(try_data_frame(lynx, "year", as.numeric = TRUE),
 
 Multivariate time series are also supported.
 
-\subsection{New stats}
-
-Package \ggpmisc provides new stats: \code{stat\_peaks()}, \code{stat\_valleys()}, and \code{stat\_poly\_eq()}. Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
-
 \subsection{Peaks and valleys}
+
+Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
 
 There are many cases, for example in physics and chemistry, but also when plotting time-series data when we need to automatically locate and label local maxima (peaks) or local minima (valleys) in curves. The statistics presented here are useful only for dense data as they do not fit a peak function but instead simply search for the local maxima or minima in the observed data. However, they allow flexible generation of labels on both $x$ and $y$ peak or valley coordinates.
 
@@ -144,7 +144,10 @@ my.data <- data.frame(x, y,
                       y2 = y * c(0.5,2))
 @
 
-First an example using default arguments.
+\subsubsection{Linear models}
+
+This section shows examples of linear models with one independent variables, including different polynomials.
+We first give an example using default arguments.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -281,13 +284,12 @@ formula <- y ~ poly(x, 3, raw = TRUE)
 ggplot(my.data, aes(x, y2)) +
   geom_point() +
   geom_smooth(method = "lm", formula = formula) +
-  stat_poly_eq(aes(label = ..eq.label..), # size = rel(2.8),
+  stat_poly_eq(aes(label = ..eq.label..), # size = 2.8,
                formula = formula, parse = TRUE) +
   facet_wrap(~group)
 @
 
-Grouping, in this example using colour aesthetic also works as expected, but we
-need to use vjust to prevent the two equation labels to overlap.
+Grouping, in this example using colour aesthetic also works as expected.
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_narrow)
@@ -298,10 +300,118 @@ formula <- y ~ poly(x, 3, raw = TRUE)
 ggplot(my.data, aes(x, y2, colour = group)) +
   geom_point() +
   geom_smooth(method = "lm", formula = formula) +
-  stat_poly_eq(aes(label = ..eq.label..), vjust = c(-8, 0),
+  stat_poly_eq(aes(label = ..eq.label..),
                formula = formula, parse = TRUE) +
   theme_bw() +
   theme(legend.position = "top")
+@
+
+\subsubsection{Other types of models}
+
+Another statistic, \texttt{stat\_fit\_glance()} allows lots of flexibility, but at the moment there is no equivalently flexible version of \texttt{stat\_smooth()}.
+
+We give an example with a linear model, showing a P-value (a frequent request for which I do not find much use).
+
+We use \texttt{geom\_debug()} to find out what values \texttt{stat\_glance()} returns for our linear model, and add labels with P-values for the fits.
+
+<<>>=
+formula <- y ~ x + I(x^2) + I(x^3)
+ggplot(my.data, aes(x, y2, colour = group)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_fit_glance(method.args = list(formula = formula),
+                  geom = "debug",
+                  summary.fun = print,
+                  summary.fun.args = list()) +
+  theme_bw() +
+  theme(legend.position = "top")
+@
+
+Using the information now at hand we create some labels.
+<<>>=
+formula <- y ~ x + I(x^2) + I(x^3)
+ggplot(my.data, aes(x, y2, colour = group)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_fit_glance(aes(label = paste('italic(P)~`=`~', signif(..p.value.., 3)), sep = ""),
+                  parse = TRUE,
+                  method.args = list(formula = formula),
+                  geom = "text") +
+  theme_bw() +
+  theme(legend.position = "top")
+@
+
+We use \texttt{geom\_debug()} to find out what values \texttt{stat\_glance()} returns for our resistant linear model fitted with \texttt{MASS:rlm()}.
+
+<<>>=
+formula <- y ~ x + I(x^2) + I(x^3)
+ggplot(my.data, aes(x, y2, colour = group)) +
+  geom_point() +
+  geom_smooth(method = "rlm", formula = formula) +
+  stat_fit_glance(method.args = list(formula = formula),
+                  geom = "debug",
+                  method = "rlm",
+                  summary.fun = print,
+                  summary.fun.args = list()) +
+  theme_bw() +
+  theme(legend.position = "top")
+@
+
+Using the information now at hand we create some labels.
+<<>>=
+formula <- y ~ x + I(x^2) + I(x^3)
+ggplot(my.data, aes(x, y2, colour = group)) +
+  geom_point() +
+  geom_smooth(method = "rlm", formula = formula) +
+  stat_fit_glance(aes(label = paste('AIC~`=`~', signif(..AIC.., 3),
+                      "~~", 'BIC~`=`~', signif(..BIC.., 3), sep = "")),
+                  parse = TRUE,
+                  method = "rlm",
+                  method.args = list(formula = formula),
+                  geom = "text") +
+  theme_bw() +
+  theme(legend.position = "top")
+@
+
+In a similar way one can generate labels for any fit supported by package 'broom'.
+
+\subsection{Highlighting deviations from fitted line}
+
+First an example using default arguments.
+
+<<>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_fit_deviations(formula = formula)
+@
+
+<<>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+ggplot(my.data, aes(x, y)) +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_fit_deviations(formula = formula, color = "red",
+                      arrow = arrow(length = unit(0.015, "npc"),
+                                   ends = "both")) +
+  geom_point()
+@
+
+<<>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+ggplot(my.data, aes(x, y, colour = group)) +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_fit_deviations(formula = formula) +
+  geom_point()
+@
+
+\subsection{Plotting residuals from linear fit}
+
+<<>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+ggplot(my.data, aes(x, y, colour = group)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_fit_residuals(formula = formula)
 @
 
 \subsection{Learning and/or debugging}
@@ -351,7 +461,7 @@ ggplot(lynx.df, aes(year, lynx)) +
 For the time being I reproduce here a couple of examples from the package
 vignette.
 
-<<echo=FALSE>>=
+<<>>=
 opts_chunk$set(opts_fig_wide_square)
 @
 
@@ -402,11 +512,10 @@ my.anscombe <- data.frame(x = my.mat[ , 1],
 @
 
 <<>>=
-ggplot(my.anscombe, aes(x,y)) +
+ggplot(my.anscombe, aes(x = x, y = y)) +
   geom_point(shape=21, fill="orange", size=3) +
   geom_smooth(method="lm") +
   stat_poly_eq(formula = y ~ x, parse = TRUE,
-               label.x = 5, label.y = 14,
                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~~"))) +
   facet_wrap(~case, ncol=2) +
   theme_bw(16)
@@ -415,11 +524,11 @@ ggplot(my.anscombe, aes(x,y)) +
 \subsection{Volcano plots}
 
 
-
-\subsection{``Star'' plots}
+\subsection{Quadrat plots}
 
 <<>>=
 try(detach(package:ggpmisc))
+try(detach(package:xts))
 try(detach(package:ggrepel))
 try(detach(package:ggplot2))
 @
