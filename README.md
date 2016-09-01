@@ -5,7 +5,7 @@
 This repository contains draft chapters of a book titled _Learning R... as you learnt your mother tongue_. 
 Some of these chapters started as teaching notes and others as appendixes to a handbook. However, they grew too big to be appendixes. 
 
-### Is the book available as a PDF file for dwonload? ###
+### Is the book available as a PDF file for download? ###
 
 Yes, the book draft is available for download at (http://leanpub.com/learnr).
 
