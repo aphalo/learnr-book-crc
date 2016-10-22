@@ -1,0 +1,124 @@
+\subsection{Gantt charts}
+
+Example from Richie Cotton's answer at \url{http://stackoverflow.com/a/3556020/2419892}.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(reshape2)}
+\hlkwd{library}\hlstd{(ggplot2)}
+\hlkwd{library}\hlstd{(ggpmisc)}
+\hlkwd{library}\hlstd{(tibble)}
+\hlkwd{library}\hlstd{(dplyr)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# \\\#\# Attaching package: 'dplyr'}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following objects are masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  filter, lag}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following objects are masked from 'package:base':\\\#\# \\\#\#\ \ \ \  intersect, setdiff, setequal, union}}\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{tasks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"Screen for photoreceptor mutants (M. truncatula)"}\hlstd{,}
+           \hlstr{"Transfer photoreceptor mutants to accessions (M. truncatula)"}\hlstd{,}
+           \hlstr{"Exp. with accessions (M. truncatula)"}\hlstd{,}
+           \hlstr{"Exp. with photoreceptor mutants (M. truncatula)"}\hlstd{,}
+           \hlstr{"Exp. with cultivars/lines (V. faba)"}\hlstd{,}
+           \hlstr{"Exp. with segregating pop. (V. fava)"}\hlstd{,}
+           \hlstr{"Exp. with photoreceptor mutants (A. thaliana)"}\hlstd{,}
+           \hlstr{"Exp. with accessions (A. thaliana)"}\hlstd{)}
+\hlstd{tasks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"Screen for photoreceptor mutants (\textbackslash{}\textbackslash{}emph\{M. truncatula\})"}\hlstd{,}
+           \hlstr{"Transfer photoreceptor mutants to accessions (\textbackslash{}\textbackslash{}emph\{M. truncatula\})"}\hlstd{,}
+           \hlstr{"Exp. with accessions (\textbackslash{}\textbackslash{}emph\{M. truncatula\})"}\hlstd{,}
+           \hlstr{"Exp. with photoreceptor mutants (\textbackslash{}\textbackslash{}emph\{M. truncatula\})"}\hlstd{,}
+           \hlstr{"Exp. with cultivars/lines (\textbackslash{}\textbackslash{}emph\{V. faba\})"}\hlstd{,}
+           \hlstr{"Exp. with segregating pop. (\textbackslash{}\textbackslash{}emph\{V. fava\})"}\hlstd{,}
+           \hlstr{"Exp. with photoreceptor mutants (\textbackslash{}\textbackslash{}emph\{A. thaliana\})"}\hlstd{,}
+           \hlstr{"Exp. with accessions (\textbackslash{}\textbackslash{}emph\{A. thaliana\})"}\hlstd{)}
+\hlstd{tasks} \hlkwb{<-} \hlkwd{factor}\hlstd{(tasks,} \hlkwc{levels} \hlstd{=} \hlkwd{rev}\hlstd{(tasks))}
+\hlkwd{levels}\hlstd{(tasks)}
+\end{alltt}
+\begin{verbatim}
+## [1] "Exp. with accessions (\\emph{A. thaliana})"                          
+## [2] "Exp. with photoreceptor mutants (\\emph{A. thaliana})"               
+## [3] "Exp. with segregating pop. (\\emph{V. fava})"                        
+## [4] "Exp. with cultivars/lines (\\emph{V. faba})"                         
+## [5] "Exp. with photoreceptor mutants (\\emph{M. truncatula})"             
+## [6] "Exp. with accessions (\\emph{M. truncatula})"                        
+## [7] "Transfer photoreceptor mutants to accessions (\\emph{M. truncatula})"
+## [8] "Screen for photoreceptor mutants (\\emph{M. truncatula})"
+\end{verbatim}
+\begin{alltt}
+\hlstd{dfr} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}
+  \hlkwc{task}        \hlstd{= tasks,}
+  \hlkwc{start.date}  \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.0}\hlstd{,} \hlnum{1.0}\hlstd{,} \hlnum{0.35}\hlstd{,} \hlnum{2.0}\hlstd{,} \hlnum{0.25}\hlstd{,} \hlnum{2.25}\hlstd{,} \hlnum{0.0}\hlstd{,} \hlnum{1.0}\hlstd{),}
+  \hlkwc{end.date}    \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{3.0}\hlstd{,} \hlnum{4.0}\hlstd{,} \hlnum{4.75}\hlstd{,} \hlnum{4.5}\hlstd{,} \hlnum{1.70}\hlstd{,} \hlnum{4.70}\hlstd{,} \hlnum{2.0}\hlstd{,} \hlnum{3.0}\hlstd{),}
+  \hlkwc{location}    \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"HU+HCM"}\hlstd{,} \hlstr{"HU"}\hlstd{,} \hlstr{"HU+BGU+SARDI"}\hlstd{,} \hlstr{"HU+BGU+SARDI"}\hlstd{,} \hlstr{"HU"}\hlstd{,} \hlstr{"HU"}\hlstd{,} \hlstr{"HU"}\hlstd{,} \hlstr{"HU+HCM"}\hlstd{),}
+\hlcom{#  theme       = c(),}
+  \hlkwc{species}     \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"M. truncatula"}\hlstd{,} \hlstr{"M. truncatula"}\hlstd{,} \hlstr{"M. truncatula"}\hlstd{,} \hlstr{"M. truncatula"}\hlstd{,} \hlstr{"V. faba"}\hlstd{,} \hlstr{"V. faba"}\hlstd{,} \hlstr{"A. thaliana"}\hlstd{,} \hlstr{"A. thaliana"}\hlstd{)}
+\hlstd{)}
+\hlkwd{levels}\hlstd{(dfr}\hlopt{$}\hlstd{task)}
+\end{alltt}
+\begin{verbatim}
+## [1] "Exp. with accessions (\\emph{A. thaliana})"                          
+## [2] "Exp. with photoreceptor mutants (\\emph{A. thaliana})"               
+## [3] "Exp. with segregating pop. (\\emph{V. fava})"                        
+## [4] "Exp. with cultivars/lines (\\emph{V. faba})"                         
+## [5] "Exp. with photoreceptor mutants (\\emph{M. truncatula})"             
+## [6] "Exp. with accessions (\\emph{M. truncatula})"                        
+## [7] "Transfer photoreceptor mutants to accessions (\\emph{M. truncatula})"
+## [8] "Screen for photoreceptor mutants (\\emph{M. truncatula})"
+\end{verbatim}
+\begin{alltt}
+\hlstd{dfr} \hlkwb{<-} \hlkwd{arrange}\hlstd{(dfr, species, start.date)}
+
+\hlstd{mdfr} \hlkwb{<-} \hlkwd{melt}\hlstd{(dfr,} \hlkwc{measure.vars} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"start.date"}\hlstd{,} \hlstr{"end.date"}\hlstd{))}
+\hlkwd{levels}\hlstd{(mdfr}\hlopt{$}\hlstd{task)}
+\end{alltt}
+\begin{verbatim}
+## [1] "Exp. with accessions (\\emph{A. thaliana})"                          
+## [2] "Exp. with photoreceptor mutants (\\emph{A. thaliana})"               
+## [3] "Exp. with segregating pop. (\\emph{V. fava})"                        
+## [4] "Exp. with cultivars/lines (\\emph{V. faba})"                         
+## [5] "Exp. with photoreceptor mutants (\\emph{M. truncatula})"             
+## [6] "Exp. with accessions (\\emph{M. truncatula})"                        
+## [7] "Transfer photoreceptor mutants to accessions (\\emph{M. truncatula})"
+## [8] "Screen for photoreceptor mutants (\\emph{M. truncatula})"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fig.gantt} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(mdfr,} \hlkwd{aes}\hlstd{(value, task))} \hlopt{+}
+\hlcom{#  geom_debug() +}
+  \hlkwd{geom_line}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{color} \hlstd{= location),} \hlkwc{size} \hlstd{=} \hlnum{8}\hlstd{)} \hlopt{+}
+\hlcom{#  geom_line(aes(color = species), size = 3) +}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"Time (years)"}\hlstd{)} \hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlkwa{NULL}\hlstd{)} \hlopt{+}
+\hlcom{#  theme_minimal() +}
+  \hlkwd{theme_light}\hlstd{()} \hlopt{+}
+  \hlkwd{theme}\hlstd{(}\hlkwc{legend.position} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{3.2}\hlstd{,} \hlnum{3.7}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#tikzDevice::tikz("gantt.tex", width = 7, height = 5)}
+\hlkwd{print}\hlstd{(fig.gantt)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/gantt-5-1} 
+\begin{kframe}\begin{alltt}
+\hlcom{#dev.off()}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+

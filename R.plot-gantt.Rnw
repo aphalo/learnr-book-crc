@@ -1,0 +1,65 @@
+\subsection{Gantt charts}
+
+Example from Richie Cotton's answer at \url{http://stackoverflow.com/a/3556020/2419892}.
+
+<<gantt-1>>=
+library(reshape2)
+library(ggplot2)
+library(ggpmisc)
+library(tibble)
+library(dplyr)
+@
+
+<<gantt-2>>=
+tasks <- c("Screen for photoreceptor mutants (M. truncatula)",
+           "Transfer photoreceptor mutants to accessions (M. truncatula)",
+           "Exp. with accessions (M. truncatula)",
+           "Exp. with photoreceptor mutants (M. truncatula)",
+           "Exp. with cultivars/lines (V. faba)",
+           "Exp. with segregating pop. (V. fava)",
+           "Exp. with photoreceptor mutants (A. thaliana)",
+           "Exp. with accessions (A. thaliana)")
+tasks <- c("Screen for photoreceptor mutants (\\emph{M. truncatula})",
+           "Transfer photoreceptor mutants to accessions (\\emph{M. truncatula})",
+           "Exp. with accessions (\\emph{M. truncatula})",
+           "Exp. with photoreceptor mutants (\\emph{M. truncatula})",
+           "Exp. with cultivars/lines (\\emph{V. faba})",
+           "Exp. with segregating pop. (\\emph{V. fava})",
+           "Exp. with photoreceptor mutants (\\emph{A. thaliana})",
+           "Exp. with accessions (\\emph{A. thaliana})")
+tasks <- factor(tasks, levels = rev(tasks))
+levels(tasks)
+dfr <- tibble(
+  task        = tasks,
+  start.date  = c(0.0, 1.0, 0.35, 2.0, 0.25, 2.25, 0.0, 1.0),
+  end.date    = c(3.0, 4.0, 4.75, 4.5, 1.70, 4.70, 2.0, 3.0),
+  location    = c("HU+HCM", "HU", "HU+BGU+SARDI", "HU+BGU+SARDI", "HU", "HU", "HU", "HU+HCM"),
+#  theme       = c(),
+  species     = c("M. truncatula", "M. truncatula", "M. truncatula", "M. truncatula", "V. faba", "V. faba", "A. thaliana", "A. thaliana")
+)
+levels(dfr$task)
+dfr <- arrange(dfr, species, start.date)
+
+mdfr <- melt(dfr, measure.vars = c("start.date", "end.date"))
+levels(mdfr$task)
+@
+
+<<gantt-3>>=
+fig.gantt <- ggplot(mdfr, aes(value, task)) +
+#  geom_debug() +
+  geom_line(aes(color = location), size = 8) +
+#  geom_line(aes(color = species), size = 3) +
+  xlab("Time (years)") +
+  ylab(NULL) +
+  xlim(0,5) +
+#  theme_minimal() +
+  theme_light() +
+  theme(legend.position = c(3.2, 3.7))
+@
+
+<<gantt-5>>=
+tikzDevice::tikz("gantt.tex", width = 6, height = 3)
+print(fig.gantt)
+dev.off()
+@
+
