@@ -16,6 +16,7 @@ library(ggplot2)
 library(viridis)
 library(ggrepel)
 library(ggpmisc)
+library(gganimate)
 library(xts)
 library(MASS)
 @
@@ -88,6 +89,98 @@ ggplot(my.data, aes(x, y)) +
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_narrow)
 @
+
+\section[gganimate]{\pkgname{gganimate}}
+
+Package \pkgname{gganimate} allows the use of package \pkgname{animation} in ggplots with a syntax consistent with the grammar of graphics. It adds a new aesthetic \code{frame}, which can be used to map \emph{groups} of data to \emph{frames} in the animation.
+
+Use of the package is extremely easy, but installation can be somehow tricky because of system requirements. Just, make sure to have \pgrmname{ImageMagic} installed and included in the search \code{PATH}.
+
+We modify an example from section \ref{sec:simple:points:lines} on page \ref{sec:simple:points:lines}. We add the \code{frame} aesthetic to the earlier figure.
+<<gganimate-1>>=
+p <- ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl), frame  = cyl)) +
+  geom_point()
+@
+
+Now we can print \code{p} as a normal plot,
+
+<<gganimate-2>>=
+p
+@
+
+Or display an animation. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but not in Sumatra PDF viewer. We add \code{title\_frame = FALSE} as a title does not seem useful in this simple animation.
+
+<<gganimate-3, fig.show='animate'>>=
+gg_animate(p, title_frame = FALSE)
+@
+
+Or save it to a file.
+
+<<gganimate-4, eval = FALSE>>=
+gg_animate(p, "p-animation.gif")
+@
+
+Cumulative animations are also supported. We here use the same example with three frames, but this type of animation is particularly effective for time series data. To achieve this we only need to add \code{cumulative = TRUE} to the aesthetics mappings.
+
+<<gganimate-1a>>=
+p <- ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl),
+           frame  = cyl, cumulative = TRUE)) +
+  geom_point()
+@
+
+Now we can print \code{p} as a normal plot,
+
+<<gganimate-2a>>=
+p
+@
+
+Or display an animation. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but in Sumatra PDF viewer.
+
+<<gganimate-3a, fig.show='animate'>>=
+gg_animate(p, title_frame = FALSE)
+@
+
+\section[ggstance]{\pkgname{ggstance}}
+
+coming soon.
+
+\section[ggbiplot]{\pkgname{ggbiplot}}
+
+coming soon.
+
+\section[ggalt]{\pkgname{ggalt}}
+
+coming soon.
+
+\section[ggExtra]{\pkgname{ggExtra}}
+
+coming soon.
+
+\section[ggfortify]{\pkgname{ggfortify}}
+
+coming soon.
+
+\section[ggradar]{\pkgname{ggradar}}
+
+coming soon.
+
+\section[ggseas]{\pkgname{ggseas}}
+
+coming soon.
+
+\section[ggsci]{\pkgname{ggsci}}
+
+coming soon.
+
+\section[ggthemes]{\pkgname{ggthemes}}
+
+coming soon.
+
+\section[ggnetwork]{\pkgname{ggnetwork}}
+
+coming soon.
 
 \section[ggpmisc]{\ggpmisc}
 
@@ -470,7 +563,7 @@ ggplot(my.data, aes(x, y, colour = group)) +
   stat_fit_residuals(formula = formula)
 @
 
-\subsection{Filtering observations based on local density}
+\subsection{Filtering observations based on local density}\label{sec:dens:filter}
 
 Statistics \Rfunction{stat\_dens2d\_filter} works best with clouds of observations, so we generate some random data.
 
@@ -544,6 +637,7 @@ ggplot(my.2d.data, aes(x, y, color = group)) +
   stat_dens2d_filter_g(shape = 1, size = 3)
 @
 
+A related stat \code{stat\_dens2d\_label}, also defined in package \ggpmisc is described in section \ref{sec:repel:dens} on page \pageref{sec:repel:dens}.
 
 \subsection{Learning and/or debugging}
 
@@ -581,26 +675,23 @@ plots and in maps.
 
 \subsection{New geoms}
 
-Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom\_label\_repel}. They are used similarly to \code{geom\_text} and \code{geom\_label} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded.
+Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom\_label\_repel}. They are used similarly to \code{geom\_text} and \code{geom\_label} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded. The vignette \emph{ggrepel Usage Examples} provides very nice examples of the power and flexibility of these geoms. The algorithm used for avoiding overlaps through repulsion is iterative, and can be slow when the number of labels or observations are in the thousands.
 
-<<>>=
-ggplot(lynx.df, aes(year, lynx)) +
-  geom_line() +
-  stat_peaks(geom = "label_repel", nudge_y = 500)
-@
-
-For the time being I reproduce here a couple of examples from the package
-vignette.
+I reproduce here some simple examples from the \ggrepel vignette.
 
 <<>>=
 opts_chunk$set(opts_fig_wide_square)
 @
+
+Just using defaults, we avoid overlaps among text items on the plot. \code{geom\_text\_repel} has some parameters matching those in \code{geom\_text}, but those related to manual positioning are missing except for \code{angle}. Several new parameters control both the appearance of text and the function of the repulsion algorithm.
 
 <<>>=
 ggplot(mtcars, aes(wt, mpg)) +
   geom_point(color = 'red') +
   geom_text_repel(aes(label = rownames(mtcars)))
 @
+
+The chunk below shows how to change the appearance of labels. \code{geom\_label\_repel} is comparable to \code{geom\_label}, but with repulsion.
 
 <<>>=
 set.seed(42)
@@ -612,6 +703,12 @@ ggplot(mtcars) +
       box.padding = unit(0.25, "lines"),
       point.padding = unit(0.5, "lines")) +
   theme(legend.position = "top")
+@
+
+The parameters \code{nudge\_x} and \code{nudge\_y} allow strengthening or weakening the repulsion force, or favouring a certain direction.
+
+<<>>=
+opts_chunk$set(opts_fig_wide)
 @
 
 <<>>=
@@ -626,6 +723,71 @@ ggplot(Orange, aes(age, circumference, color = Tree)) +
                   segment.color = NA) +
   theme(legend.position = "none") +
   labs(x = "Age (days)", y = "Circumference (mm)")
+@
+
+We can combine \code{stat\_peaks} from package \ggpmisc with the use of repulsive text to avoid overlaps between text items. We use \code{nudge\_y = 500} to push the text upwards.
+
+<<>>=
+ggplot(lynx.df, aes(year, lynx)) +
+  geom_line() +
+  stat_peaks(geom = "text_repel", nudge_y = 500)
+@
+
+\subsection{Selectively plotting repulsive labels}\label{sec:repel:dens}
+
+To repel text or labels so that they do not overlap unlabelled observations, one can set the labels to an empty character string \code{""}. Setting labels to \code{NA} skips the observation completely, as is the usual behavior in \ggplot2 geoms, and can result in text or labels overlapping those observations. Labels can be set manually to \code{""}, but in those cases where all observations have labels in the data, but we would like to plot only those in low density regions, this can be automated. Geoms \code{geom\_text\_repel} and \code{geom\_label\_repel} from package \ggrepel can be used together with \code{stat\_dens2d\_label} from package \ggpmisc.
+
+To demonstrate this we first generate suitable data and labels.
+
+<<>>=
+# Make random labels
+random_string <- function(len = 6) {
+paste(sample(letters, len, replace = TRUE), collapse = "")
+}
+@
+
+<<>>=
+# Make random data.
+set.seed(1001)
+myl.data <- data.frame(
+  x = rnorm(100),
+  y = rnorm(100),
+  group = rep(c("A", "B"), c(50, 50)),
+  lab = replicate(100, { random_string() })
+)
+head(myl.data)
+@
+
+The first example uses defaults.
+
+<<>>=
+ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
+  geom_point() +
+  stat_dens2d_labels(geom = "text_repel")
+@
+
+The fraction of observations can be plotted, as well as the maximum number can be both set through parameters, as shown in section \ref{sec:dens:filter} on page \pageref{sec:dens:filter}.
+
+Something to be aware of when rotating labels is that repulsion is always based on bounding box that does not rotate, which for long labels and angles that are not multiples of 90 degrees, reserves too much space and leaves gaps between segments and text. Compare the next two figures.
+
+<<>>=
+ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
+  geom_point() +
+  stat_dens2d_labels(geom = "text_repel", angle = 90)
+@
+
+<<>>=
+ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
+  geom_point() +
+  stat_dens2d_labels(geom = "text_repel", angle = 45)
+@
+
+Labels cannot be rotated.
+
+<<>>=
+ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
+  geom_point() +
+  stat_dens2d_labels(geom = "label_repel")
 @
 
 \section{Examples}
@@ -651,6 +813,9 @@ ggplot(my.anscombe, aes(x = x, y = y)) +
   facet_wrap(~case, ncol=2) +
   theme_bw(16)
 @
+
+\subsection{Heatmaps}
+
 
 \subsection{Volcano plots}
 
