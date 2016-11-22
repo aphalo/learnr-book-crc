@@ -12,11 +12,16 @@ opts_knit$set(concordance=TRUE)
 For executing the examples listed in this chapter you need first to load the following packages from the library:
 
 <<message=FALSE>>=
+library(tibble)
 library(ggplot2)
 library(viridis)
 library(ggrepel)
 library(ggpmisc)
+library(ggseas)
 library(gganimate)
+library(ggstance)
+library(ggbiplot)
+library(ggalt)
 library(xts)
 library(MASS)
 @
@@ -25,6 +30,7 @@ We set a font larger size than the default
 <<>>=
 theme_set(theme_grey(16))
 @
+
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_narrow)
 @
@@ -35,14 +41,28 @@ search()
 getwd()
 @
 
-\section[viridis]{\viridis}
+\section{Introduction}
+
+In this chapter we describe some of the packages that add additional functionality or \emph{graphical designs} of plots to package \pkgname{ggplot2}. Several new packages were written after \pkgname{ggplot2} version 2.0.0 was released, because this version for the first time made it straightforward to write these extensions. To keep up-to-date with the release of new extensions I recommend to regularly check the site `ggplot2 Extensions' (maintained by Daniel Emaasit) at \url{https://www.ggplot2-exts.org/}.
+
+Some of the packages described in this chapter were not yet in CRAN at the time of writing. However, it is possible to install packages directly from Github or Bitbucket using functions from package \pkgname{devtools}. We show here as examples the code needed for packages \pkgname{gganimate} and \pkgname{ggstance}.
+
+<<inst-dev-1, eval=FALSE>>=
+devtools::install_github("dgrtwo/gganimate")
+devtools::install_github("lionel-/ggstance")
+@
+
+\begin{framed}
+  In this chapter we use mostly the modernized data frames of package \pkgname{tibble}. The main reason is that the \code{tibble} constructor does not by default convert character variables into factors as the \code{data.frame} constructor does. The format used for printing is also improved. It is possible to use \code{data.frame} instead of \code{tibble} in the examples below, but in some cases you will need to add \code{stringsAsFactors = FALSE} to the call.
+\end{framed}
+
+\section[viridis]{\viridis}\label{sec:plot:viridis}
 
 Package \viridis defines color palettes and fill and color scales with colour selected based on human perception, with special consideration of visibility for those with different kinds of color blindness and well as in grey-scale reproduction.
 
 <<viridis-00>>=
 set.seed(56231)
-my.data <-
-  data.frame(x = rnorm(500),
+my.data <- tibble(x = rnorm(500),
              y = c(rnorm(250, -1, 1), rnorm(250, 1, 1)),
              group = factor(rep(c("A", "B"), c(250, 250))) )
 @
@@ -81,7 +101,14 @@ ggplot(my.data, aes(x, y)) +
 
 <<viridis-05>>=
 ggplot(my.data, aes(x, y)) +
-  geom_hex(bins = 6) +
+  geom_bin2d(bins = 8) +
+  facet_wrap(~group) +
+  scale_fill_viridis()
+@
+
+<<viridis-06>>=
+ggplot(my.data, aes(x, y)) +
+  geom_hex(bins = 8) +
   facet_wrap(~group) +
   scale_fill_viridis()
 @
@@ -144,15 +171,140 @@ gg_animate(p, title_frame = FALSE)
 
 \section[ggstance]{\pkgname{ggstance}}
 
-coming soon.
+Package \pkgname{ggstance} defines horizontal versions of common ggplot \emph{geoms}, \emph{stats} and \emph{positions}. Although \ggplot defines \code{coord\_flip}, \pkgname{ggstance} provides a more intuitive user interface and more consistent plot formatting.
+
+\sloppy
+Currently the package defines \textbf{horizontal} \emph{geoms} \code{geom\_barh()}, \code{geom\_histogramh()}, \code{geom\_linerangeh()}, \code{geom\_pointrangeh()}, \code{geom\_errorbarh()}, \code{geom\_crossbarh()}, \code{geom\_boxploth()}, and \code{geom\_violinh()}. It also defines
+\textbf{horizontal} \emph{stats} \code{stat\_binh()}, \code{stat\_boxploth()}, \code{stat\_counth()}, and \code{stat\_xdensity()} and \textbf{vertical} \emph{positions} \code{position\_dodgev}, \code{position\_nudgev}, \code{position\_fillv}, \code{position\_stackv}, and \code{position\_jitterdodgev}.
+
+We will give give only a couple of examples, as their use has no surprises. First we make horizontal versions of the histogram plots shown in section \ref{sec:histogram} on page \pageref{sec:histogram}.
+
+<<>>=
+set.seed(12345)
+my.data <- tibble(x = rnorm(200),
+             y = c(rnorm(100, -1, 1), rnorm(100, 1, 1)),
+             group = factor(rep(c("A", "B"), c(100, 100))) )
+@
+
+<<>>=
+ggplot(my.data, aes(y = x)) +
+  geom_histogramh(bins = 15)
+@
+
+<<>>=
+ggplot(my.data, aes(y = y, fill = group)) +
+  geom_histogramh(bins = 15, position = "dodgev")
+@
+
+<<>>=
+ggplot(my.data, aes(y = y, fill = group)) +
+  geom_histogramh(bins = 15, position = "stackv")
+@
+
+<<>>=
+ggplot(my.data, aes(y = y, fill = group)) +
+  geom_histogramh(bins = 15, position = "identity", alpha = 0.5) +
+  theme_bw(16)
+@
+
+Now we make an horizontal version of the boxplot shown in section \ref{sec:boxplot} on page \pageref{sec:boxplot}.
+
+<<>>=
+ggplot(my.data, aes(y, group)) +
+  geom_boxploth()
+@
 
 \section[ggbiplot]{\pkgname{ggbiplot}}
 
-coming soon.
+Package \pkgname{ggbiplot} defines two functions, \code{ggscreeplot()} and \code{ggbiplot()}. These functions make it easy to nicely print the results from principal components analysis done with \code{prcomp}.
+
+For the time being we reproduce an example from the package README.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<ggbiplot-1>>=
+data(wine)
+wine.pca <- prcomp(wine, scale. = TRUE)
+ggbiplot(wine.pca, obs.scale = 1, var.scale = 1,
+  groups = wine.class, ellipse = TRUE, circle = TRUE) +
+  scale_color_discrete(name = '') +
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
 
 \section[ggalt]{\pkgname{ggalt}}
 
-coming soon.
+Package \pkgname{ggalt} defines \emph{geoms} \code{geom\_xspline()}, \code{geom\_bkde()}, \code{geom\_bkde2d()}, \code{geom\_stateface()}, \code{geom\_encircle()}, \code{geom\_lollipop()}, \code{geom\_dumbbell()}, and \code{geom\_stepribbon()}; \emph{stats} \code{stat\_xspline()}, \code{stat\_bkde()}, \code{stat\_bkde2d()}, and \code{stat\_ash()}; \emph{scale} \code{scale\_fill\_pokemon}; \emph{formatter} \code{byte\_format}.
+
+The highlights are use of functions from package 'KernSmooth' for density estimation, the provision of \emph{X-splines} and for formating ``bytes'' in the usual way used when describing computer memory.
+
+First example is the use of \emph{x-splines} which are very flexible splines that are smooth (have a continuous first derivative). They can be tuned from interpolation (passing through every observation) to being rather ``stiff'' smoothers.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<ggalt-1>>=
+set.seed(1816)
+dat <- tibble(x=1:10,
+                  y=c(sample(15:30, 10)))
+@
+
+<<ggalt-2>>=
+ggplot(dat, aes(x, y)) +
+  geom_point() +
+  geom_xspline()
+@
+
+The "flexibility" of the spline can be adjusted by passing an \code{numeric} argument to parameter \code{spline\_shape}.
+
+<<ggalt-3>>=
+ggplot(dat, aes(x, y)) +
+  geom_point() +
+  geom_xspline(spline_shape=0.4)
+@
+
+We also redo some of the densitiy plot examples from \ref{sec:plot:density} on page \pageref{sec:plot:density}.
+
+<<ggalt-4>>=
+ggplot(my.data, aes(y, fill = group)) +
+  geom_bkde(alpha = 0.5)
+@
+
+<<ggalt-5>>=
+ggplot(my.data, aes(x, y, colour = group)) +
+  geom_point() +
+  geom_rug() +
+  geom_bkde2d()
+@
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<ggalt-6>>=
+ggplot(my.data, aes(x, y)) +
+    geom_bkde2d() +
+    facet_wrap(~group)
+@
+
+We here use a scale from package \pkgname{viridis} described in section \ref{sec:plot:viridis} on page \pageref{sec:plot:viridis}.
+
+<<ggalt-7>>=
+ggplot(my.data, aes(x, y)) +
+    stat_bkde2d(aes(fill = ..level..), geom = "polygon") +
+    facet_wrap(~group) +
+    scale_fill_viridis()
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
 
 \section[ggExtra]{\pkgname{ggExtra}}
 
@@ -168,15 +320,111 @@ coming soon.
 
 \section[ggseas]{\pkgname{ggseas}}
 
-coming soon.
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
 
-\section[ggsci]{\pkgname{ggsci}}
+The focus of this extension to \pkgname{ggplot2} is the seasonal decomposition of time series done on the fly while creating a ggplot. Package \pkgname{ggseas} defines five \emph{statistics}, \code{stat\_index}, \code{stat\_decomp}, \code{stat\_rollapplyr}, \code{stat\_stl}, and \code{stat\_seas}. By default they all use \code{geom\_line}. This package also defines function
+\code{tsdf} that needs to be used to convert time series to data frames to pass as \code{data} argument to \code{ggplot}. 
 
-coming soon.
+Index referenced to the first two observations in the series. Here we use \code{try\_tibble} from our package \pkgname{ggpmisc}. Function \code{tsdf} can be also used.
 
-\section[ggthemes]{\pkgname{ggthemes}}
+<<>>=
+ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
+       aes(x = time, y = V.lynx)) +
+       stat_index(index.ref = 1:2) +
+       expand_limits(y = 0)
+@
 
-coming soon.
+<<>>=
+ggplot(try_tibble(AirPassengers, "month"),
+       aes(time, V.AirPassengers)) +
+       stat_index(index.ref = 1:10) +
+       expand_limits(y = 0)
+@
+
+Rolling average.
+
+We use a with of 9, which seems to be approximately the length of the cycle.
+ 
+<<>>=
+ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
+       aes(x = time, y = V.lynx), na.rm = TRUE) +
+       geom_line() +
+       stat_rollapplyr(width = 9, align = "center", color = "blue") +
+       expand_limits(y = 0)
+@
+
+For monthly data on air travel, it is clear that a width of 12 observations (months) is best.
+
+<<>>=
+ggplot(try_tibble(AirPassengers, "month"),
+       aes(time, V.AirPassengers)) +
+       geom_line() +
+       stat_rollapplyr(width = 12, align = "center", color = "blue") +
+       expand_limits(y = 0)
+@
+
+Seasonal decomposition.
+
+Using function \code{tsdf} from package \pkgname{ggseas}.
+
+<<>>=
+ggplot(tsdf(AirPassengers),
+       aes(x, y)) +
+       geom_line() +
+       stat_seas(colour = "blue") +
+       stat_stl(s.window = 7, color = "red") +
+       expand_limits(y = 0)
+@
+
+Currently, the \code{tibble} object returned by \code{try\_tibble} gives an error, so the chunk below is not evaluated.
+ 
+<<eval=FALSE>>=
+ggplot(try_tibble(AirPassengers, "month"),
+       aes(time, V.AirPassengers)) +
+       geom_line() +
+       stat_seas(colour = "blue") +
+       stat_stl(s.window = 7, color = "red") +
+       expand_limits(y = 0)
+@
+
+\begin{framed}
+  As \code{ggplot} is a generic we can easily define a specialization for class \code{ts}.
+  
+<<>>=
+ggplot.ts <- function(data,
+                      mapping = NULL, 
+                      ..., 
+                      environment = parent.frame()) {
+   if (is.null(mapping)) {
+     mapping <- aes_(~x, ~y)
+   }
+   ggplot2::ggplot(data = ggseas::tsdf(data),
+          mapping =  mapping,
+          ... = ...,
+          environment = environment)
+}
+@
+
+And subsequently use to plot time series objects of class \code{ts}, code like
+<<>>=
+ggplot(AirPassengers) + 
+    stat_index(index.ref = 1:10)
+@
+or
+<<>>=
+ggplot(AirPassengers)  +
+    geom_line() +
+    stat_rollapplyr(width = 12, align = "center", color = "blue") +
+    expand_limits(y = 0)
+@
+
+\end{framed}
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
 
 \section[ggnetwork]{\pkgname{ggnetwork}}
 
@@ -184,17 +432,21 @@ coming soon.
 
 \section[ggpmisc]{\ggpmisc}
 
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
 \sloppy
 Package \ggpmisc is a package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching. It provides new stats for everyday use: \code{stat\_peaks()}, \code{stat\_valleys()}, \code{stat\_poly\_eq()}, \code{stat\_fit\_glance()}, \code{stat\_fit\_deviations()}, and \code{stat\_fit\_augment()}. A function for converting time-series data to a data frame that can be easily plotted with `ggplot2'. It also provides some debugging tools that echo the data received as input: \code{stat\_debug\_group()}, \code{stat\_debug\_panel()}, and code{geom\_debug()}, and \code{geom\_null()} that does not plot its input.
 
 \subsection{Plotting time-series}
 
-Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_data\_frame()} accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a very simple wrapper to obtain a data frame.
+Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_tibble()} (also available as \code{try\_data\_frame()}) accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a very simple wrapper to obtain a data frame.
 
 We exemplify this with some of the time series data included in R. In the first example we use the default format for time.
 
 <<>>=
-ggplot(try_data_frame(austres),
+ggplot(try_tibble(austres),
        aes(time, V.austres)) +
   geom_line()
 @
@@ -202,8 +454,14 @@ ggplot(try_data_frame(austres),
 In the second example we use years in numeric format for expressing `time'.
 
 <<>>=
-ggplot(try_data_frame(lynx, "year", as.numeric = TRUE),
+ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
        aes(x = time, y = V.lynx)) +
+  geom_line()
+@
+
+<<>>=
+ggplot(try_tibble(AirPassengers, "month"),
+       aes(time, V.AirPassengers)) +
   geom_line()
 @
 
@@ -216,6 +474,10 @@ Peaks and valleys are local (or global) maxima and minima. These stats return th
 There are many cases, for example in physics and chemistry, but also when plotting time-series data when we need to automatically locate and label local maxima (peaks) or local minima (valleys) in curves. The statistics presented here are useful only for dense data as they do not fit a peak function but instead simply search for the local maxima or minima in the observed data. However, they allow flexible generation of labels on both $x$ and $y$ peak or valley coordinates.
 
 We use as example the same time series as above. In the next several examples we demonstrate some of this flexibility.
+
+\begin{framed}
+ As we are passing a \code{matrix} to the constructor, in this case, using the \code{tibble} constructor would fail.
+\end{framed}
 
 <<>>=
 lynx.df <- data.frame(year = as.numeric(time(lynx)), lynx = as.matrix(lynx))
@@ -278,6 +540,10 @@ ggplot(lynx.df, aes(year, lynx)) +
 
 \subsection{Equations as labels in plots}
 
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
 How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \code{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
 
 We first generate some artificial data.
@@ -288,9 +554,9 @@ set.seed(4321)
 x <- 1:100
 y <- (x + x^2 + x^3) +
   rnorm(length(x), mean = 0, sd = mean(x^3) / 4)
-my.data <- data.frame(x, y,
-                      group = c("A", "B"),
-                      y2 = y * c(0.5,2))
+my.data <- tibble(x, y,
+                  group = rep(c("A", "B"), 50),
+                  y2 = y * c(0.5,2))
 @
 
 \subsubsection{Linear models}
@@ -570,8 +836,7 @@ Statistics \Rfunction{stat\_dens2d\_filter} works best with clouds of observatio
 <<>>=
 set.seed(1234)
 nrow <- 200
-my.2d.data <-
-  data.frame(
+my.2d.data <- tibble(
     x = rnorm(nrow),
     y = rnorm(nrow) + rep(c(-1, +1), rep(nrow / 2, 2)),
     group = rep(c("A", "B"), rep(nrow / 2, 2))
@@ -749,7 +1014,7 @@ paste(sample(letters, len, replace = TRUE), collapse = "")
 <<>>=
 # Make random data.
 set.seed(1001)
-myl.data <- data.frame(
+myl.data <- tibble(
   x = rnorm(100),
   y = rnorm(100),
   group = rep(c("A", "B"), c(50, 50)),
@@ -790,16 +1055,28 @@ ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   stat_dens2d_labels(geom = "label_repel")
 @
 
+\section[ggsci]{\pkgname{ggsci}}
+
+coming soon.
+
+\section[ggthemes]{\pkgname{ggthemes}}
+
+coming soon.
+
 \section{Examples}
 
 \subsection{Anscombe's example revisited}
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
 
 To make the example self contained we repeat the code from chapter \ref{chap:plotting}.
 
 <<>>=
 # we rearrange the data
 my.mat <- matrix(as.matrix(anscombe), ncol=2)
-my.anscombe <- data.frame(x = my.mat[ , 1],
+my.anscombe <- tibble(x = my.mat[ , 1],
                           y = my.mat[ , 2],
                           case=factor(rep(1:4, rep(11,4))))
 @
@@ -823,9 +1100,16 @@ ggplot(my.anscombe, aes(x = x, y = y)) +
 \subsection{Quadrat plots}
 
 <<>>=
-try(detach(package:ggpmisc))
+try(detach(package:MASS))
 try(detach(package:xts))
+try(detach(package:ggalt))
+try(detach(package:ggbiplot))
+try(detach(package:ggstance))
+try(detach(package:gganimate))
+try(detach(package:ggpmisc))
 try(detach(package:ggrepel))
-try(detach(package:ggplot2))
+try(detach(package:viridis))
+try(detach(package:tibble))
 @
+
 

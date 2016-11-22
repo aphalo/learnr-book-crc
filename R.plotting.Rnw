@@ -20,9 +20,6 @@ We set a font of larger size than the default
 <<>>=
 theme_set(theme_grey(16))
 @
-<<echo=FALSE,include=FALSE>>=
-opts_chunk$set(opts_fig_narrow)
-@
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 opts_knit$get()
@@ -34,7 +31,7 @@ getwd()
 
 Being R extensible, in addition to the built-in plotting functions, there are several alternatives provided by packages. Of the general purpose ones, the most extensively used are \code{Lattice} and \ggplot. There are additional packages that add extra functionality to these packages.
 
-In the examples in this chapter we use \ggplot. In later chapters we use \ggplot together with \ggmap, \ggtern, \ggrepel, and \ggpmisc. Here we start with an introduction to the `grammar of graphics' and \ggplot. There is ample literature on the use of \ggplot, starting with very good reference documentation at \url{http://ggplot2.org/}. The book `R Graphics Cookbook' \autocite{Chang2013} is very useful and should be always near you, when using the package, as it contains many worked out examples. Much of the literature available at this time is for older versions of \ggplot but we here describe version 2.0.0, and highlight the most important incompatibilities that need to be taken into account when using versions of \ggplot earlier than 2.0.0. There is little well-organized literature on packages extending \ggplot so we will describe some of them in later chapters.
+In the examples in this chapter we describe the of use package \ggplot. We start with an introduction to the `grammar of graphics' and \ggplot. There is ample literature on the use of \ggplot, including the very good reference documentation at \url{http://ggplot2.org/}. The \ggplot book \autocite{Wickham2016} is the authoritative reference, as it is authored by the developer of \ggplot. The book `R Graphics Cookbook' \autocite{Chang2013} is very useful as a reference as it contains many worked out examples. Much of the literature available at this time is for older versions of \ggplot but we here describe version 2.2.0, and highlight the most important incompatibilities that need to be taken into account when using versions of \ggplot earlier than 2.2.0. There is no comprehensive text on packages extending \ggplot so I will describe some of them in later chapters. In the present chapter we describe the functions and methods defined in package \ggplot, in chapter \ref{chap:R:more:ggplotting} on page \pageref{chap:R:more:ggplotting} we describe extensions to \ggplot defined in other packages, except for those related to plotting data onto maps and other images, described in chapter \ref{chap:R:maps} on page \pageref{chap:R:maps}.
 
 \section{Grammar of graphics}
 
@@ -62,30 +59,13 @@ Scales give the relationship between data values and the aesthetic values to be 
 
 How the plots look when displayed or printed can be altered by means of themes. A plot can be saved without adding a theme and then printed or displayed using different themes. Also individual theme elements can be changed, and whole new themes defined. This adds a lot of flexibility and helps in the separation of the data representation aspects from those related to the graphical design.
 
-\section{Simple examples: points and lines}\label{sec:simple:points:lines}
-
 As discussed above the grammar of graphics is based on aesthetics (\code{aes}) as for example color, geometric elements \code{geom\_\ldots} such as lines, and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, labels \code{labs}, and themes \code{theme\_\ldots}. Plots are assembled from these elements, we start with a plot with two aesthetics, and one geometry.
+
+\section{Scatter plots}\label{sec:plot:scatter}\label{sec:simple:points:lines}
 
 In the examples that follow we will use the \code{mtcars} data set included in R. To learn more about this data set, \code{help("mtcars")} at the R command prompt.
 
-<<>>=
-ggplot(data = mtcars, aes(x = disp, y = mpg)) +
-  geom_point()
-@
-
-I could have written the code above passing the arguments by position but this
-makes the code more difficult to read and less tolerant to possible changes to the
-definitions of the functions used in future version of package \ggplot. It is not
-recommended to use this terse style in scripts or package coding. However, it can
-be used at the command prompt, although it can lead to mistakes when the sanity
-of results is difficult to quickly assess at first sight.
-
-<<>>=
-ggplot(mtcars, aes(disp, mpg)) +
-  geom_point()
-@
-
-Data variables can be `mapped' to \textit{aesthetics}, variables can be either continuous (numeric) or discrete (categorical, factor). Variable \code{cyl} is encoded in the \code{mtcars} dataframe as numeric values. Even though only three values are present, a continuous color scale is used by default.
+Data variables can be `mapped' to \textit{aesthetics}. Variables to be represented in a plot can be either continuous (numeric) or discrete (categorical, factor). Variable \code{cyl} is encoded in the \code{mtcars} data frame as numeric values. Even though only three values are present, a continuous color scale is used by default.
 
 <<>>=
 ggplot(data = mtcars,
@@ -93,48 +73,167 @@ ggplot(data = mtcars,
   geom_point()
 @
 
-Some scales exist in two `flavours', one suitable for continuous variables and another for discrete variables. For now we will just use the default scales, but later on we will see how to alter them. We can convert \code{cyl} into a factor `on-the-fly' to force the use of a discrete color scale.
+Some scales exist in two `flavours', one suitable for continuous variables and another for discrete variables. We can convert \code{cyl} into a factor `on-the-fly' to force the use of a discrete color scale.
 
 <<>>=
-ggplot(data = mtcars,
-       aes(x = disp, y = mpg, colour = factor(cyl))) +
+ggplot(data = mtcars, aes(x = disp, y = mpg, colour = factor(cyl))) +
   geom_point()
 @
 
-Using an aesthetic, involves mapping of values in the data to aesthetic values such as colours. The mapping is defined by means of scales. If we now consider the \code{colour} aesthetic in the previous statement, a default discrete colour scale was used. In this case if we would like different colours used for the three values, but still have them selected automatically, we can select a different colour palette:
+Using an aesthetic, involves the mapping of values in the data to aesthetic values such as colours. The mapping is defined by means of scales. If we now consider the \code{colour} aesthetic in the previous statement, a default discrete colour scale was used. In this case if we would like different colours used for the three values, but still have them selected automatically, we can select a different colour palette:
 
 <<>>=
 ggplot(data = mtcars,
-       aes(x = disp, y = mpg, fill = factor(cyl))) +
-  geom_point(size = rel(2)) +
-  scale_color_brewer(type = "div", palette = 8) +
-  theme_bw(16)
+       aes(x = disp, y = mpg, color = factor(cyl))) +
+  geom_point() +
+  scale_color_brewer(type = "qual", palette = 2)
 @
 
-Data assigned to an aesthetic can be the `result of a computation'. In other words, the values to be plotted do not need to be stored in the data frame passed as argument to \code{data}, the first formal parameter of \code{ggplot()}
+Within \code{aes()} the aesthetics are interpreted as being a function of the values in the data---i.e.\ to be a mapped. If given outside \code{aes()} they are interpreted as constants values, which apply to one geom if given within the call to \code{geom\_xxx} but outside \code{aes()}. The aesthetics and data given as \code{ggplot()}'s arguments become the defaults for all the geoms, but geoms also accept aesthetics and data as arguments, which when supplied locally override the whole-plot defaults. In the example below, we override the default colour of the points.
+
+If we \emph{set} the \code{color} aesthetic to a constant value, \code{"red"}, all points are plotted in red.
 
 <<>>=
 ggplot(data = mtcars,
-       aes(x = factor(cyl), y = mpg / disp)) +
-  geom_point()
-@
-
-Within \code{aes()} the aesthetics are interpreted as being a function of the values in the data. If given outside \code{aes()} they are interpreted as constants values, which apply to one geom if given within the call to \code{geom\_xxx} but outside \code{aes()}. The aesthetics and data given as \code{ggplot()}'s arguments become the defaults for all the geoms, but geoms also accept aesthetics and data as arguments, which when supplied as arguments override the whole-plot defaults. In the example below, we override the default colour of the points.
-
-<<>>=
-ggplot(data = mtcars,
-       aes(x = factor(cyl), y = mpg / disp)) +
+       aes(x = disp, y = mpg)) +
   geom_point(color = "red")
 @
 
+If we \emph{map} the \code{color} aesthetic to a variable, \code{factor(cyl)}, points get colors according to the levels of the factor, and by default a \code{guide} or \emph{key} for the mapping is also added.
+
 <<>>=
 ggplot(data = mtcars,
-       aes(x = factor(cyl), y = mpg / disp, color = factor(cyl))) +
+       aes(x = disp, y = mpg, color = factor(cyl))) +
   geom_point()
 @
 
-The same plot can be also obtained by adding all pieces one by one (although
-seldom used except when defining new functions).
+As with any R function it is possible to pass arguments by position to \code{aes} when
+mapping variables to \emph{aesthetics} but this
+makes the code more difficult to read and less tolerant to possible changes to the
+definitions of functions. It is not
+recommended to use this terse style in scripts or package coding. However, it can
+be used by experienced users at the command prompt usually without problems.
+
+Mapping passing arguments by \emph{name} to \code{aes}.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg)) +
+  geom_point()
+@
+
+If we swap the order of the arguments we still obtain the same plot.
+
+<<>>=
+ggplot(data = mtcars, aes(y = mpg, x = disp)) +
+  geom_point()
+@
+
+Mapping passing arguments by \emph{position} to \code{aes}.
+
+<<>>=
+ggplot(mtcars, aes(disp, mpg)) +
+  geom_point()
+@
+
+If we swap the order of the arguments we obtain a different plot as the mappings are swapped.
+
+<<>>=
+ggplot(mtcars, aes(mpg, disp)) +
+  geom_point()
+@
+
+When not relying on colors, the most common way of distinguishing groups of observations in scatter plots is to use the \code{shape} of the points as an \emph{aesthetic}.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
+  geom_point()
+@
+
+We can use \code{scale\_shape\_manual} to choose each shape to be used. We set three ``open'' shapes that we will see later are very useful as they obey both \code{color} and \code{fill} \emph{aesthetics}.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
+  geom_point() +
+  scale_shape_manual(values = c(21, 22, 23))
+@
+
+It is also possible to use character strings as shapes. The character is centred on the position of the observation. Conceptually using \code{character} values for \code{shape} is different to using \code{geom\_text} as in the later case there is much more flexibility as character strings and expressions are allowed in addition to single characters. Also positioning with respect to the coordinates of the observations can be asjusted through justification. While \code{geom\_text} is usually used for annotations, the present example treats the character string as a symbol. (This also opens the door to the use as shapes of symbols defined in special fonts.)
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
+  geom_point(size = 2.5) +
+  scale_shape_manual(values = c("4", "6", "8"), guide = FALSE)
+@
+
+Only the first character of the string is used, and this is sometimes limiting, as with two digit numbers or alphanumeric codes. For example the second character is ignored in the code below.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
+  geom_point(size = 4) +
+  scale_shape_manual(values = c("c4", "c6", "c8"), guide = FALSE)
+@
+
+As seen earlier one variable can be mapped to more than one aesthetic allowing redundant aesthetics. This may seem wasteful, but it is extremely useful as it allows one to produce figures that even when produced in color, can still be read if reproduced as monochrome images.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          shape = factor(cyl),
+                          color = factor(cyl))) +
+  geom_point()
+@
+
+Here we will map \code{fill} to \code{cyl}, and we could in addition map \code{color} to a different grouping as color controls color of the border of the shapes.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          shape = factor(cyl),
+                          fill = factor(cyl))) +
+  geom_point() +
+  scale_shape_manual(values = c(21, 22, 23))
+@
+
+We can create a ``bubble'' plot by mapping the \code{size} \emph{aesthetic} to a continuous variable. In this case, one has to think what is visually more meaningful. Although the radius of the shape is frequently mapped, in general due to how human perception works, mapping a variable to the area of the shape is in general more useful by being perceptually closer to a linear mapping. For this example we add a new variable to the plot. the weight of the car in tons and map it to the area of the points.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          color = factor(cyl),
+                          size = wt)) +
+  scale_size_area() +
+  geom_point()
+@
+
+If we use a radius based scale the ``impression'' we get is that some cars had very light weight, which is not the case.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          color = factor(cyl),
+                          size = wt)) +
+  scale_size() +
+  geom_point()
+@
+
+As a final example of how to combine different aesthetics, we use in a single plot several of the different mappings described in earlier examples.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          shape = factor(cyl),
+                          fill = factor(cyl),
+                          size = wt)) +
+  geom_point(alpha = 0.33, color = "black") +
+  scale_size_area() +
+  scale_shape_manual(values = c(21, 22, 23))
+@
+
+Data assigned to an \emph{aesthetic} can be the `result of a computation'. In other words, the values to be plotted do not need to be stored in the data frame passed as argument to \code{data}, the first formal parameter of \code{ggplot()}
+
+Here we plot the ratio of miles-per-gallon, \code{mpg}, and the engine displacement (volume), \code{disp}. Instead of mapping as above \code{disp} to the $x$ \emph{aesthetic}, we map \code{factor(cyl)} to $x$. In contrast to the continuous variable \code{disp} we earlier used, now we use a factor, so a discrete (categorical) scale is used by default for $x$.
+
+<<>>=
+ggplot(data = mtcars, aes(x = factor(cyl), y = mpg / disp)) +
+  geom_point()
+@
+
+Although \code{factor(cyl)} is mapped to $x$, we can map it in addition to  \code{color}. This may be useful when desiring to keep the design consistent across plots, for example this one and those above.
 
 <<>>=
 ggplot() +
@@ -143,38 +242,13 @@ ggplot() +
   geom_point(data = mtcars)
 @
 
-The code in the next chunk is also valid, it returns a blank plot.
+The code in the next chunk is also valid, it returns a blank plot. This apparently useless plot, can be very useful when writing functions that return \code{ggplot} objects or build them piece by piece in a loop.
 
 <<>>=
 ggplot()
 @
 
-In the next example we override the \code{color} aesthetic in \code{geom\_smooth}\footnote{Smoothing and curve fitted is discussed in more detail in section \ref{sec:???}.}, causing all the data to be fitted together. The data points are labelled according to \code{cyl} but the smooth line is calculated jointly for all values of \code{cyl}. That we use \code{code = "black"} is not important, what is important is that we use a constant to override an aesthetic mapping set globally for the whole plot.
-
-<<>>=
-ggplot(data = mtcars, aes(x=disp, y=hp, colour=factor(cyl))) +
-  geom_smooth(colour="black") +
-  geom_point()
-@
-
-In the example above the order in which the two geoms are added is important, as this determines the position of their layers. In the example above the points are plotted on top of the smoother, while in the next example \code{geom\_smooth} is plotted on top of the points.
-
-<<>>=
-ggplot(data = mtcars, aes(x=disp, y=hp, colour=factor(cyl))) +
-  geom_point() +
-  geom_smooth(colour="black")
-@
-
-We can assign the same variable to more than one aesthetic, and the combined key will be produced automatically.
-
-<<>>=
-ggplot(data = mtcars,
-       aes(x=disp, y=hp, colour=factor(cyl),
-           shape=factor(cyl))) +
-  geom_point()
-@
-
-We can change the labels for the different aesthetics, and give a title (\verb!\n! means `new line' and can be used to continue a label in the next line). In this case, if two aesthetics are linked to the same variable, the labels supplied should be identical, otherwise two separate keys will be produced.
+We can set the labels for the different aesthetics, and give a title (\verb!\n! means `new line' and can be used to continue a label in the next line). In this case, if two aesthetics are linked to the same variable, the labels supplied should be identical, otherwise two separate \emph{keys} will be produced.
 
 <<>>=
 ggplot(data = mtcars,
@@ -187,6 +261,9 @@ ggplot(data = mtcars,
        shape="Number of\ncylinders")
 @
 
+Please, see section \ref{sec:plot:labs} on page \pageref{sec:plot:labs} for more an extended description of the use of \code{labs}.
+
+\begin{framed}
 We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
 
 <<>>=
@@ -230,162 +307,36 @@ The are a few predefined themes in package \ggplot and additional ones in other 
 myplot + mylabs + theme_grey(10)
 myplot + mylabs + theme_grey(16)
 @
+\end{framed}
 
-As exemplified above the different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. The \code{alpha} (transparency) aesthetic can be mapped to a constant to make underlying layers visible, or they can be mapped to a data variable for example making the transparency of points in a plot depend on the number of observations used in its calculation.
+\section{Line plots}
 
-<<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
-  geom_point() + geom_smooth(colour="black", alpha=0.7)
-@
-
-The plot looks different if the order of the geoms is swapped. The data points overlapping the confidence band are more clearly visible in this second example because they are above the shaded area instead of bellow it.
+For line plots we use \code{geom\_line}. The \code{size} of a line is its thickness, and as we had \code{shape} for points, we have \code{linetype} for lines. In a line plot observations in successive rows of the data frame, or the subset corresponding to a group, are joined by straight lines. We use a different data set included in R, Orange, with data on the growth of five orange trees. See the help page for \code{Orange} for details.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
-   geom_smooth(colour="black", alpha=0.7) + geom_point()
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line()
 @
-
-\section{Plotting summaries}
-
-The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \code{xlim()} and \code{ylim}. See section \ref{???} for a way of constraining the viewport (the region visible in the plot) while keeping the scale limits on a wider range of $x$ and $y$ values.
-
-\subsection{Fitted curves, including splines}
-
-We will now show an example of the use of \code{stat\_smooth} accepting the default spline smoothing.
 
 <<>>=
-myplot + stat_smooth(colour="black")
+ggplot(data = Orange,
+       aes(x = age, y = circumference, linetype = Tree)) +
+  geom_line()
 @
 
-Instead of using the default spline, we can use a linear model fit. In this example we use a linear model, fitted by \code{lm}, as smoother:
-
-<<>>=
-myplot + stat_smooth(method="lm", colour="black")
-@
-
-Instead of using the default linear regression as smoother, we can use a linear model fit. In this example we use a polynomial of order 2 fitted by \code{lm}.
-
-<<>>=
-myplot + stat_smooth(method="lm", formula=y~poly(x,2), colour="black")
-@
-
-If we do not use \code{colour="black"} then the colour aesthetics supplied to \code{ggplot} is used, and splits the data into three groups to which the model is fitted separately.
-
-<<>>=
-myplot + stat_smooth(method="lm")
-@
-
-It is possible to use other types of models, including GAM and GLM, as smoothers, but we will not give examples of the use these more advanced models.
-
-\subsection{Statistical ``summaries''}
-
-It is also possible to summarize data on-the-fly when plotting, but before showing this we will generate some normally distributed artificial data:
-
-<<>>=
-fake.data <- data.frame(
-  y = c(rnorm(20, mean=2, sd=0.5),
-        rnorm(20, mean=4, sd=0.7)),
-  group = factor(c(rep("A", 20), rep("B", 20)))
-  )
-@
-
-Now will we use these data to plot means and confidence intervals by group. However, to save typing we first produce a dot plot by group.
-
-<<>>=
-fig2 <- ggplot(data=fake.data, aes(y=y, x=group)) +
-          geom_point()
-fig2
-@
-
-We have saved the base figure in \code{fig2}, so now we can play with different summaries. We first add just the mean. In this case we need to add as argument to \code{stat\_summary} the geom to use, as the default one expects data for plotting error bars, in later examples, this is not needed.
-
-<<>>=
-fig2 + stat_summary(fun.y = "mean", geom="point",
-                    colour="red", shape="-", size=20)
-@
-
-Then the median, by changing the argument passed to \code{fun.y}.
-
-<<>>=
-fig2 + stat_summary(fun.y = "median", geom="point",
-                    colour="red", shape="-", size=20)
-@
-
-We can add the mean and $p = 0.95$ confidence intervals assuming normality (using the $t$ distribution):
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_cl_normal",
-                    colour="red", size=1, alpha=0.7)
-@
-
-We can add the means and $p = 0.95$ confidence intervals not assuming normality (using the actual distribution of the data by bootstrapping):
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_cl_boot",
-                    colour="red", size=1, alpha=0.7)
-@
-
-If needed, we can instead add the means and less restrictive confidence intervals, at $p = 0.90$ in this example, by means of \code{conf.int = 0.90} passed as a list to the underlying function being called.
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_cl_boot",
-                    fun.args = list(conf.int = 0.90),
-                    colour = "red", size = 1, alpha = 0.7)
-@
-
-We can plot error bars corresponding to $\pm$s.e. (standard errors) with the function \code{"mean\_se"} that was added in \ggplot 2.0.0.
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_se",
-                    colour="red", size=1, alpha=0.7)
-@
-
-As \code{mult} is the multiplier based on the probability distribution used, by default student's {t}, by setting it to one, we get also standard errors of the mean.
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_cl_normal", fun.args = list(mult = 1),
-                    colour="red", size=1, alpha=0.7)
-@
-
-However, be aware that the code below, as used in earlier versions of \ggplot, needs to be rewritten as above.
-
-<<eval=FALSE>>=
-fig2 + stat_summary(fun.data = "mean_cl_normal", mult = 1,
-                    colour="red", size=1, alpha=0.7)
-@
-
-Finally we can plot error bars showing $\pm$s.d. (standard deviation).
-
-<<>>=
-fig2 + stat_summary(fun.data = "mean_sdl",
-                    colour="red", size=1, alpha=0.7)
-@
-
-We do not show it here, but instead of using these functions (from package \Hmisc) it is possible to define one's own functions, and remember that arguments to all functions, except for the first one containing the actual data should be supplied as a list through formal argument \code{fun.args}.
-
-Finally we plot the means in a bar plot, with the observations superimposed and $p = 0.95$ C.I. (the order in which the geoms are added is important: by having \code{geom\_point} last it is plotted on top of the bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets mapping
-them to factors in the data set can be used to distinguish them.
-
-<<eval=FALSE>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
-  stat_summary(fun.y = "mean", geom = "bar",
-               fill="yellow", colour="black") +
-  stat_summary(fun.data = "mean_cl_normal",
-               geom = "errorbar", mult = 1,
-               width=0.1, size=1, colour="red") +
-  geom_point(size=3, alpha=0.3)
-@
+Much of what was described above for scatter plots can be adapted to line plots.
 
 \section{Plotting functions}
 
-We can also directly plot functions, without need to generate data beforehand (the number of data points to be generated can be also set).
+In addition to plotting data from a data frame with variables to map to $x$ and $y$ \emph{aesthetics}, it is possible to have only a variable mapped to $x$ and use \code{stat\_function} to generate the values to be mapped to $y$ using a function. This avoids the need to generate data beforehand (the number of data points to be generated can be also set).
 
 <<>>=
 ggplot(data.frame(x=-3:3), aes(x=x)) +
   stat_function(fun=dnorm)
 @
 
-We can even pass additional arguments to a function.
+Using a list we can even pass by name additional arguments to a function.
 
 <<>>=
 ggplot(data.frame(x=-3:3), aes(x=x)) +
@@ -400,7 +351,7 @@ ggplot(data.frame(x=0:1), aes(x=x)) +
                 args = list(a = 1, b = 1.4))
 @
 
-Here is an example of a predefined function, but in this case the default breaks (tick positions) are not the best:
+Here is an example of a predefined function, but in this case the default breaks (tick positions) are not the best.
 
 <<>>=
 ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
@@ -421,7 +372,7 @@ ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
 
 \section{Plotting text and expressions}
 
-One can use \code{geom\_text} to add text labels to observations. The aesthetic \code{label} gives text and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} aesthetic can be also used for text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of zero for both \code{hjust} and \code{vjust} centres the label. The centre of the text is at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Negative justification values, shift the label left or down, and positive values right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ sift the text even further away.
+We can use \code{geom\_text} or \code{geom\_label} to add text labels to observations. For \code{geom\_text}, the aesthetic \code{label} gives text and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} aesthetic can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label. The centre of the text is at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Negative justification values, shift the label left or down, and positive values right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, based on the length of the string. In the case of \code{geom\_label} the text is enclosed in a rectangle, which obeys the \code{fill} \emph{aesthetic}. However, it does not support rotation with \code{angle}.
 
 <<>>=
 my.data <-
@@ -442,7 +393,7 @@ my.data <-
              label=paste("alpha[", 1:5, "]", sep = ""))
 
 ggplot(my.data, aes(x,y,label=label)) +
-  geom_text(hjust=-0.2, parse=TRUE, size = rel(6)) +
+  geom_text(hjust=-0.2, parse=TRUE, size = 6) +
   geom_point()
 @
 
@@ -450,12 +401,133 @@ A similar example using \code{geom\_label}.
 
 <<>>=
 ggplot(my.data, aes(x, y, label = label)) +
-  geom_label(hjust = -0.2, parse = TRUE, size = rel(4),
+  geom_label(hjust = -0.2, parse = TRUE, size = 4,
              fill = "white", colour = "red") +
   geom_point()
 @
 
 See R's `plotmath' demo for more information on the syntax of expressions.
+
+\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}
+
+I describe this in the same section, and immediately after the section on plotting text labels, as they are added to plots using similar approaches. Be aware that the default jsutification of plot titles has changed in \ggplot version 2.2.0 from centered to left justified. At the same time, support for subtitles and captions was added.
+
+The most flexible approach is to use \code{labs} as it allows the user to set the text or expressions to be used for these different elements.
+
+<<>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  labs(title = "Growth of orange trees",
+       subtitle = "Starting from 1968-12-31",
+       caption = "see Draper, N. R. and Smith, H. (1998)",
+       x = "Time (d)",
+       y = "Stem circumference (mm)",
+       color = "Tree\nnumber")
+@
+
+There are in addition \code{labs} some convenience functions for setting the axis labels, \code{xlab} and \code{ylab}.
+
+<<>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  xlab("Time (d)") +
+  ylab("Stem circumference (mm)")
+@
+
+An additional convenience function, \code{ggtitle} can be used to add a title and optionally a subtitle.
+
+<<>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  ggtitle("Growth of orange trees",
+          subtitle = "Starting from 1968-12-31")
+@
+
+Function \code{update\_labels} allows the replacement of labels in an existing plot.
+
+<<>>=
+p <-
+    ggplot(data = mtcars,
+           aes(x=disp, y=hp, colour=factor(cyl),
+               shape=factor(cyl))) +
+      geom_point() +
+      labs(x="Engine displacement)",
+           y="Gross horsepower",
+           color="Number of\ncylinders",
+           shape="Number of\ncylinders")
+
+update_labels(p, list(x = "Cilindrada",
+                      y = "Potencia bruta (caballos de fuerza)",
+                      color = "no. de\ncilindros",
+                      shape = "no. de\ncilindros"))
+@
+
+The labels used in keys and axis tick-labels for factor levels can be changed through the different discrete and manual \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
+
+\section{Tile plots}\label{sec:tileplot}
+
+For the special case of heat maps see section \ref{sec:heatmap} on page \pageref{sec:heatmap}.
+
+We here generate 100 random draws from the $F$ distribution with degrees of freedom $\nu_1 = 5, \nu_2 = 20$.
+
+<<>>=
+set.seed(1234)
+randomf.df <- data.frame(z = rf(100, df1 = 5, df2 = 20),
+                         x = rep(letters[1:10], 10),
+                         y = LETTERS[rep(1:10, rep(10, 10))])
+@
+
+<<>>=
+ggplot(randomf.df, aes(x, y, fill = z)) +
+  geom_tile()
+@
+
+We can use \code{"white"} or some other contrasting color to better delineate the borders of the tiles.
+
+<<>>=
+ggplot(randomf.df, aes(x, y, fill = z)) +
+  geom_tile(color = "white")
+@
+
+Any continuous fill scale can be used to control the appearance. Here we show a tile plot using a grey gradient.
+
+<<>>=
+ggplot(randomf.df, aes(x, y, fill = z)) +
+  geom_tile(color = "black") +
+  scale_fill_gradient(low = "grey15", high = "grey85", na.value = "red")
+@
+
+\section{Bar plots}\label{sec:plot:bar}
+
+R users not familiar yet with \ggplot are frequently surprised by the default behaviour of \code{geom\_bar} as it uses \code{stat\_count} to compute the value plotted, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). The default can be changed, but \code{geom\_col} is equivalent to \code{geom\_bar} used with \code{"identity"} as argument to parameter \code{stat}. The \emph{statistic} \code{stat\_identity} just echoes its input. In previous sections, as when plotting points and lines, this statistic was used by default.
+
+In this bar plot, each bar shows the number of observations in each \code{class} of car in the data set. We use a data set included in \ggplot for this example based on the documentation.
+<<>>=
+ggplot(mpg, aes(class)) + geom_bar()
+@
+
+We can easily get stacked bars grouped by the number of cylinders of the engine.
+
+<<>>=
+ggplot(mpg, aes(class, fill = factor(cyl))) + geom_bar()
+@
+
+The default palette used for \code{fill} is rather ugly, so we also show the same plot with another scale for fill.
+
+<<>>=
+ggplot(mpg, aes(class, fill = factor(cyl))) +
+  geom_bar(color = "black") +
+  scale_fill_brewer()
+@
 
 \section{Circular plots}
 
@@ -464,61 +536,278 @@ Under circular plots I include pie charts. Here we add a new "word" to the gramm
 Pie charts are more difficult to read: our brain is more comfortable at comparing
 lengths than angles. If used, they should only be used to show composition, or
 fractional components that add up to a total. In this case only if the number of
-“pie slices” is small (rule of thumb: less seven).
+“pie slices” is small (rule of thumb: less than seven).
 
-A funny example stolen from the \ggplot website at \url{http://docs.ggplot2.org/current/coord_polar.html}.
+We make the equivalent of the first bar plot above. As we are still using \code{geom\_bar} the default is \code{stat\_count}. As earlier we use the brewer scale for nicer colors.
 
 <<>>=
-# Hadley's favourite pie chart
-df <- data.frame(
-  variable = c("resembles", "does not resemble"),
-  value = c(80, 20)
-)
-ggplot(df, aes(x = "", y = value, fill = variable)) +
-  geom_bar(width = 1, stat = "identity") +
-  scale_fill_manual(values = c("red", "yellow")) +
-  coord_polar("y", start = pi / 3) +
-  labs(title = "Pac man")
+ggplot(data = mpg, aes(x = factor(1), fill = factor(class))) +
+  geom_bar(width = 1, color = "black") +
+  coord_polar(theta = "y") +
+  scale_fill_brewer() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class")
 @
 
-Something just a bit more useful, also stolen from the same page:
+Even with four slices pie charts can be difficult to read. Compare the following bar plot and pie chart.
 
 <<>>=
-# A pie chart = stacked bar chart + polar coordinates
-pie <- ggplot(data = mtcars, aes(x = factor(1), fill = factor(cyl))) +
-         geom_bar(width = 1)
-pie + coord_polar(theta = "y")
+ggplot(data = mpg, aes(x = factor(cyl), fill = factor(cyl))) +
+  geom_bar(color = "black") +
+  scale_fill_grey() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class") +
+  theme_bw()
+
+ggplot(data = mpg, aes(x = factor(1), fill = factor(cyl))) +
+  geom_bar(width = 1, color = "black") +
+  coord_polar(theta = "y") +
+  scale_fill_grey() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class") +
+  theme_bw()
 @
 
-\section{Bar plots}
+\section{Plotting summaries}\label{sec:plot:summaries}
 
-\section{Pie charts vs.\ bar plots example}
+The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \code{xlim()} and \code{ylim}. See section \ref{???} for a way of constraining the viewport (the region visible in the plot) while keeping the scale limits on a wider range of $x$ and $y$ values.
 
-There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
+\subsection{Statistical ``summaries''}
 
-Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
+It is possible to summarize data on-the-fly when plotting. We describe in the same section the calculation of measures of central position and of variation, as \code{stat\_summary} allows them to be calculated in the same function call.
+
+For the examples we will generate some normally distributed artificial data.
 
 <<>>=
-example.data <-
-  data.frame(values = c(17, 18, 20, 22, 23,
-                        20, 20, 19, 21, 20,
-                        23, 22, 20, 18, 17),
-             examples= rep(c("A", "B", "C"), c(5,5,5)),
-             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
+fake.data <- data.frame(
+  y = c(rnorm(20, mean=2, sd=0.5),
+        rnorm(20, mean=4, sd=0.7)),
+  group = factor(c(rep("A", 20), rep("B", 20)))
   )
-
-ggplot(example.data, aes(x=cols, y=values, fill=cols)) +
-  geom_bar(width = 1, stat="identity") +
-  facet_grid(.~examples) +
-  scale_fill_identity()
-ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
-  geom_bar(width = 1, stat="identity") +
-  facet_grid(.~examples) +
-  scale_fill_identity() +
-  coord_polar(theta="y")
 @
+
+We first use scatter plots for the examples, later we give some additional examples for bar plots.
+We will reuse a ``base'' plot in a series of examples, so that the differences are easier to appreciate. We first add just the mean. In this case we need to pass as argument to \code{stat\_summary} the \code{geom} to use, as the default one, \code{geom\_pointrange}, expects data for plotting error bars in addition to the mean.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.y = "mean", geom="point", color="red", shape="-", size=20)
+@
+
+Then the median, by changing the argument passed to \code{fun.y}.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.y = "median", geom="point", colour="red", shape="-", size=20)
+@
+
+We can add the mean and $p = 0.95$ confidence intervals assuming normality (using the $t$ distribution):
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_normal", colour="red", size=1, alpha=0.7)
+@
+
+We can add the means and $p = 0.95$ confidence intervals not assuming normality (using the actual distribution of the data by bootstrapping):
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7)
+@
+
+If needed, we can display less restrictive confidence intervals, at $p = 0.90$ in this example, by means of \code{conf.int = 0.90} passed as a list to the underlying function being called.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_boot",
+               fun.args = list(conf.int = 0.90),
+               colour = "red", size = 1, alpha = 0.7)
+@
+
+We can plot error bars corresponding to $\pm$s.e. (standard errors) with the function \code{"mean\_se"}, added in \ggplot 2.0.0.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_se",
+               colour="red", size=1, alpha=0.7)
+@
+
+As \code{mult} is the multiplier based on the probability distribution used, by default student's {t}, by setting it to one, we get also standard errors of the mean.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_normal",
+               fun.args = list(mult = 1),
+               colour="red", size=1, alpha=0.7)
+@
+
+However, be aware that the code such as below (NOT EVALUATED HERE), as used in earlier versions of \ggplot, needs to be rewritten as above.
+
+<<eval=FALSE>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_cl_normal", mult = 1,
+               colour="red", size=1, alpha=0.7)
+@
+
+Finally we can plot error bars showing $\pm$s.d. (standard deviation).
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  geom_point() +
+  stat_summary(fun.data = "mean_sdl", colour="red", size=1, alpha=0.7)
+@
+
+We do not give an example here, but instead of using these functions (from package \Hmisc) it is possible to define one's own functions. In addition as arguments to any function used, except for the first one containing the actual data, are supplied as a list through formal argument \code{fun.args}, there is a lot of flexibility with respect to what functions can be used.
+
+Finally we plot the means in a scatter plot, with the observations superimposed and $p = 0.95$ confidence interval (the order in which the geoms are added is important: by having \code{geom\_point} last it is plotted on top of the bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets mapping them to factors in the data set can be used to distinguish them. Adding \code{stat\_summary} twice allows us to plot the mean and the error bars using different colors.
+
+<<>>=
+ggplot(data=fake.data, aes(y=y, x=group)) +
+  stat_summary(fun.y = "mean", geom = "point",
+               fill="white", colour="black") +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "errorbar",
+               width=0.1, size=1, colour="red") +
+  geom_point(size=3, alpha=0.3)
+@
+
+Similarly as with scatter plots, we can plot summaries as bars plots and add error bars.
+If we supply a different argument to \code{stat} we can for example plot the means or medians for a variable, for each \code{class} of car.
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) + geom_bar(stat = "summary", fun.y = mean)
+@
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) + geom_bar(stat = "summary", fun.y = median)
+@
+
+The ``reverse'' syntax is also possible, we can add the \emph{statistics} to the plot object and pass the \emph{geometry} as an argument to it.
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) + stat_summary(geom = "col", fun.y = mean)
+@
+
+And we can easily add error bars to the bar plot. We use \code{size} to make the lines of the error bar thicker, and a value smaller than zero for \code{fatten} to make the point smaller. The default \code{geom} for \code{stat\_summary} is \code{"pointrange"}.
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean) +
+  stat_summary(fun.data = "mean_se", size = 1, fatten = 0.5)
+@
+
+Instead of making the point smaller, we can pass \code{"linerange"} as argument to eliminate the point completely.
+<<>>=
+ggplot(mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean) +
+  stat_summary(geom = "linerange", fun.data = "mean_se", size = 1)
+@
+
+Passing \code{"errorbar"} to \code{geom} results in more traditional error bars, however, this type of error bars has been criticized as adding unnecesary clutter to plots \autocite{TufteXXXX}. We use \code{width} to reduce the width of the cross lines at the ends of the bars.
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean) +
+  stat_summary(geom = "errorbar", fun.data = "mean_se", width = 0.1, size = 1)
+@
+
+If we have ready calculated values for the summaries, we can still obtain the same plots. Here we calculate the summaries before plotting, and then redraw the plot immediately above.
+
+<<>>=
+mpg_g <- dplyr::group_by(mpg, class)
+mpg_summ <- dplyr::summarise(mpg_g, hwy_mean = mean(hwy),
+                                    hwy_se = sd(hwy) / sqrt(n()))
+
+ggplot(mpg_summ, aes(x = class,
+                     y = hwy_mean,
+                     ymax = hwy_mean + hwy_se,
+                     ymin = hwy_mean - hwy_se)) +
+  geom_col() +
+  geom_errorbar(width = 0.1, size = 1)
+@
+
+\section{Fitted smooth curves}
+
+The \emph{statistic} \code{stat\_smooth} fits a smooth curve to observations in the case when the scales for $x$ and $y$ are continuous. For the first example, we use the default smoother, a spline. The type of spline is automatically chosen based on the number of observations.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg)) +
+       stat_smooth()
+@
+
+In most cases we will want to plot the observations as points together with the smoother. Can can plot the observation on top of the smoother, as done here, or the smoother on top of the observations.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg)) +
+  stat_smooth() +
+  geom_point()
+@
+
+Instead of using the default spline, we can fit a different model. In this example we use a linear model as smoother, fitted by \code{lm}.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg)) +
+  stat_smooth(method="lm") +
+  geom_point()
+@
+
+These data are really grouped, so we map the grouping to the \code{color} \emph{aesthetic}. Now we get three groups of points with different colours but also three separate smooth lines.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
+  stat_smooth(method="lm") +
+  geom_point()
+@
+
+To obtain a single smoother for the three groups, we need to set the mapping of the \code{color} \emph{aesthetic} to a constant within \code{stat\_smooth}. This local value overrides the default for the whole plot set with \code{aes} just for this single \emph{statistic}. We use \code{"black"} but this could be replaced by any other color definition known to R.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
+  stat_smooth(method="lm", colour="black") +
+  geom_point()
+@
+
+Instead of using the default \code{formula} for a linear regression as smoother, we pass a different \code{formula} as argument. In this example we use a polynomial of order 2 fitted by \code{lm}.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
+  stat_smooth(method="lm", formula=y~poly(x,2), colour="black") +
+  geom_point()
+@
+
+It is possible to use other types of models, including GAM and GLM, as smoothers, but we will not give examples of the use of these more advanced models in this section.
+
+\begin{framed}
+The different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. The \code{alpha} (transparency) aesthetic can be mapped to a constant to make underlying layers visible, or \code{alpha} can be mapped to a data variable for example making the transparency of points in a plot depend on the number of observations used in its calculation.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
+  geom_point() +
+  geom_smooth(colour="black", alpha=0.7) +
+  theme_bw()
+@
+
+The plot looks different if the order of the geoms is swapped. The data points overlapping the confidence band are more clearly visible in this second example because they are above the shaded area instead of bellow it.
+
+<<>>=
+ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
+  geom_smooth(colour="black", alpha=0.7) +
+  geom_point() +
+  theme_bw()
+@
+\end{framed}
 
 \section{Frequencies and densities}
+
+A different type of summaries are frequencies and empirical density functions. These can be calculated in one or more dimensions. Sometimes instead of being calculated, we rely on the density of graphical elements to convey the density. Sometimes, scatter plots using a well chosen value for \code{alpha} give a satisfactory impression of the density. Rug plots, described below work in a similar way.
 
 \subsection{Marginal rug plots}
 
@@ -543,7 +832,9 @@ ggplot(my.data, aes(x, y, colour = group)) +
   geom_rug()
 @
 
-\subsection{Histograms}
+\subsection{Histograms}\label{sec:histogram}
+
+Histograms are defined by how the plotted values are calculated. Although they are most frequently plotted as bar plots, many bar plots are not histograms. Although rarely done in practice, a histogram could be plotted using a different \emph{geometry} and \code{stat\_bin} the \emph{statistic} used by default by \code{geom\_histogram}. This statistics does binning of observations before computing frequencies, as is suitable for continuous $x$ scales. For categorical data \code{stat\_count} should be used, which as seen in section \ref{sec:plot:bar} on page \pageref{sec:plot:bar} is the default \code{stat} for \code{geom\_bar}.
 
 <<>>=
 ggplot(my.data, aes(x)) +
@@ -566,7 +857,26 @@ ggplot(my.data, aes(y, fill = group)) +
   theme_bw(16)
 @
 
-\subsection{Density plots}
+The \emph{geometry} \code{geom\_bin2d} by default uses the \emph{statistic} \code{stat\_bin2d} which can be thought as a histogram in two dimensions. The frequency for each rectangle is mapped onto a \code{fill} scale.
+
+<<>>=
+ggplot(my.data, aes(x, y)) +
+  geom_bin2d(bins = 8) +
+  facet_wrap(~group)
+@
+
+The \emph{geometry} \code{geom\_hex} by default uses the \emph{statistic} \code{stat\_binhex} which can be thought as a histogram in two dimensions. The frequency for each hexagon is mapped onto a \code{fill} scale.
+
+<<>>=
+ggplot(my.data, aes(x, y)) +
+  geom_hex(bins = 8) +
+  facet_wrap(~group)
+@
+
+
+\subsection{Density plots}\label{sec:plot:density}
+
+Empirical density functions are the equivalent of a histogram, but are continuous and not calculated using bins. They can be calculated in 1 or 2 dimensions (2d), for $x$ or $x$ and $y$ respectively. As with histograms it is possible to use different \emph{geometries} to visualize them.
 
 <<>>=
 ggplot(my.data, aes(x, colour = group)) +
@@ -606,24 +916,24 @@ stat_density_2d(aes(fill = ..level..), geom = "polygon") +
   facet_wrap(~group)
 @
 
-<<>>=
-ggplot(my.data, aes(x, y)) +
-  geom_hex(bins = 6) +
-  facet_wrap(~group)
-@
-
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_narrow)
 @
 
-\subsection{Box and whiskers plots}
+\subsection{Box and whiskers plots}\label{sec:boxplot}
+
+Box and whiskers plots, also very frequently called just boxplots, are also summaries that convey some of the characteristics of a distribution. Although they can be calculated and plotted based on just a few observations, they are not useful unless each box plot is based in more than 10 to 15 observations.
 
 <<>>=
 ggplot(my.data, aes(group, y)) +
   geom_boxplot()
 @
 
+As with other \emph{geometries} their appearance obeys both the usual \emph{aesthetics} such as color, and others specific to these type of visual representation.
+
 \subsection{Violin plots}
+
+Violin plots are a more recent development than box plots, and usable with relatively large numbers of observations. They could be thought as being a sort of hybrid between an empirical density function and a box plot. As is the case with box plots, they are particularly useful when comparing distributions of related data, side by side.
 
 <<>>=
 ggplot(my.data, aes(group, y)) +
@@ -637,26 +947,15 @@ ggplot(my.data, aes(group, y, fill = group)) +
              colour = "black", shape = 21)
 @
 
-\section{Special plots}
-
-In this section we present some bare-bones examples of specialized plots. More elaborate versions are presented in later chapters using extensions to \ggplot. These plots are not special in the grammar used to build them, but are to some extent idiosyncratic although frequently used in certain disciplines.
-
-\subsection{Heat maps}
-
-
-
-\subsection{Volcano plots}
-
-A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
-
-<<>>=
-fake_expression.data <- NA
-
-@
+As with other \emph{geometries} their appearance obeys both the usual \emph{aesthetics} such as color, and others specific to these type of visual representation.
 
 \section{Using facets}
 
 Sets of coordinated plots are a very useful tool for visualizing data. These became popular through the \code{trellis} graphs in S, and the \code{lattice} package in R. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets along a single `axis' but wrapped into several rows. In the examples below we use \code{geom\_point} but faceting can be used with any \code{ggplot} object (even with maps, spectra and ternary plots produced by functions in packages \ggmap, \ggspectra and \ggtern.
+
+\begin{framed}
+  The code underlying faceting has been rewritten in \ggplot version 2.2.0. All the examples given here are backwards compatible with versions 2.1.0 and possibly 2.0.0. The new functionality is related to the writing of extensions or controlled through themes, and will be discussed in other sections.
+\end{framed}
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
@@ -763,19 +1062,19 @@ opts_chunk$set(opts_fig_wide)
 p + facet_wrap(~ vs, labeller = label_bquote(alpha ^ .(vs)))
 @
 
-\section{Scales}
+\section{Scales}\label{sec:plot:scales}
 
 Scales map data onto aesthetics. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted geometrical object, such as \code{color}, \code{size}, position (\code{x, y, z}), \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most elemental mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \code{scale\_x\_continuous}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the $x$-axis will be based on the logarithm of the original data. A continuous data variable can, if we think it useful for describing our data, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
 
 Discrete scales work in a similar way. We can use \code{scale\_colour\_identity} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from the default palette, unless we chose a different palette, or even use \code{scale\_colour\_manual} to assign whatever colour we want to each level to be mapped. The same is true for other discrete scales like symbol \code{shape} and \code{linetype}. Remeber that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes such observation invisible.
 
-Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot 2.0.0 re-exports many functions from package \code{scales}. Some simple examples follow.
+Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot 2.0.0 and later re-exports many functions from package \code{scales}. Some simple examples follow.
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_medium)
 @
 
-Some new fake data.
+We generate new fake data.
 
 <<>>=
 fake2.data <-
@@ -785,36 +1084,284 @@ fake2.data <-
              z = rnorm(40, mean=12, sd=6))
 @
 
-We save \code{ggplot} object with the default scales.
+\subsection{Continuous scales for $x$ and $y$}
+
+\subsubsection{Limits}
+
+To change the limits of the $y$-scale, \code{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \code{ylim} only, but \code{xlim} can be used equivalently for the $x$ scale.
+
+We can set both limits, minimum and maximum.
 
 <<>>=
-fig2 <- ggplot(fake2.data, aes(z, y)) + geom_point()
+ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, 100)
 @
 
-We re-save a \code{ggplot} object using the default scales, except that we change the limits of the $y$-scale. \code{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic.
+We can set both limits, minimum and maximum, reversing the direction of the axis scale.
 
 <<>>=
-fig2 + ylim(0, NA)
+ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(100, 0)
 @
 
-The default scale used by the \code{y} aesthetic uses \code{position = "identity"}, but there are predefined for transformed scales. Axis tick labels display the original values before applying the transformation, original numbers. The \code{"breaks"} need to be given in the original scale.
+We can set one limit and leave the other one free.
 
 <<>>=
-fig2 + scale_y_log10(breaks=c(10,20,50,100))
+ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, NA)
 @
 
-In contrast, transforming the data, results in tick-labels expressed in the logarithm of the original data.
+We can use \code{lims} with discrete scales, listing all the levels that are to be included in the scale, even if they are missing from a given data set, such as after subsetting.
+
+And we can expand the limits, to set a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in data frame \code{fake2.data}.
 
 <<>>=
-fig2log <- ggplot(fake2.data, aes(z, log10(y))) + geom_point()
+ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
 @
 
+\subsubsection{Transformed scales}
+
+The default scale used by the \code{y} aesthetic uses \code{position = "identity"}, but there are predefined for transformed scales.
+
+Although transformations can be passed as argument to \code{scale\_x\_continuous} and \code{scale\_y\_continuous}, there are predefined convenience scale functions for \code{log10}, \code{sqrt} and \code{reverse}.
+
+\begin{framed}
+  Similarly to the maths functions of R, the name of the scales are \code{scale\_x\_log10} and \code{scale\_y\_log10} rather than \code{scale\_y\_log} because in R the function \code{log} returns the natural or Neperian logarithm.
+\end{framed}
+
+We can use \code{scale\_x\_reverse} to reverse the direction of a continuous scale,
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() + scale_x_reverse()
+@
+
+Axis tick-labels display the original values before applying the transformation. The \code{"breaks"} need to be given in the original scale as well. We use \code{scale\_y\_log10} to apply a $\log_{10}$ transformation to the $x$ values.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() + scale_y_log10(breaks=c(10,20,50,100))
+@
+
+In contrast, transforming the data on-the-fly when mapping it to the $x$ \emph{aesthetic}, results in tick-labels expressed in the logarithm of the original data.
+
+<<>>=
+ggplot(fake2.data, aes(z, log10(y))) + geom_point()
+@
+
+We show here how to specify a transformation to a continuous scale, using a predefined ``transformation'' object.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(trans = "reciprocal")
+@
+
+Natural logarithms are important in growth analysis as the slope against time gives the relative growth rate. We show this with the \code{Orange} data set.
+
+<<>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(trans = "log", breaks = c(20, 50, 100, 200))
+@
+
+In section \ref{sec:plot:volcano} on page \pageref{sec:plot:volcano} we define and use a transformation object.
+
+\begin{framed}
 When combining scale transformations and summaries, one should be aware of which data are used, transformed or not.
+\end{framed}
 
+\subsubsection{Tick labels}
+
+Finally, when wanting to display tick labels for data available as fractions as percentages, we can use
+\code{labels = scales::percent}.
+
+<<>>=
+ggplot(fake2.data, aes(z, y / max(y))) +
+  geom_point() +
+  scale_y_continuous(labels = scales::percent)
+@
+
+In the case of currency we can use \code{labels = scales::dollar}, and if we want to use commas for decimal point we can use \code{labels = scales::comma}.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_y_continuous(labels = scales::dollar)
+@
+
+When using breaks, we can just accept the default labels for the \code{breaks}.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_y_continuous(breaks = c(20, 40, 47, 60))
+@
+
+We can also set tick labels manually, in parallel to the setting of \code{breaks}.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_y_continuous(breaks = c(20, 40, 47, 60), labels = c("20", "40", "->", "60"))
+@
+
+Using an expression we obtain a Greek letter.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_y_continuous(breaks = c(20, 40, 47, 60), labels = c("20", "40", expression(alpha), "60"))
+@
+
+We can pass a function that accepts the breaks and returns labels to \code{labels}. Package \scales defines several formatters, or we can define our own. For \code{log10} scales
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_y_continuous(labels = scales::scientific_format())
+@
+
+Please, see section \ref{sec:plot:volcano} on page \pageref{sec:plot:volcano} for an example of the use of \code{scales::math\_format} together with a logarithmic transformation of the data.
+
+\subsection{Time and date scales for $x$ and $y$}
+
+\subsubsection{Limits}
+
+Time and date scales are conceptually similar to continuous numeric scales, but use special data types and formatting for labels. We can set limits and breaks using constants as time or dates. These are most easily input with the functions in packages \pkgname{lubridate} or \pkgname{anytime}.
+
+Please, see section \ref{sec:ggpmisc:trydf} on page \pageref{sec:ggpmisc:trydf} for examples.
+
+\subsubsection{Axis labels}
+
+By default the tick labels produced and their formatting is automatically selected based on the extent of the time data. For example, if we have all data collected within a single day, then the tick labels will show hours and minutes. If we plot data for several years, the labels will show the date portion of the time instant. The default is frequently good enough, but it is possible, as for numbers to use different formatter functions to generate the tick labels.
+
+\subsection{Discrete scales for $x$ and $y$}
+
+In the case of ordered or unordered factors, the tick labels are by default the names of the factor levels. Consequently one roundabout way to obtaining the desired tick labels is to use them as factor levels. This approach is not recommended as in most cases the text of the desired tick labels may not be recognized as a valid name making the code using them difficult to type in scripts or at the command prompt. It is best to use simple mnemonic short names for factor levels and variables, and to set suitable labels when plotting, as we will show here.
+
+\begin{framed}
+When using factors, the ordering used for plotting levels is the one they have in the factor. When a factor is created, the default is for levels to be stored in alphabetical order. This default can be easily overridden at the time of creation, as well as the order modified at a later time.
+
+<<>>=
+default.fct <- factor(c("a", "c", "f", "f", "a", "d"))
+levels(default.fct)
+@
+
+<<>>=
+levels.fct <- factor(c("a", "c", "f", "f", "a", "d"),
+                      levels = c("f", "a", "d", "c"))
+levels(levels.fct)
+@
+
+Reorder can be used to change the order of the levels based on the values of a numeric variable. We will visit once again the \code{Orange} data set.
+
+<<>>=
+my1.Tree <- with(Orange,
+                reorder(Tree, -circumference))
+levels(Orange$Tree)
+levels(my1.Tree)
+@
+
+Which is equivalent to reversing the order in this particular case.
+
+<<>>=
+my2.Tree <- with(Orange,
+                factor(Tree,
+                levels = rev(levels(Tree))))
+levels(Orange$Tree)
+levels(my2.Tree)
+@
+
+We restore the default ordering.
+
+<<>>=
+my3.Tree <- with(Orange,
+                factor(Tree,
+                levels = sort(levels(Tree))))
+levels(Orange$Tree)
+levels(my3.Tree)
+@
+
+We can set the levels in any arbitrary order by explicitly listing the level names, not only at the time of creation but also later. Here we show that it is possible to not only reorder exisitng levels, but even to add a level for which there are no observations.
+
+<<>>=
+my3.Tree <- with(Orange,
+                factor(Tree,
+                levels = c("1", "2", "3", "4", "5", "9")))
+levels(Orange$Tree)
+levels(my3.Tree)
+@
+
+\end{framed}
+
+We use here once again the \code{mpg} data set.
+
+We order the columns in the plot based on \code{mpg\$hwy} by reordering \code{mpg\$class}. This approach makes sense if this ordering is needed for all plots. It is always bad to keep several versions of a single data set as it easily leads to mistakes and confusion.
+
+<<>>=
+my.mpg <- mpg
+my.mpg$class <- with(my.mpg, reorder(factor(class), hwy))
+ggplot(my.mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean)
+@
+
+Or the same on-the-fly, which is much better as the data remains unmodified..
+
+<<>>=
+ggplot(mpg, aes(reorder(factor(class), hwy), hwy)) +
+  stat_summary(geom = "col", fun.y = mean)
+@
+
+Or ordering based on a different variable, \code{displ}.
+
+<<>>=
+ggplot(mpg, aes(reorder(factor(class), displ), hwy)) +
+  stat_summary(geom = "col", fun.y = mean)
+@
+
+Alternatively we can use \code{scale\_x\_discrete} to reorder and select the columns without altering the data. If we use this approach to subset the data, then to avoid warnings we need to add \code{na.rm = TRUE}. We use the scale in this example to convert level names to uppercase. The complementary function of \code{toupper} is \code{tolower}.
+
+<<>>=
+ggplot(mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
+  scale_x_discrete(limits = c("compact", "subcompact", "midsize"),
+  labels = toupper)
+@
+
+\subsection{Size}
+
+For the \code{size} \emph{aesthetic} several scales are available, both discrete and continuous. They do not differ much from those already described above. \emph{Geometries} \code{geom\_point}, \code{geom\_line}, \code{geom\_hline}, \code{geom\_vline}, \code{geom\_text}, \code{geom\_label} obey \code{size} as expected. In the case of \code{geom\_bar}, \code{geom\_col}, \code{geom\_area} and all other geometric elements bordered by lines, \code{size} is obeyed by these border lines. In fact, other aesthetics natural for lines such as \code{linetype} also apply to these borders.
+
+When using \code{size} scales, \code{breaks} and \code{labels} affect the key or \code{guide}. In scales that produce a key passing \code{guide = FALSE} removes the key corresponding to the scale.
+
+\subsection{Color and fill}
+
+\subsection{Position of axes}
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_x_continuous(position = "top") +
+  scale_y_continuous(position = "right")
+@
+
+\subsection{Secondary axes}
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(
+    "y",
+    sec.axis = sec_axis(~ . ^-1, name = "1/y")
+  )
+@
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(
+    "y",
+    sec.axis = sec_axis(~ ., name = "y", breaks = c(33.2, 55.4))
+  )
+@
 
 \section{Adding annotations}
 
-Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the \code{ggplot} object. In this example we pass directly expressions as tick labels. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}.
+Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the \code{ggplot} object. In this example we pass directly expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data.
 
 <<>>=
 ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
@@ -881,8 +1428,6 @@ fig + ylim(1,3) +
 
 hWe discuss how to use expressions as facet labels in section \ref{sec:facet}.
 
-\section{Scales in detail}
-
 \section{Generating output files}
 
 It is possible, when using RStudio, to directly export the displayed plot to a file. However, if the file will have to be generated again at a later time, or a series of plots need to be produced with consistent format, it is best to include the commands to export the plot in the script.
@@ -926,6 +1471,159 @@ Font face selection, weight, size, maths, etc. are set with \LaTeX\ syntax. The 
 We will revisit the example from the previous sections, but now using \LaTeX\ for the subscripted Greek $\alpha$ for labels instead of \code{plotmath}. In this example we use as subscripts numeric values from another variable in the same dataframe.
 
 \section{Examples}
+
+In this section we first produce some publication-ready plots requiring the use of different combinations of what has been presented earlier in this chapter and then we recreate some well known plots, using versions from Wikipedia articles as models. Our objective here is to show, how by combining different words and modifiers from the grammar of graphics we can build step by step very complex plots and/or annotate them with sophisticated labels. Here we do not any packages extending \ggplot2. Even more elaborate versions are presented in later chapters using \ggplot with other packages.
+
+\subsection{Heat maps}\label{sec:heatmap}
+
+Heat maps are 3D plots, with two axes with cartesian coordinates giving origin to rectangular tiles, with a third dimension represented by the \code{fill} of the tiles. They are used to describe deviations from a reference or controls condition, with for example, blue representing values below the reference and red above. A color gradient represents the size of the deviation. Simple heat maps can be produced directly with \ggplot functions and methods. Heat maps with similitude trees obtained through clustering require additional tools.
+
+The main difference with a generic tile plot (See section \ref{sec:tileplot} on page \pageref{sec:tileplot}) is that the fill scale is centred on zero and the red to blue colours used for fill represent a ``temperature''. Nowadays, the name \emph{heatmap} is also used for tile plots using other color for fill, as long as they represent deviations from a central value.
+
+\sloppy
+To obtain a heat map, then we need to use as fill scale \code{scale\_fill\_gradient2}. In the first plot we use the default colors for the fill, and in second example we use different ones.
+
+For the examples in this section we use artificial data to build a correlation matrix, which we convert into a data frame before plotting.
+
+<<>>=
+set.seed(123)
+x <- matrix(rnorm(200), nrow=20, ncol=10)
+y <- matrix(rnorm(200), nrow=20, ncol=10)
+cor.mat <- cor(x,y)
+cor.df <- data.frame(cor = as.vector(cor.mat),
+           x = rep(letters[1:10], 10),
+           y = LETTERS[rep(1:10, rep(10, 10))])
+@
+
+<<>>=
+ggplot(cor.df, aes(x, y, fill = cor)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2()
+@
+
+<<>>=
+ggplot(cor.df, aes(x, y, fill = cor)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "darkred", mid = "yellow",
+  high = "darkgreen")
+@
+
+\subsection{Quadrat plots}
+
+A quadrat plot is usually a scatter plot, although sometimes lines are also used. The scales are symmetrical both for $x$ and $y$ and negative and positive ranges: the origin $x = 0, y = 0$ is at the geometrical center of the plot.
+
+We generate an artificial data set with \code{y} values correlated to \code{x} values.
+
+<<>>=
+set.seed(4567)
+x <- rnorm(200, sd = 1)
+quadrat_data.df <- data.frame(x = x,
+                              y = rnorm(200, sd = 0.5) + 0.5 * x)
+@
+
+Here we draw a simple quadrat plot, by adding two lines and using fixed coordinates with a 1:1 ratio between $x$ and $y$ scales.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    coord_fixed(ratio = 1) +
+    theme_bw()
+@
+
+We may want to add lines showing 1:1 slopes, make the axes limits symmetric, and make points semi-transparent to allow overlapping points to be visualized. We expand the limits with \code{expand\_limits} rather that set them with \code{limits} or \code{xlim} and \code{ylim}, so that if there are observations in the data set outside our target limits, the limits will still include them. In other words, we set a minimum expanse for the limits of the axes, but allow them to \emph{grow} further if needed.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+    geom_abline(slope = -1, intercept = 0, color = "blue", linetype = "dashed") +
+    geom_point(alpha = 0.5) +
+    scale_color_identity(guide = FALSE) +
+    scale_fill_identity(guide = FALSE) +
+    coord_fixed(ratio = 1) +
+    expand_limits(x = -3, y = -3) +
+    expand_limits(x = +3, y = +3) +
+    theme_bw()
+@
+
+It is also easy to add a linear regression line with its confidence band.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    stat_smooth(method = "lm") +
+    geom_point(alpha = 0.5) +
+    coord_fixed(ratio = 1) +
+    expand_limits(x = -3, y = -3) +
+    expand_limits(x = +3, y = +3) +
+    theme_bw()
+@
+
+\subsection{Volcano plots}\label{sec:plot:volcano}
+
+A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
+We here demonstrate how to create a volcano plot with tick labels in untransformed units, off-scale values drawn at the edge of the plotting region and highlighted with a different shape, and points color coded according to whether expression is significantly enhanced or depressed, or the evidence for the direction of the effect is inconclusive. We use a random sample of size 5000 from real data from an RNAseq experiment.
+
+<<>>=
+load(file = "data/volcano-example.rda")
+head(clean5000.df, 4)
+@
+
+First we create a no-frills volcano plot. This is just an ordinary scatter plot, with a certain way of transforming the $P$-values. We do this transformation on the fly when mapping the $y$ aesthetic with \code{y = -log10(PValue)}.
+
+<<>>=
+ggplot(data = clean5000.df,
+         aes(x = logFC,
+             y = -log10(PValue),
+             color = factor(outcome))) +
+    geom_point() +
+    scale_color_manual(values = c("blue", "grey10", "red"), guide = FALSE)
+@
+
+Now we add quite many tweaks to the $x$ and $y$ scales. 1) we show tick labels in back-transformed units, at \emph{nice} round numbers. 2) We add publication-ready axis labels. 3) We restrict the limits of the $x$ and $y$ scales, but use \code{oob = scales::squish} so that instead of being dropped observations outside the range limits are plotted at the limit and highlighted with a a different \code{shape}. We also use the black and white \emph{theme} instead of the default one.
+
+As we assume the reverse log transformation to be generally useful we define a function \code{reverselog\_trans} for it. In the plot we use this function to set the transformation as part of the $y$-scale definition, so that we can directly map $P$-values to the $y$ \emph{aesthetic}.
+
+<<>>=
+reverselog_trans <- function(base = exp(1)) {
+  trans <- function(x) -log(x, base)
+  inv <- function(x) base^(-x)
+  scales::trans_new(paste0("reverselog-", format(base)), trans, inv,
+                    scales::log_breaks(base = base),
+                    domain = c(1e-100, Inf))
+}
+
+ggplot(data = clean5000.df,
+         aes(x = logFC,
+             y = PValue,
+             color = factor(outcome),
+             shape = factor(ifelse(PValue <= 1e-50, "out", "in")))) +
+    geom_vline(xintercept = c(log2(2/3), log2(3/2)), linetype = "dotted",
+               color = "grey75") +
+    geom_point() +
+    scale_color_manual(values = c("blue", "grey80", "red"), guide = FALSE) +
+    scale_x_continuous(breaks = c(log2(1e-3), log2(1e-2), log2(1e-1), log2(1/2),
+                                  0, log2(2), log2(1e1), log2(1e2), log2(1e3)),
+                       labels = c("1/1000", "1/100", "1/10", "1/2", "1",
+                                  "2", "10", "100", "1000"),
+                       limits = c(log2(1e-3), log2(1e3)),
+                       name = "Relative expression",
+                       minor_breaks = NULL) +
+    scale_y_continuous(trans = reverselog_trans(10),
+                       breaks = c(1, 1e-3, 1e-10, 1e-20, 1e-30, 1e-40, 1e-50),
+                       labels = scales::trans_format("log10",
+                                                     scales::math_format(10^.x)),
+                       limits = c(1, 1e-50), # axis is reversed!
+                       name = expression(italic(P)-{value}),
+                       oob = scales::squish,
+                       minor_breaks = NULL) +
+    scale_shape(guide = FALSE) +
+    theme_bw()
+@
 
 \subsection{Anscombe's regression examples}
 
@@ -973,8 +1671,35 @@ ggplot(my.anscombe, aes(x,y)) +
 @
 
 
+\section{Pie charts vs.\ bar plots example}
+
+There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
+
+Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
 
 <<>>=
+example.data <-
+  data.frame(values = c(17, 18, 20, 22, 23,
+                        20, 20, 19, 21, 20,
+                        23, 22, 20, 18, 17),
+             examples= rep(c("A", "B", "C"), c(5,5,5)),
+             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
+  )
+
+ggplot(example.data, aes(x=cols, y=values, fill=cols)) +
+  geom_col(width = 1) +
+  facet_grid(.~examples) +
+  scale_fill_identity()
+ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
+  geom_col(width = 1) +
+  facet_grid(.~examples) +
+  scale_fill_identity() +
+  coord_polar(theta="y")
+@
+
+
+<<>>=
+try(detach(package:tikz))
 try(detach(package:ggplot2))
 @
 
