@@ -16,6 +16,7 @@ library(tibble)
 library(ggplot2)
 library(viridis)
 library(ggrepel)
+library(ggforce)
 library(ggpmisc)
 library(ggseas)
 library(gganimate)
@@ -58,7 +59,12 @@ devtools::install_github("lionel-/ggstance")
 
 \section[viridis]{\viridis}\label{sec:plot:viridis}
 
+<<>>=
+citation(package = "viridis")
+@
+
 Package \viridis defines color palettes and fill and color scales with colour selected based on human perception, with special consideration of visibility for those with different kinds of color blindness and well as in grey-scale reproduction.
+
 
 <<viridis-00>>=
 set.seed(56231)
@@ -119,6 +125,10 @@ opts_chunk$set(opts_fig_narrow)
 
 \section[gganimate]{\pkgname{gganimate}}
 
+<<>>=
+citation(package = "gganimate")
+@
+
 Package \pkgname{gganimate} allows the use of package \pkgname{animation} in ggplots with a syntax consistent with the grammar of graphics. It adds a new aesthetic \code{frame}, which can be used to map \emph{groups} of data to \emph{frames} in the animation.
 
 Use of the package is extremely easy, but installation can be somehow tricky because of system requirements. Just, make sure to have \pgrmname{ImageMagic} installed and included in the search \code{PATH}.
@@ -171,6 +181,10 @@ gg_animate(p, title_frame = FALSE)
 
 \section[ggstance]{\pkgname{ggstance}}
 
+<<>>=
+citation(package = "ggstance")
+@
+
 Package \pkgname{ggstance} defines horizontal versions of common ggplot \emph{geoms}, \emph{stats} and \emph{positions}. Although \ggplot defines \code{coord\_flip}, \pkgname{ggstance} provides a more intuitive user interface and more consistent plot formatting.
 
 \sloppy
@@ -216,6 +230,10 @@ ggplot(my.data, aes(y, group)) +
 
 \section[ggbiplot]{\pkgname{ggbiplot}}
 
+<<>>=
+citation(package = "ggbiplot")
+@
+
 Package \pkgname{ggbiplot} defines two functions, \code{ggscreeplot()} and \code{ggbiplot()}. These functions make it easy to nicely print the results from principal components analysis done with \code{prcomp}.
 
 For the time being we reproduce an example from the package README.
@@ -238,6 +256,10 @@ opts_chunk$set(opts_fig_narrow)
 @
 
 \section[ggalt]{\pkgname{ggalt}}
+
+<<>>=
+citation(package = "ggalt")
+@
 
 Package \pkgname{ggalt} defines \emph{geoms} \code{geom\_xspline()}, \code{geom\_bkde()}, \code{geom\_bkde2d()}, \code{geom\_stateface()}, \code{geom\_encircle()}, \code{geom\_lollipop()}, \code{geom\_dumbbell()}, and \code{geom\_stepribbon()}; \emph{stats} \code{stat\_xspline()}, \code{stat\_bkde()}, \code{stat\_bkde2d()}, and \code{stat\_ash()}; \emph{scale} \code{scale\_fill\_pokemon}; \emph{formatter} \code{byte\_format}.
 
@@ -318,119 +340,82 @@ coming soon.
 
 coming soon.
 
-\section[ggseas]{\pkgname{ggseas}}
-
-<<echo=FALSE,include=FALSE>>=
-opts_chunk$set(opts_fig_wide)
-@
-
-The focus of this extension to \pkgname{ggplot2} is the seasonal decomposition of time series done on the fly while creating a ggplot. Package \pkgname{ggseas} defines five \emph{statistics}, \code{stat\_index}, \code{stat\_decomp}, \code{stat\_rollapplyr}, \code{stat\_stl}, and \code{stat\_seas}. By default they all use \code{geom\_line}. This package also defines function
-\code{tsdf} that needs to be used to convert time series to data frames to pass as \code{data} argument to \code{ggplot}. 
-
-Index referenced to the first two observations in the series. Here we use \code{try\_tibble} from our package \pkgname{ggpmisc}. Function \code{tsdf} can be also used.
-
-<<>>=
-ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
-       aes(x = time, y = V.lynx)) +
-       stat_index(index.ref = 1:2) +
-       expand_limits(y = 0)
-@
-
-<<>>=
-ggplot(try_tibble(AirPassengers, "month"),
-       aes(time, V.AirPassengers)) +
-       stat_index(index.ref = 1:10) +
-       expand_limits(y = 0)
-@
-
-Rolling average.
-
-We use a with of 9, which seems to be approximately the length of the cycle.
- 
-<<>>=
-ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
-       aes(x = time, y = V.lynx), na.rm = TRUE) +
-       geom_line() +
-       stat_rollapplyr(width = 9, align = "center", color = "blue") +
-       expand_limits(y = 0)
-@
-
-For monthly data on air travel, it is clear that a width of 12 observations (months) is best.
-
-<<>>=
-ggplot(try_tibble(AirPassengers, "month"),
-       aes(time, V.AirPassengers)) +
-       geom_line() +
-       stat_rollapplyr(width = 12, align = "center", color = "blue") +
-       expand_limits(y = 0)
-@
-
-Seasonal decomposition.
-
-Using function \code{tsdf} from package \pkgname{ggseas}.
-
-<<>>=
-ggplot(tsdf(AirPassengers),
-       aes(x, y)) +
-       geom_line() +
-       stat_seas(colour = "blue") +
-       stat_stl(s.window = 7, color = "red") +
-       expand_limits(y = 0)
-@
-
-Currently, the \code{tibble} object returned by \code{try\_tibble} gives an error, so the chunk below is not evaluated.
- 
-<<eval=FALSE>>=
-ggplot(try_tibble(AirPassengers, "month"),
-       aes(time, V.AirPassengers)) +
-       geom_line() +
-       stat_seas(colour = "blue") +
-       stat_stl(s.window = 7, color = "red") +
-       expand_limits(y = 0)
-@
-
-\begin{framed}
-  As \code{ggplot} is a generic we can easily define a specialization for class \code{ts}.
-  
-<<>>=
-ggplot.ts <- function(data,
-                      mapping = NULL, 
-                      ..., 
-                      environment = parent.frame()) {
-   if (is.null(mapping)) {
-     mapping <- aes_(~x, ~y)
-   }
-   ggplot2::ggplot(data = ggseas::tsdf(data),
-          mapping =  mapping,
-          ... = ...,
-          environment = environment)
-}
-@
-
-And subsequently use to plot time series objects of class \code{ts}, code like
-<<>>=
-ggplot(AirPassengers) + 
-    stat_index(index.ref = 1:10)
-@
-or
-<<>>=
-ggplot(AirPassengers)  +
-    geom_line() +
-    stat_rollapplyr(width = 12, align = "center", color = "blue") +
-    expand_limits(y = 0)
-@
-
-\end{framed}
-
-<<echo=FALSE,include=FALSE>>=
-opts_chunk$set(opts_fig_narrow)
-@
-
 \section[ggnetwork]{\pkgname{ggnetwork}}
 
 coming soon.
 
+\section[ggforce]{\pkgname{ggforce}}
+
+<<>>=
+citation(package = "ggforce")
+@
+
+Package \pkgname{ggforce} includes an assortment of useful extensions to \pkgname{ggplot2}.
+
+\subsection{Geoms and stats}
+
+Sina plots are a new type of plots resembling violin plots (described in section \ref{sec:plot:violin} on page \pageref{sec:plot:violin}), where actual observations are plotted as a cloud spreading widely as the density increases. Both a \emph{geometry} and a \emph{statistics} are defined.
+
+<<>>=
+set.seed(12345)
+my.data <-
+  data.frame(x = rnorm(200),
+             y = c(rnorm(100, -1, 1), rnorm(100, 1, 1)),
+             group = factor(rep(c("A", "B"), c(100, 100))) )
+@
+
+<<>>=
+ggplot(my.data, aes(group, y)) +
+  geom_sina()
+@
+
+<<>>=
+ggplot(my.data, aes(group, y, fill = group)) +
+  geom_sina()
+@
+
+<<>>=
+ggplot(my.data, aes(group, y, fill = group)) +
+  geom_violin(alpha = 0.16) +
+  geom_sina(alpha = 0.33)
+@
+
+Several \emph{geometries} for plotting arcs, curves and circles also provided: \code{geom\_circle}, \code{geom\_arc}, \code{geom\_arcbar}, \code{geom\_bezier}, \code{geom\_bspline}.
+
+coming soon.
+
+
+\emph{Geometries} similar to \code{geom\_path} and \code{geom\_segment}, called \code{geom\_link} and \code{geom\_link2} add interpolation of \emph{aesthetics} along the segment or path between each pair of observations/points.
+
+coming soon.
+
+\subsection{Transformations}
+
+\code{trans\_reverser} can be used to reverse any monotonic transformation.
+
+New transformations \code{power\_trans} and \code{radial\_trans}
+
+coming soon.
+
+\subsection{Theme}
+
+<<>>=
+ggplot(my.data, aes(group, y)) +
+  geom_sina() +
+  theme_no_axes()
+@
+
+\subsection{Paginated facetting}
+
+\code{facet\_grid\_paginate}, \code{facet\_wrap\_paginate} and \code{facet\_zoom} add pagination to usual faceting, allowing one to split large faceted plots into pages, and zooming into individual panel in a facetted plot.
+
+coming soon.
+
 \section[ggpmisc]{\ggpmisc}
+
+<<>>=
+citation(package = "ggpmisc")
+@
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
@@ -758,7 +743,7 @@ formula <- y ~ x + I(x^2) + I(x^3)
 ggplot(my.data, aes(x, y2, colour = group)) +
   geom_point() +
   geom_smooth(method = "lm", formula = formula) +
-  stat_fit_glance(aes(label = paste('italic(P)~`=`~', signif(..p.value.., 3)), sep = ""),
+  stat_fit_glance(aes(label = paste('italic(P)~`=`~', signif(..p.value.., 3), sep = "")),
                   parse = TRUE,
                   method.args = list(formula = formula),
                   geom = "text") +
@@ -941,6 +926,10 @@ ggplot(lynx.df, aes(century, lynx)) +
 
 \section[ggrepel]{\ggrepel}
 
+<<>>=
+citation(package = "ggrepel")
+@
+
 Package \ggrepel is under development by Kamil Slowikowski. It does a single
 thing, relocates text labels so that they do not overlap. This is achieved through
 two geometries that work similarly to those provided by \ggplot except for the
@@ -1065,9 +1054,114 @@ ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   stat_dens2d_labels(geom = "label_repel")
 @
 
+\section[ggseas]{\pkgname{ggseas}}
+
+<<>>=
+citation(package = "ggseas")
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+The focus of this extension to \pkgname{ggplot2} is the seasonal decomposition of time series done on the fly while creating a ggplot. Package \pkgname{ggseas} defines five \emph{statistics}, \code{stat\_index}, \code{stat\_decomp}, \code{stat\_rollapplyr}, \code{stat\_stl}, and \code{stat\_seas}. By default they all use \code{geom\_line}. This package also defines function
+\code{tsdf} that needs to be used to convert time series to data frames to pass as \code{data} argument to \code{ggplot}.
+
+Index referenced to the first two observations in the series. Here we use \code{ggplot} method for class \code{"ts"} from our package \pkgname{ggpmisc}. Functions \code{try\_tibble} from   \pkgname{ggpmisc} and \code{tsdf} from \pkgname{ggseas} can be also used.
+
+<<>>=
+ggplot(lynx) +
+       stat_index(index.ref = 1:2) +
+       expand_limits(y = 0)
+@
+
+<<>>=
+ggplot(AirPassengers) +
+       stat_index(index.ref = 1:10) +
+       expand_limits(y = 0)
+@
+
+Rolling average.
+
+We use a with of 9, which seems to be approximately the length of the cycle.
+
+<<>>=
+ggplot(lynx) +
+       geom_line() +
+       stat_rollapplyr(width = 9, align = "center", color = "blue") +
+       expand_limits(y = 0)
+@
+
+For monthly data on air travel, it is clear that a width of 12 observations (months) is best.
+
+<<>>=
+ggplot(AirPassengers) +
+       geom_line() +
+       stat_rollapplyr(width = 12, align = "center", color = "blue") +
+       expand_limits(y = 0)
+@
+
+Seasonal decomposition.
+
+<<>>=
+ggplot(AirPassengers) +
+       geom_line() +
+       stat_seas(colour = "blue") +
+       stat_stl(s.window = 7, color = "red") +
+       expand_limits(y = 0)
+@
+
+Using function \code{tsdf} from package \pkgname{ggseas}.
+
+<<>>=
+ggplot(tsdf(AirPassengers),
+       aes(x, y)) +
+       geom_line() +
+       stat_seas(colour = "blue") +
+       stat_stl(s.window = 7, color = "red") +
+       expand_limits(y = 0)
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
 \section[ggsci]{\pkgname{ggsci}}
 
 coming soon.
+
+\section[ggtern]{\pkgname{ggtern}}
+
+<<>>=
+citation(package = "ggtern")
+@
+
+Package \pkgname{ggtern} provides facilities for making ternary plots, frequently used in soil science and in geology, and in sensory physiology and color science for representing trichromic vision (red-green-blue for humans). They are based on a special system of coordinates with three axes on a single plane.
+
+\begin{shaded}
+  This package redefines some functions exported by \ggplot and currently easily conflicts with other extensions to \ggplot. One rarely would like to use functions from this and other packages extending \ggplot in the same figure, but using them in the same document could be necessary. In such cases one may need to call the original definitions explicitly, for example \code{ggplot2::ggplot()} instead of simply \code{ggplot()} which after loading \pkgname{ggtern} no longer refers to the original definition. Because of this problems we load this package here, near the end of the chapter.  
+\end{shaded}
+
+<<>>=
+library(ggtern)
+@
+
+In this example we use colors pre-defined in R and make a ternary plot of the red, green abd blue components of these colors.
+
+<<>>=
+colours <- c("red", "green", "yellow", "white",
+             "orange", "purple", "seagreen", "pink")
+rgb.values <- col2rgb(colours)
+color.data <- data.frame(colour=colours,
+                        R=rgb.values[1, ],
+                        G=rgb.values[2, ],
+                        B=rgb.values[3, ])
+ggtern(data=color.data,
+       aes(x=R, y=G, z=B, label=colour, fill=colour)) +
+       geom_point(shape=23, size=3) +
+  geom_text(hjust=-0.2) +
+  labs(x = "R", y="G", z="B") + scale_fill_identity()
+@
 
 \section[ggthemes]{\pkgname{ggthemes}}
 
@@ -1117,6 +1211,7 @@ try(detach(package:ggbiplot))
 try(detach(package:ggstance))
 try(detach(package:gganimate))
 try(detach(package:ggpmisc))
+try(detach(package:ggforce))
 try(detach(package:ggrepel))
 try(detach(package:viridis))
 try(detach(package:tibble))
