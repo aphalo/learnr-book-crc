@@ -46,13 +46,6 @@ getwd()
 
 In this chapter we describe some of the packages that add additional functionality or \emph{graphical designs} of plots to package \pkgname{ggplot2}. Several new packages were written after \pkgname{ggplot2} version 2.0.0 was released, because this version for the first time made it straightforward to write these extensions. To keep up-to-date with the release of new extensions I recommend to regularly check the site `ggplot2 Extensions' (maintained by Daniel Emaasit) at \url{https://www.ggplot2-exts.org/}.
 
-Some of the packages described in this chapter were not yet in CRAN at the time of writing. However, it is possible to install packages directly from Github or Bitbucket using functions from package \pkgname{devtools}. We show here as examples the code needed for packages \pkgname{gganimate} and \pkgname{ggstance}.
-
-<<inst-dev-1, eval=FALSE>>=
-devtools::install_github("dgrtwo/gganimate")
-devtools::install_github("lionel-/ggstance")
-@
-
 \begin{framed}
   In this chapter we use mostly the modernized data frames of package \pkgname{tibble}. The main reason is that the \code{tibble} constructor does not by default convert character variables into factors as the \code{data.frame} constructor does. The format used for printing is also improved. It is possible to use \code{data.frame} instead of \code{tibble} in the examples below, but in some cases you will need to add \code{stringsAsFactors = FALSE} to the call.
 \end{framed}
@@ -426,31 +419,47 @@ Package \ggpmisc is a package developed by myself as a result of questions from 
 
 \subsection{Plotting time-series}
 
-Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_tibble()} (also available as \code{try\_data\_frame()}) accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a very simple wrapper to obtain a data frame.
+Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_tibble()} (also available as \code{try\_data\_frame()}) accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a wrapper to obtain a data frame. By default the time variable is given name \code{time} and that with observations, the ``name'' of the data argument passed. In the usual case of passing a time series object, its name is used for the variable.
 
 We exemplify this with some of the time series data included in R. In the first example we use the default format for time.
 
 <<>>=
-ggplot(try_tibble(austres),
-       aes(time, V.austres)) +
+ggplot(try_tibble(austres), aes(time, austres)) +
   geom_line()
 @
 
-In the second example we use years in numeric format for expressing `time'.
+In the second example we use ``decimal years'' in numeric format for expressing `time'.
 
 <<>>=
-ggplot(try_tibble(lynx, "year", as.numeric = TRUE),
-       aes(x = time, y = V.lynx)) +
+ggplot(try_tibble(lynx, as.numeric = TRUE),
+       aes(x = time, y = lynx)) +
   geom_line()
 @
+
+Here we use dates rounded to the month.
 
 <<>>=
 ggplot(try_tibble(AirPassengers, "month"),
-       aes(time, V.AirPassengers)) +
+       aes(time, AirPassengers)) +
   geom_line()
 @
 
 Multivariate time series are also supported.
+
+Plotting can be automated even further for \code{"ts"} and \code{"xts"} with the specialized \code{ggplot} methods defined by package \pkgname{ggpmisc}. The same parameters as in \
+
+<<>>=
+ggplot(AirPassengers) +
+  geom_line()
+@
+
+These methods default to using ``decimal time'' for \code{time} as not all \emph{statistics} (i.e.\ from package \pkgname{ggseas}) work correctly with \code{POSIXct}. Passing \code{FALSE} as argument \code{as.numeric} results in \code{time} being returned as a datetime variable. This allows use of \ggplot's time scales.
+
+<<>>=
+ggplot(AirPassengers, as.numeric = FALSE) +
+  scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
+  geom_line()
+@
 
 \subsection{Peaks and valleys}
 
@@ -460,16 +469,8 @@ There are many cases, for example in physics and chemistry, but also when plotti
 
 We use as example the same time series as above. In the next several examples we demonstrate some of this flexibility.
 
-\begin{framed}
- As we are passing a \code{matrix} to the constructor, in this case, using the \code{tibble} constructor would fail.
-\end{framed}
-
 <<>>=
-lynx.df <- data.frame(year = as.numeric(time(lynx)), lynx = as.matrix(lynx))
-@
-
-<<>>=
-ggplot(lynx.df, aes(year, lynx)) + geom_line() +
+ggplot(lynx) + geom_line() +
   stat_peaks(colour = "red") +
   stat_peaks(geom = "text", colour = "red",
              vjust = -0.5, x.label.fmt = "%4.0f") +
@@ -480,7 +481,7 @@ ggplot(lynx.df, aes(year, lynx)) + geom_line() +
 @
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) + geom_line() +
+ggplot(lynx) + geom_line() +
   stat_peaks(colour = "red") +
   stat_peaks(geom = "rug", colour = "red") +
   stat_peaks(geom = "text", colour = "red",
@@ -490,7 +491,7 @@ ggplot(lynx.df, aes(year, lynx)) + geom_line() +
 @
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) + geom_line() +
+ggplot(lynx) + geom_line() +
   stat_peaks(colour = "red") +
   stat_peaks(geom = "rug", colour = "red") +
   stat_valleys(colour = "blue") +
@@ -498,29 +499,55 @@ ggplot(lynx.df, aes(year, lynx)) + geom_line() +
 @
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) + geom_line() +
+ggplot(lynx) + geom_line() +
   stat_peaks(colour = "red") +
   stat_peaks(geom = "rug", colour = "red") +
   stat_peaks(geom = "text", colour = "red",
              hjust = -0.1, label.fmt = "%4.0f",
-             angle = 90, size = rel(2),
+             angle = 90, size = 2.5,
              aes(label = paste(..y.label..,
                                "skins in year", ..x.label..))) +
   stat_valleys(colour = "blue") +
   stat_valleys(geom = "rug", colour = "blue") +
   stat_valleys(geom = "text", colour = "blue",
-             hjust = -0.1, vjust = 1, label.fmt = "%4.0f",
-             angle = 90, size = rel(2),
+             hjust = -0.1, label.fmt = "%4.0f",
+             angle = 90, size = 2.5,
              aes(label = paste(..y.label..,
                                "skins in year", ..x.label..))) +
   ylim(NA, 10000)
 @
 
+Using POSIXct for `time` but supplying a format string, to show only the month corresponding to each peak or valley. Any format string accepted by \code{strftime} can be used.
+
+<<>>=
+ggplot(AirPassengers, as.numeric = FALSE) + geom_line() +
+  stat_peaks(colour = "red", span = 9) +
+  stat_peaks(geom = "text", span = 9, colour = "red", hjust = -0.5,
+             angle = 90, x.label.fmt = "%b") +
+  stat_valleys(colour = "blue", span = 9) +
+  stat_valleys(geom = "text", span = 9, colour = "blue", hjust = 1.5,
+               angle = 90, x.label.fmt = "%b") +
+  scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
+  ylim(-50, 700)
+@
+
+Rotating the labels.
+
+<<>>=
+ggplot(lynx, as.numeric = FALSE) + geom_line() +
+  stat_peaks(colour = "red") +
+  stat_peaks(geom = "text", colour = "red", angle = 66,
+             hjust = -0.1, x.label.fmt = "%Y") +
+  ylim(NA, 7800)
+@
+
 Of course, if one finds use for it, the peaks and/or valleys can be plotted on their own. Here we plot an "envelope" using \code{geom\_line()}.
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) +
-  stat_peaks(geom = "line") + stat_valleys(geom = "line")
+ggplot(AirPassengers) +
+  geom_line() +
+  stat_peaks(geom = "line", span = 9, linetype = "dashed") +
+  stat_valleys(geom = "line", span = 9, linetype = "dashed")
 @
 
 \subsection{Equations as labels in plots}
@@ -904,24 +931,32 @@ A related stat \code{stat\_dens2d\_label}, also defined in package \ggpmisc is d
 A very simple stat named \code{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \code{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \code{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) + geom_line() +
+ggplot(lynx) + geom_line() +
   stat_debug_group()
 @
 
 <<>>=
-lynx.df$century <- ifelse(lynx.df$year >= 1900, "XX", "XIX")
-ggplot(lynx.df, aes(year, lynx, color = century)) +
+ggplot(lynx,
+       aes(time, lynx,
+           color = ifelse(time >= 1900, "XX", "XIX"))) +
   geom_line() +
-  stat_debug_group()
+  stat_debug_group() +
+  labs(color = "century")
 @
 
 By means of \code{geom\_debug} it is possible to "print" to the console the data returned by a ggplot statistic.
 
 <<>>=
-ggplot(lynx.df, aes(century, lynx)) +
-  geom_blank() +
-  stat_summary(fun.y = median,
-               geom = "debug", summary.fun = head, summary.fun.args = list())
+ggplot(mpg, aes(class, hwy, color = class)) +
+  geom_point(alpha = 0.2) +
+  stat_summary(fun.data = mean_se, size = 0.6)
+@
+
+<<>>=
+ggplot(mpg, aes(class, hwy, color = class)) +
+  geom_debug() +
+  stat_summary(fun.data = mean_se,
+               geom = "debug", summary.fun = as_tibble, summary.fun.args = list())
 @
 
 \section[ggrepel]{\ggrepel}
@@ -992,7 +1027,7 @@ ggplot(Orange, aes(age, circumference, color = Tree)) +
 We can combine \code{stat\_peaks} from package \ggpmisc with the use of repulsive text to avoid overlaps between text items. We use \code{nudge\_y = 500} to push the text upwards.
 
 <<>>=
-ggplot(lynx.df, aes(year, lynx)) +
+ggplot(lynx) +
   geom_line() +
   stat_peaks(geom = "text_repel", nudge_y = 500)
 @
@@ -1139,7 +1174,7 @@ citation(package = "ggtern")
 Package \pkgname{ggtern} provides facilities for making ternary plots, frequently used in soil science and in geology, and in sensory physiology and color science for representing trichromic vision (red-green-blue for humans). They are based on a special system of coordinates with three axes on a single plane.
 
 \begin{shaded}
-  This package redefines some functions exported by \ggplot and currently easily conflicts with other extensions to \ggplot. One rarely would like to use functions from this and other packages extending \ggplot in the same figure, but using them in the same document could be necessary. In such cases one may need to call the original definitions explicitly, for example \code{ggplot2::ggplot()} instead of simply \code{ggplot()} which after loading \pkgname{ggtern} no longer refers to the original definition. Because of this problems we load this package here, near the end of the chapter.  
+  This package redefines some functions exported by \ggplot and currently easily conflicts with other extensions to \ggplot. One rarely would like to use functions from this and other packages extending \ggplot in the same figure, but using them in the same document could be necessary. In such cases one may need to call the original definitions explicitly, for example \code{ggplot2::ggplot()} instead of simply \code{ggplot()} which after loading \pkgname{ggtern} no longer refers to the original definition. Because of this problems we load this package here, near the end of the chapter.
 \end{shaded}
 
 <<>>=
