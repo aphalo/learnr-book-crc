@@ -1,17 +1,9 @@
-\documentclass[paper=a4,headsepline,BCOR=12mm,twoside,open=right,%
+\documentclass[paper=a4,headsepline,BCOR=12mm,DIV=11,twoside,open=right,%
 titlepage,headings=small,fontsize=10pt,index=totoc,bibliography=totoc,%
 captions=tableheading,captions=nooneline]{scrbook}
 
 %\usepackage[utf8]{inputenc}
 \usepackage{color}
-
-%\usepackage{amsmath,amssymb,amsthm}
-\usepackage{unicode-math}
-
-\usepackage{fontspec}
-\setmainfont{Lucida Bright OT}
-\setsansfont{Lucida Sans OT}
-\setmonofont{Lucida Console DK}
 
 \usepackage{polyglossia}
 \setdefaultlanguage[variant = british, ordinalmonthday = false]{english}
@@ -39,6 +31,13 @@ captions=tableheading,captions=nooneline]{scrbook}
             pdfauthor={Pedro J. Aphalo}%
             ]{hyperref}
 
+\hypersetup{colorlinks,breaklinks,
+             urlcolor=blue,
+             linkcolor=blue,
+             citecolor=blue,
+             filecolor=blue,
+             menucolor=blue}
+
 \usepackage{framed}
 
 \usepackage{abbrev}
@@ -46,11 +45,49 @@ captions=tableheading,captions=nooneline]{scrbook}
 
 \usepackage{imakeidx}
 
+%%% Adjust graphic design
+
+% New float "example" and corresponding "list of examples"
+%\DeclareNewTOC[type=example,types=examples,float,counterwithin=chapter]{loe}
+\DeclareNewTOC[name=Box,listname=List of Text Boxes, type=example,types=examples,float,counterwithin=chapter,%
+]{lotxb}
+
+% changing the style of float captions
+\addtokomafont{caption}{\sffamily\small}
+\setkomafont{captionlabel}{\sffamily\bfseries}
+\setcapindent{0em}
+
+% finetuning tocs
+\makeatletter
+\renewcommand*\l@figure{\@dottedtocline{1}{0em}{2.6em}}
+\renewcommand*\l@table{\@dottedtocline{1}{0em}{2.6em}}
+\renewcommand*\l@example{\@dottedtocline{1}{0em}{2.3em}}
+\renewcommand{\@pnumwidth}{2.66em}
+\makeatother
+
+% add pdf bookmarks to tocs
+\makeatletter
+\BeforeTOCHead{%
+  \cleardoublepage
+    \edef\@tempa{%
+      \noexpand\pdfbookmark[0]{\list@fname}{\@currext}%
+    }\@tempa
+}
+
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.90}
+\renewcommand{\textfraction}{0.10}
+\renewcommand{\floatpagefraction}{0.70}
+\renewcommand{\dbltopfraction}{0.90}
+\renewcommand{\dblfloatpagefraction}{0.70}
+
 \addbibresource{rbooks.bib}
 \addbibresource{references.bib}
 
 \makeindex
-
 
 \begin{document}
 
@@ -91,20 +128,21 @@ The source files for the whole book are available at \url{https://bitbucket.org/
 
 <<setup-1, include=FALSE, cache=FALSE>>=
 library(knitr)
+library(svglite)
 @
 
 <<setup-2, include=FALSE, cache=FALSE>>=
 opts_knit$set(child.command = 'include')
 opts_knit$set(self.contained=FALSE)
-opts_chunk$set(fig.path='figure/pos-', fig.align='center', fig.show='hold', size="footnotesize", dev='cairo_pdf', cache=FALSE)
-opts_chunk$set(tidy=FALSE)
+opts_chunk$set(fig.path='figure/pos-', fig.align='center', fig.show='hold', size="footnotesize", dev='pdf', cache=FALSE)
+opts_chunk$set(tidy=FALSE,size='small')
 options(replace.assign=TRUE,width=50)
 @
 
 <<fig-setup, include=FALSE, cache=FALSE>>=
-opts_fig_wide <- list(fig.width=7, fig.height=3.9, out.width='.95\\textwidth')
-opts_fig_wide_square <- list(fig.width=7, fig.height=7, out.width='.95\\textwidth')
-opts_fig_narrow <- list(fig.width=5.444, fig.height=3.9, out.width='.739\\textwidth')
+opts_fig_wide <- list(fig.width=7, fig.height=3.9, out.width='.76\\textwidth')
+opts_fig_wide_square <- list(fig.width=7, fig.height=7, out.width='.76\\textwidth')
+opts_fig_narrow <- list(fig.width=5.444, fig.height=3.9, out.width='.60\\textwidth')
 opts_fig_very_narrow <- opts_fig_narrow
 opts_fig_medium <- opts_fig_narrow
 opts_chunk$set(opts_fig_narrow)
@@ -172,17 +210,19 @@ These notes are work-in-progress. I will appreciate suggestions for further exam
 
 I have been using \R since around 1998 or 1999, but I am still constantly learning new things about \R itself and \R packages. With time it has replaced in my work as a researcher and teacher several other pieces of software: \textsf{SPSS}, \textsf{Systat}, \textsf{Origin}, \textsf{Excel}, and it has become a central piece of the tool set I use for producing lecture slides, notes, books and even web pages. This is to say that it is the most useful piece of software and programming language I have ever learnt to use. Of course, in time it will be replaced by something better, but at the moment it is the ``hot'' thing to learn for anybody with a need to analyse and display data.
 
-\begin{shaded}
+\begin{infobox}
 \noindent
+\textbf{Status as of 2016-12-11.} I have added ``playground'' exercises to the chapter describing \ggplot, and converted some of the examples earlier part of the main text into these playground items. I have added icons to help readers quickly distinguish playground sections (\textcolor{blue}{\noticestd{"0055}}), information sections (\textcolor{blue}{\modpicts{"003D}}), warnings about things one needs to be specially aware of (\colorbox{yellow}{\typicons{"E136}}) and boxes with more advanced content that may require longer time/more effort to grasp (\typicons{"E04E}). I have add to the sections \code{scales} and examples in the \ggplot chapter details about the use of colors in R and \ggplot2.
+
 \textbf{Status as of 2016-11-23.} I have updated the manuscript to track package updates since the previous version uploaded six months ago, and added several examples of the new functionality added to packages \ggpmisc, \ggrepel, and \ggplot. I have written new sections on packages \viridis, \pkgname{gganimate}, \pkgname{ggstance}, \pkgname{ggbiplot}, \pkgname{ggforce}, \pkgname{ggtern} and \pkgname{ggalt}. Some of these sections are to be expanded, and additional sections are planned for other recently released packages.
 
 With respect to the chapter \textit{Storing and manipulating data with R} I have put it on hold, except for the introduction, until I can see a soon to be published book covering the same subject. Hadley Wickham has named the set of tools developed by him and his collaborators as \textit{tidyverse} to be described in the book titled \textit{R for Data Science} by Grolemund and Wickham (O'Reilly).
 
 An important update to \ggplot was released last week, and it includes changes to the behavior of some existing functions, specially faceting has become extensible through other packages. Several of the new facilities are described in the updated text and code included in this book and this pdf has been generated with up-to-date version of \ggplot and packages as available today from CRAN, except for \pkgname{ggtern} which was downloaded from Bitbucket minutes ago.
 
-The present update adds about 100 pages to the previous versions. I expect to upload a new update to this manuscript in one or two months time. 
+The present update adds about 100 pages to the previous versions. I expect to upload a new update to this manuscript in one or two months time.
 
-\end{shaded}
+\end{infobox}
 
 %\chapter*{Learning like a child}
 \mainmatter
