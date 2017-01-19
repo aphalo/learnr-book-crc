@@ -208,7 +208,7 @@ ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
   scale_shape_manual(values = c(21, 22, 23))
 @
 
-It is also possible to use character strings as shapes. The character is centred on the position of the observation. Conceptually using \code{character} values for \code{shape} is different to using \code{geom\_text} as in the later case there is much more flexibility as character strings and expressions are allowed in addition to single characters. Also positioning with respect to the coordinates of the observations can be adjusted through justification. While \code{geom\_text} is usually used for annotations, the present example treats the character string as a symbol. (This also opens the door to the use as shapes of symbols defined in special fonts.)
+It is also possible to use characters as shapes. The character is centred on the position of the observation. Conceptually using \code{character} values for \code{shape} is different to using \code{geom\_text} as in the later case there is much more flexibility as character strings and expressions are allowed in addition to single characters. Also positioning with respect to the coordinates of the observations can be adjusted through justification. While \code{geom\_text} is usually used for annotations, the present example treats the character string as a symbol. (This also opens the door to the use as shapes of symbols defined in special fonts.)
 
 <<>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg, shape = factor(cyl))) +
@@ -503,17 +503,7 @@ What are the advantages and disadvantages of each approach in relation to easy w
 \end{playground}
 
 \begin{warningbox}
-You\index{plots!fonts} should be aware that R and ggplot2 support the use of UNICODE\index{UNICODE}, such as UTF8\index{UTF8} character encoding in strings. If your editor or IDE supports their use, then you can type Greek letters and simple maths symbols directly, and they will show correctly in labels. This is not fully portable\index{portability}, as even if the character positions are standardized for many languages, most UNICODE fonts support at most a small number of languages. In principle one can use this mechanism to have labels both using other alphabets and languages like Chinese with their numerous symbols mixed in the same figure. Furthermore, the support for fonts and consequently character sets in R is output-device dependent. The font encoding used by R by default depends on the default locale settings of the operating system, which can  also lead to garbage or wrong characters being plotted running the same code on a different computer from the one where a script was edited. The simple code as shown below will work as expect only in some cases. Not all is lost, though, as R can be coerced to use system fonts with functions provided by packages \pkgname{showtext} and \pkgname{extrafont} described in section \ref{sec:plot:fonts} on page \pageref{sec:plot:fonts}.
-
-<<>>=
-my.data <-
-  data.frame(x = 1:5, y = rep(2, 5),
-             label = c("α", "β", "γ", "δ", "ε"))
-
-ggplot(my.data, aes(x, y, label = label)) +
-  geom_text(hjust=1.5) +
-  geom_point()
-@
+You\index{plots!fonts} should be aware that R and ggplot2 support the use of UNICODE\index{UNICODE}, such as UTF8\index{UTF8} character encoding in strings. If your editor or IDE supports their use, then you can type Greek letters and simple maths symbols directly, and they may show correctly in labels if a suitable font is loaded and an extended encoding like UTF8 in use by the operating system. Even if UTF8 is in use, text is not fully portable unless the same font is available\index{portability}, as even if the character positions are standardized for many languages, most UNICODE fonts support at most a small number of languages. In principle one can use this mechanism to have labels both using other alphabets and languages like Chinese with their numerous symbols mixed in the same figure. Furthermore, the support for fonts and consequently character sets in R is output-device dependent. The font encoding used by R by default depends on the default locale settings of the operating system, which can also lead to garbage printed to the console or wrong characters being plotted running the same code on a different computer from the one where a script was edited. Not all is lost, though, as R can be coerced to use system fonts and Google fonts with functions provided by packages \pkgname{showtext} and \pkgname{extrafont} described in section \ref{sec:plot:fonts} on page \pageref{sec:plot:fonts}. Encoding-related problems, specially in MS-Windows, are very common.
 \end{warningbox}
 
 \index{plots!text in|)}
@@ -1763,8 +1753,93 @@ ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
 
 \section{Themes}
 \index{plots!themes}
+For ggplots themes are the equivalent of style sheets for text. They determine how the different elements of a plot are rendered when displayed, printed or saved to a file. They do not alter how the data themselves are displayed, but instead that of text-labels, titles, axes, grids, etc. are formatted. Package \ggplot includes several predefined themes, and some extension packages define additional ones. In addition to switching between themes, the user can modify the format applied to individual elements, or define totally new themes.  
+
 \subsection{Predefined themes}
+
+The theme used by default is \code{theme\_grey}. Themes are defined as functions, with parameters. These parameters allow changing some ``base'' properties. The base size for text elements is given in points, and affects all text elements in a plot (except those produced by \emph{geometries}) as the size of them is by default defined relative to the base size. Another parameter, \code{base\_family}, allows the font family to be set.
+
+<<themes-01>>=
+ggplot(fake2.data, aes(z, y)) + 
+  geom_point() +
+  theme_grey(15, "serif")
+@
+
+\begin{playground}
+Change the code in the previous chunk to use the \code{"mono"} font family at size 8.
+\end{playground}
+
+<<themes-02>>=
+ggplot(fake2.data, aes(z, y)) + 
+  geom_point() +
+  theme_bw()
+@
+
+\begin{playground}
+Change the code in the previous chunk to use all the other predefined themes: \code{theme\_classic}, \code{theme\_minimal}, \code{theme\_linedraw}, \code{theme\_light}, \code{theme\_dark} and \code{theme\_void}.
+\end{playground}
+
+I frequent idiom is to create a ggplot without specifying a theme, and then adding the theme when printed.
+
+<<themes-03>>=
+p <- ggplot(fake2.data, aes(z, y)) +
+       geom_point()
+p + theme_bw()
+@
+
+\begin{playgound}
+Play by replacing in the last statement in the previous code chunk the theme used to print the saved ggplot object \code{p}. Do also try the effect of changing the base size and font family.
+\end{playgound}
+
+It is also possible to set the default theme to be used by all subsequent plots rendered.
+
+<<themes-04>>=
+old_theme <- theme_set(theme_bw(15))
+p
+theme_set(old_theme)
+p
+@
+
 \subsection{Tweaking a theme}
+
+Sometimes we would just like to slightly tweak one of the predefined themes. This is also possible. We exemplify this by solving the frequent problem of overlapping $x$-axis tick labels with different approaches. We force this by setting the number ticks to a high value. Usually rotating the text of the labels solves the problem.
+
+<<themes-11>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 20)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 05))
+@
+
+\begin{playground}
+Play with the code above, modifying the values used for \code{angle}, \code{hjust} and \code{vjust}. (Angles are expressed in degrees, and justification with values between 0 and 1.
+\end{playground}
+
+Another possibility is to use a smaller font size. Within theme function \code{rel()} can be used to set size relative to the base size.
+
+<<themes-12>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 12)) +
+  theme(axis.text = element_text(color = "black"),
+        axis.text.x = element_text(size = rel(0.5))
+@
+
+Themes definitions follow a hierarchy, allowing us to modify the formatting of groups similar elements, as well as of individual elements. In the chunk above we modify the color of the tick labels in both axes, but change the size only for the $x$-axis.
+
+\begin{playground}
+Modify the example above, so that the tick labels on the $x$-axis are blue and those on the $y$-axis red, and the font size the same for both axes.
+\end{playground}
+
+Formatting of all other text elements can be adjusted in a similar way.
+
+The color of the background, and the properties of the grid lines and other lines can be adjusted thought theme elements. We next change the properties of the lines used for the axes, removing the lines on the top and right margins, and adding arrow heads to the axis lines.
+
+<<themes-13, eval=FALSE>>=
+p + theme_classical() + 
+  theme(axis.line = element_line(size = 2) )
+ 
+@
 \subsection{Defining a new theme}
 
 \section{Advanced topics}
