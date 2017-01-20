@@ -752,7 +752,7 @@ ggplot(mpg, aes(class, fill = factor(cyl))) +
 \section{Circular plots}
 \index{plots!circular|(}
 \index{plots!pie charts!circular|(}
-Under circular plots I include pie charts. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!polar coordiantes}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
+Under circular plots I include pie charts. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
 
 Pie charts are more difficult to read: our brain is more comfortable at comparing
 lengths than angles. If used, they should only be used to show composition, or
@@ -1751,16 +1751,16 @@ ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
            size=6)
 @
 
-\section{Themes}
-\index{plots!themes}
-For ggplots themes are the equivalent of style sheets for text. They determine how the different elements of a plot are rendered when displayed, printed or saved to a file. They do not alter how the data themselves are displayed, but instead that of text-labels, titles, axes, grids, etc. are formatted. Package \ggplot includes several predefined themes, and some extension packages define additional ones. In addition to switching between themes, the user can modify the format applied to individual elements, or define totally new themes.  
+\section{Themes}\label{sec:plot:themes}
+\index{plots!themes|(}
+For ggplots themes are the equivalent of style sheets for text. They determine how the different elements of a plot are rendered when displayed, printed or saved to a file. They do not alter how the data themselves are displayed, but instead that of text-labels, titles, axes, grids, etc. are formatted. Package \ggplot includes several predefined themes, and some extension packages define additional ones. In addition to switching between themes, the user can modify the format applied to individual elements, or define totally new themes.
 
 \subsection{Predefined themes}
-
+\index{plots!themes!predefined|(}
 The theme used by default is \code{theme\_grey}. Themes are defined as functions, with parameters. These parameters allow changing some ``base'' properties. The base size for text elements is given in points, and affects all text elements in a plot (except those produced by \emph{geometries}) as the size of them is by default defined relative to the base size. Another parameter, \code{base\_family}, allows the font family to be set.
 
 <<themes-01>>=
-ggplot(fake2.data, aes(z, y)) + 
+ggplot(fake2.data, aes(z, y)) +
   geom_point() +
   theme_grey(15, "serif")
 @
@@ -1770,7 +1770,7 @@ Change the code in the previous chunk to use the \code{"mono"} font family at si
 \end{playground}
 
 <<themes-02>>=
-ggplot(fake2.data, aes(z, y)) + 
+ggplot(fake2.data, aes(z, y)) +
   geom_point() +
   theme_bw()
 @
@@ -1787,60 +1787,185 @@ p <- ggplot(fake2.data, aes(z, y)) +
 p + theme_bw()
 @
 
-\begin{playgound}
+\begin{playground}
 Play by replacing in the last statement in the previous code chunk the theme used to print the saved ggplot object \code{p}. Do also try the effect of changing the base size and font family.
-\end{playgound}
+\end{playground}
 
 It is also possible to set the default theme to be used by all subsequent plots rendered.
 
 <<themes-04>>=
-old_theme <- theme_set(theme_bw(15))
-p
-theme_set(old_theme)
 p
 @
 
-\subsection{Tweaking a theme}
+We save the currently default theme, so as to be able to restore it. If there is no need to `go back' then saving can be skipped by not including the left hand side and the assignment operator in the first statement below.
 
+<<themes-05>>=
+old_theme <- theme_set(theme_bw(15))
+p
+@
+
+<<themes-06>>=
+theme_set(old_theme)
+p
+@
+\index{plots!themes!predefined|)}
+
+\subsection{Modifying a theme}
+\index{plots!themes!modifying|(}
 Sometimes we would just like to slightly tweak one of the predefined themes. This is also possible. We exemplify this by solving the frequent problem of overlapping $x$-axis tick labels with different approaches. We force this by setting the number ticks to a high value. Usually rotating the text of the labels solves the problem.
 
 <<themes-11>>=
-ggplot(fake2.data, aes(z, y)) +
+ggplot(fake2.data, aes(z + 100, y)) +
   geom_point() +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 20)) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 05))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 @
 
 \begin{playground}
 Play with the code above, modifying the values used for \code{angle}, \code{hjust} and \code{vjust}. (Angles are expressed in degrees, and justification with values between 0 and 1.
 \end{playground}
 
+\begin{warningbox}
+When tick labels are rotated one usually needs to set both the horizontal and vertical justification as the default values are no longer suitable. This is due to the fact that justification settings are referenced to the text itself rather than to the plot, i.e.\ vertical justification of $x$-axis tick labels rotated 90 degrees sets their horizontal position with respect to the plot.
+\end{warningbox}
+
 Another possibility is to use a smaller font size. Within theme function \code{rel()} can be used to set size relative to the base size.
 
 <<themes-12>>=
-ggplot(fake2.data, aes(z, y)) +
+ggplot(fake2.data, aes(z + 100, y)) +
   geom_point() +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 12)) +
-  theme(axis.text = element_text(color = "black"),
-        axis.text.x = element_text(size = rel(0.5))
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 20)) +
+  theme(axis.text = element_text(color = "darkblue"),
+        axis.text.x = element_text(size = rel(0.6)))
 @
 
-Themes definitions follow a hierarchy, allowing us to modify the formatting of groups similar elements, as well as of individual elements. In the chunk above we modify the color of the tick labels in both axes, but change the size only for the $x$-axis.
+Themes definitions follow a hierarchy, allowing us to modify the formatting of groups of similar elements, as well as of individual elements. In the chunk above we modify the color of the tick labels in both axes, but changed the font size only for the $x$-axis.
 
 \begin{playground}
-Modify the example above, so that the tick labels on the $x$-axis are blue and those on the $y$-axis red, and the font size the same for both axes.
+Modify the example above, so that the tick labels on the $x$-axis are blue and those on the $y$-axis red, and the font size the same for both axes, but changed from the default.
 \end{playground}
 
 Formatting of all other text elements can be adjusted in a similar way.
 
-The color of the background, and the properties of the grid lines and other lines can be adjusted thought theme elements. We next change the properties of the lines used for the axes, removing the lines on the top and right margins, and adding arrow heads to the axis lines.
+The color of the background, and the properties of the grid lines and other lines can be adjusted thought theme elements. We next change the properties of the lines used for the axes, removing the lines on the top and right margins, and adding arrow heads to the axis lines. See chapter 9 in \citetitle{Wickham2016} \autocite{Wickham2016} for additional examples and \citetitle{Chang2013} \autocite{Chang2013} for more details.
 
-<<themes-13, eval=FALSE>>=
-p + theme_classical() + 
-  theme(axis.line = element_line(size = 2) )
- 
+\begin{warningbox}
+If you use a saved theme, and want to modify some elements, then the saved theme should be added to the plot before adding \code{+ theme(...)} as otherwise the changes would be overwritten.
+\end{warningbox}
+
+It is also possible to modify the default theme used for rendering all subsequent plots.
+
+<<themes-14>>=
+p
 @
+
+We save the currently default theme, so as to be able to restore it. If there is no need to `go back' then saving can be skipped by not including the left hand side and the assignment operator in the first statement below.
+
+<<themes-15>>=
+old_theme <- theme_update(text = element_text(color = "red"))
+p
+@
+
+<<themes-16>>=
+theme_set(old_theme)
+p
+@
+\index{plots!themes!modifying|)}
+
 \subsection{Defining a new theme}
+\index{plots!themes!creating|(}
+
+Themes can be defined both from scratch, or by modifying existing saved themes, and saving the modified version. If we want to preserve the ability to change the base settings, we cannot use \code{theme()} to modify a saved theme and save the resulting theme. We need to create a new theme from scratch. However, unless you are writing a package, the first way of ``creating'' a new theme is enough, and documented in the vignette accompanying package \ggplot. We give an example below.
+
+<<themes-21>>=
+my_theme <- theme_bw() + theme(text = element_text(color = "red"))
+@
+
+<<themes-22>>=
+p
+@
+
+<<themes-23>>=
+p + my_theme
+@
+
+Be aware that \code{my\_theme} is not a function, and consequently we do not use parenthesis as with the saved themes included in package \ggplot.
+
+\begin{playground}
+It is always good to learn to recognize error messages. One way of doing this is by generating errors on purpose. So do add parentheses to the statement in the code chunk above.
+\end{playground}
+
+\begin{explainbox}
+How to create a new theme with a behaviour similar to those part of package \ggplot is not documented, as it is usually the case with changes that involve programming. However, you should always remember that the source code is available. Usually typing the name of a function without the parentheses is enough to get a listing of its definition, or if this is not useful, then reading the source file in the package reveals how a function has been defined. We can then use it as a template for writing our own function.
+\end{explainbox}
+
+Looking at the definition of \code{theme\_minimal} gives us enough information as to proceed to define our own modified theme as a function.
+
+<<themes-31, tidy=TRUE, tidy.opts=list(width.cutoff=30)>>=
+theme_minimal
+@
+
+Using \code{theme\_minimal} as a model, we will proceed to define our own theme function. Argument \code{complete = TRUE} is essential as it affects the behaviour of the returned theme. A `complete' theme replaces any theme present in the ggplot object clearing all settings, while a theme that is not `complete' adds to the existing the new elements without clearing existing settings not being redefined. Saved themes like \code{theme\_grey()} are complete themes, while the themes objects returned by \code{theme()} are by default not complete. 
+
+<<themes-32>>=
+my_theme <-
+    function (base_size = 11, base_family = "") {
+        theme_grey(base_size = base_size, base_family = base_family) +
+            theme(text = element_text(color = "red"), complete = TRUE)
+    }
+@
+
+<<themes-33>>=
+p + my_theme(base_family = "serif")
+@
+
+\begin{warningbox}
+In the definition of \code{theme\_minimal}, \code{\%+replace\%} is used so as to unset all the properties of each theme element, while \code{+} only replaces the properties explicitly given as argument the the \emph{element}-setting function.
+\end{warningbox}
+
+\begin{explainbox}
+The function \code{theme\_minimal} was a good model for the example above, however, it was not the first function I explored. I did list the definition of \code{theme\_gray} first, but as this theme is defined from scratch, it was not the best starting point for our problem. Of course, if we had wanted to define a theme from scratch, then it would have been the `model' to use for defining it.
+\end{explainbox}
+
+Frequently one needs the same plots differently formatted, e.g.\ for overhead slides and for use in a printed article or book. In such a case, we may even some elements like titles to be included only in the slides. One could create two different \code{ggplot} objects, one for each occasion, but this can lead to inconsistencies if the code used to create the plot is updated. A better solution is to use themes, more generally, define themes for the different occasions according to one's taste and needs. A simple example is given in the next five code chunks.
+ 
+<<themes-35>>=
+theme_ovh <-
+    function (base_size = 15, base_family = "") {
+        theme_grey(base_size = base_size, base_family = base_family) +
+            theme(text = element_text(face = "bold"), complete = TRUE)
+    }
+
+theme_prn <-
+    function (base_size = 11, base_family = "serif") {
+        theme_classic(base_size = base_size, base_family = base_family) +
+            theme(plot.title = element_blank(), 
+                  plot.subtitle = element_blank(),
+                  complete = TRUE)
+    }
+@
+
+<<themes-36>>=
+p1 <- p + ggtitle("A Title", subtitle = "with a subtitle")
+@
+
+<<themes-37>>=
+p1
+@
+
+<<themes-38>>=
+p1 + theme_ovh()
+@
+
+<<themes-39>>=
+p1 + theme_prn()
+@
+
+\begin{playground}
+Modify the two themes defined above, so as to suite your own tastes and needs, but first of all, just play around to get a feel of all the possibilities. The help page for function \code{theme} describes and exemplifies the use of most if not all the valid theme elements.
+\end{playground}
+\index{plots!themes!creating|)}
+\index{plots!themes|)}
 
 \section{Advanced topics}
 
