@@ -560,7 +560,7 @@ ggplot(data = Orange,
 Make an empty plot (\code{ggplot()}) and add to it as title an expression producing $y = b_0 + b_1 x + b_2 x^2$. (Hint: have a look at the examples for the use of expressions as labels in section \ref{sec:plot:text} on page \pageref{sec:plot:text} and the \code{plotmath} demo in R.)
 \end{playground}
 
-Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them.
+Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them. (In \ggplot 2.2.1 \code{update\_labels} fails for \emph{aesthetic} \code{color} but works as expected with \code{colour}. Issue raised in Github on 2016-01-21.)
 
 <<axis-labels-04>>=
 p <-
@@ -1740,9 +1740,46 @@ ggplot(fake2.data, aes(z, y)) + geom_point() +
 
 \section{Adding annotations}
 \index{plots!annotations}
-Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the \code{ggplot} object. In this example we pass directly expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data.
+Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the \code{ggplot} object. Annotations frequently make use \code{"text"} or \code{"label"} \emph{geometries} with character strings as data, possibly to be parsed as expressions. However, other \emph{geometries} can also be very useful. We start with a simple example with text.
 
-<<>>=
+<<annotate-01>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  annotate(geom = "text",
+           label = "origin",
+           x = 0, y = 0,
+           color = "blue",
+           size=4)
+@
+
+\begin{playground}
+Play with the values of the arguments to \code{annotate} to vary the position, size, color, font family, font face, rotation angle and justification of the annotation.
+\end{playground}
+
+We can add lines to mark the origin more precisely and effectively. (With \ggplot 2.2.1 we need to add a redundant \code{x} or \code{y} argument to get any effect of the annotations. Issue raised in Github 2017-01-22.)
+
+<<annotate-02>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  annotate(geom = "hline",
+           yintercept = 0, y = 0,
+           color = "blue") +
+  annotate(geom = "vline",
+           xintercept = 0, x = 0,
+           color = "blue")
+@
+
+\begin{playground}
+Play with the values of the arguments to \code{annotate} to vary the position and attributes of the lines. The vertical and horizontal line geometries have the same properties as other lines: linetype, color, size, etc.
+\end{playground}
+
+\begin{playground}
+Modify the examples above to use the \code{line} \emph{geometry} for the annotations. Explore the help page for \code{geom\_line} and add arrows as annotations to the plot.
+\end{playground}
+
+In this third example, in addition to adding expressions as annotations, we also pass expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data, but using the same coordinates and units as for plotting the data.
+
+<<annotate-03>>=
 ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
   stat_function(fun=sin) +
   scale_x_continuous(
@@ -1761,6 +1798,10 @@ ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
            x=c(0, 1, 2) * pi, y=0,
            size=6)
 @
+
+\begin{playground}
+Modify the plot above to show the cosine instead of the sine function, replacing \code{sin} with \code{cos}. This is easy, but the catch is that you will need to relocate the annotations.
+\end{playground}
 
 \section{Themes}\label{sec:plot:themes}
 \index{plots!themes|(}
@@ -1790,7 +1831,7 @@ ggplot(fake2.data, aes(z, y)) +
 Change the code in the previous chunk to use all the other predefined themes: \code{theme\_classic}, \code{theme\_minimal}, \code{theme\_linedraw}, \code{theme\_light}, \code{theme\_dark} and \code{theme\_void}.
 \end{playground}
 
-I frequent idiom is to create a ggplot without specifying a theme, and then adding the theme when printed.
+A frequent idiom is to create a ggplot without specifying a theme, and then adding the theme when printed.
 
 <<themes-03>>=
 p <- ggplot(fake2.data, aes(z, y)) +
@@ -1808,7 +1849,7 @@ It is also possible to set the default theme to be used by all subsequent plots 
 p
 @
 
-We save the currently default theme, so as to be able to restore it. If there is no need to `go back' then saving can be skipped by not including the left hand side and the assignment operator in the first statement below.
+We save the current default theme, so as to be able to restore it. If there is no need to `go back' then saving can be skipped by not including the left hand side and the assignment operator in the first statement below.
 
 <<themes-05>>=
 old_theme <- theme_set(theme_bw(15))
@@ -1870,7 +1911,7 @@ It is also possible to modify the default theme used for rendering all subsequen
 p
 @
 
-We save the currently default theme, so as to be able to restore it. If there is no need to `go back' then saving can be skipped by not including the left hand side and the assignment operator in the first statement below.
+As above, we save the current default theme, so as to be able to restore it.
 
 <<themes-15>>=
 old_theme <- theme_update(text = element_text(color = "red"))
@@ -1892,9 +1933,13 @@ Themes can be defined both from scratch, or by modifying existing saved themes, 
 my_theme <- theme_bw() + theme(text = element_text(color = "red"))
 @
 
+The default theme remains unchanged.
+
 <<themes-22>>=
 p
 @
+
+But we can use the saved theme when desired.
 
 <<themes-23>>=
 p + my_theme
@@ -1926,9 +1971,29 @@ my_theme <-
     }
 @
 
+The default theme remains unchanged, as shown earlier. The saved theme is now a function, and accepts arguments. In this example we have kept the function parameters the same as used by the predefined themes---whenever it is possible we should avoid surprising users.
+
 <<themes-33>>=
 p + my_theme(base_family = "serif")
 @
+
+There is nothing to prevent us from defining a theme function with additional parameters. The example below is fully compatible with the one defined above thanks to the default argument for \code{text.color} but allows changing the color.
+
+<<themes-32a>>=
+my_theme <-
+    function (base_size = 11, base_family = "", text.color = "red") {
+        theme_grey(base_size = base_size, base_family = base_family) +
+            theme(text = element_text(color = text.color), complete = TRUE)
+    }
+@
+
+<<themes-33a>>=
+p + my_theme(text.color = "green")
+@
+
+\begin{playground}
+Define a theme function that instead of \code{color} allows setting the \code{face} (regular, bold, italic) through a user-supplied argument.
+\end{playground}
 
 \begin{warningbox}
 In the definition of \code{theme\_minimal}, \code{\%+replace\%} is used so as to unset all the properties of each theme element, while \code{+} only replaces the properties explicitly given as argument the the \emph{element}-setting function.
@@ -2231,23 +2296,23 @@ ggplot(data = clean5000.df,
          aes(x = logFC,
              y = PValue,
              color = factor(outcome),
-             shape = factor(ifelse(PValue <= 1e-50, "out", "in")))) +
+             shape = factor(ifelse(PValue <= 1e-40, "out", "in")))) +
     geom_vline(xintercept = c(log2(2/3), log2(3/2)), linetype = "dotted",
                color = "grey75") +
     geom_point() +
     scale_color_manual(values = c("blue", "grey80", "red"), guide = FALSE) +
-    scale_x_continuous(breaks = c(log2(1e-3), log2(1e-2), log2(1e-1), log2(1/2),
-                                  0, log2(2), log2(1e1), log2(1e2), log2(1e3)),
-                       labels = c("1/1000", "1/100", "1/10", "1/2", "1",
-                                  "2", "10", "100", "1000"),
-                       limits = c(log2(1e-3), log2(1e3)),
+    scale_x_continuous(breaks = c(log2(1e-2), log2(1e-1), log2(1/2),
+                                  0, log2(2), log2(1e1), log2(1e2)),
+                       labels = c("1/100", "1/10", "1/2", "1",
+                                  "2", "10", "100"),
+                       limits = c(log2(1e-2), log2(1e2)),
                        name = "Relative expression",
                        minor_breaks = NULL) +
     scale_y_continuous(trans = reverselog_trans(10),
-                       breaks = c(1, 1e-3, 1e-10, 1e-20, 1e-30, 1e-40, 1e-50),
+                       breaks = c(1, 1e-3, 1e-10, 1e-20, 1e-30, 1e-40),
                        labels = scales::trans_format("log10",
                                                      scales::math_format(10^.x)),
-                       limits = c(1, 1e-50), # axis is reversed!
+                       limits = c(1, 1e-40), # axis is reversed!
                        name = expression(italic(P)-{value}),
                        oob = scales::squish,
                        minor_breaks = NULL) +
