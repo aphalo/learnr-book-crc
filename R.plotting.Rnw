@@ -441,7 +441,7 @@ We start by checking which fonts families R recognizes on our system for the PDF
 names(pdfFonts())
 @
 
-\code{"Helvetica"} is the default, but we can change the default through parameter \code{family}. Some of the family names are \emph{generic} like \code{serif}, \code{sans} (sans-serif) and \code{mono} (mono-spaced), and others refer to actual font names. Some related fonts (e.g.\ from different designers or foundries) may also use variations of the same name.
+A sans-serif font, either \code{"Helvetica"} or \code{"Arial"} is the default, but we can change the default through parameter \code{family}. Some of the family names are \emph{generic} like \code{serif}, \code{sans} (sans-serif) and \code{mono} (mono-spaced), and others refer to actual font names. Some related fonts (e.g.\ from different designers or foundries) may also use variations of the same name. Base R does not support the use of system fonts in graphics output devices. However, add-on packages allow their use. The simplest to use is package \pkgname{showtext} described in \ref{sec:plot:fonts} on page \pageref{sec:plot:fonts}.
 
 <<>>=
 my.data <-
@@ -518,7 +518,7 @@ I describe this in the same section, and immediately after the section on plotti
 
 The most flexible approach is to use \code{labs} as it allows the user to set the text or expressions to be used for these different elements.
 
-<<>>=
+<<axis-labels-01>>=
 ggplot(data = Orange,
        aes(x = age, y = circumference, color = Tree)) +
   geom_line() +
@@ -534,7 +534,7 @@ ggplot(data = Orange,
 
 There are in addition to \code{labs} convenience functions for setting the axis labels, \code{xlab} and \code{ylab}.
 
-<<>>=
+<<axis-labels-02>>=
 ggplot(data = Orange,
        aes(x = age, y = circumference, color = Tree)) +
   geom_line() +
@@ -546,7 +546,7 @@ ggplot(data = Orange,
 
 An additional convenience function, \code{ggtitle} can be used to add a title and optionally a subtitle.
 
-<<>>=
+<<axis-labels-03>>=
 ggplot(data = Orange,
        aes(x = age, y = circumference, color = Tree)) +
   geom_line() +
@@ -560,31 +560,42 @@ ggplot(data = Orange,
 Make an empty plot (\code{ggplot()}) and add to it as title an expression producing $y = b_0 + b_1 x + b_2 x^2$. (Hint: have a look at the examples for the use of expressions as labels in section \ref{sec:plot:text} on page \pageref{sec:plot:text} and the \code{plotmath} demo in R.)
 \end{playground}
 
-Function \code{update\_labels} allows the replacement of labels in an existing plot.
+Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them.
 
-<<>>=
+<<axis-labels-04>>=
 p <-
     ggplot(data = mtcars,
-           aes(x=disp, y=hp, colour=factor(cyl),
-               shape=factor(cyl))) +
+           aes(x = disp, y = hp, colour = factor(cyl),
+               shape = factor(cyl))) +
       geom_point() +
-      labs(x="Engine displacement)",
-           y="Gross horsepower",
-           color="Number of\ncylinders",
-           shape="Number of\ncylinders")
+      labs(x = "Engine displacement)",
+           y = "Gross horsepower",
+           color = "Number of\ncylinders",
+           shape = "Number of\ncylinders")
+p
+@
 
+<<axis-labels-05>>=
 update_labels(p, list(x = "Cilindrada",
                       y = "Potencia bruta (caballos de fuerza)",
-                      color = "no. de\ncilindros",
+                      colour = "no. de\ncilindros",
                       shape = "no. de\ncilindros"))
 @
+
+\begin{warningbox}
+When setting or updating labels using either \code{labs()} or \code{update\_labels()} be aware that even though \code{color} and \code{colour} are synonyms for the same \emph{aesthetics}, the `name' used in the call to \code{aes()} must match the  `name' used when setting or updating the labels.
+\end{warningbox}
+
+\begin{playground}
+Modify the code used in the code chunk above to update labels, so that \code{colour} is used instead of \code{color}. How does the figure change?
+\end{playground}
 
 The labels used in keys and axis tick-labels for factor levels can be changed through the different \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
 
 \begin{explainbox}
 Sometimes we would like to include in the title or as an annotation in the plot, the name of the argument passed to \code{ggplot}'s \code{data} parameter. To obtain the name of an object as a character string, the usual R ``slang'' is \code{deparse(substitute(x))} where \code{x} is the object.
 
-<<>>=
+<<axis-labels-06>>=
 ggplot(data = Orange,
        aes(x = age, y = circumference, color = Tree)) +
   geom_line() +
@@ -595,7 +606,7 @@ ggplot(data = Orange,
 
 The example above rarely is of much use, as we have anyway to pass the object itself twice, and consequently there is no advantage in effort compare to typing \code{"Data: Orange"} as argument to \code{ggtitle}. A more general way to solve this problem is to write a wrapper function.
 
-<<>>=
+<<axis-labels-07>>=
 ggwrapper <- function(data, ...) {
   ggplot(data, ...) +
     ggtitle(paste("Object: ", substitute(data)))
@@ -614,7 +625,7 @@ Using this function in a loop over a list or vector, will produce output is not 
 
 We create a suitable set of data frames, build a list with name \code{my.dfs} containing them.
 
-<<>>=
+<<axis-labels-08>>=
 df1 <- data.frame(x = 1:10, y = (1:10)^2)
 df2 <- data.frame(x = 10:1, y = (10:1)^2.5)
 my.dfs <- list(first.df = df1, second.df = df2)
@@ -622,7 +633,7 @@ my.dfs <- list(first.df = df1, second.df = df2)
 
 If we print the output produced by the wrapper function when called in a loop but we get always the same title, so this approach is not useful.
 
-<<>>=
+<<axis-labels-09>>=
 for (df in my.dfs) {
   print(
     ggwrapper(data = df,
@@ -638,7 +649,7 @@ for (df in my.dfs) {
 
 As we have given names to the list members, we can use these and enclose the loop in a function. This is a very inflexible approach, and on top the plots are only printed, and the \code{ggplot} objects get discarded once printed.
 
-<<>>=
+<<axis-labels-10>>=
 plot.dfs <- function(x, ...) {
 list.name <- deparse(substitute(x))
 member.names <- names(x)
@@ -658,7 +669,7 @@ if (is.null(member.names)) {
 }
 @
 
-<<>>=
+<<axis-labels-11>>=
 plot.dfs(my.dfs)
 @
 
@@ -674,7 +685,7 @@ When one has control over the objects, one can add the desired title as an attri
 
 As an advanced exercise I suggest implementing this attribute-based solution by tagging the data frames using a function defined as shown below or by directly using \code{attr}. You will also need modify the code to use the new attribute when building the \code{ggplot} object.
 
-<<>>=
+<<axis-labels-12>>=
 add.title.attr <- function(x, my.title) {
   attr(x, "title") <- my.title
   x
@@ -1905,7 +1916,7 @@ Looking at the definition of \code{theme\_minimal} gives us enough information a
 theme_minimal
 @
 
-Using \code{theme\_minimal} as a model, we will proceed to define our own theme function. Argument \code{complete = TRUE} is essential as it affects the behaviour of the returned theme. A `complete' theme replaces any theme present in the ggplot object clearing all settings, while a theme that is not `complete' adds to the existing the new elements without clearing existing settings not being redefined. Saved themes like \code{theme\_grey()} are complete themes, while the themes objects returned by \code{theme()} are by default not complete. 
+Using \code{theme\_minimal} as a model, we will proceed to define our own theme function. Argument \code{complete = TRUE} is essential as it affects the behaviour of the returned theme. A `complete' theme replaces any theme present in the ggplot object clearing all settings, while a theme that is not `complete' adds to the existing the new elements without clearing existing settings not being redefined. Saved themes like \code{theme\_grey()} are complete themes, while the themes objects returned by \code{theme()} are by default not complete.
 
 <<themes-32>>=
 my_theme <-
@@ -1928,7 +1939,7 @@ The function \code{theme\_minimal} was a good model for the example above, howev
 \end{explainbox}
 
 Frequently one needs the same plots differently formatted, e.g.\ for overhead slides and for use in a printed article or book. In such a case, we may even want some elements like titles to be included only in the plots in overhead slides. One could create two different \code{ggplot} objects, one for each occasion, but this can lead to inconsistencies if the code used to create the plot is updated. A better solution is to use themes, more generally, define themes for the different occasions according to one's taste and needs. A simple example is given in the next five code chunks.
- 
+
 <<themes-35>>=
 theme_ovh <-
     function (base_size = 15, base_family = "") {
@@ -1939,7 +1950,7 @@ theme_ovh <-
 theme_prn <-
     function (base_size = 11, base_family = "serif") {
         theme_classic(base_size = base_size, base_family = base_family) +
-            theme(plot.title = element_blank(), 
+            theme(plot.title = element_blank(),
                   plot.subtitle = element_blank(),
                   complete = TRUE)
     }
