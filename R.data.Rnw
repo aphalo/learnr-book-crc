@@ -13,9 +13,189 @@ By reading previous chapters, you have already become familiar with base R's cla
 
 The chapter is divided in three sections, the first one deals with reading data from files produced by other programs or instruments, or typed by users outside of R, and querying databases and very briefly on reading data from the internet. The second section will deal with transformations of the data that do not combine different observations, although they may combine different variables from a single observation event, or select certain variables or observations from a larger set. The third section will deal with operations that produce summaries or involve other operations on groups of observations.
 
-\section{Data input}
+\section{Data input and output}
+
+In recent several packages have made it easier and faster to import data into R. This together with wider and faster internet access to data sources, has made it possible to efficiently work with relatively large data sets. The way R is implemented, keeping all data in memory (RAM), imposes limits the size of data sets that can analysed with base R. One option is to use a 64 bit version of R on a computer running a 64 bit operating system. This allows the use of large amounts of RAM if available. For larger data sets, one can use different packages that allow selective reading of data from files, and using queries to obtain subsets of data from databases. We will start with the simplest case, files using the native formats of R itself.
+
+\subsection{.Rda files}
+
+In addition to saving the whole workspace, one can save any R object present in the workspace to disk. One or more objects, belonging to any mode or class can be saved into the same file. Reading the file restores all the saved objects into the current workspace. These files are portable across most R versions. Whether compression is used, and whether the files is encoded in ASCII characters---allowing maximum portability at the expense of increased size or not.
+
+We create and save a data frame object.
+
+<<rda-01>>=
+my.df <- data.frame(x = 1:10, y = 10:1)
+my.df
+save(my.df, file = "my-df.rda")
+@
+
+We delete the data frame object and confirm that it is no longer present in the workspaceh.
+<<rda-02>>=
+rm(my.df)
+ls(pattern = "my.df")
+@
+
+We read the file we earlier saved to restore the object.
+<<rda-03>>=
+load(file = "my-df.rda")
+ls(pattern = "my.df")
+my.df
+@
+
+The default format used is binary and compressed, which results in smaller files.
+
+In the example above, only one object was saved, but one can simply give the names of additional objects as arguments. Sometimes it is easier to supply the names of the objects to be saved as a vector of character strings through an argument to parameter \code{list}. One case is when wnating to save a group of objects based on their names. We can use \code{ls()} to list the names of objects matching a simple \code{pattern} or a complex regular expression. The example below does this in two steps saving the character vector first, and then using this saved object as argument to \code{save}'s \code{list} parameter.
+
+<<rda-04>>=
+objcts <- ls(pattern = "*.df")
+save(list = objcts, file = "my-df1.rda")
+@
+
+The intermediate step can be skipped.
+<<rda-05>>=
+save(list = ls(pattern = "*.df"), file = "my-df1.rda")
+@
+
+As a coda, we show how to cleanup by deleting the two files we created. Function \code{unlink()} can also be used to delete folders.
+<<rda-06>>=
+unlink(c("my-df.rda", "my-df1.rda"))
+@
+
+\subsection{File names and portability}
+
+When saving data to files that one expect to be read on a different operating system (OS), we need to be careful to chose files names valid in all OSs where the file could be read. This is specially important when developing R packages. Best avoid space characters as part of file names and the use of more than one dot. For widest portability, underscores should be avoided, while dashes are usually not a problem.
+
+R provides some functions which help with portability, by hiding the idiosyncracies of the different OSs from R code. Different OSs use different characters in paths, for example, the algorithm needed to extract a file name from a file path, is OS specific. However, R's function \code{basename()} allows the inclusion of this operation in user's code portably.
+
+Under \pgrmname{MS-Windows} paths include backslash characters which are not ``normal'' characters in R, and many other languages, but rather ``escape'' characters. Within R forward slash can be used in their place,
+
+<<filenames-01>>=
+basename("C:/Users/aphalo/Documents/my-file.txt")
+@
+
+or backslash characters can be ``escaped'' by repeating them.
+<<filenames-02>>=
+basename("C:\\Users\\aphalo\\Documents\\my-file.txt")
+@
+
+The complementary function is \code{dirname()} which extracts the bare path to conatining disk folder from a file path.
+<<filenames-03>>=
+dirname("C:/Users/aphalo/Documents/my-file.txt")
+@
+
+Functions \code{getwd()} and \code{setwd()} can be used to get the path to the current working directory and setting it, respectively.
+
+<<filenames-05>>=
+getwd()
+@
+
+Function \code{setwd} returns the path of the previous working directory, allowing us to portably set the working directory to the previous one. Both relative paths, as in the example, or absolute paths are accepted as arguments.
+<<filenames-06>>=
+oldwd <- setwd("..")
+getwd()
+@
+
+The returned value is always a absolute full path, so it remains valid even if the path to the working directory changes more than once before it being restored.
+<<filenames-07>>=
+oldwd
+setwd(oldwd)
+getwd()
+@
+
+Base R provides several functions for working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access acc
+
+<<filenames-08>>=
+if (!file.exists("xxx.txt")) {
+  file.create("xxx.txt")
+}
+file.size("xxx.txt")
+file.info("xxx.txt")
+file.rename("xxx.txt", "zzz.txt")
+file.exists("xxx.txt")
+file.exists("zzz.txt")
+file.remove("zzz.txt")
+@
+
+We can also obtain a list of files and/or directories (= disk folders).
+<<filenames-09>>=
+head(list.files("."))
+head(list.dirs("."))
+@
+
+Function \code{file.path} can be used to construct a file path from its components in a way that is portable across OSs.
 
 \subsection{Text files}
+Text files come many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples.
+
+In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV).
+\begin{verbatim}
+ 1.0, 24.5, 346, ABC
+23.4, 45.6,  78, ZXY
+\end{verbatim}
+
+When reading a CSV file, white space is ignored and fields recognized based on separators. In most cases decimal points and exponential notation are allowed for floating point values. Alignment is optional, and helps only reading by humans, as white space is ignored. This miss-aligned version of the example above can be expected to be readable with base R function \code{read.csv()}.
+\begin{verbatim}
+1.0,24.5,346,ABC
+23.4,45.6,78,ZXY
+\end{verbatim}
+
+With a fixed format for fields no delimiters are needed, but a description of the format is required. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in fixed with fields can be read with base R function \code{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed widths.
+\begin{verbatim}
+ 10245346ABC
+234456 78ZXY
+\end{verbatim}
+
+Function \code{read.fortran()} is a wrapper on \code{read.fwf()} that accepts format definitions similar to those used in FORTRAN, but not completely compatible with them. One particularity of FORTRAN FWF files is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or decks of punch cards) smaller.
+
+R function \code{read.table()} provides more flexibility than function \code{read.csv()} earlier mentioned, which is in fact a wrapper on \code{read.table()} with defaults for its arguments suitable for reading CSV files in English-language locales. Function \code{read.csv2()} is similar but setting defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach.
+
+Matching functions are available for writing data to files: \code{write.csv()}, \code{write.csv2()} and \code{write.table()}. Below we give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \code{write} functions take as argument data frames or objects that can be coerced into data frames. In contrast to \code{save()}, these functions can only write to files data that is in a tabular or matrix-like arrangement.
+
+<<file-io-txt-01>>=
+my.df <- data.frame(x = 1:5, y = 5:1 / 10)
+@
+
+We write a CSV file suitable for an English language locale, and then display its contents.
+<<file-io-txt-02>>=
+write.csv(my.df, file = "my-file1.csv")
+file.show("my-file1.csv", pager = "console")
+@
+
+<<file-io-txt-02a, comment='', echo=FALSE>>=
+cat(readLines('my-file1.csv'), sep = '\n')
+@
+
+We write a CSV file suitable for a Spanish, Finnish or similar locale, and then display its contents. It can be seen, that the same data frame is saved using different delimiters.
+<<file-io-txt-03>>=
+write.csv2(my.df, file = "my-file2.csv")
+file.show("my-file2.csv", pager = "console")
+@
+
+<<file-io-txt-03a, comment='', echo=FALSE>>=
+cat(readLines('my-file2.csv'), sep = '\n')
+@
+
+We write a file with the fields separated by white space with function \code{write.table()}.
+<<file-io-txt-04>>=
+write.table(my.df, file = "my-file3.txt")
+file.show("my-file3.txt", pager = "console")
+@
+
+<<file-io-txt-04a, comment='', echo=FALSE>>=
+cat(readLines('my-file3.txt'), sep = '\n')
+@
+
+Function \code{cat()} takes R objects and writes them after conversion to character strings to a file, inserting one or more characters as separators, by default a space. This separator can be set by an argument through \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\\n"}.
+
+<<file-io-txt-05>>=
+my.lines <- c("abcd", "hello world", "123.45")
+cat(my.lines, file = "my-file4.txt", sep = "\n")
+file.show("my-file4.txt", pager = "console")
+@
+
+<<file-io-txt-05a, comment='', echo=FALSE>>=
+cat(readLines('my-file4.txt'), sep = '\n')
+@
 
 \subsection{Worksheets}
 
