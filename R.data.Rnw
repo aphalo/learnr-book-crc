@@ -7,6 +7,16 @@ opts_knit$set(concordance=TRUE)
 
 \chapter{Storing and manipulating data with R}\label{chap:R:data}
 
+\section{Packages used in this chapter}
+
+For executing the examples listed in this chapter you need first to load the following packages from the library:
+
+<<message=FALSE>>=
+library(tibble)
+library(readr)
+library(readxl)
+@
+
 \section{Introduction}
 
 By reading previous chapters, you have already become familiar with base R's classes, methods, functions and operators for storing and manipulating data. Several recently developed packages provide somehow different, and in my view easier, ways of working with data in R without compromising performance to a level that would matter outside the realm of `big data'. Some other recent packages emphasize computation speed, at some cost with respect to simplicity of use, and in particular intuitiveness. Of course, as with any user interface, much depends on one's own preferences and attitudes to data analysis. However, a package designed for maximum efficiency like \pkgname{data.table} requires of the user to have a good understanding of computers to be able to understand the compromises and the unusual behavior compared to the rest of R. I will base this chapters on what I mostly use myself for everyday data analysis and scripting, and exclude the complexities of R programming and package development.
@@ -125,9 +135,10 @@ head(list.dirs("."))
 Function \code{file.path} can be used to construct a file path from its components in a way that is portable across OSs.
 
 \subsection{Text files}
-Text files come many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples.
 
-In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV).
+Text files come many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
+
+In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV). Function \code{write.csv()} and \code{read.csv()} can be used to write and read these files using the conventions used in this example.
 \begin{verbatim}
  1.0, 24.5, 346, ABC
 23.4, 45.6,  78, ZXY
@@ -139,25 +150,25 @@ When reading a CSV file, white space is ignored and fields recognized based on s
 23.4,45.6,78,ZXY
 \end{verbatim}
 
-With a fixed format for fields no delimiters are needed, but a description of the format is required. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in fixed with fields can be read with base R function \code{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed widths.
+With a fixed format for fields no delimiters are needed, but a description of the format is required. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in fixed format with fields can be read with base R function \code{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed widths.
 \begin{verbatim}
  10245346ABC
 234456 78ZXY
 \end{verbatim}
 
-Function \code{read.fortran()} is a wrapper on \code{read.fwf()} that accepts format definitions similar to those used in FORTRAN, but not completely compatible with them. One particularity of FORTRAN FWF files is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or decks of punch cards) smaller.
+Function \code{read.fortran()} is a wrapper on \code{read.fwf()} that accepts format definitions similar to those used in FORTRAN, but not completely compatible with them. One particularity of FORTRAN \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or stacks of punch cards) smaller.
 
-R function \code{read.table()} provides more flexibility than function \code{read.csv()} earlier mentioned, which is in fact a wrapper on \code{read.table()} with defaults for its arguments suitable for reading CSV files in English-language locales. Function \code{read.csv2()} is similar but setting defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach.
+R functions \code{write.table()} and \code{read.table()} default to separating fields with whitespace. Functions \code{write.csv()} and \code{read.csv()} have defaults for their arguments suitable for writing and reading CSV files in English-language locales. Functions \code{write.csv2()} and \code{read.csv2()} are similar have defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach as the user can pass the delimiters to used as arguments in the function call.
 
-Matching functions are available for writing data to files: \code{write.csv()}, \code{write.csv2()} and \code{write.table()}. Below we give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \code{write} functions take as argument data frames or objects that can be coerced into data frames. In contrast to \code{save()}, these functions can only write to files data that is in a tabular or matrix-like arrangement.
+We give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \code{write} functions take as argument data frames or objects that can be coerced into data frames. In contrast to \code{save()}, these functions can only write to files data that is in a tabular or matrix-like arrangement.
 
 <<file-io-txt-01>>=
-my.df <- data.frame(x = 1:5, y = 5:1 / 10)
+my1.df <- data.frame(x = 1:5, y = 5:1 / 10)
 @
 
-We write a CSV file suitable for an English language locale, and then display its contents.
+We write a CSV file suitable for an English language locale, and then display its contents. In most cases setting \code{row.names = FALSE} when writing a CSV file will help when it is read. Of course, if row names do contain important information, such as gene tags, you cannot skip writing the row names to the file unless you first copy these data into a column in the data frame. (Row names are stored separately as an attribute in \code{data.frame} objects.
 <<file-io-txt-02>>=
-write.csv(my.df, file = "my-file1.csv")
+write.csv(my.df, file = "my-file1.csv", row.names = FALSE)
 file.show("my-file1.csv", pager = "console")
 @
 
@@ -165,9 +176,20 @@ file.show("my-file1.csv", pager = "console")
 cat(readLines('my-file1.csv'), sep = '\n')
 @
 
+If we had written the file using default settings, reading the file so as to recover the original objects, would have required overriding of the default argument for parameter \code{row.names}.
+<<file-io-txt-02b>>=
+my_read1.df <- read.csv(file = "my-file1.csv")
+my_read1.df
+all.equal(my.df, my_read1.df, check.attributes = FALSE) 
+@
+
+\begin{playground}
+Read the file with function \code{read.csv2()} instead of \code{read.csv()}. Although this may look as a waste of time, the point of the exercise is for you to get familiar with R's behaviour in case of such a mistake. This will help you recognize similar errors when they happen accidentally.
+\end{playground}
+
 We write a CSV file suitable for a Spanish, Finnish or similar locale, and then display its contents. It can be seen, that the same data frame is saved using different delimiters.
 <<file-io-txt-03>>=
-write.csv2(my.df, file = "my-file2.csv")
+write.csv2(my.df, file = "my-file2.csv", row.names = FALSE)
 file.show("my-file2.csv", pager = "console")
 @
 
@@ -175,15 +197,37 @@ file.show("my-file2.csv", pager = "console")
 cat(readLines('my-file2.csv'), sep = '\n')
 @
 
+As with \code{read.csv()} had we written row names to the file, we would have needed to override the default behaviour.
+<<file-io-txt-03b>>=
+my_read2.df <- read.csv2(file = "my-file2.csv")
+my_read2.df
+all.equal(my.df, my_read2.df, check.attributes = FALSE)
+@
+
+\begin{playground}
+Read the file with function \code{read.csv()} instead of \code{read.csv2()}. This may look as an even more futile exercise than the previous one, but it isn't as the behaviour of R is different. Consider \emph{how} values are erroneously decoded in both exercises. If the \emph{structure} of the data frames read is not clear to you, do use function \code{str()} to look at them.
+\end{playground}
+
 We write a file with the fields separated by white space with function \code{write.table()}.
 <<file-io-txt-04>>=
-write.table(my.df, file = "my-file3.txt")
+write.table(my.df, file = "my-file3.txt", row.names = FALSE)
 file.show("my-file3.txt", pager = "console")
 @
 
 <<file-io-txt-04a, comment='', echo=FALSE>>=
 cat(readLines('my-file3.txt'), sep = '\n')
 @
+
+In the case of \code{read.table()} there is no need to override the default, independently of row names are written to the file or not. The reason is related to the default behaviour of the \code{write} functions. Whether they write a column name (\code{""}, an empty character string) or not for the first column, containing the row names.
+<<file-io-txt-04b>>=
+my_read3.df <- read.table(file = "my-file3.txt", header = TRUE)
+my_read3.df
+all.equal(my.df, my_read3.df, check.attributes = FALSE)
+@
+
+\begin{playground}
+If you are still unclear about why the files were decoded in the way they were, now try to read them with \code{read.table()}. Do now the three examples make sense to you?
+\end{playground}
 
 Function \code{cat()} takes R objects and writes them after conversion to character strings to a file, inserting one or more characters as separators, by default a space. This separator can be set by an argument through \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\\n"}.
 
@@ -195,6 +239,67 @@ file.show("my-file4.txt", pager = "console")
 
 <<file-io-txt-05a, comment='', echo=FALSE>>=
 cat(readLines('my-file4.txt'), sep = '\n')
+@
+
+<<file-io-txt-05b>>=
+my_read.lines <- readLines('my-file4.txt')
+my_read.lines
+all.equal(my.lines, my_read.lines, check.attributes = FALSE)
+@
+
+\begin{warningbox}
+There are couple of things to take into account when reading data from text files using base R functions \code{read.tabke()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots). 
+\end{warningbox}
+
+\subsection[readr]{\pkgname{readr}}
+
+<<>>=
+citation(package = "readr")
+@
+
+Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow much faster input and output, and have different default behaviour. Contrary to base R functions, they are optimized for speed, but may sometimes wrongly decode their input and sometimes silently do this even for some CSV files that are correctly decoded by the base functions. Base R functions are dumb, the file format or delimiters must be supplied as arguments. The \pkgname{readr} functions use ``magic'' to guess the format, in most cases they succeed, which is very handy, but occasionally the power of the magic is not strong enough. The ``magic'' can be overridden by passing arguments. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{datetime}.
+
+\begin{warningbox}
+The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \code{read\_csv()} $\approx$ \code{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \code{read.table()}, although they both read fields separated by white space, \code{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \code{read.table()} handles tolerates vertical misalignment. Other aspects of the default behaviour is also different, for example they do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \code{tibble} which inherits from \code{data.frame}).
+\end{warningbox}
+
+<<readr-01>>=
+read_csv(file = "my-file1.csv")
+@
+
+<<readr-02>>=
+read_csv2(file = "my-file2.csv")
+@
+
+Because of the vertically misaligned fields, we need to use \code{read\_delim()} instead of \code{read\_table()}.
+<<readr-03>>=
+read_delim(file = "my-file3.txt", " ")
+@
+
+We demonstrate here the use of \code{write\_tsv()} to produce a text file with tab-separated fields.
+<<readr-04>>=
+write_tsv(my.df, path = "my-file5.tsv")
+file.show("my-file5.tsv", pager = "console")
+@
+
+<<readr-04a, comment='', echo=FALSE>>=
+cat(readLines('my-file5.tsv'), sep = '\n')
+@
+
+<<readr-04b>>=
+my_read4.df <- read_tsv(file = "my-file5.tsv")
+my_read4.df
+all.equal(my.df, my_read4.df, check.attributes = FALSE)
+@
+
+We demonstrate here the use of \code{write\_excel\_csv()} to produce a text file with comma-separated fields suitable for reading with Excel.
+<<readr-05>>=
+write_excel_csv(my.df, path = "my-file6.csv")
+file.show("my-file6.csv", pager = "console")
+@
+
+<<readr-05a, comment='', echo=FALSE>>=
+cat(readLines('my-file6.csv'), sep = '\n')
 @
 
 \subsection{Worksheets}
