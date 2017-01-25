@@ -15,6 +15,7 @@ For executing the examples listed in this chapter you need first to load the fol
 library(tibble)
 library(readr)
 library(readxl)
+library(xlsx)
 @
 
 \section{Introduction}
@@ -134,7 +135,9 @@ head(list.dirs("."))
 
 Function \code{file.path} can be used to construct a file path from its components in a way that is portable across OSs.
 
-\subsection{Text files}
+\subsection{Text files}\label{sec:files:txt}
+
+\subsubsection[Base R and `utils']{Base R and \pkgname{utils}}
 
 Text files come many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
 
@@ -180,7 +183,7 @@ If we had written the file using default settings, reading the file so as to rec
 <<file-io-txt-02b>>=
 my_read1.df <- read.csv(file = "my-file1.csv")
 my_read1.df
-all.equal(my.df, my_read1.df, check.attributes = FALSE) 
+all.equal(my.df, my_read1.df, check.attributes = FALSE)
 @
 
 \begin{playground}
@@ -248,16 +251,20 @@ all.equal(my.lines, my_read.lines, check.attributes = FALSE)
 @
 
 \begin{warningbox}
-There are couple of things to take into account when reading data from text files using base R functions \code{read.tabke()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots). 
+There are couple of things to take into account when reading data from text files using base R functions \code{read.tabke()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots).
 \end{warningbox}
 
-\subsection[readr]{\pkgname{readr}}
+\subsubsection[readr]{\pkgname{readr}}
 
 <<>>=
 citation(package = "readr")
 @
 
 Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow much faster input and output, and have different default behaviour. Contrary to base R functions, they are optimized for speed, but may sometimes wrongly decode their input and sometimes silently do this even for some CSV files that are correctly decoded by the base functions. Base R functions are dumb, the file format or delimiters must be supplied as arguments. The \pkgname{readr} functions use ``magic'' to guess the format, in most cases they succeed, which is very handy, but occasionally the power of the magic is not strong enough. The ``magic'' can be overridden by passing arguments. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{datetime}.
+
+All \code{write} functions defined in this package have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
+
+Although in this section we exemplify the use of these functions by passing a file name as argument, URLS, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly. 
 
 \begin{warningbox}
 The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \code{read\_csv()} $\approx$ \code{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \code{read.table()}, although they both read fields separated by white space, \code{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \code{read.table()} handles tolerates vertical misalignment. Other aspects of the default behaviour is also different, for example they do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \code{tibble} which inherits from \code{data.frame}).
@@ -302,7 +309,101 @@ file.show("my-file6.csv", pager = "console")
 cat(readLines('my-file6.csv'), sep = '\n')
 @
 
+<<readr-06>>=
+write_lines(my.lines, path = "my-file7.txt")
+file.show("my-file7.txt", pager = "console")
+@
+
+<<readr-06a, comment='', echo=FALSE>>=
+cat(read_lines("my-file7.txt"), sep = '\n')
+@
+
+<<readr-06b>>=
+my_read.lines <- read_lines("my-file7.txt")
+my_read.lines
+all.equal(my.lines, my_read.lines, check.attributes = FALSE)
+@
+
+Additional write and read functions not mentioned are also provided: \code{write\_csv()}, \code{write\_delim()}, \code{write\_file()}, and \code{read\_fwf()}.
+
 \subsection{Worksheets}
+
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file formats for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available R packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
+
+\subsubsection{Exporting CVS files}
+
+If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into R using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a possible solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, import the data directly from the workbook or worksheets into R.
+
+\subsubsection['readxl']{\pkgname{readxl}}
+
+<<readxl-00>>=
+citation(package = "readxl")
+@
+
+This package exports only two functions for reading Excel workbooks in xlsx format. The interface is simple, and the package easy to instal. We will import a file that in Excel looks as in the screen capture below.
+
+\begin{center}
+\includegraphics[width=0.75\textwidth]{data/Book1-xlsx.png}
+\end{center}
+
+We first list the sheets contained in the workbook file.
+<<readxl-01>>=
+sheets <- excel_sheets("data/Book1.xlsx")
+sheets
+@
+
+In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}).
+<<readxl-02>>=
+Book1.df <- read_excel("data/Book1.xlsx", sheet = "my data")
+Book1.df
+@
+
+Of the remaining arguments, \code{skip} is useful when we need to skip the top row of a worksheet.
+
+\subsubsection['xlsx']{\pkgname{xlsx}}
+
+Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing Excel worksheet and workbooks, in different formats. It also allows selecting regions of a worksheet to be imported.
+
+<<xlsx-00>>=
+citation(package = "xlsx")
+@
+
+<<xlsx-01>>=
+Book1_xlsx.df <- read.xlsx("data/Book1.xlsx", sheetName = "my data")
+Book1_xlsx.df
+@
+
+<<xlsx-02>>=
+Book1_xlsx2.df <- read.xlsx2("data/Book1.xlsx", sheetIndex = 1)
+Book1_xlsx2.df
+@
+
+With the three different functions we get a data frame or a tibble, which is compatible with data frames.
+<<xlsx-03>>=
+class(Book1.df)
+class(Book1_xlsx.df)
+class(Book1_xlsx2.df)
+@
+
+However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as is, while base R functions convert them to factors. The third function, \code{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \code{read.xlsx()}.
+<<xlsx-04>>=
+sapply(Book1.df, class)
+sapply(Book1_xlsx.df, class)
+sapply(Book1_xlsx2.df, class)
+@
+
+We can also write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
+<<xlsx-05>>=
+set.seed(456321)
+my.data <- data.frame(x = 1:10, y = 1:10 + rnorm(10))
+write.xlsx(my.data, file = "data/my-data.xlsx", sheetName = "first copy")
+write.xlsx(my.data, file = "data/my-data.xlsx", sheetName = "second copy", append = TRUE)
+@
+
+When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
+\begin{center}
+\includegraphics[width=0.75\textwidth]{data/my-data-xlsx.png}
+\end{center}
 
 \subsection{Statistical software}
 
