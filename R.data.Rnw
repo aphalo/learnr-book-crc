@@ -55,7 +55,11 @@ my.df
 
 The default format used is binary and compressed, which results in smaller files.
 
-In the example above, only one object was saved, but one can simply give the names of additional objects as arguments. Sometimes it is easier to supply the names of the objects to be saved as a vector of character strings through an argument to parameter \code{list}. One case is when wnating to save a group of objects based on their names. We can use \code{ls()} to list the names of objects matching a simple \code{pattern} or a complex regular expression. The example below does this in two steps saving the character vector first, and then using this saved object as argument to \code{save}'s \code{list} parameter.
+\begin{playground}
+In the example above, only one object was saved, but one can simply give the names of additional objects as arguments. Just try saving, more than one data frame to the same file. Then the data frames plus a few vectors. Then define a simple function and save it. After saving each file, clear the workspace and then load the objects you save from the file.
+\end{playground}
+
+Sometimes it is easier to supply the names of the objects to be saved as a vector of character strings through an argument to parameter \code{list}. One case is when wnating to save a group of objects based on their names. We can use \code{ls()} to list the names of objects matching a simple \code{pattern} or a complex regular expression. The example below does this in two steps saving the character vector first, and then using this saved object as argument to \code{save}'s \code{list} parameter.
 
 <<rda-04>>=
 objcts <- ls(pattern = "*.df")
@@ -66,6 +70,10 @@ The intermediate step can be skipped.
 <<rda-05>>=
 save(list = ls(pattern = "*.df"), file = "my-df1.rda")
 @
+
+\begin{playground}
+Practice using different patterns with \code{ls()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
+\end{playground}
 
 As a coda, we show how to cleanup by deleting the two files we created. Function \code{unlink()} can also be used to delete folders.
 <<rda-06>>=
@@ -94,6 +102,10 @@ The complementary function is \code{dirname()} which extracts the bare path to c
 dirname("C:/Users/aphalo/Documents/my-file.txt")
 @
 
+\begin{warningbox}
+We here use in examples paths and filenames valid in MS-Windows. We have tried to avoid names incompatible with other operating systems, but special characters separating directories (= folders) in paths are different among operating systems. For example, if you UNIX (e.g.\ Apple´s OS X) or a Linux distribution (such as Debian or Ubuntu) only forward slashes will be recognized as separators.
+\end{warningbox}
+
 Functions \code{getwd()} and \code{setwd()} can be used to get the path to the current working directory and setting it, respectively.
 
 <<filenames-05>>=
@@ -106,14 +118,33 @@ oldwd <- setwd("..")
 getwd()
 @
 
-The returned value is always a absolute full path, so it remains valid even if the path to the working directory changes more than once before it being restored.
+The returned value is always an absolute full path, so it remains valid even if the path to the working directory changes more than once before it being restored.
 <<filenames-07>>=
 oldwd
 setwd(oldwd)
 getwd()
 @
 
-Base R provides several functions for working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access acc
+We can also obtain a list of files and/or directories (= disk folders).
+<<filenames-09>>=
+head(list.files("."))
+head(list.dirs("."))
+head(dir("."))
+@
+
+\begin{playground}
+Above we passed \code{"."} as argument for parameter \code{path}. This is the same as the default. Convince yourself that this is indeed the default by calling the functions without an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
+\end{playground}
+
+\begin{playground}
+Combine the use of \code{basename()} with \code{list.files()} to obtain a list of files names.
+\end{playground}
+
+\begin{playground}
+Compare the behaviour of functions \code{dir} and \code{lis.dirs()}, and try by overriding the default arguments of \code{list.dirs()}, to get the call to return the same output as \code{dir()} does by default.
+\end{playground}
+
+Base R provides several functions for working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for the ``family'' of functions.
 
 <<filenames-08>>=
 if (!file.exists("xxx.txt")) {
@@ -127,13 +158,9 @@ file.exists("zzz.txt")
 file.remove("zzz.txt")
 @
 
-We can also obtain a list of files and/or directories (= disk folders).
-<<filenames-09>>=
-head(list.files("."))
-head(list.dirs("."))
-@
-
-Function \code{file.path} can be used to construct a file path from its components in a way that is portable across OSs.
+\begin{playground}
+Function \code{file.path()} can be used to construct a file path from its components in a way that is portable across OSs. Look at the help page and play with the function to assemble some paths that exist in the computer you are using.
+\end{playground}
 
 \subsection{Text files}\label{sec:files:txt}
 
@@ -264,7 +291,7 @@ Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines fun
 
 All \code{write} functions defined in this package have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
 
-Although in this section we exemplify the use of these functions by passing a file name as argument, URLS, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly. 
+Although in this section we exemplify the use of these functions by passing a file name as argument, URLS, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
 
 \begin{warningbox}
 The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \code{read\_csv()} $\approx$ \code{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \code{read.table()}, although they both read fields separated by white space, \code{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \code{read.table()} handles tolerates vertical misalignment. Other aspects of the default behaviour is also different, for example they do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \code{tibble} which inherits from \code{data.frame}).
@@ -282,6 +309,10 @@ Because of the vertically misaligned fields, we need to use \code{read\_delim()}
 <<readr-03>>=
 read_delim(file = "my-file3.txt", " ")
 @
+
+\begin{playground}
+See what happens when you modify the code to use \code{read} functions to read files that are not matched to them---i.e.\ mix and match functions and files from the three code chunks above. As mentioned earlier forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes.
+\end{playground}
 
 We demonstrate here the use of \code{write\_tsv()} to produce a text file with tab-separated fields.
 <<readr-04>>=
@@ -309,6 +340,10 @@ file.show("my-file6.csv", pager = "console")
 cat(readLines('my-file6.csv'), sep = '\n')
 @
 
+\begin{playground}
+Compare the output from \code{write\_excel\_csv()} and \code{write\_csv}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer).
+\end{playground}
+
 <<readr-06>>=
 write_lines(my.lines, path = "my-file7.txt")
 file.show("my-file7.txt", pager = "console")
@@ -324,7 +359,11 @@ my_read.lines
 all.equal(my.lines, my_read.lines, check.attributes = FALSE)
 @
 
-Additional write and read functions not mentioned are also provided: \code{write\_csv()}, \code{write\_delim()}, \code{write\_file()}, and \code{read\_fwf()}.
+Additional write and read functions not mentioned are also provided by the package: \code{write\_csv()}, \code{write\_delim()}, \code{write\_file()}, and \code{read\_fwf()}.
+
+\begin{advplayground}
+Use \code{write\_file()} to write a file that can be read with \code{read\_csv()}.
+\end{advplayground}
 
 \subsection{Worksheets}
 
