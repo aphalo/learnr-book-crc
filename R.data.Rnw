@@ -16,6 +16,8 @@ library(tibble)
 library(readr)
 library(readxl)
 library(xlsx)
+library(foreign)
+library(haven)
 @
 
 \section{Introduction}
@@ -82,9 +84,9 @@ unlink(c("my-df.rda", "my-df1.rda"))
 
 \subsection{File names and portability}
 
-When saving data to files that one expect to be read on a different operating system (OS), we need to be careful to chose files names valid in all OSs where the file could be read. This is specially important when developing R packages. Best avoid space characters as part of file names and the use of more than one dot. For widest portability, underscores should be avoided, while dashes are usually not a problem.
+When saving data to files from scripts or code that one expects to be run on a different operating system (OS), we need to be careful to chose files names valid under all OSs where the file could be used. This is specially important when developing R packages. Best avoid space characters as part of file names and the use of more than one dot. For widest portability, underscores should be avoided, while dashes are usually not a problem.
 
-R provides some functions which help with portability, by hiding the idiosyncracies of the different OSs from R code. Different OSs use different characters in paths, for example, the algorithm needed to extract a file name from a file path, is OS specific. However, R's function \code{basename()} allows the inclusion of this operation in user's code portably.
+R provides some functions which help with portability, by hiding the idiosyncracies of the different OSs from R code. Different OSs use different characters in paths, for example, and consequently the algorithm needed to extract a file name from a file path, is OS specific. However, R's function \code{basename()} allows the inclusion of this operation in user's code portably.
 
 Under \pgrmname{MS-Windows} paths include backslash characters which are not ``normal'' characters in R, and many other languages, but rather ``escape'' characters. Within R forward slash can be used in their place,
 
@@ -97,7 +99,7 @@ or backslash characters can be ``escaped'' by repeating them.
 basename("C:\\Users\\aphalo\\Documents\\my-file.txt")
 @
 
-The complementary function is \code{dirname()} which extracts the bare path to conatining disk folder from a file path.
+The complementary function is \code{dirname()} which extracts the bare path to the containing disk folder, from a full file path.
 <<filenames-03>>=
 dirname("C:/Users/aphalo/Documents/my-file.txt")
 @
@@ -106,7 +108,7 @@ dirname("C:/Users/aphalo/Documents/my-file.txt")
 We here use in examples paths and filenames valid in MS-Windows. We have tried to avoid names incompatible with other operating systems, but special characters separating directories (= folders) in paths are different among operating systems. For example, if you UNIX (e.g.\ Apple´s OS X) or a Linux distribution (such as Debian or Ubuntu) only forward slashes will be recognized as separators.
 \end{warningbox}
 
-Functions \code{getwd()} and \code{setwd()} can be used to get the path to the current working directory and setting it, respectively.
+Functions \code{getwd()} and \code{setwd()} can be used to get the path to the current working directory and to set a directory as current, respectively.
 
 <<filenames-05>>=
 getwd()
@@ -291,10 +293,10 @@ Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines fun
 
 All \code{write} functions defined in this package have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
 
-Although in this section we exemplify the use of these functions by passing a file name as argument, URLS, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
+Although in this section we exemplify the use of these functions by passing a file name as argument, URLs, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
 
 \begin{warningbox}
-The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \code{read\_csv()} $\approx$ \code{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \code{read.table()}, although they both read fields separated by white space, \code{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \code{read.table()} handles tolerates vertical misalignment. Other aspects of the default behaviour is also different, for example they do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \code{tibble} which inherits from \code{data.frame}).
+The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \code{read\_csv()} $\approx$ \code{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \code{read.table()}, although they both read fields separated by white space, \code{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \code{read.table()} tolerates vertical misalignment. Other aspects of the default behaviour are also different, for example these functions do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \code{tibble} which inherits from \code{data.frame}).
 \end{warningbox}
 
 <<readr-01>>=
@@ -305,7 +307,7 @@ read_csv(file = "my-file1.csv")
 read_csv2(file = "my-file2.csv")
 @
 
-Because of the vertically misaligned fields, we need to use \code{read\_delim()} instead of \code{read\_table()}.
+Because of the vertically misaligned fields in file \code{my-file3.txt}, we need to use \code{read\_delim()} instead of \code{read\_table()}.
 <<readr-03>>=
 read_delim(file = "my-file3.txt", " ")
 @
@@ -367,11 +369,11 @@ Use \code{write\_file()} to write a file that can be read with \code{read\_csv()
 
 \subsection{Worksheets}
 
-Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file formats for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available R packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available R packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
 
 \subsubsection{Exporting CVS files}
 
-If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into R using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a possible solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, import the data directly from the workbook or worksheets into R.
+If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into R using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a workable solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, to import the data directly from the workbook or worksheets into R.
 
 \subsubsection['readxl']{\pkgname{readxl}}
 
@@ -424,7 +426,7 @@ class(Book1_xlsx.df)
 class(Book1_xlsx2.df)
 @
 
-However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as is, while base R functions convert them to factors. The third function, \code{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \code{read.xlsx()}.
+However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as such, while base R functions convert them to factors. The third function, \code{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \code{read.xlsx()}.
 <<xlsx-04>>=
 sapply(Book1.df, class)
 sapply(Book1_xlsx.df, class)
@@ -445,6 +447,58 @@ When opened in Excel we get a workbook, containing two worksheets, named using t
 \end{center}
 
 \subsection{Statistical software}
+
+There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more more robust than those from \pkgname{haven}.
+
+\subsubsection[foreign]{\pkgname{foreign}}
+
+Functions in this package allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPPS} among others, and a function for writing data into files with formats native to these three programs. Documentation is included with R describing them in \emph{R Data Import/Export}. We give here just a simple example with a \pgrmname{SPSS} file saved recently,
+
+<<foreign-01>>=
+my_spss.df <- read.spss(file = "data/my-data.sav", to.data.frame = TRUE)
+head(my_spss.df)
+@
+with dates not converted into R's datetime objects but into numbers.
+
+A second example, this time with a simple \code{.SAV} file saved 15 years ago.
+
+<<foreign-02>>=
+thiamin.df <- read.spss(file = "data/thiamin.sav", to.data.frame = TRUE)
+head(thiamin.df)
+@
+
+Another example, for a Systat file saved on an PC more than 20 years ago.
+
+<<foreign-03>>=
+my_systat.df <- read.systat(file = "data/BIRCH1.SYS")
+my_systat.df
+@
+
+The functions in \pkgname{foreign} can return data frames, but not always this is the default.
+
+\subsubsection[haven]{\pkgname{haven}}
+
+The recently released package \pkgname{haven} is less ambitious in scope, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal R modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. The returned \code{tibble} objects in cases when the imported file contained labelled values needs some further work from the user before obtaining `normal' data-frame-compatible \code{tibble} objects.
+
+We import here a \code{.SAV} file saved by a recent version of \pgrmname{SPSS}.
+
+<<haven-01>>=
+my_spss.tb <- read_sav(file = "data/my-data.sav")
+my_spss.tb
+head(my_spss.tb$harvest_date)
+@
+
+In this case the dates are correctly decoded.
+
+And an \pgrmname{SPSS}'s \code{.SAV} file saved 15 years ago.
+
+<<haven-02>>=
+thiamin.tb <- read_sav(file = "data/thiamin.sav")
+thiamin.tb
+thiamin.tb <- as_factor(thiamin.tb)
+thiamin.tb
+@
+
 
 \subsection{Databases}
 
