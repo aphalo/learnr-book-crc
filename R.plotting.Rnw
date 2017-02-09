@@ -417,7 +417,7 @@ The use of \code{expression} is explained in detail in section \ref{sec:plot:plo
 \section{Plotting text and maths}\label{sec:plot:text}
 \index{plots!text in|(}
 \index{plots!maths in|(}
-We can use \code{geom\_text} or \code{geom\_label} to add text labels to observations. For \code{geom\_text}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label. The centre of the text is at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Negative justification values, shift the label left or down, and positive values right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, based on the length of the string. In the case of \code{geom\_label} the text is enclosed in a rectangle, which obeys the \code{fill} \emph{aesthetic}. However, it does not support rotation with \code{angle}.
+We can use \code{geom\_text} or \code{geom\_label} to add text labels to observations. For \code{geom\_text} and \code{geom\_label}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label. The centre of the text is at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Negative justification values, shift the label left or down, and positive values right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, based on the length of the string. In the case of \code{geom\_label} the text is enclosed in a rectangle, which obeys the \code{fill} \emph{aesthetic} and takes additional parameters (described starting at page \pageref{start:plot:label}). However, it does not support rotation with \code{angle}.
 
 <<>>=
 my.data <-
@@ -502,9 +502,42 @@ ggplot(my.data, aes(x,
 What are the advantages and disadvantages of each approach in relation to easy with which a script in which several figures using the same ``labels'' are produced, in relation to consistency across figures? In contrast, which approach would you prefer if different figures in the same script used different variations of labels constructed from the same variables in the data?
 \end{playground}
 
+As \code{geom\_label} obeys the same parameters as \code{geom\_text} except for \code{angle} we describe below only the additional parameters compared to \code{geom\_text}.
+
+<<>>=
+my.data <-
+  data.frame(x = 1:5, y = rep(2, 5),
+             label=paste("alpha[", 1:5, "]", sep = ""))
+ggplot(my.data, aes(x, y, label = label)) +
+  geom_label(hjust = -0.2, parse = TRUE, size = 6) +
+  geom_point() + 
+  expand_limits(x = 5.4)
+@
+
+We may want to alter the default width of the border line or the color used to \code{fill} the rectangle, or to change the ``roundness'' of the corners. To suppress the border line use \code{NA}, as a value of zero produces a very thin border. Corner roundness is controlled by parameter \code{label.r} and the size of the margin around the text with \code{label.padding}.
+
+<<>>=
+my.data <-
+  data.frame(x = 1:5, y = rep(2, 5),
+             label=paste("alpha[", 1:5, "]", sep = ""))
+ggplot(my.data, aes(x, y, label = label)) +
+  geom_label(hjust = -0.2, parse = TRUE, size = 6, 
+             label.size = NA, 
+             label.r = unit(0, "lines"),
+             label.padding = unit(0.15, "lines"),
+             fill = "yellow", alpha = 0.5) +
+  geom_point() +
+  expand_limits(x = 5.4)
+@
+
+\begin{playground}
+Play with the arguments to the different parameters and with the \emph{aesthetics} to get an idea of what can be with them. For example, use thicker border lines and increase the padding so that a good margin is still achieve. You may also try mapping the \code{fill} and \code{color} \emph{aesthetics} to factors in the data.
+\end{playground}
+
 \begin{warningbox}
 You\index{plots!fonts} should be aware that R and ggplot2 support the use of UNICODE\index{UNICODE}, such as UTF8\index{UTF8} character encoding in strings. If your editor or IDE supports their use, then you can type Greek letters and simple maths symbols directly, and they may show correctly in labels if a suitable font is loaded and an extended encoding like UTF8 in use by the operating system. Even if UTF8 is in use, text is not fully portable unless the same font is available\index{portability}, as even if the character positions are standardized for many languages, most UNICODE fonts support at most a small number of languages. In principle one can use this mechanism to have labels both using other alphabets and languages like Chinese with their numerous symbols mixed in the same figure. Furthermore, the support for fonts and consequently character sets in R is output-device dependent. The font encoding used by R by default depends on the default locale settings of the operating system, which can also lead to garbage printed to the console or wrong characters being plotted running the same code on a different computer from the one where a script was edited. Not all is lost, though, as R can be coerced to use system fonts and Google fonts with functions provided by packages \pkgname{showtext} and \pkgname{extrafont} described in section \ref{sec:plot:fonts} on page \pageref{sec:plot:fonts}. Encoding-related problems, specially in MS-Windows, are very common.
 \end{warningbox}
+
 
 \index{plots!text in|)}
 \index{plots!maths in|)}

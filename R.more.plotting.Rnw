@@ -121,7 +121,7 @@ ggplot(my.data, aes(x, y, label = label)) +
 
 The examples that follow, using Google fonts are more portable as long that internet access is available. You can browse the available fonts at \url{https://fonts.google.com/}. The name used in the statements below are those under which the fonts are listed.
 
-<<showtext-4>>=
+<<showtext-4, cache = TRUE>>=
 ## Loading Google fonts (http://www.google.com/fonts)
 font.add.google(name = "Permanent Marker", family = "Marker")
 font.add.google(name = "Courgette")
@@ -764,7 +764,23 @@ formula <- y ~ poly(x, 3, raw = TRUE)
 ggplot(my.data, aes(x, y)) +
   geom_point() +
   geom_smooth(method = "lm", formula = formula) +
-  stat_poly_eq(geom = "label", alpha = 0.25, formula = formula, parse = TRUE)
+  stat_poly_eq(geom = "label", alpha = 0.3, formula = formula, parse = TRUE)
+@
+
+The \code{geom\_label\_repel} accepts the same arguments as \code{geom\_label} for controlling the format of the box and border. We give a simple example here. For other examples see page \pageref{par:plot:label}.
+
+<<>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = formula) +
+  stat_poly_eq(geom = "label", 
+               label.size = NA,
+               label.r = unit(0, "lines"),
+               color = "white",
+               fill = "grey10",
+               formula = formula, parse = TRUE) +
+  theme_bw()
 @
 
 The remaining examples in this section use the default \code{geom\_text} but can be modified to use \code{geom\_label} as shown above.
@@ -1152,7 +1168,7 @@ ggplot(mpg, aes(class, hwy, color = class)) +
 \index{plots!text in}
 \index{plots!geometries!repulsive text}
 \index{plots!geometries!repulsive label}
-<<>>=
+<<ggrepel-0>>=
 citation(package = "ggrepel")
 @
 
@@ -1175,7 +1191,7 @@ opts_chunk$set(opts_fig_wide_square)
 
 Just using defaults, we avoid overlaps among text items on the plot. \code{geom\_text\_repel} has some parameters matching those in \code{geom\_text}, but those related to manual positioning are missing except for \code{angle}. Several new parameters control both the appearance of text and the function of the repulsion algorithm.
 
-<<>>=
+<<ggrepel-01>>=
 ggplot(mtcars, aes(wt, mpg)) +
   geom_point(color = 'red') +
   geom_text_repel(aes(label = rownames(mtcars)))
@@ -1183,7 +1199,7 @@ ggplot(mtcars, aes(wt, mpg)) +
 
 The chunk below shows how to change the appearance of labels. \code{geom\_label\_repel} is comparable to \code{geom\_label}, but with repulsion.
 
-<<>>=
+<<ggrepel-02>>=
 set.seed(42)
 ggplot(mtcars) +
   geom_point(aes(wt, mpg), size = 5, color = 'grey') +
@@ -1195,13 +1211,28 @@ ggplot(mtcars) +
   theme(legend.position = "top")
 @
 
+As with \code{geom\_label} we can change the width of the border line, or remove it completely as in the example below, by means of an argument passed through parameter \code{label.size} which defaults to 0.25. Although 0 as argument still results in a thin border line, \code{NA} removes it altogether. 
+
+<<ggrepel-03>>=
+set.seed(42)
+ggplot(mtcars) +
+  geom_point(aes(wt, mpg), size = 5, color = 'grey') +
+  geom_label_repel(
+  aes(wt, mpg, fill = factor(cyl), label = rownames(mtcars)),
+      fontface = 'bold', color = 'white',
+      box.padding = unit(0.25, "lines"),
+      point.padding = unit(0.5, "lines"),
+      label.size = NA) +
+  theme(legend.position = "top")
+@
+
 The parameters \code{nudge\_x} and \code{nudge\_y} allow strengthening or weakening the repulsion force, or favouring a certain direction. We also need to expand the x-axis high limit to make space for the labels.
 
 <<>>=
 opts_chunk$set(opts_fig_wide)
 @
 
-<<>>=
+<<ggrepel-04>>=
 set.seed(42)
 ggplot(Orange, aes(age, circumference, color = Tree)) +
   geom_line() +
@@ -1217,7 +1248,7 @@ ggplot(Orange, aes(age, circumference, color = Tree)) +
 
 We can combine \code{stat\_peaks} from package \ggpmisc with the use of repulsive text to avoid overlaps between text items. We use \code{nudge\_y = 500} to push the text upwards.
 
-<<>>=
+<<ggrepel-05>>=
 ggplot(lynx) +
   geom_line() +
   stat_peaks(geom = "text_repel", nudge_y = 500)
@@ -1229,14 +1260,14 @@ To repel text or labels so that they do not overlap unlabelled observations, one
 
 To demonstrate this we first generate suitable data and labels.
 
-<<>>=
+<<ggrepel-10>>=
 # Make random labels
 random_string <- function(len = 6) {
 paste(sample(letters, len, replace = TRUE), collapse = "")
 }
 @
 
-<<>>=
+<<ggrepel-11>>=
 # Make random data.
 set.seed(1001)
 myl.data <- tibble(
@@ -1250,7 +1281,7 @@ head(myl.data)
 
 The first example uses defaults.
 
-<<>>=
+<<ggrepel-12>>=
 ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   geom_point() +
   stat_dens2d_labels(geom = "text_repel")
@@ -1260,13 +1291,13 @@ The fraction of observations can be plotted, as well as the maximum number can b
 
 Something to be aware of when rotating labels is that repulsion is always based on bounding box that does not rotate, which for long labels and angles that are not multiples of 90 degrees, reserves too much space and leaves gaps between segments and text. Compare the next two figures.
 
-<<>>=
+<<ggrepel-13>>=
 ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   geom_point() +
   stat_dens2d_labels(geom = "text_repel", angle = 90)
 @
 
-<<>>=
+<<ggrepel-14>>=
 ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   geom_point() +
   stat_dens2d_labels(geom = "text_repel", angle = 45)
@@ -1274,7 +1305,7 @@ ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
 
 Labels cannot be rotated.
 
-<<>>=
+<<ggrepel-15>>=
 ggplot(data = myl.data, aes(x, y, label = lab, color = group)) +
   geom_point() +
   stat_dens2d_labels(geom = "label_repel")
