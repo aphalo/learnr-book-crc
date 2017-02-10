@@ -18,6 +18,8 @@ library(readxl)
 library(xlsx)
 library(foreign)
 library(haven)
+library(RNetCDF)
+library(lubridate)
 @
 
 \section{Introduction}
@@ -499,6 +501,50 @@ thiamin.tb <- as_factor(thiamin.tb)
 thiamin.tb
 @
 
+\subsection{NetCDF files}
+
+In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is a format that allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
+
+Officially described as
+\begin{quote}
+NetCDF is a set of software libraries and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
+\end{quote}
+
+\subsubsection[RNetCDF]{\pkgname{RNetCDF}}
+
+As sometimes NetCDF files are large, it is good that it is possible to selectively read the data with functions in package \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in steps.
+
+We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \code{print.nc} we can find out the names and characteristics of the variables and attributes.
+
+<<netcdf-01>>=
+meteo_data.nc <- open.nc("data/meteo-data.nc")
+str(meteo_data.nc)
+# very long output
+# print.nc(meteo_data.nc)
+@
+
+The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings.
+
+<<netcdf-02>>=
+time.vec <- var.get.nc(meteo_data.nc, "time")
+head(time.vec)
+longitude <-  var.get.nc(meteo_data.nc, "lon")
+head(longitude)
+latitude <-  var.get.nc(meteo_data.nc, "lat")
+head(latitude)
+@
+
+We construct a \code{tibble} object with values for midday UV Index for 26 days. For convenience, we convert the strings into R's datetime objects.
+
+<<netcdf-03>>=
+uvi.tb <-
+    tibble(date = ymd(time.vec, tz="EET"),
+           lon = longitude[6],
+           lat = latitude[2],
+           uvi = var.get.nc(meteo_data.nc, "UVindex")[6,2,]
+           )
+uvi.tb
+@
 
 \subsection{Databases}
 
