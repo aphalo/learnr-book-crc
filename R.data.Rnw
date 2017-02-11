@@ -18,7 +18,9 @@ library(readxl)
 library(xlsx)
 library(foreign)
 library(haven)
+library(xml2)
 library(RNetCDF)
+library(ncdf4)
 library(lubridate)
 @
 
@@ -282,7 +284,7 @@ all.equal(my.lines, my_read.lines, check.attributes = FALSE)
 @
 
 \begin{warningbox}
-There are couple of things to take into account when reading data from text files using base R functions \code{read.tabke()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots).
+There are couple of things to take into account when reading data from text files using base R functions \code{read.table()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots).
 \end{warningbox}
 
 \subsubsection[readr]{\pkgname{readr}}
@@ -373,11 +375,11 @@ Use \code{write\_file()} to write a file that can be read with \code{read\_csv()
 
 Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available R packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
 
-\subsubsection{Exporting CVS files}
+\subsubsection{Exporting CSV files}
 
 If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into R using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a workable solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, to import the data directly from the workbook or worksheets into R.
 
-\subsubsection['readxl']{\pkgname{readxl}}
+\subsubsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
 
 <<readxl-00>>=
 citation(package = "readxl")
@@ -448,7 +450,30 @@ When opened in Excel we get a workbook, containing two worksheets, named using t
 \includegraphics[width=0.75\textwidth]{data/my-data-xlsx.png}
 \end{center}
 
-\subsection{Statistical software}
+\begin{playground}
+If you have some worksheet files available, import them into R, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to read the data from them.
+\end{playground}
+
+\subsubsection['xml2']{\pkgname{xml2}}
+
+Several modern data exchange formats are based on the XML standard format which uses schema for flexibility. Package \pkgname{xml2} provides functions for reading and parsing such files, as well as HTML files. This is a vast subject, of which I will only give a brief introduction.
+
+We first read a very simple web page.
+
+<<xml2-01>>=
+web_page <- read_html("http://r4photobiology.info/R/index.html")
+html_structure(web_page)
+@
+
+And we extract the text from its \code{title} attribute.
+
+<<xml2-02>>=
+xml_text(xml_find_all(web_page, ".//title"))
+@
+
+The functions defined in this package and in package \pkgname{XML} can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through XML schemas. 
+
+\subsection{Statistical software}\label{sec:files:stat}
 
 There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more more robust than those from \pkgname{haven}.
 
@@ -501,18 +526,90 @@ thiamin.tb <- as_factor(thiamin.tb)
 thiamin.tb
 @
 
+\begin{playground}
+Compare the values returned by different \code{read} functions when applied to the same file on disk. Use \code{names()}, \code{str()} and \code{class} as tools in your exploration. If you are brave, also use \code{attributes()}, \code{mode()}, \code{dim()}, \code{dimnames()}, \code{nrow()} and \code{ncol()}.
+\end{playground}
+
+\begin{playground}
+If you use or have used in the past other statistical software or a general purpose language like \langname{Python}, look up some files, and import them into R.
+\end{playground}
+
 \subsection{NetCDF files}
 
-In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is a format that allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
+In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to an array of locations, like with data read from Affymetrix micro arrays used to study gene expression. The NetCDF format allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
 
 Officially described as
 \begin{quote}
 NetCDF is a set of software libraries and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
 \end{quote}
 
+As sometimes NetCDF files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in two or more steps.
+
+\subsubsection[ncdf4]{\pkgname{ncdf4}}
+
+We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \code{print} we can find out the names and characteristics of the variables and attributes. In this example we use
+long term averages for potential evapotranspiration (PET).
+
+<<ncdf4-01>>=
+meteo_data.nc <- nc_open("data/pevpr.sfc.mon.ltm.nc")
+# very long output
+# print(meteo_data.nc)
+@
+
+\begin{playground}
+Uncomment the \code{print()} statement above and study the metadata available for the data set as a whole, and for each variable.
+\end{playground}
+The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings.
+
+<<ncdf4-02>>=
+time.vec <- ncvar_get(meteo_data.nc, "time")
+head(time.vec)
+longitude <-  ncvar_get(meteo_data.nc, "lon")
+head(longitude)
+latitude <- ncvar_get(meteo_data.nc, "lat")
+head(latitude)
+@
+
+The \code{time} vector is rather odd, as it contains only month data as these are long-term averages. From the metadata we can infer that they correspond to the months of the year, and we directly generate these, instead of attemping a conversion.
+
+We construct a \code{tibble} object with PET values for one grid point, we can take advantage of \emph{recycling} or short vectors.
+
+<<ncdf4-03>>=
+pet.tb <-
+    tibble(moth = month.abb[1:12],
+           lon = longitude[6],
+           lat = latitude[2],
+           pet = ncvar_get(meteo_data.nc, "pevpr")[6, 2, ]
+           )
+pet.tb
+@
+
+If we want to read in several grid points, we can use several different approaches. In this example we take all latitudes along one longitude. Here we avoid using loops altogether when creating a \emph{tidy} \code{tibble} object. However, because of how the data is stored, we needed to transpose the intermediate array before conversion into a vector.
+
+<<ncdf4-04>>=
+pet2.tb <-
+    tibble(moth = rep(month.abb[1:12], length(latitude)),
+           lon = longitude[6],
+           lat = rep(latitude, each = 12),
+           pet = as.vector(t(ncvar_get(meteo_data.nc, "pevpr")[6, , ]))
+           )
+pet2.tb
+subset(pet2.tb, lat == latitude[2])
+@
+
+\begin{playground}
+Play with \code{as.vector(t(ncvar\_get(meteo\_data.nc, "pevpr")[6, , ]))} until you understand what is the effect of each of the nested function calls, starting from \code{ncvar\_get(meteo\_data.nc, "pevpr")}. You will also want to use \code{str()} to see the structure of the objects returned at each stage.
+\end{playground}
+
+\begin{playground}
+Instead of extracting data for one longitude across latitudes, extract data across longitudes for one latitude near the Equator.
+\end{playground}
+
 \subsubsection[RNetCDF]{\pkgname{RNetCDF}}
 
-As sometimes NetCDF files are large, it is good that it is possible to selectively read the data with functions in package \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in steps.
+\begin{warningbox}
+Package RNetCDF supports NetCDF3 files, but not those saved using the current NetCDF4 format.
+\end{warningbox}
 
 We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \code{print.nc} we can find out the names and characteristics of the variables and attributes.
 
@@ -546,11 +643,105 @@ uvi.tb <-
 uvi.tb
 @
 
-\subsection{Databases}
+\subsection{Remotely located data}
 
-\subsection{Data acquisition from web}
+Many of the functions described above accept am URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
+
+<<url-01>>=
+logger.df <-
+      read.csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
+                header = FALSE,
+                col.names = c("time", "temperature"))
+sapply(logger.df, class)
+sapply(logger.df, mode)
+@
+
+<<url-02>>=
+logger.tb <-
+    read_csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
+              col_names = c("time", "temperature"))
+sapply(logger.tb, class)
+sapply(logger.tb, mode)
+@
+
+While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}.
+
+<<url-11>>=
+download.file("http://r4photobiology.info/learnr/my-data.xlsx", 
+              "data/my-data-dwn.xlsx", 
+              mode = "wb")
+@
+
+Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into R.
+
+<<url-03>>=
+remote_thiamin.df <- 
+  read.spss(file = "http://r4photobiology.info/learnr/thiamin.sav", 
+            to.data.frame = TRUE)
+head(remote_thiamin.df)
+@
+
+<<url-04>>=
+remote_my_spss.tb <- 
+    read_sav(file = "http://r4photobiology.info/learnr/thiamin.sav")
+remote_my_spss.tb
+@
+
+Function \code{download.file()} in R's default \pkgname{utils} package can be used to download files using URLs. It supports differemt modes such as binary or text, and write or append, and different methods such as internal, wget and libcurl. 
+
+In this example we download a NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it, and then we open the local file.
+
+<<url-05,eval=-2>>=
+my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
+                "surface_gauss/pevpr.sfc.mon.ltm.nc",
+                sep = "")
+download.file(my.url,
+              mode = "wb",
+              destfile = "data/pet_ltm.nc")
+pet_ltm.nc <- nc_open("data/pet_ltm.nc")
+@
+
+\begin{warningbox}
+For portability NetCDF files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required at least under MS-Windows. 
+\end{warningbox}
 
 \subsection{Data acquisition from physical devices}
+
+Numerous modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or looged data. Formats based on XML schemas or in JSON format are commonly used. 
+
+\subsubsection[jsonlite]{\pkgname{jsonlite}}
+
+We give here a simple example using a module from the \href{http://www.yoctopuce.com/}{YoctoPuce} family using a software hub running locally. We retrieve logged data from a YoctoMeteo module.
+
+<<iot-01,eval=FALSE>>=
+hub.url <- "http://127.0.0.1:4444/"
+Meteo01.lst <- 
+    fromJSON(paste(hub.url, "byName/Meteo01/dataLogger.json", 
+                   sep = ""))
+@
+
+The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is \emph{tidy} with respect to the variables, with quantity names and units also returned by the module, as well as the time.
+
+<<iot-02,eval=FALSE>>=
+    val.vector <- unlist(Meteo01.lst[["val"]])
+    dplyr::transmute(Meteo01.lst,
+                     utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
+                     qty = qty.name,
+                     unit = qty.unit,
+                     minimum = val.vector[c(TRUE, FALSE, FALSE)],
+                     mean = val.vector[c(FALSE, TRUE, FALSE)],
+                     maximum = val.vector[c(FALSE, FALSE, TRUE)],
+                     dur,
+                     freq)
+@
+
+\subsection{Databases}
+
+One of the advantages of using databases is that subsets of cases and variables can be retrieved from databases, even remotely, making it possible to work both locally and remotely with huge data sets. One should remember thar R natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work.
+
+\begin{infobox}
+The contents of the remaining sections of this chapter is not yet decided as there are several good books on these aspects of data analysis with R. I recomend the book \citetitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite. The book \citetitle{Peng2017} \autocite{Peng2017} covers these subjects in the first chapters before moving on to programming.
+\end{infobox}
 
 \section{Pipes and tees}
 
@@ -575,17 +766,3 @@ uvi.tb
 \subsection{Summaries}
 
 \subsection{Variable selection}
-
-\section{Data output}
-
-\subsection{Text files}
-
-\subsection{Worksheets}
-
-\subsection{Statistical software}
-
-\subsection{Databases}
-
-\subsection{Publication to the web}
-
-\subsection{Control of physical devices}
