@@ -1,11 +1,13 @@
-\chapter{Plotting maps}\label{chap:R:maps}
+\chapter{Plotting maps and images}\label{chap:R:maps}
 
 \section[ggmap]{\pkgname{ggmap}}
 
 <<>>=
+library(ggplot2)
 library(ggmap)
 library(rgdal)
-#library{scatterpie}
+library(scatterpie)
+library(imager)
 @
 
 <<>>=
@@ -262,6 +264,88 @@ ggplot(bbox_robin.data, aes(long,lat, group=group)) +
 Coming soon. I am not fond of pie charts, but displayed on top of maps they can sometimes be useful.
 
 <<>>=
+citation(package = "scatterpie")
+@
+
+\section[imager]{\pkgname{imager}}
+\index{images!plotting}
+\index{images!processing}
+Functions in this package allows easy plotting and fast processing of images with R. It is based on the \pgrmname{CIimg} library. \pgrmname{CImg}, \url{http://cimg.eu}, is a simple, modern C++ library for image processing.
+
+<<>>=
+citation(package = "imager")
+@
+
+I will use as examples downsized cropped sections\footnote{A crop is used to make the code faster. I may replace it with a higher resolution image before the book is published.} from photographs of a \emph{Dahlia} flower. The first example is a photograph taken using a UV-A band-pass filter. I chose such an image because the different colour channels have very different luminance values even after applying in full the corrections available in the raw conversion software, making it look almost monochromatic.
+
+We read the image from a TIFF file with luminance data encoded in 16 bits per channel, or values in the range from $2^0$ to $2^{16}$. The image is saved as an object of class \texttt{"cimg"} as defined in package \pkgname{imager}.
+
+<<imager01>>=
+dahlia01.img <- load.image("data/dahlia-uva.tif")
+class(dahlia01.img)
+dahlia01.img
+@
+
+We exemplify first the use of the \texttt{plot()} method from package \pkgname{imager}.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<imager01a>>=
+plot(dahlia01.img)
+@
+
+Although a \texttt{plot()} method is provided for \texttt{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. The \texttt{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \texttt{cc} identifying the three colour channels, and the luminance values in column \texttt{value}. We add a factor \texttt{channel} with `nice' labels and add a numeric variable \texttt{luminance} with the values re-encoded to be in the range zero to one.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<imager02>>=
+dahlia01.df <- as.data.frame(dahlia01.img)
+names(dahlia01.df)
+dahlia01.df <- plyr::mutate(dahlia01.df,
+                            channel = factor(cc, labels = c('R','G','B')),
+                            luminance = value / 2^16)
+names(dahlia01.df)
+@
+
+Now we can use functions from package \pkgname{ggplot2} as usual to create different plots. We start by plotting histograms for the different color channels.
+
+<<imager03>>=
+ggplot(dahlia01.df,
+       aes(luminance, fill = channel)) +
+       geom_histogram(bins = 60, color = NA) +
+       scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
+                         guide = FALSE) +
+       facet_wrap(~channel)
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+
+We now plot each channel as a separate raster, mapping luminance to the \texttt{alpha} \emph{aesthetic} so as to be able to map the colour corresponding to each channel as a uniform \texttt{fill}. Because the $y$-axis of the image is the reverse of the default expected by \texttt{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \texttt{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \texttt{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
+
+<<imager04>>=
+ggplot(dahlia01.df,
+       aes(x, y, alpha = 1 - luminance, fill = channel)) +
+       geom_raster() +
+       facet_wrap(~channel) +
+       coord_fixed() +
+       scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
+                         guide = FALSE) +
+       scale_alpha_identity() +
+       scale_x_continuous(expand = c(0, 0)) +
+       scale_y_continuous(expand = c(0, 0), 
+                          trans = scales::reverse_trans()) +
+       theme_void()
+@
+
+
+<<>>=
+try(detach(package:imager))
 try(detach(package:ggmap))
 try(detach(package:rgdal))
 @
