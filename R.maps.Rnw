@@ -272,16 +272,18 @@ citation(package = "scatterpie")
 \index{images!processing}
 Functions in this package allows easy plotting and fast processing of images with R. It is based on the \pgrmname{CIimg} library. \pgrmname{CImg}, \url{http://cimg.eu}, is a simple, modern C++ library for image processing.
 
-<<>>=
+<<imager00>>=
 citation(package = "imager")
 @
 
-I will use as examples downsized cropped sections\footnote{A crop is used to make the code faster. I may replace it with a higher resolution image before the book is published.} from photographs of a \emph{Dahlia} flower. The first example is a photograph taken using a UV-A band-pass filter. I chose such an image because the different colour channels have very different luminance values even after applying in full the corrections available in the raw conversion software, making it look almost monochromatic.
+I will use as examples downsized cropped sections\footnote{A crop is used to make the code faster. I may replace it with a higher resolution image before the book is published.} from photographs of a \emph{Dahlia} flower.
 
-We read the image from a TIFF file with luminance data encoded in 16 bits per channel, or values in the range from $2^0$ to $2^{16}$. The image is saved as an object of class \texttt{"cimg"} as defined in package \pkgname{imager}.
+The first example is a photograph taken in sunlight, with no filter on the camera objective---i.e.\ a \emph{normal} image.
+
+We read the image from a TIFF file with luminance data encoded in 8 bits per channel, i.e.\ as values in the range from 0 to 255. The image is saved as an object of class \texttt{"cimg"} as defined in package \pkgname{imager}.
 
 <<imager01>>=
-dahlia01.img <- load.image("data/dahlia-uva.tif")
+dahlia01.img <- load.image("data/dahlia-vis.tif")
 class(dahlia01.img)
 dahlia01.img
 @
@@ -296,27 +298,157 @@ opts_chunk$set(opts_fig_wide_square)
 plot(dahlia01.img)
 @
 
-Although a \texttt{plot()} method is provided for \texttt{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. The \texttt{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \texttt{cc} identifying the three colour channels, and the luminance values in column \texttt{value}. We add a factor \texttt{channel} with `nice' labels and add a numeric variable \texttt{luminance} with the values re-encoded to be in the range zero to one.
+Converting the image to gray scale is easy if it is an 8 bit per channel image.
+
+<<imager01b>>=
+dahlia01g.img <- grayscale(dahlia01.img)
+class(dahlia01g.img)
+dahlia01g.img
+@
+
+<<imager01c>>=
+plot(dahlia01g.img)
+@
+
+We can convert a gray scale image into a black and white image with binary values for each pixel.
+
+<<imager01d>>=
+dahlia01t.img <- threshold(dahlia01g.img)
+plot(dahlia01t.img)
+@
+
+Although a \texttt{plot()} method is provided for \texttt{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. For simplicity's sake we start with the gray scale image. The \texttt{as.data.frame()} method converts this image into a \emph{tidy} data frame with column \texttt{cc} identifying the three colour channels, and the luminance values in column \texttt{value}. We add a factor \texttt{channel} with `nice' labels and add a numeric variable \texttt{luminance} with the values re-encoded to be in the range zero to one.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 @
 
 <<imager02>>=
+dahlia01g.df <- as.data.frame(dahlia01g.img)
+names(dahlia01g.df)
+@
+
+Now we can use functions from package \pkgname{ggplot2} as usual to create plots. We start by plotting a histogram of the \texttt{value} column.
+
+<<imager03>>=
+ggplot(dahlia01g.df, aes(value)) +
+       geom_histogram(bins = 30)
+@
+
+And then we plot it as a raster image, mapping luminance to the \texttt{alpha} \emph{aesthetic} and setting \texttt{fill} to a constant \texttt{"black"}. Because the $y$-axis of the image is the reverse of the default expected by \texttt{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \texttt{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \texttt{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
+
+<<imager04>>=
+ggplot(dahlia01g.df,
+       aes(x, y, alpha = 1 - value)) +
+       geom_raster(fill = "black") +
+       coord_fixed() +
+       scale_alpha_identity() +
+       scale_x_continuous(expand = c(0, 0)) +
+       scale_y_continuous(expand = c(0, 0),
+                          trans = scales::reverse_trans()) +
+       theme_void()
+@
+
+After this first simple example, we handle the slightly more complicated case of working with the original RGB colour image. In this case, \texttt{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \texttt{cc} identifying the three colour channels, and the luminance values in column \texttt{value}. We add a factor \texttt{channel} with `nice' labels and add a numeric variable \texttt{luminance} with the values re-encoded to be in the range zero to one.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<imager05>>=
 dahlia01.df <- as.data.frame(dahlia01.img)
 names(dahlia01.df)
 dahlia01.df <- plyr::mutate(dahlia01.df,
                             channel = factor(cc, labels = c('R','G','B')),
-                            luminance = value / 2^16)
+                            luminance = value)
 names(dahlia01.df)
 @
 
 Now we can use functions from package \pkgname{ggplot2} as usual to create different plots. We start by plotting histograms for the different color channels.
 
-<<imager03>>=
+<<imager06>>=
 ggplot(dahlia01.df,
        aes(luminance, fill = channel)) +
-       geom_histogram(bins = 60, color = NA) +
+       geom_histogram(bins = 30, color = NA) +
+       scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
+                         guide = FALSE) +
+       facet_wrap(~channel)
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+
+We now plot each channel as a separate raster, mapping luminance to the \texttt{alpha} \emph{aesthetic} and map the colour corresponding to each channel as a uniform \texttt{fill}. As above, because the $y$-axis of the image is the reverse of the default expected by \texttt{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. Also as above, we use \texttt{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \texttt{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one.
+
+<<imager07>>=
+ggplot(dahlia01.df,
+       aes(x, y, alpha = (255 - luminance) / 255, fill = channel)) +
+       geom_raster() +
+       facet_wrap(~channel) +
+       coord_fixed() +
+       scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
+                         guide = FALSE) +
+       scale_alpha_identity() +
+       scale_x_continuous(expand = c(0, 0)) +
+       scale_y_continuous(expand = c(0, 0),
+                          trans = scales::reverse_trans()) +
+       theme_void()
+@
+
+The second original is a photograph of the same flower taken in sunlight, but using a UV-A band-pass filter. I chose such an image because the different colour channels have very different luminance values even after applying the full strength of the corrections available in the raw conversion software, making it look almost monochromatic\footnote{This is also the reason to work with 16 bit per channel images, as further pushing the green channels could deteriorate image quality.}.
+
+We read the image from a TIFF file with luminance data encoded in 8 bits per channel, i.e.\ as values in the range from 0 to 255. As above the image is saved as an object of class \texttt{"cimg"} as defined in package \pkgname{imager}.
+
+<<imager11>>=
+dahlia02.img <- load.image("data/dahlia-uva.tif")
+class(dahlia02.img)
+dahlia02.img
+@
+
+We exemplify first the use of the \texttt{plot()} method from package \pkgname{imager}.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<imager11a>>=
+plot(dahlia02.img)
+@
+
+Converting the image to gray scale is easy as it is an 8 bit per channel image.
+
+<<imager11b>>=
+dahlia02g.img <- grayscale(dahlia02.img)
+class(dahlia01g.img)
+dahlia01g.img
+@
+
+<<imager11c>>=
+plot(dahlia02g.img)
+@
+
+Although a \texttt{plot()} method is provided for \texttt{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. The \texttt{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \texttt{cc} identifying the three colour channels, and the luminance values in column \texttt{value}. We add a factor \texttt{channel} with `nice' labels and add a numeric variable \texttt{luminance} with the values re-encoded to be in the range zero to one.
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<imager12>>=
+dahlia02.df <- as.data.frame(dahlia02.img)
+names(dahlia01.df)
+dahlia02.df <- plyr::mutate(dahlia02.df,
+                            channel = factor(cc, labels = c('R','G','B')),
+                            luminance = value)
+names(dahlia01.df)
+@
+
+Now we can use functions from package \pkgname{ggplot2} as usual to create different plots. We start by plotting histograms for the different color channels.
+
+<<imager13>>=
+ggplot(dahlia02.df,
+       aes(luminance, fill = channel)) +
+       geom_histogram(bins = 30, color = NA) +
        scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
                          guide = FALSE) +
        facet_wrap(~channel)
@@ -328,9 +460,9 @@ opts_chunk$set(opts_fig_very_wide)
 
 We now plot each channel as a separate raster, mapping luminance to the \texttt{alpha} \emph{aesthetic} so as to be able to map the colour corresponding to each channel as a uniform \texttt{fill}. Because the $y$-axis of the image is the reverse of the default expected by \texttt{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \texttt{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \texttt{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
 
-<<imager04>>=
-ggplot(dahlia01.df,
-       aes(x, y, alpha = 1 - luminance, fill = channel)) +
+<<imager14>>=
+ggplot(dahlia02.df,
+       aes(x, y, alpha =  (255 - luminance) / 255, fill = channel)) +
        geom_raster() +
        facet_wrap(~channel) +
        coord_fixed() +
@@ -338,12 +470,62 @@ ggplot(dahlia01.df,
                          guide = FALSE) +
        scale_alpha_identity() +
        scale_x_continuous(expand = c(0, 0)) +
-       scale_y_continuous(expand = c(0, 0), 
+       scale_y_continuous(expand = c(0, 0),
                           trans = scales::reverse_trans()) +
        theme_void()
 @
 
+After seeing the histograms, we guess a value for a constant to use to improve the white balance in a very simplistic way.
 
+<<imager21>>=
+dahlia03.img <- dahlia02.img
+red <- R(dahlia03.img) - 15
+R(dahlia03.img) <- ifelse(red < 0, 0, red)
+G(dahlia03.img) <- G(dahlia03.img) + 50
+blue <- B(dahlia03.img) - 15
+B(dahlia03.img) <- ifelse(blue < 0, 0, blue)
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<imager21a>>=
+plot(dahlia03.img)
+@
+
+Another approach would be to equalize the histograms. We start with the gray scale image.
+
+<<imager31>>=
+plot(as.cimg(ecdf(dahlia02g.img)(dahlia02g.img), dim = dim(dahlia02g.img)))
+@
+
+The line above is not that easy to understand. What is going on is the \texttt{ecdf(dahlia02g.img)} returns a \emph{function} built on the fly, and then with the additional set of parentheses we call it, and then pass the result to the \texttt{plot()} method. It could be split as follows into three statements.
+
+<<imager32>>=
+eq.f <- ecdf(dahlia02g.img)
+equalized_dahlia02g <- eq.f(dahlia02g.img)
+equalized_dahlia02g.img <- as.cimg(equalized_dahlia02g, dim = dim(dahlia02g.img))
+plot(equalized_dahlia02g.img)
+@
+
+We can further check what is happening by printing the function.
+
+<<imager33>>=
+mode(eq.f)
+class(eq.f)
+eq.f
+@
+
+\begin{playground}
+Define a function that accepts as argument a \texttt{cimg} object, and returns an equalized image as a \texttt{cimg} object. Do the development in steps as follows.
+\begin{description}
+  \item[Easy] Implement for gray scale images. 
+  \item[Medium] Implement for colour images both as argument and return values.
+  \item[Advanced] As Medium but use package are \pkgname{Rcpp} to implement the ``glue'' code calling functions in the \prgmname{CImg} library in C++ so that the data is passed back and forth between R and compiled code only once.
+\end{description}
+
+\end{playground}
 <<>>=
 try(detach(package:imager))
 try(detach(package:ggmap))
