@@ -502,7 +502,7 @@ ggplot(my.data, aes(x,
 What are the advantages and disadvantages of each approach in relation to easy with which a script in which several figures using the same ``labels'' are produced, in relation to consistency across figures? In contrast, which approach would you prefer if different figures in the same script used different variations of labels constructed from the same variables in the data?
 \end{playground}
 
-As \code{geom\_label} obeys the same parameters as \code{geom\_text} except for \code{angle} we describe below only the additional parameters compared to \code{geom\_text}.
+As \code{geom\_label} obeys the same parameters as \code{geom\_text} except for \code{angle} we describe below only the additional parameters compared to \code{geom\_text}.\label{start:plot:label}
 
 <<>>=
 my.data <-
@@ -510,7 +510,7 @@ my.data <-
              label=paste("alpha[", 1:5, "]", sep = ""))
 ggplot(my.data, aes(x, y, label = label)) +
   geom_label(hjust = -0.2, parse = TRUE, size = 6) +
-  geom_point() + 
+  geom_point() +
   expand_limits(x = 5.4)
 @
 
@@ -521,8 +521,8 @@ my.data <-
   data.frame(x = 1:5, y = rep(2, 5),
              label=paste("alpha[", 1:5, "]", sep = ""))
 ggplot(my.data, aes(x, y, label = label)) +
-  geom_label(hjust = -0.2, parse = TRUE, size = 6, 
-             label.size = NA, 
+  geom_label(hjust = -0.2, parse = TRUE, size = 6,
+             label.size = NA,
              label.r = unit(0, "lines"),
              label.padding = unit(0.15, "lines"),
              fill = "yellow", alpha = 0.5) +
@@ -542,7 +542,7 @@ You\index{plots!fonts} should be aware that R and ggplot2 support the use of UNI
 \index{plots!text in|)}
 \index{plots!maths in|)}
 
-\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}
+\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
 \index{plots!labels|(}
 \index{plots!title|(}
 \index{plots!subtitle|(}
@@ -839,7 +839,7 @@ An example comparing pie charts to bar plots is presented in section \ref{sec:pl
 
 \section{Plotting summaries}\label{sec:plot:summaries}
 
-The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \code{xlim()} and \code{ylim}. See section \ref{???} for a way of constraining the viewport (the region visible in the plot) while keeping the scale limits on a wider range of $x$ and $y$ values.
+The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \code{xlim()} and \code{ylim}. See the text box on \pageref{box:plot:coord:lims} for a way of constraining the viewport (the region visible in the plot) by changing coordinate limits while keeping the scale limits on a wider range of $x$ and $y$ values.
 
 \subsection{Statistical ``summaries''}
 \index{plots!statistics|(}
@@ -907,6 +907,34 @@ ggplot(data=fake.data, aes(y=y, x=group)) +
   stat_summary(fun.data = "mean_se",
                colour="red", size=1, alpha=0.7)
 @
+
+\begin{warningbox}\label{box:plot:coord:lims}
+\textbf{Scale- and coordinate limits are very different.} Scale limits restrict the data used, while coordinate limits restrict the data that are visible. For a scatter plot, the effect of either approach on the resulting plot are equivalent, as no calculations are involved, but when using \emph{statistics} to compute summaries, one should almost always rely on coordinate limits, to make sure that no data are excluded from the calculated summary. An example follows, using artificial data with an outlier added.
+
+<<>>=
+outlier.data <- fake.data
+outlier.data[1, "y"] <- outlier.data[1, "y"] * 5
+@
+
+This figure has the wrong values for mean and standard error, as the outlier has been excluded from the calculations. A warning is issued, reporting that observations have been excluded. One should never ignore such warnings before one understands why they are being triggered and is confident that this what one really intended to do!
+
+<<>>=
+ggplot(data=outlier.data, aes(y=y, x=group)) +
+  stat_summary(fun.data = "mean_se",
+               colour="red", size=1, alpha=0.7) +
+  ylim(range(fake.data$y))
+@
+
+This figure has the correct values for mean and standard error, as the outlier has been included in the calculations.
+
+<<>>=
+ggplot(data=outlier.data, aes(y=y, x=group)) +
+  stat_summary(fun.data = "mean_se",
+               colour="red", size=1, alpha=0.7) +
+  coord_cartesian(ylim = range(fake.data$y))
+@
+
+\end{warningbox}
 
 As \code{mult} is the multiplier based on the probability distribution used, by default student's {t}, by setting it to one, we get also standard errors of the mean.
 
@@ -2350,7 +2378,7 @@ ggplot(data = clean5000.df,
 @
 \index{plots!advanced examples!volcano plot|)}
 
-\subsection{Anscombe's regression examples}
+\subsection{Anscombe's regression examples}\label{sec:plot:anscombe}
 \index{plots!advanced examples!Anscombe's linear regression plots|(}
 
 <<>>=
