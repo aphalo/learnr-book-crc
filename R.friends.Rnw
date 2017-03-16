@@ -7,32 +7,159 @@ opts_knit$set(concordance=TRUE)
 
 \chapter{If and when R needs help}\label{chap:R:performance}
 
+\dictum[Patrick J. Burns (1998) S Poetry. \url{http://www.burns-stat.com/documents/books/s-poetry/}]{Improving the efficiency of your S functions can be well worth some effort.\ \ldots But remember that large efficiency gains can be made by using a better algorithm, not just by coding the same algorithm better.}
+
+\section{Packages used in this chapter}
+
+For executing the examples listed in this chapter you need first to load the following packages from the library:
+
+<<message=FALSE>>=
+library(Rcpp)
+library(inline)
+# library(rPython)
+library(rJava)
+@
+
 \section{Introduction}
+
+If when developing software you hit some apparent limit, then think laterally. Explore outside the box. A pair of very inspiring books by Jon Bentley (\citeyear{Bentley1986,Bentley1988}) are a very good starting point. As the quotation at the top of this page states, the surest way to improve performance is to use better algorithms. However, sometimes the R language, being interpreted, depresses performance. In addition, sometimes good implementations of very good algorithms are already available as libraries written in our computer languages.
 
 S (R is sometimes called Gnu S) is a very well designed language, but it was designed with a specific purpose in mind. No tool can handle efficiently and gracefully every task one may want to throw at it. R is no different. However, R is good at working together with other languages and tools. As for most tasks in life, for data analysis one may find the best tools for our toolbox scattered around the place and coming from different sources. What is important in any tool pack is that all the tools can be used together in an efficient and `fluid' combination. In this final chapter, I will give an overview of what is available, giving only minimal examples, as a teaser for readers to explore on their own what may be most useful for their jobs.
 
 \section{R's limitations and strengths}
 
+\subsection{Optimizing R code}
+
+Some constructs like \code{for} and \code{while} loops execute slowly in R, as they are interpreted. Byte compiling and Just-In-Time (JIT) compiling of loops (enabled by default in R >= 3.4.0) should decrease this burden in the future. However, base R as well some packages define several \emph{apply} functions. Being compiled functions, written in C or C++, using apply functions instead of explicit loops can provide a major improvement in performance while keeping user's code fully written in R. Pre-allocating memory, rather than growing a vector or array at each iteration can help. One little known problem is related to consistency tests when `growing' data frames. If we add one by one variables to a large data frame the overhead is in many cases huge. This can be easily avoided in many cases by assembling the object as a list, and once assembled converting it into a data frame.
+
+You may ask, how can I know, where in the code is the performance bottleneck. During the early years of R, this was quite a difficult task. Nowadays, we there are good code profiling and code benchmarking tools, which are in the most recent version, integrated into the RStudio IDE. Profiling consists in measuring how much of the total runtime of a test is spent in different functions, or even lines of code. Benchmarking consists in timing the execution of alternative versions of some piece of code, to decide which one should preferred.
+
+There are some rules of style, and common sense, that should be always applied, to develop good quality program code. However, as in most cases, high performance comes at the cost of a more complex program or algorithm, optimizations should be applied only at the parts of the code that are limiting overall performance. Usually even when the requirement of high performance is known in advance, it is in most cases to start with a simple implementation of a simple algorithm. Get this first solution working reliably, and use this as a reference both for performance and accuracy of returned results while attempting optimization.
+
 \subsection{Using the best tool for each job}
 
-\subsection{R is great, but}
+In many cases optimizing R code for performance can yield more than an order of magnitude decrease in runtime. In many cases this is enough, and the most cost-effective solution. There are both packages and functions in base R, that if properly used can make a huge difference in performance. In addition, efforts in recent years to optimize the overall performance of R itself have been successful. Some of the packages with enhanced performance have been described in earlier chapters, as they are easy enough to use and have also an easy to learn user interface. Other packages like \pkgname{data.table} although achieving very fast execution, incur the cost of using a user interface and having a behaviour alien to the ``normal way of working'' with R.
 
-\subsection{On choice versus fashion}
+Sometimes, the best available tools for a certain job have not been implemented in R but are available in other languages. Alternatively, the algorithms or the size of the data are such that performance is poor when implemented in the R language, and can be better using a compiled language.
 
-\subsection{On finding one's own way around}
+\subsection{R is great, but not always best}
 
-\subsection{Getting around performance issues}
+One extremely important feature leading to the success of R is extensibility. Not only by writing packages in R itself, but by allowing the development of packages containing functions written in other computer languages. The beauty of the package loading mechanism, is that even if R itself is written in C, and compiled into an executable, packages containing interpreted R code, and also compiled C, C++, FORTRAN, or other languages, or calling libraries written in Java, Python, etc. can be loaded and unloaded at runtime.
 
-\subsection{Re-using code writing in other languages}
+Most common reasons for using compiled code, are the availability of libraries written in FORTRAN, C and C++ that are well tested and optimized for performance. This is frequently the case for numerical calculations and time-consuming data manipulations like image analysis. In such cases the R code in packages is just a wrapper (or ``glue'') to allow the functions in the library to be called from R.
 
-\section{C++}
+In other cases we diagnose a performance bottleneck, decide to write a few functions within a package otherwise written in R, in a compiled language like C++. In such cases is a good idea to use benchmarking, as the use of a language does not necessarily provide a worthwhile performance enhancement. Different languages do not always store data in memory in the same format, this can add overhead to function calls across languages.
+
+\section{Rcpp}
+
+<<>>=
+citation(package = "Rcpp")
+@
+
+Nowadays, thanks to package \pkgname{Rcpp}, using \langname{C++} mixed with R language, is fairly simple. This package does not only provide R code, but a \langname{C++} header file that and macro definitions that reduces the writing of the necessary ``glue'' code to the use of a simple macro in the C++ code. Although, this mechanism is most frequently used in packages, it is also possible to define function written in C++ in the R console, or a simple user's script. Of course for these to work all the tools needed to build R packages from source are needed, including a suitable compiler and linker.
+
+An example taken from the Rcpp documentation follows. This is an example of how one would define a function during an interactive session at the R console, or in a simple script. When writing a package, one would write a separate source file for the function, include the \code{rcpp.h} header and use the C++ macros to build the R code side.
+
+First we save the source code for the function written in C++, taking advantage of types and templates defined in the \code{Rccp.h} header file.
+
+<<rcpp-01>>=
+src <- '
+ Rcpp::NumericVector xa(a);
+ Rcpp::NumericVector xb(b);
+ int n_xa = xa.size(), n_xb = xb.size();
+
+ Rcpp::NumericVector xab(n_xa + n_xb - 1);
+ for (int i = 0; i < n_xa; i++)
+ for (int j = 0; j < n_xb; j++)
+ xab[i + j] += xa[i] * xb[j];
+ return xab;
+'
+@
+
+The second step is to compile and load the function, in a way that is callable from R and indistinguishable from a function defined in R.
+
+<<rcpp-02>>=
+fun <- cxxfunction(signature(a = "numeric", b = "numeric"), src, plugin = "Rcpp")
+@
+
+We can now use as any other R function.
+
+<<rcpp-03>>=
+fun(1:3, 1:4)
+@
+
+As we will see below, this is not the case in the case of calling Java and Python, cases where although the integration is relatively tight, special syntax is used when calling the ``foreign'' functions. The advantage of Rcpp in this respect is very significant, as we can define functions that have exactly the same argument signature, use the same syntax and behave in the same way, using either the R or C++ language. This means that at any point during development of a package a function defined in R can be replaced by an equivalent function defined in C++, or vice versa, with absolutely no impact on user's code, except possibly by faster execution of the C++ version.
 
 \section{FORTRAN and C}
 
+In the case of FORTRAN and C, the process is less automated in the R code needed to call the compiled functions needs to be explicitly written. Once written, the building and installation of the package is automatic. This how many existing libraries are used from within R.
+
 \section{Phyton}
+
+Package \pkgname{rPython} allows calling \langname{Python} functions and methods from R code. Currently this package is not available under MS-Windows.
+
+Example taken from the package description (not run).
+
+<<rpython-01,eval=FALSE>>=
+python.call( "len", 1:3 )
+a <- 1:4
+b <- 5:8
+python.exec( "def concat(a,b): return a+b" )
+python.call( "concat", a, b)
+@
+
+It is also possible to call R functions from Python. However, this is outside the scope of this book.
 
 \section{Java}
 
-\section{Javascript}
+Although Java compilers exist, most frequently Java programs are compiled into intermediate byte code and this is interpreted, and usually the interpreter includes a JIT compiler. For calling Java functions or accessing Java objects from R code, the solution is to use package \pkgname{rJava}. One important point to remember is that the Java Development Environment must be installed for this package to work. The usually installed runtime is not enough.
+
+We need first to start the Java Virtual Machine (the byte-code interpreter).
+
+<<rjava-01>>=
+.jinit() 
+@
+
+The code that follows is not that clear, and merits some explanation.
+
+We first create a Java array from inside R.
+
+<<rjava-02>>=
+a <- .jarray( list(
+                   .jnew( "java/awt/Point", 10L, 10L ),
+                   .jnew( "java/awt/Point", 30L, 30L )
+                   ) )
+print(a)
+mode(a)
+class(a)
+str(a)
+@
+
+Then we use base R's function \code{lapply()} to apply a user-defined R function to the elements of the Java array, obtaining as returned value an R array.
+
+<<rjava-03>>=
+b <- sapply(a, 
+            function(point){
+              with(point, {
+                (x + y )^2
+              } )
+            })
+print(b)
+mode(b)
+class(b)
+str(b)
+@
+
+Although more cumbersome than in the case of \pkgname{Rcpp} one can manually write wrapper code to hide the special syntax and object types from users.
+
+It is also possible to call R functions from within a Java program. This is outside the scope of this book.
 
 \section{sh, bash}
+
+The operating system shell can be accessed from within R and the output from programs and shell scripts returned to the R session. This is useful, for example for pre-processing raw data files with tools like grep, ed, etc. and AWK or Perl scripts. The problem with this approach is that the R script cannot when this is done run portably across operating systems, or in the absence of the tools or sh or bash scripts. Except for code that will never be reused (i.e.\ it is used once and thrown away) it is preferable to use R's built-in commands whenever possible, or if shell scripts are used, to make the shell script the master script from within which the R scripts are called, rather than the other way around. The reason for this is mainly making clear the developer's intention: that the code as a whole will be run in a given operating system using a certain set of tools, rather hiding shell calls inside the R script. In other words, keep the least portable bits in full light.
+
+\section{Web pages, and interactive interfaces}
+
+There is a lot to write on this aspect, and intense development efforts going on. One example is the \pkgname{shinny} package and server. This package allows the creation of interactive displays to be viewed through any web browser.
+
+There are other packages for printing graphics in formats suitable for on-line display, as well as package \pkgname{knitr} used for writing this book, which when using RMarkdown for markup (with package \pkgname{RMarkdown} or \pkgname{Bookdown} can output self-contained HTML files in addition to RTF and PDF formats.
