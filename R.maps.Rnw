@@ -23,7 +23,6 @@ Package \pkgname{ggmap}\index{plots!maps}\index{plots!geographical maps|see{plot
 
 The first step is to fetch the desired map. One can fetch the maps base on any valid Google Maps search term, or by giving the coordinates at the center of the map. Although \code{zoom} defaults to "auto", frequently the best result is obtained by providing this argument. Valid values for \code{zoom} are integers in the range 1 to 20.
 
-
 \begin{warningbox}
 
 We will fetch maps from Google Maps\index{plots!maps!from Google Maps}. We have disabled the messages, to avoid repeated messages about Google's terms of use.
@@ -305,6 +304,9 @@ dahlia01.img <- load.image("data/dahlia-vis.tif")
 class(dahlia01.img)
 mode(dahlia01.img)
 dahlia01.img
+range(R(dahlia01.img))
+range(G(dahlia01.img))
+range(B(dahlia01.img))
 @
 
 We exemplify first the use of the \code{plot()} method from package \pkgname{imager}.
@@ -373,7 +375,7 @@ And then we plot it as a raster image, mapping luminance to the \code{alpha} \em
 
 <<imager-04>>=
 ggplot(dahlia01g.df,
-       aes(x, y, alpha = 1 - value)) +
+       aes(x, y, alpha = (255 - value) / 255)) +
        geom_raster(fill = "black") +
        coord_fixed() +
        scale_alpha_identity() +
@@ -446,9 +448,6 @@ We read the image from a TIFF file with luminance data encoded in 8 bits per cha
 
 <<imager-11>>=
 dahlia02.img <- load.image("data/dahlia-uva.tif")
-class(dahlia02.img)
-mode(dahlia02.img)
-dahlia02.img
 @
 
 We use as above the \code{plot()} method from package \pkgname{imager}.
@@ -465,8 +464,6 @@ Converting this image to gray scale is easy as it is an 8 bit per channel image\
 
 <<imager-11b>>=
 dahlia02g.img <- grayscale(dahlia02.img)
-class(dahlia02g.img)
-mode(dahlia02g.img)
 dahlia02g.img
 @
 
@@ -484,11 +481,11 @@ opts_chunk$set(opts_fig_wide)
 
 <<imager-12>>=
 dahlia02.df <- as.data.frame(dahlia02.img)
-names(dahlia01.df)
+names(dahlia02.df)
 dahlia02.df <- plyr::mutate(dahlia02.df,
                             channel = factor(cc, labels = c('R','G','B')),
                             luminance = value)
-names(dahlia01.df)
+names(dahlia02.df)
 @
 
 Now we can use functions from package \pkgname{ggplot2} as usual to create different plots. We start by plotting histograms for the different color channels.
@@ -525,22 +522,40 @@ ggplot(dahlia02.df,
 
 \subsection[Manipulating pixel data: 2nd example]{Manipulating pixel data: second example}
 
-After seeing the histograms, we guess a value for a constants to use to improve the white balance in a very simplistic way.
+After seeing the histograms, we guess values for constants to use to improve the white balance in a very simplistic way. Be aware that code equivalent to the one below, but using \code{ifelse()} triggers an error.
 
 <<imager-21>>=
 dahlia03.img <- dahlia02.img
-red <- R(dahlia03.img) - 25
-R(dahlia03.img) <- ifelse(red < 0, 0, red)
-G(dahlia03.img) <- G(dahlia03.img) + 50
-blue <- B(dahlia03.img) - 25
-B(dahlia03.img) <- ifelse(blue < 0, 0, blue)
+range(G(dahlia03.img))
+G(dahlia03.img) <- G(dahlia03.img) + 40
+range(G(dahlia03.img))
+@
+
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+<<imager-22>>=
+dahlia03.df <- as.data.frame(dahlia03.img)
+dahlia03.df <- plyr::mutate(dahlia03.df,
+                            channel = factor(cc, labels = c('R','G','B')),
+                            luminance = value)
+@
+
+<<imager-23>>=
+ggplot(dahlia03.df,
+       aes(luminance, fill = channel)) +
+       geom_histogram(bins = 30, color = NA) +
+       scale_fill_manual(values = c('R' = "red", 'G' = "green", 'B' = "blue"),
+                         guide = FALSE) +
+       facet_wrap(~channel)
 @
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
 @
 
-<<imager-21a>>=
+<<imager-24>>=
 plot(dahlia03.img)
 @
 
@@ -561,15 +576,29 @@ plot(equalized_dahlia02g.img)
 
 A third syntax, is to use the \code{\%>\%} pipe operator. This operator is not native to the R language, but is defined by a package. However, in recent times its use has become rather popular for data transformations. These is equivalent to the nested calls in the one-line statement above.
 
-<<imager-32a>>=
+<<imager-33>>=
 ecdf(dahlia02g.img)(dahlia02g.img) %>%
     as.cimg(equalized_dahlia02g, dim = dim(dahlia02g.img)) %>%
     plot()
 @
 
+We can plot the histogram before and after equalization.
+
+<<imager-34>>=
+ggplot(as.data.frame(dahlia02g.img),
+       aes(value)) +
+       geom_histogram(bins = 30)
+@
+
+<<imager-35>>=
+ggplot(as.data.frame(equalized_dahlia02g.img),
+       aes(value)) +
+       geom_histogram(bins = 30)
+@
+
 We can further check how the ECDF function looks like, by looking at its attributes and printing its definition.
 
-<<imager-33>>=
+<<imager-36>>=
 class(eq.f)
 mode(eq.f)
 eq.f
@@ -597,6 +626,7 @@ R
 <<imager-42>>=
 channel
 @
+
 \end{playground}
 
 \subsection{Using bitmaps as data in R}

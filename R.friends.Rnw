@@ -22,7 +22,7 @@ library(rJava)
 
 \section{Introduction}
 
-If when developing software you hit some apparent limit, then think laterally. Explore outside the box. A pair of very inspiring books by Jon Bentley (\citeyear{Bentley1986,Bentley1988}) are a very good starting point. As the quotation at the top of this page states, the surest way to improve performance is to use better algorithms. However, sometimes the R language, being interpreted, depresses performance. In addition, sometimes good implementations of very good algorithms are already available as libraries written in our computer languages.
+If when developing software you hit some apparent limit, then think laterally. Explore outside the box. A pair of very inspiring books by Jon Bentley (\citeyear{Bentley1986,Bentley1988}) are a very good starting point. As the quotation at the top of this page states, the surest way to improve performance is to use better algorithms. However, sometimes the R language, being interpreted, depresses performance. In addition, sometimes good implementations of very good algorithms are already available as libraries written in other computer languages.
 
 S (R is sometimes called Gnu S) is a very well designed language, but it was designed with a specific purpose in mind. No tool can handle efficiently and gracefully every task one may want to throw at it. R is no different. However, R is good at working together with other languages and tools. As for most tasks in life, for data analysis one may find the best tools for our toolbox scattered around the place and coming from different sources. What is important in any tool pack is that all the tools can be used together in an efficient and `fluid' combination. In this final chapter, I will give an overview of what is available, giving only minimal examples, as a teaser for readers to explore on their own what may be most useful for their jobs.
 
@@ -35,6 +35,9 @@ Some constructs like \code{for} and \code{while} loops execute slowly in R, as t
 You may ask, how can I know, where in the code is the performance bottleneck. During the early years of R, this was quite a difficult task. Nowadays, we there are good code profiling and code benchmarking tools, which are in the most recent version, integrated into the RStudio IDE. Profiling consists in measuring how much of the total runtime of a test is spent in different functions, or even lines of code. Benchmarking consists in timing the execution of alternative versions of some piece of code, to decide which one should preferred.
 
 There are some rules of style, and common sense, that should be always applied, to develop good quality program code. However, as in most cases, high performance comes at the cost of a more complex program or algorithm, optimizations should be applied only at the parts of the code that are limiting overall performance. Usually even when the requirement of high performance is known in advance, it is in most cases to start with a simple implementation of a simple algorithm. Get this first solution working reliably, and use this as a reference both for performance and accuracy of returned results while attempting optimization.
+
+The book \citetitle{Matloff2011} \autocite{Matloff2011} is very good at presenting the use of R language and how to profit from its peculiar features to write concise and efficient code.
+Studying the book \citetitle{Wickham2014advanced} \autocite{Wickham2014advanced} will give you a deep understanding of the R language, its limitations and good and bad approaches to its use. If you aim at writing R packages, then \citetitle{Wickham2015} \autocite{Wickham2015} will guide you on how to write your own packages, using modern tools. Finally, any piece of software, benefits from thorough and consistent testing, and R packages and scripts are no exception. Building a set of test cases simplifies enormously code maintenance, as they help detect unintended changes in program behaviour \autocite{Wickham2015,Cotton2016}.
 
 \subsection{Using the best tool for each job}
 
@@ -56,9 +59,9 @@ In other cases we diagnose a performance bottleneck, decide to write a few funct
 citation(package = "Rcpp")
 @
 
-Nowadays, thanks to package \pkgname{Rcpp}, using \langname{C++} mixed with R language, is fairly simple. This package does not only provide R code, but a \langname{C++} header file that and macro definitions that reduces the writing of the necessary ``glue'' code to the use of a simple macro in the C++ code. Although, this mechanism is most frequently used in packages, it is also possible to define function written in C++ in the R console, or a simple user's script. Of course for these to work all the tools needed to build R packages from source are needed, including a suitable compiler and linker.
+Nowadays, thanks to package \pkgname{Rcpp}, using \langname{C++} mixed with R language, is fairly simple \autocite{Eddelbuettel2013}. This package does not only provide R code, but a \langname{C++} header file with macro definitions that reduces the writing of the necessary ``glue'' code to the use of a simple macro in the C++ code. Although, this mechanism is most frequently used as a component packages, it is also possible to define a function written in C++ at the R console, or in a simple user's script. Of course for these to work all the tools needed to build R packages from source are needed, including a suitable compiler and linker.
 
-An example taken from the Rcpp documentation follows. This is an example of how one would define a function during an interactive session at the R console, or in a simple script. When writing a package, one would write a separate source file for the function, include the \code{rcpp.h} header and use the C++ macros to build the R code side.
+An example taken from the Rcpp documentation follows. This is an example of how one would define a function during an interactive session at the R console, or in a simple script. When writing a package, one would write a separate source file for the function, include the \code{rcpp.h} header and use the C++ macros to build the R code side. Using C++ inline requires package \pkgname{inline} to be loaded in addition to \pkgname{Rcpp}.
 
 First we save the source code for the function written in C++, taking advantage of types and templates defined in the \code{Rccp.h} header file.
 
@@ -117,7 +120,7 @@ Although Java compilers exist, most frequently Java programs are compiled into i
 We need first to start the Java Virtual Machine (the byte-code interpreter).
 
 <<rjava-01>>=
-.jinit() 
+.jinit()
 @
 
 The code that follows is not that clear, and merits some explanation.
@@ -138,7 +141,7 @@ str(a)
 Then we use base R's function \code{lapply()} to apply a user-defined R function to the elements of the Java array, obtaining as returned value an R array.
 
 <<rjava-03>>=
-b <- sapply(a, 
+b <- sapply(a,
             function(point){
               with(point, {
                 (x + y )^2
