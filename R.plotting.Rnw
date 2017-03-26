@@ -21,6 +21,12 @@ play.eval <- FALSE
 \index{annotations (ggplot)|see{plots, annotations}}
 \index{aesthetics (ggplot)|see{plots, aesthetics}}
 
+\section{Aims of this chapter}
+
+Three main plotting systems are available to \R users: base R, package \pkgname{lattice} \autocite{Sarkar2008} and package \pkgname{ggplolt2} \autocite{Wickham2016}, being the last one the most recent and currently most popular system available in \R for plotting data. Even two different sets of graphics primitives are available in R, that in base R and a newer one in the \pkgname{grid} package \autocite{Murrell2011}.
+
+In this chapter you will learn the concepts of the grammar of graphics, on which package \pkgname{ggplot2} is based. You will as well learn how to do many of the data plots that can be produced with package \pkgname{ggplot2}. We will focus only on the grammar of graphics, as it is currently the most used plotting approach in R. As a consequence of this popularity and its flexibility, many extensions to \pkgname{ggplot2} have been released through free licences and deposited in public repositories. Several of these packages will be described in Chapter \ref{chap:R:more:ggplotting} starting on page \pageref{chap:R:more:ggplotting} and in Chapter \ref{chap:R:maps} starting on page \pageref{chap:R:maps}. As previous chapters, this chapter is intended to be read in whole.
+
 \section{Packages used in this chapter}
 
 <<>>=
@@ -33,6 +39,7 @@ For executing the examples listed in this chapter you need first to load the fol
 library(ggplot2)
 library(scales)
 library(tikzDevice)
+library(lubridate)
 @
 
 We set a font of larger size than the default
@@ -677,7 +684,7 @@ for (df in my.dfs) {
 @
 
 \begin{warningbox}
- Automatic printing of objects is disabled within functions and iteration loops, making it necessary to use \code{print} explicitly in these cases (see loops above). This `inconsistency' in behaviour is frequently surprising to unexperienced R users, so keep in mind that if some chunk of R code unexpectedly fails to produce visible output, the most frequent reason is that \code{print} needs to be included in the code to make the `missing' result visible. Except for base R plotting functions, the norm in R is that printing, either implicitly or explicitly is needed for output to be visible to the user.
+ Automatic printing of objects is disabled within functions and iteration loops, making it necessary to use \code{print()} explicitly in these cases (see loops above). This `inconsistency' in behaviour is frequently surprising to unexperienced R users, so keep in mind that if some chunk of R code unexpectedly fails to produce visible output, the most frequent reason is that \code{print()} needs to be included in the code to make the `missing' result visible. Except for base R plotting functions, the norm in R is that printing, either implicitly or explicitly is needed for output to be visible to the user.
 \end{warningbox}
 
 As we have given names to the list members, we can use these and enclose the loop in a function. This is a very inflexible approach, and on top the plots are only printed, and the \code{ggplot} objects get discarded once printed.
@@ -792,62 +799,6 @@ ggplot(mpg, aes(class, fill = factor(cyl))) +
   scale_fill_brewer()
 @
 \index{plots!bar plot|)}
-
-\section{Circular plots}
-\index{plots!circular|(}
-
-Under circular plots I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
-
-\subsection{Pie charts}
-\index{plots!pie charts|(}
-
-Pie charts are more difficult to read: our brain is more comfortable at comparing
-lengths than angles. If used, they should only be used to show composition, or
-fractional components that add up to a total. In this case only if the number of
-“pie slices” is small (rule of thumb: less than seven).
-
-We make the equivalent of the first bar plot above. As we are still using \code{geom\_bar} the default is \code{stat\_count}. As earlier we use the brewer scale for nicer colors.
-
-<<>>=
-ggplot(data = mpg, aes(x = factor(1), fill = factor(class))) +
-  geom_bar(width = 1, color = "black") +
-  coord_polar(theta = "y") +
-  scale_fill_brewer() +
-  scale_x_discrete(breaks = NULL) +
-  labs(x = NULL, fill = "Vehicle class")
-@
-
-Even with four slices pie charts can be difficult to read. Compare the following bar plot and pie chart.
-
-<<>>=
-ggplot(data = mpg, aes(x = factor(cyl), fill = factor(cyl))) +
-  geom_bar(color = "black") +
-  scale_fill_grey() +
-  scale_x_discrete(breaks = NULL) +
-  labs(x = NULL, fill = "Vehicle class") +
-  theme_bw()
-
-ggplot(data = mpg, aes(x = factor(1), fill = factor(cyl))) +
-  geom_bar(width = 1, color = "black") +
-  coord_polar(theta = "y") +
-  scale_fill_grey() +
-  scale_x_discrete(breaks = NULL) +
-  labs(x = NULL, fill = "Vehicle class") +
-  theme_bw()
-@
-
-An example comparing pie charts to bar plots is presented in section \ref{sec:plot:pie:bar} on page \pageref{sec:plot:pie:bar}.
-\index{plots!pie charts|)}
-
-\subsection{Wind-rose plots}
-\index{plots!wind rose|(}
-They can be plotted as histograms on polar coordinates, when the data is to be represented by frequencies or, as bar plot when the values are means calculated with a \emph{statistic} or a single observation is available per quadrat.
-
-\textbf{Example coming soon}
-
-A density plot with polar coordinates\ldots
-\index{plots!wind rose|)}
-\index{plots!circular|)}
 
 \section{Plotting summaries}\label{sec:plot:summaries}
 
@@ -1342,8 +1293,16 @@ p + facet_grid(. ~ vs + am)
 p + facet_grid(. ~ vs + am, labeller = label_both)
 @
 
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+
 <<>>=
 p + facet_grid(. ~ vs + am, margins=TRUE)
+@
+
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_wide)
 @
 
 <<>>=
@@ -1871,6 +1830,161 @@ ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
 \begin{playground}
 Modify the plot above to show the cosine instead of the sine function, replacing \code{sin} with \code{cos}. This is easy, but the catch is that you will need to relocate the annotations.
 \end{playground}
+
+\section{Coordinates and circular plots}
+\index{plots!circular|(}
+
+In this section I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \code{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
+
+\subsection{Pie charts}
+\index{plots!pie charts|(}
+
+Pie charts are more difficult to read: our brain is more comfortable at comparing
+lengths than angles. If used, they should only be used to show composition, or
+fractional components that add up to a total. In this case only if the number of
+“pie slices” is small (rule of thumb: less than seven).
+
+We make the equivalent of the first bar plot above. As we are still using \code{geom\_bar} the default is \code{stat\_count}. As earlier we use the brewer scale for nicer colors.
+
+<<>>=
+ggplot(data = mpg, aes(x = factor(1), fill = factor(class))) +
+  geom_bar(width = 1, color = "black") +
+  coord_polar(theta = "y") +
+  scale_fill_brewer() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class")
+@
+
+Even with four slices pie charts can be difficult to read. Compare the following bar plot and pie chart.
+
+<<>>=
+ggplot(data = mpg, aes(x = factor(cyl), fill = factor(cyl))) +
+  geom_bar(color = "black") +
+  scale_fill_grey() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class") +
+  theme_bw()
+
+ggplot(data = mpg, aes(x = factor(1), fill = factor(cyl))) +
+  geom_bar(width = 1, color = "black") +
+  coord_polar(theta = "y") +
+  scale_fill_grey() +
+  scale_x_discrete(breaks = NULL) +
+  labs(x = NULL, fill = "Vehicle class") +
+  theme_bw()
+@
+
+An example comparing pie charts to bar plots is presented in section \ref{sec:plot:pie:bar} on page \pageref{sec:plot:pie:bar}.
+\index{plots!pie charts|)}
+
+\subsection{Wind-rose plots}
+\index{plots!wind rose|(}
+They can be plotted as histograms on polar coordinates, when the data is to be represented by frequencies or, as density plot. A bar plot or a line or points when the values are means calculated with a \emph{statistic} or a single observation is available per quadrat. It also possible to use summaries, or smoothers.
+
+Some types of data are more naturally expressed on polar coordinates than on cartesian coordinates. The clearest example is wind direction, from which the name derives. In some cases of time series data with a strong periodic variation, polar coordinates can be used to highlight any phase shifts or changes in frequency. A more mundane application is to plot variation in a response variable through the day with a clock-face like representation of time-of-day.
+
+We use for this example wind speed and direction data, measured once per minute during 24~h.
+
+<<wind-01>>=
+load("data/wind-data.rda")
+@
+
+We first show a time series plot, using cartesian coordinates, which demonstrates the problem of using an arbitrary origin at the North for a variable that does not have a scale with true limits: early in the day the predominant direction is just slightly West of 0 degrees North and the cloud of observations gets artificially split. We can also observe a clear change in wind direction soon after solar noon.
+
+<<wind-02>>=
+ggplot(viikki_d29.dat, aes(solar_time, WindDir_D1_WVT))  +
+geom_point() +
+scale_x_datetime(date_labels = "%H:%M") +
+labs(x = "Time of day (hh:mm)", y = "Wind direction (degrees)")
+@
+
+No such problem exists with wind speed.
+
+<<wind-03>>=
+ggplot(viikki_d29.dat, aes(solar_time, WindSpd_S_WVT))  +
+geom_point() +
+geom_smooth() +
+scale_x_datetime(date_labels = "%H:%M") +
+labs(x = "Time of day (hh:mm)", y = "Wind speed (m/s)")
+@
+
+Using a scatter plot with polar coordinates helps to some extent, but having time of day on the radial axis is rather unclear.
+
+<<wind-04>>=
+ggplot(viikki_d29.dat, aes(WindDir_D1_WVT, solar_time))  +
+  coord_polar() +
+  geom_point() +
+  scale_x_continuous(breaks = c(0, 90, 180, 270),
+                     labels = c("N", "E", "S", "W"),
+                     limits = c(0, 360),
+                     expand = c(0, 0),
+                     name = "Wind direction") +
+  scale_y_datetime(date_labels = "%H:%M",
+                   name = "Time of day (hh:mm)",
+                   date_breaks = "6 hours",
+                   date_minor_breaks = "3 hours",)
+@
+
+Most frequently, wind-rose plots use summaries, such as histograms or densities.
+Next we plot a circular histogram of wind directions with 15 degrees-wide bins.
+
+<<wind-05>>=
+ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
+  coord_polar() +
+  stat_bin(color = "black", fill = "grey50", binwidth = 15, geom = "bar") +
+  scale_x_continuous(breaks = c(0, 90, 180, 270),
+                     labels = c("N", "E", "S", "W"),
+                     limits = c(0, 360),
+                     expand = c(0, 0),
+                     name = "Wind direction") +
+  scale_y_continuous(name = "Frequency")
+@
+
+An equivalent plot, using an empirical density.
+
+<<wind-06>>=
+ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
+  coord_polar() +
+  stat_density(color = "black", fill = "grey50", size = 1, na.rm = TRUE) +
+  scale_x_continuous(breaks = c(0, 90, 180, 270),
+                     labels = c("N", "E", "S", "W"),
+                     limits = c(0, 360),
+                     expand = c(0, 0),
+                     name = "Wind direction") +
+  scale_y_continuous(name = "Density")
+@
+
+As final wind-rose plot examples we do a scatter plot of wind speeds versus wind direction and a two dimensional density plot. In both cases we use \code{facet\_wrap()} to have separate panel for AM and PM. In the scatter plot we set \code{alpha = 0.1} for better visualization of overlapping points. 
+
+<<wind-07>>=
+ggplot(viikki_d29.dat, aes(WindDir_D1_WVT, WindSpd_S_WVT)) +
+  coord_polar() +
+  geom_point(alpha = 0.1, shape = 16) +
+  scale_x_continuous(breaks = c(0, 90, 180, 270),
+                     labels = c("N", "E", "S", "W"),
+                     limits = c(0, 360),
+                     expand = c(0, 0),
+                     name = "Wind direction") +
+  scale_y_continuous(name = "Wind speed (m/s)") +
+  facet_wrap(~factor(ifelse(hour(solar_time) < 12, "AM", "PM")))
+@
+
+<<wind-08>>=
+ggplot(viikki_d29.dat, aes(WindDir_D1_WVT, WindSpd_S_WVT)) +
+  coord_polar() +
+  stat_density_2d() +
+  scale_x_continuous(breaks = c(0, 90, 180, 270),
+                     labels = c("N", "E", "S", "W"),
+                     limits = c(0, 360),
+                     expand = c(0, 0),
+                     name = "Wind direction") +
+  scale_y_continuous(name = "Wind speed (m/s)") +
+  facet_wrap(~factor(ifelse(hour(solar_time) < 12, "AM", "PM")))
+@
+
+\index{plots!wind rose|)}
+\index{plots!circular|)}
+
 
 \section{Themes}\label{sec:plot:themes}
 \index{plots!themes|(}
@@ -2682,6 +2796,7 @@ Revise the code you wrote for the ``playground'' exercise in section \ref{sec:pl
 
 
 <<eco=FALSE>>=
+try(detach(package:lubridate))
 try(detach(package:tikzDevice))
 try(detach(package:ggplot2))
 try(detach(package:scales))
