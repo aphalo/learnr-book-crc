@@ -15,28 +15,58 @@ The aim of this chapter is to introduce some of the frequently used function ava
 
 \section{Loading data}
 \index{data!loading data sets}
-To start with, we need some data. Here we use \code{cars}, a data set included in base R.
+To start with, we need some data to run the examples. Here we use \code{cars}, a data set included in base R. How to read or import ``foreign'' data is discussed in R's documentation in \emph{R Data Import/Export}, and in this book, in Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}. In general \code{data()} is used load R objects saved in a file format used by R. Text files con be read with functions \code{scan()}, \code{read.table()}, \code{read.csv()} and their variants. It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in R urls are accepted as arguments to the \code{file} argument (see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details and examples on how to import data from different ``foreign'' formats and sources).
+
+In the examples of the present chapter we use data included in R, as R objects, which can be loaded with function \code{data}. \code{cars} is a data frame.
 
 <<data-1>>=
 data(cars)
 @
 
-\section{Looking at the data}
+\section{Looking at data}
 \index{data!exploring at the console}
-<<plot-1>>=
+There are several functions in \langname{R} that let us obtain different `views' into objects. Function \code{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \code{names()}. If a data frame contains many rows of observations, \code{head()} and \code{tail()} allow us to easily restrict the number of rows printed. Functions \code{nrow()} and \code{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \code{str()}, outputs is abbreviated but in a way that preserves the structure of the object.
+<<exploring-dfs-1>>=
+class(cars)
+nrow(cars)
+ncol(cars)
 names(cars)
 head(cars)
 tail(cars)
 str(cars)
 @
 
-The \code{cars} data are stored as a data frame. Data frames consist in columns of equal length. The different columns can be different types (e.g.\ numeric and character). With \code{data()} we load it; with \code{names()} we obtain the names of the variables or columns. With head with can see the top several lines, and with tail the lines at the end. In general \code{data()} is used load R objects saved in a file format used by R. Text files con be read with functions \code{scan()}, \code{read.table()}, \code{read.csv()} and their variants.
+\begin{playground}
+Look up the help pages for \code{head()} and \code{tail()}, and edit the code above to print only the first line, or only the last line of \code{cars}, respectively. As a second exercise print the 25 topmost rows of \code{cars}.
+\end{playground}
 
-It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in R urls are accepted as arguments to the \code{file} argument (see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details and examples).
+Data frames consist in columns of equal length (see Chapter \ref{chap:R:as:calc}, section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames} for details). The different columns of a data frame can contain data of different modes (e.g.\ numeric, factor and/or character).
+
+To explore the mode of the columns of \code{cars}, we can use an \emph{apply} function. In the present case, we want to apply function \code{mode()} to each column of the data frame \code{cars}.
+
+<<exploring-dfs-2>>=
+sapply(cars, mode)
+@
+
+The statement above returns a vector of character strings, with the mode of each column. Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the second argument, to the one of current interest.
+
+\begin{playground}
+Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables are included, their modes, the number of rows, etc.
+\end{playground}
+
+There is in \Rpgrm a function called \code{summary()}, which can be used to obtain a suitable summary from objects of most classes. We can also use \code{sapply()} or \code{lapply()} to apply any suitable function to individual columns.
+<<exploring-dfs-3>>=
+summary(cars)
+sapply(cars, range)
+@
+
+\begin{playground}
+Obtain the summary of \code{airquality} with function \code{summary}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column.
+\end{playground}
 
 \section{Plotting}
 \index{plots!base R graphics}
-The built-in generic function \code{plot()} can be used to plot data. It is a generic function, that has suitable methods for different kinds of objects. In this section we only very briefly demonstrate the use of the most common base R's graphics functions.
+The base \langname{R}'s generic function \code{plot()} can be used to plot different data. It is a generic function that has suitable methods for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe either the Trellis and Lattice approach to plotting \autocite{Sarkar2008}. We describe in detail the use of the grammar of graphics and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
 
 <<plot-2>>=
 plot(dist ~ speed, data=cars)

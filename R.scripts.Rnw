@@ -13,7 +13,7 @@ opts_knit$set(concordance=TRUE)
 
 In my experience, for those who have mainly used graphical user interfaces, understanding why and when scripts can help in communicating a certain data analysis protocol can be revelatory. As soon as a data analysis stops being trivial, describing the steps followed through a system of menus and dialogue boxes becomes extremely tedious.
 
-It is also usually the case that graphical user interfaces tend to be difficult extend or improve in a way that keeps step-by-step instructions valid over program versions and operating systems. 
+It is also usually the case that graphical user interfaces tend to be difficult extend or improve in a way that keeps step-by-step instructions valid over program versions and operating systems.
 
 Many times the same sequence of commands needs to be applied to different data sets, and scripts make validation of such a requirement easy.
 
@@ -127,7 +127,7 @@ C -> variable
 
 The points discussed above already help a lot. However, one can go further in achieving the goal of human readability by interspersing explanations and code ``chunks'' and using all the facilities of typesetting, even of maths, within the listing of the script. Furthermore, by including the results of the calculations and the code itself in a typeset report built automatically, we ensure that the results are indeed the result of running the code shown. This greatly contributes to data analysis reproducibility, which is becoming a widespread requirement for any data analysis both in academic research and in industry. It is possible not only to build whole books like this one, but also whole data-based web sites with these tools.
 
-In the realm of programming, this approach is called literate programming\index{literate programmin} and was first proposed by Donald Knuth \autocite{Knuth1984a} through his \pgrmname{WEB} system. In the case of \Rpgrm programming the first support of literate programming was through \pkgname{Sweave}, which has been mostly superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of Markdown or \LaTeX\ \autocite{Lamport1994} as markup language for the textual contents, and also can format and add syntax highlighting to code chunks. Markdown\index{Markdown}\index{Bookdown} language has been extended to make it easier to include R code---R Markdown (\url{http://rmarkdown.rstudio.com/}), and in addition suitable for typesetting large and complex documents---Bookdown \autocite{Xie2016}. The use of \pkgname{knitr} is well integrated into the \pgrmname{RStudio} IDE.
+In the realm of programming, this approach is called literate programming\index{literate programming} and was first proposed by Donald Knuth \autocite{Knuth1984a} through his \pgrmname{WEB} system. In the case of \Rpgrm programming the first support of literate programming was through \pkgname{Sweave}, which has been mostly superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of Markdown or \LaTeX\ \autocite{Lamport1994} as markup language for the textual contents, and also can format and add syntax highlighting to code chunks. Markdown\index{Markdown}\index{Bookdown} language has been extended to make it easier to include R code---R Markdown (\url{http://rmarkdown.rstudio.com/}), and in addition suitable for typesetting large and complex documents---Bookdown \autocite{Xie2016}. The use of \pkgname{knitr} is well integrated into the \pgrmname{RStudio} IDE.
 
 This is not strictly an R programming subject, as it concerns programming in any language. On the other hand, this is an incredibly important skill to learn, but well described in other books and web sites cited in the previous paragraph. This whole book, including figures, has been generated using \pkgname{knitr} and the source scripts for the book are available through Bitbucket at \url{https://bitbucket.org/aphalo/using-r}.
 
@@ -229,6 +229,88 @@ Create some additional vectors containing \code{NA}s or not. Use them to test fu
 \begin{explainbox}
 \Rpgrm handles evaluation of function arguments differently to many other computer languages. Not only arguments are passed by value, but in addition they are evaluated only at the time of first use in the function body code. This is called \emph{lazy evaluation} and before evaluation arguments remain as \emph{promises}. In many cases this is advantageous by improving computation efficiency. However, if the value of the variable used as argument or in an expression used as argument changes, the value of the variable at the time of evaluation will be used. This is rarely a problem, but being aware of this behaviour is helpful specially when programmatically defining functions. Very rarely, an argument will not the evaluated when it should (e.g.\ because of bugs in packages, or use of ``trickery''). Earlier evaluation can be forced at any time with function \code{force()}.
 \end{explainbox}
+
+\section{Objects, classes and methods}\label{sec:script:objects:classes:methods}
+
+An\index{objects}\index{classes}\index{methods} in-depth discussion of object oriented programming in \langname{R} is outside the scope of this book. Several books describe in detail the different class systems available and how to take best advantage of them when developing packages extending R. For the non-programmer user, a basic understanding can be useful, even if he or she do not intend to create new classes. This basic knowledge is what we intend to convey in this section. For an in-depth treatment of the subject please consult the recently published book \citetitle{Wickham2014} \autocite{Wickham2014}.
+
+We start with a quotation form \citetitle{Burns1998} \autocite[][, page 13]{Burns1998}.
+\begin{quotation}
+The idea of object-oriented programming is simple, but carries a lot of weight.
+Here's the whole thing: if you told a group of people ``dress for work'', then
+you would expect each to put on clothes appropriate for that individual's job.
+Likewise it is possible for S[R] objects to get dressed appropriately depending on
+what class of object they are.
+\end{quotation}
+
+\langname{R} supports the use of the object oriented programming paradigm, but as a system that has evolved over the years, currently \langname{R} includes different approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a generic name like ``plot'' can be used as a generic name, and that which specific version of \code{plot()} is called depends on the arguments of the call. Using computing terms we could say that the generic version of \code{plot()} dispatches the original call to different specific versions of \code{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions the specializations of a generic are recognized/identified only by their name. And the class of an object by a character string stored as an attribute to the object.
+
+The most basic approach is to create a new class, pre-pending its name to the existing class attribute of an object. This would normally take place within a constructor.
+
+<<explain-object-classes-01>>=
+a <- 123
+class(a)
+class(a) <- c("myclass", class(a))
+class(a)
+@
+
+Now we create a print method specific to \code{"myclass"} objects.
+<<explain-object-classes-02>>=
+print.myclass <- function(x) {
+    sprintf("[myclass] %.g4", x)
+}
+@
+
+Once a specialized method exists, it will be used.
+
+<<explain-object-classes-03>>=
+print(a)
+print(as.numeric(a))
+@
+
+The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather fragile in that most of the responsibility about consistency and correctness of the design---e.g.\ not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc.-- is not checked by the R interpreter.
+
+Defining a new S3 generic is also quite simple. A generic method and a default method need to be created.
+
+<<explain-object-classes-04>>=
+my_print <- function (x, ...) {
+   UseMethod("my_print", x)
+ }
+
+my_print.default <- function(x, ...) {
+   print(class(x))
+   print(x, ...)
+}
+@
+
+<<explain-object-classes-05>>=
+my_print(123)
+my_print("abc")
+@
+
+Up to now, \code{my_print()}, has no specialization. We now write one for data frames.
+
+<<explain-object-classes-06>>=
+my_print.data.frame <- function(x, rows = 1:5, ...) {
+   print(x[rows, ], ...)
+   invisible(x)
+}
+@
+
+We add the second statement so that the function returns invisibly the whole data frame, rather than the lines printed. We now do a quick test of the function.
+
+<<explain-object-classes-07>>=
+my_print(cars)
+my_print(cars, 8:10)
+my_print(cars, TRUE)
+b <- my_print(cars)
+b
+@
+
+\begin{playground}
+1) What would be the most concise way of defining a specialization for \code{matrix}? Write one, and test it.
+2) How would you modify the code so that also columns to print can be selected?
+\end{playground}
 
 \section{Control of execution flow}\label{sec:script:flow:control}
 \index{control of execution flow}
