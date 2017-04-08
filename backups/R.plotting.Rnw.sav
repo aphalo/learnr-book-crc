@@ -2344,85 +2344,6 @@ We will revisit the example from the previous sections, but now using \LaTeX\ fo
 \index{plots!using Latex@using \LaTeX|)}
 \index{graphic output devices|)}
 
-\section{Building complex data displays}
-\index{examples!modular plot construction|(}
-
-In this section we do not refer to those aspects of the design of a plot that can be adjust through themes (see section \ref{sec:plot:themes} on page \pageref{sec:plot:themes}. Whenever this possibility exists, it is the best. Here we refer to aspects that are not really part of the graphical (''artistic'') design, but instead mappings, labels and similar data and metadata related aspects of plots. In many cases scales (see section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}) also fall within the scope of the present section.
-
-\subsection{Using the grammar of graphics for individual plots}\label{sec:plot:composition}
-
-The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows one to build and test plots incrementally. In daily use, it is best to start with a simple design for a plot, print this plot, checking that the output is as expected and the code error-free. Afterwards, one can map additional \emph{aesthetics} and \emph{geometries} and \emph{statistics} gradually. The final steps are then to add \emph{annotations} and the text or expressions used for titles, and axis and key labels.
-
-\begin{playground}
-  Build a graphically complex data plot of your interest, step by step. By step by step, I do not refer to using the grammar in the construction of the plot as earlier, but of taking advantage of this modularity to test intermediate version in an iterative design process, first by building up the complex plot in stages as a tool in debugging, and later using iteration in the processes of improving the graphic design of the plot and improving its readability and effectiveness.
-\end{playground}
-
-\subsection{Using the grammar of graphics for series of plots with consistent design}
-
-As in any type of script with instructions (for humans or computers), we should avoid unnecessary repetition, as repetition conspires against consistent results and is a major source of errors when the script needs to be modified. Not less important, a shorter script, if well written is easier to read.
-
-One approach is to use user-defined functions\index{plots!consistent format using functions}. One can for example, write simple wrapper functions on top functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \code{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, the wrapper can be a specialization of the generic, and become almost invisible to users (e.g.\ not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses the last two approaches.
-
-As \code{ggplot}\index{plots!reusing parts of} objects are composed using operator \code{+} to assemble together the different components, one can also store in a variable these components, or using a list, partial plots, which can be used to compose the final figure.
-
-\begin{explainbox}
-We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
-
-<<>>=
-myplot <- ggplot(data = mtcars,
-                 aes(x=disp, y=mpg,
-                 colour=factor(cyl))) +
-          geom_point()
-
-mylabs <- labs(x="Engine displacement)",
-               y="Gross horsepower",
-               colour="Number of\ncylinders",
-               shape="Number of\ncylinders")
-@
-
-And now we can assemble them into plots.
-
-<<>>=
-myplot
-myplot + mylabs + theme_bw(16)
-myplot + mylabs + theme_bw(16) + ylim(0, NA)
-@
-
-We can also save intermediate results.
-
-<<>>=
-mylogplot <- myplot + scale_y_log10(limits=c(8,55))
-mylogplot + mylabs + theme_bw(16)
-@
-
-If the pieces to put together do not include a "ggplot" object, we can put them
-into a "list" object.
-
-<<>>=
-myparts <- list(mylabs, theme_bw(16))
-mylogplot + myparts
-@
-
-The\index{plots!themes} are a few predefined themes in package \ggplot and additional ones in other packages such as \cowplot, even the default \code{theme\_grey} can come in handy because the first parameter to themes is the point size used as reference to calculate all other font sizes. You can see in the two examples bellow, that the size of all text elements changes proportionally when we set a different base size in points.
-
-<<>>=
-myplot + mylabs + theme_grey(10)
-myplot + mylabs + theme_grey(16)
-@
-
-The code in the next chunk is valid, it returns a blank plot. This apparently useless plot, can be very useful when writing functions that return \code{ggplot} objects or build them piece by piece in a loop.
-
-<<>>=
-ggplot()
-@
-
-\begin{playground}
-Revise the code you wrote for the ``playground'' exercise in section \ref{sec:plot:composition}, but this time, pre-building and saving groups of elements that you expect to be useful unchanged when composing a different plot of the same type, or a plot of a different type from the same data.
-\end{playground}
-
-\end{explainbox}
-\index{examples!modular plot construction|)}
-
 \section{Extended examples}
 \index{plots!advanced examples|(}
 In this section we first produce some publication-ready plots requiring the use of different combinations of what has been presented earlier in this chapter and then we recreate some well known plots, using versions from Wikipedia articles as models. Our objective here is to show, how by combining different terms and modifiers from the grammar of graphics we can build step by step very complex plots and/or annotate them with sophisticated labels. Here we do not use any packages extending \ggplot2. Even more elaborate versions of these plots are presented in later chapters using \ggplot together with other packages.
@@ -2793,6 +2714,85 @@ ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
 @
 \index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|)}
 \index{plots!advanced examples|(}
+
+\section{Building complex data displays}
+\index{examples!modular plot construction|(}
+
+In this section we do not refer to those aspects of the design of a plot that can be adjust through themes (see section \ref{sec:plot:themes} on page \pageref{sec:plot:themes}. Whenever this possibility exists, it is the best. Here we refer to aspects that are not really part of the graphical (''artistic'') design, but instead mappings, labels and similar data and metadata related aspects of plots. In many cases scales (see section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}) also fall within the scope of the present section.
+
+\subsection{Using the grammar of graphics for individual plots}\label{sec:plot:composition}
+
+The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows one to build and test plots incrementally. In daily use, it is best to start with a simple design for a plot, print this plot, checking that the output is as expected and the code error-free. Afterwards, one can map additional \emph{aesthetics} and \emph{geometries} and \emph{statistics} gradually. The final steps are then to add \emph{annotations} and the text or expressions used for titles, and axis and key labels.
+
+\begin{playground}
+  Build a graphically complex data plot of your interest, step by step. By step by step, I do not refer to using the grammar in the construction of the plot as earlier, but of taking advantage of this modularity to test intermediate version in an iterative design process, first by building up the complex plot in stages as a tool in debugging, and later using iteration in the processes of improving the graphic design of the plot and improving its readability and effectiveness.
+\end{playground}
+
+\subsection{Using the grammar of graphics for series of plots with consistent design}
+
+As in any type of script with instructions (for humans or computers), we should avoid unnecessary repetition, as repetition conspires against consistent results and is a major source of errors when the script needs to be modified. Not less important, a shorter script, if well written is easier to read.
+
+One approach is to use user-defined functions\index{plots!consistent format using functions}. One can for example, write simple wrapper functions on top functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \code{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, the wrapper can be a specialization of the generic, and become almost invisible to users (e.g.\ not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses the last two approaches.
+
+As \code{ggplot}\index{plots!reusing parts of} objects are composed using operator \code{+} to assemble together the different components, one can also store in a variable these components, or using a list, partial plots, which can be used to compose the final figure.
+
+\begin{explainbox}
+We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
+
+<<>>=
+myplot <- ggplot(data = mtcars,
+                 aes(x=disp, y=mpg,
+                 colour=factor(cyl))) +
+          geom_point()
+
+mylabs <- labs(x="Engine displacement)",
+               y="Gross horsepower",
+               colour="Number of\ncylinders",
+               shape="Number of\ncylinders")
+@
+
+And now we can assemble them into plots.
+
+<<>>=
+myplot
+myplot + mylabs + theme_bw(16)
+myplot + mylabs + theme_bw(16) + ylim(0, NA)
+@
+
+We can also save intermediate results.
+
+<<>>=
+mylogplot <- myplot + scale_y_log10(limits=c(8,55))
+mylogplot + mylabs + theme_bw(16)
+@
+
+If the pieces to put together do not include a "ggplot" object, we can put them
+into a "list" object.
+
+<<>>=
+myparts <- list(mylabs, theme_bw(16))
+mylogplot + myparts
+@
+
+The\index{plots!themes} are a few predefined themes in package \ggplot and additional ones in other packages such as \cowplot, even the default \code{theme\_grey} can come in handy because the first parameter to themes is the point size used as reference to calculate all other font sizes. You can see in the two examples bellow, that the size of all text elements changes proportionally when we set a different base size in points.
+
+<<>>=
+myplot + mylabs + theme_grey(10)
+myplot + mylabs + theme_grey(16)
+@
+
+The code in the next chunk is valid, it returns a blank plot. This apparently useless plot, can be very useful when writing functions that return \code{ggplot} objects or build them piece by piece in a loop.
+
+<<>>=
+ggplot()
+@
+
+\begin{playground}
+Revise the code you wrote for the ``playground'' exercise in section \ref{sec:plot:composition}, but this time, pre-building and saving groups of elements that you expect to be useful unchanged when composing a different plot of the same type, or a plot of a different type from the same data.
+\end{playground}
+
+\end{explainbox}
+\index{examples!modular plot construction|)}
 
 
 <<eco=FALSE>>=
