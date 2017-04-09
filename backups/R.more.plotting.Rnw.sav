@@ -83,7 +83,9 @@ ggplot(NULL, aes(x = 1, y = 1)) + ylim(0.8, 1.2) +
              family = "sans", fontface = "italic", size = 8)
 @
 
-Next we load some system fonts, the same we are using for the text of this book. Within code chunks when using \pkgname{knitr} we can enable \code{showtext} with chunk option \code{fig.showtext=TRUE} as done here (but not visible). In a script or at the console we can use \code{showtext.auto()}, or \code{showtext.begin()} and \code{showtext.end()}. As explained in the package vignette, using \code{showtext} can increase the size of the PDF files created, but on the other hand, it makes embedding of fonts unnecessary.
+Next we load some system fonts, the same we are using for the text of this book. Within code chunks when using \pkgname{knitr} we can enable \code{showtext} with chunk option \code{fig.showtext=TRUE} as done here (but not visible). In a script or at the console we can use \Rfunction{showtext.auto()}, or \Rfunction{showtext.begin()} and \Rfunction{showtext.end()}. As explained in the package vignette, using \code{showtext} can increase the size of the PDF files created, but on the other hand, it makes embedding of fonts unnecessary.
+
+Function \Rfunction{font.families()} lists the fonts known to R, and function \Rfunction{font.add()} can be used to make \emph{system fonts} visible to R. We set families, and indicate the font names for each \emph{face}.
 
 <<showtext-1>>=
 font.families()
@@ -102,6 +104,8 @@ font.add(family = "Lucida.Bright",
 
 font.families()
 @
+
+We can then select these fonts in the usual way.
 
 <<showtext-1a, fig.showtext=TRUE>>=
 ggplot(NULL, aes(x = 1, y = 1)) + ylim(0.8, 1.2) +
@@ -129,7 +133,7 @@ ggplot(my.data, aes(x, y, label = label)) +
   geom_point()
 @
 
-The examples that follow, using Google fonts are more portable as long that internet access is available. You can browse the available fonts at \url{https://fonts.google.com/}. The name used in the statements below are those under which the fonts are listed.
+The examples that follow, using function \Rfunction{font.add.google()} to add Google fonts, are more portable. This is so because as long as internet access is available, fonts can be downloaded if not available locally. You can browse the available fonts at \url{https://fonts.google.com/}. The names used in the statements below are those under which the fonts are listed.
 
 <<showtext-4, cache = FALSE>>=
 ## Loading Google fonts (http://www.google.com/fonts)
@@ -148,7 +152,7 @@ ggplot(NULL, aes(x = 1, y = 1)) + ylim(0.8, 1.2) +
              family = "Marker", size = 6)
 @
 
-In all the examples above we used \code{geom\_text}, but \code{geom\_label} can be used similarly. In the case of the title, axis-labels, tick-labels, and similar components the use of fonts is controlled through the theme. Here we change the base family used. Please, see section \ref{sec:plot:themes} on page \pageref{sec:plot:themes} for examples of how to set the \code{family} for individual elements of the plot.
+In all the examples above we used \Rfunction{geom\_text}, but \Rfunction{geom\_label} can be used similarly. In the case of the title, axis-labels, tick-labels, and similar components the use of fonts is controlled through the theme. Here we change the base family used. Please, see section \ref{sec:plot:themes} on page \pageref{sec:plot:themes} for examples of how to set the \code{family} for individual elements of the plot.
 
 <<showtext-6, fig.showtext=TRUE>>=
 font.add.google(name = "Lora", regular.wt = 400, bold.wt = 700)
@@ -187,12 +191,16 @@ my.data <- tibble(x = rnorm(500),
 opts_chunk$set(opts_fig_wide)
 @
 
+Using \Rfunction{scale\_fill\_viridis()} replaces the default palette.
+
 <<viridis-01>>=
 ggplot(my.data, aes(x, y)) +
   stat_density_2d(aes(fill = ..level..), geom = "polygon") +
   facet_wrap(~group) +
   scale_fill_viridis()
 @
+
+Function \Rfunction{scale\_fill\_viridis()} supports several different palettes, which can be selected through an argument passed to parameter \code{option}.
 
 <<viridis-02>>=
 ggplot(my.data, aes(x, y)) +
@@ -254,7 +262,7 @@ my.data <- tibble(x = rnorm(500),
 opts_chunk$set(opts_fig_wide)
 @
 
-First we simply reproduce the first example obtaining the same plot as by use of \code{scale\_fill\_viridis}.
+First we simply reproduce the first example obtaining the same plot as by use of \Rfunction{scale\_fill\_viridis()}.
 
 <<pals-01>>=
 ggplot(my.data, aes(x, y)) +
@@ -272,25 +280,25 @@ ggplot(my.data, aes(x, y)) +
   scale_fill_gradientn(colours = viridis(10), guide = "colourbar")
 @
 
-We can compare different colormaps with \code{pal.bands()}. In this example we compare those included in package \pkgname{viridis} with some of the other palettes defined in package \pkgname{pals}.
+We can compare different colormaps with \Rfunction{pal.bands()}. In this example we compare those included in package \pkgname{viridis} with some of the other palettes defined in package \pkgname{pals}.
 
 <<pals-03>>=
 pal.bands(viridis, magma, inferno, plasma, coolwarm, tol.rainbow, parula)
 @
 
-How does the luminance of the red, green and blue colour channels vary along the palette or color map gradient?
+How does the luminance of the red, green and blue colour channels vary along the palette or color map gradient? We can see this with \Rfunction{pal.channels()}.
 
 <<pals-04>>=
 pal.channels(viridis, main = "viridis")
 @
 
-How would \code{viridis} look in monochrome, and to persons with different kinds of color blindness?
+How would \code{viridis} look in monochrome, and to persons with different kinds of color blindness? We can see this with \Rfunction{pal.safe()}.
 
 <<pals-05>>=
 pal.safe(viridis, main = "viridis")
 @
 
-A brief example with a discrete palette follows.
+A brief example with a discrete palette follows using \Rfunction{tol()}.
 
 <<pals-10>>=
 ggplot(data = mtcars,
@@ -316,7 +324,7 @@ pal.safe(tol(n = 3))
 @
 
 \begin{playground}
-Explore the available palettes until you find a nice one that is also safe with three steps. Be aware that color maps, like \code{viridis()} can be used to define a discrete color scale using \code{scale\_color\_manual()} in exactly the same way as palettes like \code{tol()}. Colormaps, however, may be perceived as gradients, rather than un-ordered discrete categories, so care is needed.
+Explore the available palettes until you find a nice one that is also safe with three steps. Be aware that color maps, like \Rfunction{viridis()} can be used to define a discrete color scale using \Rfunction{scale\_color\_manual()} in exactly the same way as palettes like \Rfunction{tol()}. Colormaps, however, may be perceived as gradients, rather than un-ordered discrete categories, so care is needed.
 \end{playground}
 
 \section[`gganimate']{\pkgname{gganimate}}\label{sec:plot:gganimate}
@@ -336,13 +344,13 @@ p <- ggplot(data = mtcars,
   geom_point()
 @
 
-Now we can print \code{p} as a normal plot,
+Now we can print \code{p} as a normal plot, with \Rfunction{print()}, here called automatically.
 
 <<gganimate-2>>=
 p
 @
 
-Or display an animation. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but not in Sumatra PDF viewer. We add \code{title\_frame = FALSE} as a title does not seem useful in this simple animation.
+Or display an animation with \Rfunction{gg\_animate()}. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but not in Sumatra PDF viewer. We add \code{title\_frame = FALSE} as a title does not seem useful in this simple animation.
 
 <<gganimate-3, fig.show='animate'>>=
 gg_animate(p, title_frame = FALSE)
@@ -369,7 +377,7 @@ Now we can print \code{p} as a normal plot,
 p
 @
 
-Or display an animation. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but in Sumatra PDF viewer.
+Or display an animation with \Rfunction{gg\_animate()}. The animation will look differently depending on the output format, and the program used for viewing it. For example, in this PDF files, the animation will work when viewed with Adobe Viewer or Adobe Acrobat but in Sumatra PDF viewer.
 
 <<gganimate-3a, fig.show='animate'>>=
 gg_animate(p, title_frame = FALSE)
@@ -403,8 +411,8 @@ citation(package = "ggstance")
 Package \pkgname{ggstance} defines horizontal versions of common ggplot \emph{geometries}, \emph{statistics} and \emph{positions}. Although \ggplot defines \code{coord\_flip}, \pkgname{ggstance} provides a more intuitive user interface and more consistent plot formatting.
 
 \sloppy
-Currently the package defines \textbf{horizontal} \emph{geoms} \code{geom\_barh()}, \code{geom\_histogramh()}, \code{geom\_linerangeh()}, \code{geom\_pointrangeh()}, \code{geom\_errorbarh()}, \code{geom\_crossbarh()}, \code{geom\_boxploth()}, and \code{geom\_violinh()}. It also defines
-\textbf{horizontal} \emph{stats} \code{stat\_binh()}, \code{stat\_boxploth()}, \code{stat\_counth()}, and \code{stat\_xdensity()} and \textbf{vertical} \emph{positions} \code{position\_dodgev}, \code{position\_nudgev}, \code{position\_fillv}, \code{position\_stackv}, and \code{position\_jitterdodgev}.
+Currently the package defines \textbf{horizontal} \emph{geoms} \Rfunction{geom\_barh()}, \Rfunction{geom\_histogramh()}, \Rfunction{geom\_linerangeh()}, \Rfunction{geom\_pointrangeh()}, \Rfunction{geom\_errorbarh()}, \Rfunction{geom\_crossbarh()}, \Rfunction{geom\_boxploth()}, and \Rfunction{geom\_violinh()}. It also defines
+\textbf{horizontal} \emph{stats} \Rfunction{stat\_binh()}, \Rfunction{stat\_boxploth()}, \Rfunction{stat\_counth()}, and \Rfunction{stat\_xdensity()} and \textbf{vertical} \emph{positions} \code{position\_dodgev}, \code{position\_nudgev}, \code{position\_fillv}, \code{position\_stackv}, and \code{position\_jitterdodgev}.
 
 We will give give only a couple of examples, as their use has no surprises. First we make horizontal versions of the histogram plots shown in section \ref{sec:histogram} on page \pageref{sec:histogram}.
 
@@ -447,12 +455,11 @@ ggplot(my.data, aes(y, group)) +
 
 \section[`ggbiplot']{\pkgname{ggbiplot}}\label{sec:plot:ggbiplot}
 \index{plots!principal components}
-\index{plots!\code{prcomp}}
 <<>>=
 citation(package = "ggbiplot")
 @
 
-Package \pkgname{ggbiplot}\index{plots!principal components} defines two functions, \code{ggscreeplot()} and \code{ggbiplot()}. These functions make it easy to nicely print the results from principal components analysis done with \code{prcomp}.
+Package \pkgname{ggbiplot}\index{plots!principal components} defines two functions, \Rfunction{ggscreeplot()} and \Rfunction{ggbiplot()}. These functions make it easy to nicely print the results from principal components analysis done with \Rfunction{prcomp()}.
 
 For the time being we reproduce an example from the package README.
 
@@ -489,9 +496,9 @@ opts_chunk$set(opts_fig_narrow)
 citation(package = "ggalt")
 @
 
-Package \pkgname{ggalt} defines \emph{geoms} \code{geom\_xspline()}, \code{geom\_bkde()}, \code{geom\_bkde2d()}, \code{geom\_stateface()}, \code{geom\_encircle()}, \code{geom\_lollipop()}, \code{geom\_dumbbell()}, and \code{geom\_stepribbon()}; \emph{stats} \code{stat\_xspline()}, \code{stat\_bkde()}, \code{stat\_bkde2d()}, and \code{stat\_ash()}; \emph{scale} \code{scale\_fill\_pokemon}; \emph{formatter} \code{byte\_format}.
+Package \pkgname{ggalt} defines \emph{geoms} \Rfunction{geom\_xspline()}, \Rfunction{geom\_bkde()}, \Rfunction{geom\_bkde2d()}, \Rfunction{geom\_stateface()}, \Rfunction{geom\_encircle()}, \Rfunction{geom\_lollipop()}, \Rfunction{geom\_dumbbell()}, and \Rfunction{geom\_stepribbon()}; \emph{stats} \Rfunction{stat\_xspline()}, \Rfunction{stat\_bkde()}, \Rfunction{stat\_bkde2d()}, and \Rfunction{stat\_ash()}; \emph{scale} \Rfunction{scale\_fill\_pokemon()}; \emph{formatter} \Rfunction{byte\_format()}.
 
-The highlights are use of functions from package 'KernSmooth' for density estimation, the provision of \emph{X-splines} and for formating ``bytes'' in the usual way used when describing computer memory.
+The highlights are use of functions from package 'KernSmooth' for density estimation, the provision of \emph{X-splines} and for formatting ``bytes'' in the usual way used when describing computer memory.
 
 First\index{plots!statistics!x-spline}\index{plots!geometries!x-spline}\index{plots!smooth curves}
  example is the use of \emph{x-splines} which are very flexible splines that are smooth (have a continuous first derivative). They can be tuned from interpolation (passing through every observation) to being rather ``stiff'' smoothers.
@@ -589,11 +596,11 @@ ggMarginal(p01, type = "histogram", margins = "x", size = 3)
 @
 
 \begin{playground}
-Read the documentation for \code{ggMarginal()} and play by changing the aesthetics used for the lines and bars on the margins.
+Read the documentation for \Rfunction{ggMarginal()} and play by changing the aesthetics used for the lines and bars on the margins.
 \end{playground}
 
 \begin{infobox}
-At the time of writing, \code{ggMarginal()} does not support grouping or facets. Both of these features would be very useful quite frequently, but this needs to be done manually, using the facilities of package \pkgname{gridExtra} to combine and align ggplots created individually. Grouping is ignored. Facets in the plot passed as argument trigger fatal errors when \code{ggMargins()} is exectuted.
+At the time of writing, \Rfunction{ggMarginal()} does not support grouping or facets. Both of these features would be very useful quite frequently, but this needs to be done manually, using the facilities of package \pkgname{gridExtra} to combine and align ggplots created individually. Grouping is ignored. Facets in the plot passed as argument trigger fatal errors when \Rfunction{ggMargins()} is exectuted.
 
 <<ggextra-11>>=
 p02 <- ggplot(my.data, aes(x, y, color = group)) +
@@ -617,7 +624,7 @@ library(ggfortify)
 citation(package = "ggfortify")
 @
 
-Package \pkgname{fortify}\index{plots!fitted models} re-organizes the output from different model fitting functions into an easier to handle and more consistent format that is especially useful when collecting the results from different fits. Package \pkgname{ggfortify} extends this idea to encompass the creation of diagnostic and other plots from model fits using \pkgname{ggplot2}. The most important method to remember is \code{autoplot()} for which many different specializations are provided. As the returned objects are of class \code{"ggplot"}, it is easy to add additional layers and graphical elements to them.
+Package \pkgname{fortify}\index{plots!fitted models} re-organizes the output from different model fitting functions into an easier to handle and more consistent format that is especially useful when collecting the results from different fits. Package \pkgname{ggfortify} extends this idea to encompass the creation of diagnostic and other plots from model fits using \pkgname{ggplot2}. The most important method to remember is \Rfunction{autoplot()} for which many different specializations are provided. As the returned objects are of class \code{"ggplot"}, it is easy to add additional layers and graphical elements to them.
 
 We start with a linear model as example. We return to the regression example used in Chapter \ref{chap:R:functions}, page \pageref{xmpl:fun:lm:fm1}.
 
@@ -647,13 +654,13 @@ autoplot(fm4)
 opts_chunk$set(opts_fig_narrow)
 @
 
-There is also an \code{autoplot()} especialization for time series data.
+There is also an \Rfunction{autoplot()} especialization for time series data.
 
 <<ggfortify-11>>=
 autoplot(lynx)
 @
 
-Please, see section \ref{sec:plot:ggpmisc} for an alternative approach, slightly less automatic, but based on a specialization of the \code{ggplot()} method.
+Please, see section \ref{sec:plot:ggpmisc} for an alternative approach, slightly less automatic, but based on a specialization of the \Rfunction{ggplot()} method.
 
 \section[`ggnetwork']{\pkgname{ggnetwork}}\label{sec:plot:ggnetwork}
 
@@ -671,7 +678,7 @@ opts_chunk$set(opts_fig_narrow_square)
 data(blood, package = "geomnet")
 @
 
-Using mostly defaults, the plot is not visually attractive. For the layout to be deterministic, we need to set the seed used by the pseudorandom number generator.
+Using mostly defaults, the plot is not visually attractive. For the layout to be deterministic, we need to set the seed used by the pseudorandom number generator. To assemble the plot we add three layers of data with \Rfunction{geom\_edges()}, \Rfunction{geom\_nodes()} and \Rfunction{geom\_nodetext()}. We use \Rfunction{theme\_blank()} as axes and their labels play no function in a plot like this. 
 
 <<ggnetwork-02>>=
 set.seed(12345)
@@ -699,7 +706,7 @@ ggplot(ggnetwork(network::network(blood$edges[, 1:2]),
 @
 
 \begin{playground}
-How does the layout change if you change the argument passed to \code{set.seed()}? And what happens with the layout if you run the plotting statement more than once, without calling \code{set.seed()}?
+How does the layout change if you change the argument passed to \Rfunction{set.seed()}? And what happens with the layout if you run the plotting statement more than once, without calling \Rfunction{set.seed()}?
 \end{playground}
 
 \begin{playground}
@@ -726,7 +733,7 @@ Package \pkgname{geomnet}\index{plots!network graphs}\index{network graphs} prov
 data(blood, package = "geomnet")
 @
 
-Using mostly defaults, the plot is very simple, and lacks labels. As above, for the layout to be deterministic, we need to set the seed.
+Using mostly defaults, the plot is very simple, and lacks labels. As above, for the layout to be deterministic, we need to set the seed. In the case of \pkgname{geomnet}, new \emph{aesthetics} \code{from\_id} and \code{to\_id} are defined, only one layer is needed, added with \Rfunction{geom\_net()}. We use here \Rfunction{theme\_net()}, also exported by this package.
 
 <<geomnet-02>>=
 set.seed(12345)
@@ -785,6 +792,8 @@ my.data <-
 opts_chunk$set(opts_fig_narrow)
 @
 
+Sina plots can obtained with \Rfunction{geom\_sina()}.
+
 <<>>=
 ggplot(my.data, aes(group, y)) +
   geom_sina()
@@ -794,6 +803,8 @@ ggplot(my.data, aes(group, y)) +
 ggplot(my.data, aes(group, y, fill = group)) +
   geom_sina()
 @
+
+The \emph{geometries} \Rfunction{geom\_sina()} and \Rfunction{geom\_violin()} can be combined to create attractive and informative plots. As with any \code{ggplot} varying the order of the layers and their transparency (\code{alpha}) can be used to obtain plots where one or the other \emph{geometry} is highlighted.
 
 <<>>=
 ggplot(my.data, aes(group, y, fill = group)) +
@@ -805,12 +816,12 @@ ggplot(my.data, aes(group, y, fill = group)) +
 \index{plots!geometries!circle}\index{plots!geometries!arc}\index{plots!geometries!arcbar}%
 \index{plots!geometries!bezier}\index{plots!geometries!bspline}
 
-Several \emph{geometries} for plotting arcs, curves and circles also provided: \code{geom\_circle}, \code{geom\_arc}, \code{geom\_arcbar}, \code{geom\_bezier}, \code{geom\_bspline}.
+Several \emph{geometries} for plotting arcs, curves and circles also provided: \Rfunction{geom\_circle()}, \Rfunction{geom\_arc()}, \Rfunction{geom\_arcbar()}, \Rfunction{geom\_bezier()}, \Rfunction{geom\_bspline()}.
 
 coming soon.
 
 \index{plots!geometries!link}\index{plots!geometries!link2}\index{plots!interpolation}
-\emph{Geometries} similar to \code{geom\_path} and \code{geom\_segment}, called \code{geom\_link} and \code{geom\_link2} add interpolation of \emph{aesthetics} along the segment or path between each pair of observations/points.
+\emph{Geometries} similar to \Rfunction{geom\_path()} and \Rfunction{geom\_segment()}, called \Rfunction{geom\_link()} and \Rfunction{geom\_link2()} add interpolation of \emph{aesthetics} along the segment or path between each pair of observations/points.
 
 coming soon.
 
@@ -818,12 +829,15 @@ coming soon.
 \index{plots!transformations!reverser}
 \code{trans\_reverser} can be used to reverse any monotonic transformation.
 \index{plots!transformations!power}\index{plots!transformations!radial}
-New transformations \code{power\_trans} and \code{radial\_trans}
+New transformations \Rfunction{power\_trans()} and \Rfunction{radial\_trans()}
 
 coming soon.
 
 \subsection{Theme}
 \index{plots!themes!no axes}
+
+\Rfunction{theme\_no\_axes()} is not that useful for a sina plot, but could be used to advantage for raster images or maps. It differs from \Rfunction{theme\_blank()} and \Rfunction{theme\_null()} in the plot being framed and having a white plotting area.
+
 <<>>=
 ggplot(my.data, aes(group, y)) +
   geom_sina() +
@@ -833,7 +847,7 @@ ggplot(my.data, aes(group, y)) +
 \subsection{Paginated facetting}
 \index{plots!facets!pagination}
 \index{plots!facets!zooming}
-\code{facet\_grid\_paginate}, \code{facet\_wrap\_paginate} and \code{facet\_zoom} add pagination to usual faceting, allowing one to split large faceted plots into pages, and zooming into individual panel in a facetted plot.
+\Rfunction{facet\_grid\_paginate()}, \Rfunction{facet\_wrap\_paginate()} and \Rfunction{facet\_zoom()} add pagination to usual faceting, allowing one to split large faceted plots into pages, and zooming into individual panel in a facetted plot.
 
 coming soon.
 
@@ -848,13 +862,13 @@ opts_chunk$set(opts_fig_wide)
 @
 
 \sloppy
-Package \ggpmisc is a package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching. It provides new stats for everyday use: \code{stat\_peaks()}, \code{stat\_valleys()}, \code{stat\_poly\_eq()}, \code{stat\_fit\_glance()}, \code{stat\_fit\_deviations()}, and \code{stat\_fit\_augment()}. A function for converting time-series data to a data frame that can be easily plotted with `ggplot2'. It also provides some debugging tools that echo the data received as input: \code{stat\_debug\_group()}, \code{stat\_debug\_panel()}, and code{geom\_debug()}, and \code{geom\_null()} that does not plot its input.
+Package \ggpmisc is a package developed by myself as a result of questions from work mates and in Stackoverflow, or functionality that I have needed in my own research or for teaching. It provides new stats for everyday use: \Rfunction{stat\_peaks()}, \Rfunction{stat\_valleys()}, \Rfunction{stat\_poly\_eq()}, \Rfunction{stat\_fit\_glance()}, \Rfunction{stat\_fit\_deviations()}, and \Rfunction{stat\_fit\_augment()}. A function for converting time-series data to a data frame that can be easily plotted with `ggplot2'. It also provides some debugging tools that echo the data received as input: \Rfunction{stat\_debug\_group()}, \Rfunction{stat\_debug\_panel()}, and \Rfunction{geom\_debug()}, and \Rfunction{geom\_null()} that does not plot its input.
 
 \subsection{Plotting time-series}
 \index{plots!time series}
 \index{time series!conversion into data frame}
 \index{time series!conversion into tibble}
-Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \code{try\_tibble()} (also available as \code{try\_data\_frame()}) accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a wrapper to obtain a data frame. By default the time variable is given name \code{time} and that with observations, the ``name'' of the data argument passed. In the usual case of passing a time series object, its name is used for the variable.
+Instead of creating a new statistics or geometry for plotting time series we provide a function that can be used to convert time series objects into data frames suitable for plotting with \ggplot. A single function \Rfunction{try\_tibble()} (also available as \\Rfunction{try\_data\_frame()}) accepts time series objects saved with different packages as well as R's native \code{ts} objects. The \textit{magic} is done mainly by package \xts to which we add a wrapper to obtain a data frame. By default the time variable is given name \code{time} and that with observations, the ``name'' of the data argument passed. In the usual case of passing a time series object, its name is used for the variable.
 
 We exemplify this with some of the time series data included in R. In the first example we use the default format for time.
 
@@ -899,7 +913,7 @@ ggplot(AirPassengers, as.numeric = FALSE) +
 \subsection{Peaks and valleys}
 \index{plots!statistics!peaks@peaks}
 \index{plots!statistics!valleys@valleys}
-Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \code{geom\_point}, \code{geom\_text}, \code{geom\_label}, \code{geom\_vline}, \code{geom\_hline} and \code{geom\_rug}, and also with geoms defined by package \ggrepel. Some examples follow.
+Peaks and valleys are local (or global) maxima and minima. These stats return the $x$ and $y$ values at the peaks or valleys plus suitable labels, and default aesthetics that make easy their use with several different geoms, including \Rfunction{geom\_point()}, \Rfunction{geom\_text()}, \Rfunction{geom\_label()}, \Rfunction{geom\_vline()}, \Rfunction{geom\_hline()} and \Rfunction{geom\_rug()}, and also with geoms defined by package \ggrepel. Some examples follow.
 
 There are many cases, for example in physics and chemistry, but also when plotting time-series data when we need to automatically locate and label local maxima (peaks) or local minima (valleys) in curves. The statistics presented here are useful only for dense data as they do not fit a peak function but instead simply search for the local maxima or minima in the observed data. However, they allow flexible generation of labels on both $x$ and $y$ peak or valley coordinates.
 
@@ -953,7 +967,7 @@ ggplot(lynx) + geom_line() +
   ylim(NA, 10000)
 @
 
-Using POSIXct for `time` but supplying a format string, to show only the month corresponding to each peak or valley. Any format string accepted by \code{strftime} can be used.
+Using POSIXct for `time` but supplying a format string, to show only the month corresponding to each peak or valley. Any format string accepted by \Rfunction{strftime()} can be used.
 
 <<>>=
 ggplot(AirPassengers, as.numeric = FALSE) + geom_line() +
@@ -977,7 +991,7 @@ ggplot(lynx, as.numeric = FALSE) + geom_line() +
   ylim(NA, 7800)
 @
 
-Of course, if one finds use for it, the peaks and/or valleys can be plotted on their own. Here we plot an "envelope" using \code{geom\_line()}.
+Of course, if one finds use for it, the peaks and/or valleys can be plotted on their own. Here we plot an "envelope" using \Rfunction{geom\_line()}.
 
 <<>>=
 ggplot(AirPassengers) +
@@ -993,7 +1007,7 @@ ggplot(AirPassengers) +
 opts_chunk$set(opts_fig_narrow)
 @
 
-How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \code{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
+How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \Rfunction{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
 
 We first generate some artificial data.
 
@@ -1021,7 +1035,7 @@ ggplot(my.data, aes(x, y)) +
   stat_poly_eq(formula = formula, parse = TRUE)
 @
 
-The default \emph{geometry} used by the \emph{statistic} is \code{geom\_text} but it is possible to use \code{geom\_label} instead when the intention is to have a color background for the label. The default background \code{fill} is white but this can also changed in the usual way by mapping the \code{fill} \emph{aesthetic}.
+The default \emph{geometry} used by the \emph{statistic} is \Rfunction{geom\_text()} but it is possible to use \Rfunction{geom\_label()} instead when the intention is to have a color background for the label. The default background \code{fill} is white but this can also changed in the usual way by mapping the \code{fill} \emph{aesthetic}.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1041,7 +1055,7 @@ ggplot(my.data, aes(x, y)) +
   stat_poly_eq(geom = "label", alpha = 0.3, formula = formula, parse = TRUE)
 @
 
-The \code{geom\_label\_repel} accepts the same arguments as \code{geom\_label} for controlling the format of the box and border. We give a simple example here. For other examples see page \pageref{par:plot:label}.
+The \Rfunction{geom\_label\_repel()} accepts the same arguments as \Rfunction{geom\_label()} for controlling the format of the box and border. We give a simple example here. For other examples see page \pageref{par:plot:label}.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1057,9 +1071,9 @@ ggplot(my.data, aes(x, y)) +
   theme_bw()
 @
 
-The remaining examples in this section use the default \code{geom\_text} but can be modified to use \code{geom\_label} as shown above.
+The remaining examples in this section use the default \Rfunction{geom\_text()} but can be modified to use \Rfunction{geom\_label()} as shown above.
 
-\code{stat\_poly\_eq()} makes available five different labels in the returned data frame. $R^2$, $R_mathrm{adj}^2$, AIC, BIC and the polynomial equation. $R^2$ is used by default, but \code{aes()} can be used to select a different one.
+\Rfunction{stat\_poly\_eq()} makes available five different labels in the returned data frame. $R^2$, $R_\mathrm{adj}^2$, AIC, BIC and the polynomial equation. $R^2$ is used by default, but \Rfunction{aes()} can be used to select a different one.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1088,7 +1102,7 @@ ggplot(my.data, aes(x, y)) +
                formula = formula, parse = TRUE)
 @
 
-Within \code{aes()} it is possible to \textit{compute} new labels based on those returned plus ``arbitrary'' text. The supplied labels are meant to be \textit{parsed} into R expressions, so any text added should be valid for a string that will be parsed.
+Within \Rfunction{aes()} it is possible to \textit{compute} new labels based on those returned plus ``arbitrary'' text. The supplied labels are meant to be \textit{parsed} into R expressions, so any text added should be valid for a string that will be parsed. Here we need to \emph{scape} the quotation marks. See section \ref{sec:plot:plotmath} starting on page \pageref{sec:plot:plotmath} for details on parsing character strings into expressions.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1097,7 +1111,7 @@ ggplot(my.data, aes(x, y)) +
   geom_smooth(method = "lm", formula = formula) +
   stat_poly_eq(aes(label = paste(..eq.label..,
                                  ..adj.rr.label..,
-                                 sep = "~~~~")),
+                                 sep = "*\",\"~~")),
                formula = formula, parse = TRUE)
 @
 
@@ -1150,7 +1164,6 @@ ggplot(my.data, aes(x, log10(y + 1e6))) +
 @
 
 Example of a polynomial of fifth order.
-
 
 <<>>=
 opts_chunk$set(opts_fig_wide)
@@ -1220,11 +1233,11 @@ ggplot(my.data, aes(x, y2, colour = group)) +
 
 \subsubsection{Other types of models}
 
-Another statistic, \texttt{stat\_fit\_glance()} allows lots of flexibility, but at the moment there is no equivalently flexible version of \texttt{stat\_smooth()}.
+Another statistic, \Rfunction{stat\_fit\_glance()} allows lots of flexibility, but at the moment there is no equivalently flexible version of \Rfunction{stat\_smooth()}.
 
 We give an example with a linear model, showing a P-value (a frequent request for which I do not find much use).
 
-We use \texttt{geom\_debug()} to find out what values \texttt{stat\_glance()} returns for our linear model, and add labels with P-values for the fits.
+We use \Rfunction{geom\_debug()} to find out what values \Rfunction{stat\_glance()} returns for our linear model, and add labels with P-values for the fits.
 
 <<>>=
 formula <- y ~ x + I(x^2) + I(x^3)
@@ -1253,7 +1266,7 @@ ggplot(my.data, aes(x, y2, colour = group)) +
   theme(legend.position = "top")
 @
 
-We use \texttt{geom\_debug()} to find out what values \texttt{stat\_glance()} returns for our resistant linear model fitted with \texttt{MASS:rlm()}.
+We use \Rfunction{geom\_debug()} to find out what values \Rfunction{stat\_glance()} returns for our resistant linear model fitted with \Rfunction{rlm()} from package \pkgname{MASS}.
 
 <<>>=
 formula <- y ~ x + I(x^2) + I(x^3)
@@ -1285,12 +1298,12 @@ ggplot(my.data, aes(x, y2, colour = group)) +
   theme(legend.position = "top")
 @
 
-In a similar way one can generate labels for any fit supported by package 'broom'.
+In a similar way one can generate labels for any fit supported by package \pkgname{broom}.
 
 \subsection{Highlighting deviations from fitted line}
 \index{plots!fitted curves!deviations}
 \index{plots!fitted curves!residuals}
-First an example using default arguments.
+First an example using default arguments for \Rfunction{stat\_fit\_deviations()}.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1299,6 +1312,8 @@ ggplot(my.data, aes(x, y)) +
   geom_smooth(method = "lm", formula = formula) +
   stat_fit_deviations(formula = formula)
 @
+
+And setting some to the \emph{aesthetics} to non-default values.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1309,6 +1324,8 @@ ggplot(my.data, aes(x, y)) +
                                    ends = "both")) +
   geom_point()
 @
+
+Grouping is respected. Here \code{colour} is mapped to the variable \code{group}.
 
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
@@ -1321,6 +1338,8 @@ ggplot(my.data, aes(x, y, colour = group)) +
 \subsection{Plotting residuals from linear fit}
 \index{plots!fitted curves!residuals}
 
+We can plot the residuals by themselves with \Rfunction{stat\_fit\_residuals()}.
+
 <<>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
 ggplot(my.data, aes(x, y, colour = group)) +
@@ -1330,7 +1349,7 @@ ggplot(my.data, aes(x, y, colour = group)) +
 
 \subsection{Filtering observations based on local density}\label{sec:dens:filter}
 \index{plots!filter observations by density}
-Statistics \Rfunction{stat\_dens2d\_filter} works best with clouds of observations, so we generate some random data.
+Statistics \Rfunction{stat\_dens2d\_filter()} works best with clouds of observations, so we generate some random data.
 
 <<>>=
 set.seed(1234)
@@ -1342,7 +1361,7 @@ my.2d.data <- tibble(
    )
 @
 
-In most recipes in the section we use \Rfunction{stat\_dens2d\_filter} to highlight observations with the \code{color} aesthetic. Other aesthetics can also be used.
+In most recipes in the section we use \Rfunction{stat\_dens2d\_filter()} to highlight observations with the \code{color} aesthetic. Other aesthetics can also be used.
 
 By default 1/10 of the observations are kept from regions of lowest density.
 
@@ -1387,7 +1406,7 @@ ggplot(my.2d.data, aes(x, y)) +
   facet_grid(~group)
 @
 
-In addition to \Rfunction{stat\_dens2d\_filter} there is \Rfunction{stat\_dens2d\_filter\_g}. The difference is in that the first one computes the density on a plot-panel basis while the second one does it on a group basis. This makes a difference only when observations are grouped based on another aesthetic within each panel.
+In addition to \Rfunction{stat\_dens2d\_filter()} there is \Rfunction{stat\_dens2d\_filter\_g()}. The difference is in that the first one computes the density on a plot-panel basis while the second one does it on a group basis. This makes a difference only when observations are grouped based on another aesthetic within each panel.
 
 <<>>=
 ggplot(my.2d.data, aes(x, y, color = group)) +
@@ -1401,13 +1420,13 @@ ggplot(my.2d.data, aes(x, y, color = group)) +
   stat_dens2d_filter_g(shape = 1, size = 3)
 @
 
-A related stat \code{stat\_dens2d\_label}, also defined in package \ggpmisc is described in section \ref{sec:repel:dens} on page \pageref{sec:repel:dens}.
+A related stat \Rfunction{stat\_dens2d\_label()}, also defined in package \ggpmisc is described in section \ref{sec:repel:dens} on page \pageref{sec:repel:dens}.
 
 \subsection{Learning and/or debugging}
 \index{plots!debugging}
 \index{plots!statistics!debug}
 \index{plots!geometries!debug}
-A very simple stat named \code{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \code{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \code{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
+A very simple stat named \Rfunction{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \Rfunction{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \Rfunction{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
 
 <<>>=
 ggplot(lynx) + geom_line() +
@@ -1423,7 +1442,7 @@ ggplot(lynx,
   labs(color = "century")
 @
 
-By means of \code{geom\_debug} it is possible to "print" to the console the data returned by a ggplot statistic.
+By means of \Rfunction{geom\_debug()} it is possible to "print" to the console the data returned by a ggplot \emph{statistic}.
 
 <<>>=
 ggplot(mpg, aes(class, hwy, color = class)) +
@@ -1455,7 +1474,7 @@ plots and in maps.
 
 \subsection{New geoms}
 
-Package \ggrepel provides two new geoms: \code{geom\_text\_repel} and \code{geom\_label\_repel}. They are used similarly to \code{geom\_text} and \code{geom\_label} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded. The vignette \emph{ggrepel Usage Examples} provides very nice examples of the power and flexibility of these geoms. The algorithm used for avoiding overlaps through repulsion is iterative, and can be slow when the number of labels or observations are in the thousands.
+Package \ggrepel provides two new geoms: \Rfunction{geom\_text\_repel()} and \Rfunction{geom\_label\_repel()}. They are used similarly to \Rfunction{geom\_text()} and \Rfunction{geom\_label()} but the text or labels ``repel'' each other so that they rarely overlap unless the plot is very crowded. The vignette \emph{ggrepel Usage Examples} provides very nice examples of the power and flexibility of these geoms. The algorithm used for avoiding overlaps through repulsion is iterative, and can be slow when the number of labels or observations are in the thousands.
 
 I reproduce here some simple examples from the \ggrepel vignette.
 
@@ -1463,7 +1482,7 @@ I reproduce here some simple examples from the \ggrepel vignette.
 opts_chunk$set(opts_fig_wide_square)
 @
 
-Just using defaults, we avoid overlaps among text items on the plot. \code{geom\_text\_repel} has some parameters matching those in \code{geom\_text}, but those related to manual positioning are missing except for \code{angle}. Several new parameters control both the appearance of text and the function of the repulsion algorithm.
+Just using defaults, we avoid overlaps among text items on the plot. \Rfunction{geom\_text\_repel()} has some parameters matching those in \Rfunction{geom\_text()}, but those related to manual positioning are missing except for \code{angle}. Several new parameters control both the appearance of text and the function of the repulsion algorithm.
 
 <<ggrepel-01>>=
 ggplot(mtcars, aes(wt, mpg)) +
@@ -1471,7 +1490,7 @@ ggplot(mtcars, aes(wt, mpg)) +
   geom_text_repel(aes(label = rownames(mtcars)))
 @
 
-The chunk below shows how to change the appearance of labels. \code{geom\_label\_repel} is comparable to \code{geom\_label}, but with repulsion.
+The chunk below shows how to change the appearance of labels. \Rfunction{geom\_label\_repel()} is comparable to \Rfunction{geom\_label()}, but with repulsion.
 
 <<ggrepel-02>>=
 set.seed(42)
@@ -1485,7 +1504,7 @@ ggplot(mtcars) +
   theme(legend.position = "top")
 @
 
-As with \code{geom\_label} we can change the width of the border line, or remove it completely as in the example below, by means of an argument passed through parameter \code{label.size} which defaults to 0.25. Although 0 as argument still results in a thin border line, \code{NA} removes it altogether.
+As with \Rfunction{geom\_label()} we can change the width of the border line, or remove it completely as in the example below, by means of an argument passed through parameter \code{label.size} which defaults to 0.25. Although 0 as argument still results in a thin border line, \code{NA} removes it altogether.
 
 <<ggrepel-03>>=
 set.seed(42)
@@ -1520,7 +1539,7 @@ ggplot(Orange, aes(age, circumference, color = Tree)) +
   labs(x = "Age (days)", y = "Circumference (mm)")
 @
 
-We can combine \code{stat\_peaks} from package \ggpmisc with the use of repulsive text to avoid overlaps between text items. We use \code{nudge\_y = 500} to push the text upwards.
+We can combine \Rfunction{stat\_peaks()} from package \ggpmisc with the use of repulsive text to avoid overlaps between text items. We use \code{nudge\_y = 500} to push the text upwards.
 
 <<ggrepel-05>>=
 ggplot(lynx) +
@@ -1530,7 +1549,7 @@ ggplot(lynx) +
 
 \subsection{Selectively plotting repulsive labels}\label{sec:repel:dens}
 \index{plots!advanced examples!selected repulsive text}
-To repel text or labels so that they do not overlap unlabelled observations, one can set the labels to an empty character string \code{""}. Setting labels to \code{NA} skips the observation completely, as is the usual behavior in \ggplot2 geoms, and can result in text or labels overlapping those observations. Labels can be set manually to \code{""}, but in those cases where all observations have labels in the data, but we would like to plot only those in low density regions, this can be automated. Geoms \code{geom\_text\_repel} and \code{geom\_label\_repel} from package \ggrepel can be used together with \code{stat\_dens2d\_label} from package \ggpmisc.
+To repel text or labels so that they do not overlap unlabelled observations, one can set the labels to an empty character string \code{""}. Setting labels to \code{NA} skips the observation completely, as is the usual behavior in \ggplot2 geoms, and can result in text or labels overlapping those observations. Labels can be set manually to \code{""}, but in those cases where all observations have labels in the data, but we would like to plot only those in low density regions, this can be automated. Geoms \code{geom\_text\_repel} and \Rfunction{geom\_label\_repel()} from package \ggrepel can be used together with \Rfunction{stat\_dens2d\_label()} from package \ggpmisc.
 
 To demonstrate this we first generate suitable data and labels.
 
@@ -1608,10 +1627,10 @@ citation(package = "ggseas")
 opts_chunk$set(opts_fig_wide)
 @
 
-The focus of this extension to \pkgname{ggplot2} is the seasonal decomposition of time series done on the fly while creating a ggplot. Package \pkgname{ggseas} defines five \emph{statistics}, \code{stat\_index}, \code{stat\_decomp}, \code{stat\_rollapplyr}, \code{stat\_stl}, and \code{stat\_seas}. By default they all use \code{geom\_line}. This package also defines function
-\code{tsdf} that needs to be used to convert time series to data frames to pass as \code{data} argument to \code{ggplot}.
+The focus of this extension to \pkgname{ggplot2} is the seasonal decomposition of time series done on the fly while creating a ggplot. Package \pkgname{ggseas} defines five \emph{statistics}, \Rfunction{stat\_index()}, \Rfunction{stat\_decomp()}, \Rfunction{stat\_rollapplyr()}, \Rfunction{stat\_stl()}, and \Rfunction{stat\_seas()}. By default they all use \Rfunction{geom\_line()}. This package also defines function
+\Rfunction{tsdf()} that needs to be used to convert time series to data frames to pass as \code{data} argument to \code{ggplot}.
 
-Index referenced to the first two observations in the series. Here we use \code{ggplot} method for class \code{"ts"} from our package \pkgname{ggpmisc}. Functions \code{try\_tibble} from   \pkgname{ggpmisc} and \code{tsdf} from \pkgname{ggseas} can be also used.
+Index referenced to the first two observations in the series. Here we use \Rfunction{ggplot()} method for class \code{"ts"} from our package \pkgname{ggpmisc}. Functions \\Rfunction{try\_tibble()} from \pkgname{ggpmisc} and \Rfunction{tsdf()} from \pkgname{ggseas} can be also used.
 
 <<>>=
 ggplot(lynx) +
@@ -1655,7 +1674,7 @@ ggplot(AirPassengers) +
        expand_limits(y = 0)
 @
 
-Using function \code{tsdf} from package \pkgname{ggseas}.
+Using function \Rfunction{tsdf()} from package \pkgname{ggseas}.
 
 <<>>=
 ggplot(tsdf(AirPassengers),
@@ -1728,19 +1747,19 @@ p05 <- ggplot(data = Orange,
            geom_line()
 @
 
-A theme obeying Tufte's recommendation of maximizing the information to ink ratio.
+A \Rfunction{theme\_tufte()} obeying Tufte's recommendation of maximizing the information to ink ratio.
 
 <<ggthemes-02>>=
 p05 + theme_tufte()
 @
 
-Like The Economist.
+A \Rfunction{theme\_economist()} like The Economist.
 
 <<ggthemes-03>>=
 p05 + theme_economist()
 @
 
-Like Google docs.
+A \Rfunction{theme\_gdocs()} like Google docs.
 
 <<ggthemes-04>>=
 p05 + theme_gdocs()
@@ -1756,14 +1775,14 @@ citation(package = "ggtern")
 Package \pkgname{ggtern} provides facilities for making ternary plots, frequently used in soil science and in geology, and in sensory physiology and color science for representing trichromic vision (red-green-blue for humans). They are based on a special system of coordinates with three axes on a single plane.
 
 \begin{warningbox}
-  Package \pkgname{ggtern} redefines some functions exported by \ggplot and currently easily conflicts with other extensions to \ggplot. One rarely would like to use functions from this and other packages extending \ggplot in the same figure, but using them in the same document could be necessary. In such cases one may need to call the original definitions explicitly, for example \code{ggplot2::ggplot()} instead of simply \code{ggplot()} which after loading \pkgname{ggtern} no longer refers to the original definition. Because of this problems we load this package here, near the end of the chapter.
+  Package \pkgname{ggtern} redefines some functions exported by \ggplot and currently easily conflicts with other extensions to \ggplot. One rarely would like to use functions from this and other packages extending \ggplot in the same figure, but using them in the same document could be necessary. In such cases one may need to call the original definitions explicitly, for example \code{ggplot2::ggplot()} instead of simply \Rfunction{ggplot()} which after loading \pkgname{ggtern} no longer refers to the original definition. Because of this problems we load this package here, near the end of the chapter.
 \end{warningbox}
 
 <<>>=
 library(ggtern)
 @
 
-In this example we use colors pre-defined in R and make a ternary plot of the red, green abd blue components of these colors.
+In this example of the use of \Rfunction{ggtern()}, we use colors pre-defined in R and make a ternary plot of the red, green and blue components of these colors.
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_wide_square)
@@ -1785,7 +1804,7 @@ ggtern(data=color.data,
   theme_nomask()
 @
 
-In the example above we need to use \code{theme\_nomask} to avoid clipping of symbols drawn on the edges of the triangular plotting area.
+In the example above we need to use \Rfunction{theme\_nomask()} to avoid clipping of symbols drawn on the edges of the triangular plotting area.
 
 \begin{playground}
 Test how the plot changes if you remove  `\code{+ theme\_nomask()}' from the code chunk above.
@@ -1796,7 +1815,7 @@ Test how the plot changes if you remove  `\code{+ theme\_nomask()}' from the cod
 In this section I list some specialized or very recently released extensions to \pkgname{ggplot2} (Table \ref{tab:ggplot:extensions}). The table below will hopefully temp you to explore those suitable for the data analysis tasks you deal with. There is a package under development, already released through CRAN, called \code{ggvis}. This package is not and extension to \pkgname{ggplot2}, but instead a new implementation of the grammar of graphics, with a focus on the creation of interactive plots.
 
 \begin{table}
-  \caption[Additional packages extending `ggplot2']{Additional packages extending \pkgname{ggplot2} whose use is not described in this book.}\label{tab:ggplot:extensions}
+  \caption[Additional packages extending `ggplot2']{Additional packages extending \pkgname{ggplot2} whose use is not described in this book. All these packages are available at CRAN.}\label{tab:ggplot:extensions}
   \centering
 \begin{tabular}{ll}
   \toprule

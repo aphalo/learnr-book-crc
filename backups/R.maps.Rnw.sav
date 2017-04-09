@@ -11,7 +11,6 @@ In the second half of the chapter we describe how to load, write and manipulate 
 \section[ggmap]{\pkgname{ggmap}}
 
 <<>>=
-library(tibble)
 library(ggplot2)
 library(ggmap)
 library(rgdal)
@@ -42,7 +41,7 @@ We will fetch maps from Google Maps\index{plots!maps!from Google Maps}. We have 
 
 \end{warningbox}
 
-We start by fetching and plotting a map of Europe of type  \code{satellite}\index{plots!satellite images!from Google}. We use the default extent \code{panel}, and also the extent \code{device} and \code{normal}. The \code{normal} plot includes axes showing the coordinates, while \code{device} does not show them, while \code{panel} shows axes but the map fits tightly into the drawing area:
+We start by using \Rfunction{get\_map()} to fetch and \Rfunction{ggmap()} to plot a map of Europe of type  \code{satellite}\index{plots!satellite images!from Google}. We use the default extent \code{panel}, and also the extent \code{device} and \code{normal}. The \code{normal} plot includes axes showing the coordinates, while \code{device} does not show them, while \code{panel} shows axes but the map fits tightly into the drawing area:
 
 <<ggmap-01, echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
@@ -98,7 +97,7 @@ ggmap(BIO3)
 @
 
 \index{plots!maps!data overlay layer}
-We will now show a simple example of plotting data on a map, first by explicitly giving the coordinates, and in the second example we show how to fetch from Google Maps coordinate values that can be then plotted. We use function \code{geocode}. In one example we use \code{geom\_point} and \code{geom\_text}, while in the second example we use \code{annotate}, but either approach could have been used for both plots:
+We will now show a simple example of plotting data on a map, first by explicitly giving the coordinates, and in the second example we show how to fetch from Google Maps coordinate values that can be then plotted. We use function \Rfunction{geocode()}. In one example we use \Rfunction{geom\_point()} and \Rfunction{geom\_text()}, while in the second example we use \code{annotate}, but either approach could have been used for both plots:
 
 <<ggmap-06, message=FALSE, cache=cache.flag>>=
 viikki <- get_map("Viikki, 00790 Helsinki",
@@ -134,7 +133,7 @@ ggmap(viikki, extent = "normal") +
 \subsection{World map}
 \index{plots!maps!shape files}
 \index{plots!advanced examples!World map}
-Using function \code{get\_map()} from package \pkgname{ggmap} for drawing a world map is not possible at the time of writing. In addition a worked out example of how to plot shape files, and how to download them from a repository is suitable as our final example. We also show how to change the map projection. The example is adapted from a blog post at \url{http://rpsychologist.com/working-with-shapefiles-projections-and-world-maps-in-ggplot}.
+Using function \Rfunction{get\_map()} from package \pkgname{ggmap} for drawing a world map is not possible at the time of writing. In addition a worked out example of how to plot shape files, and how to download them from a repository is suitable as our final example. We also show how to change the map projection. The example is adapted from a blog post at \url{http://rpsychologist.com/working-with-shapefiles-projections-and-world-maps-in-ggplot}.
 
 We start by downloading the map data archive files from \url{http://www.naturalearthdata.com}\index{plots!maps!from Natural Earth} which is available in different layers. We only use three of the available layers: `physical' which describes the coastlines and a grid and bounding box, and `cultural' which gives country borders. We save them in a folder with name `maps', which is expected to already exist. After downloading each file, we unzip it.
 
@@ -175,7 +174,7 @@ We list the layers that we have downloaded.
 ogrListLayers(dsn = "./maps")
 @
 
-Next we read the layer for the coastline, and use \code{fortify} to convert it into a data frame. We also create a second version of the data using the Robinson projection.\index{plots!maps!projection}\index{plots!maps!Robinson projection}
+Next we read the layer for the coastline, and use \Rfunction{fortify()} to convert it into a data frame. We also create a second version of the data using the Robinson projection.\index{plots!maps!projection}\index{plots!maps!Robinson projection}
 
 <<ggmap-09>>=
 wmap <- readOGR(dsn = "./maps", layer = "ne_110m_land")
@@ -207,7 +206,7 @@ bbox_robin <- spTransform(bbox, CRS("+proj=robin"))
 bbox_robin.data <- fortify(bbox_robin)
 @
 
-Now we plot the world map of the coastlines, on a longitude and latitude scale, as a \code{ggplot} using \code{geom\_polygon}.
+Now we plot the world map of the coastlines, on a longitude and latitude scale, as a \code{ggplot} using \Rfunction{geom\_polygon()}.
 
 <<ggmap-12>>=
 ggplot(wmap.data, aes(long, lat, group = group)) +
@@ -259,7 +258,7 @@ theme_map_opts <-
              axis.title.y = element_blank()))
 @
 
-Next we plot all the layers using the Robinson projection. This is still a \code{ggplot} and consequently one can plot data on top of the map, being aware of the transformation of the scale needed to make the data location match locations in a map using a certain projection.
+Next we plot all the layers using the Robinson projection. This is still a \code{ggplot} object and consequently one can plot data on top of the map, being aware of the transformation of the scale needed to make the data location match locations in a map using a certain projection.
 
 <<ggmap-16>>=
 ggplot(bbox_robin.data, aes(long,lat, group = group)) +
@@ -274,7 +273,7 @@ ggplot(bbox_robin.data, aes(long,lat, group = group)) +
                     guide = "none")
 @
 
-As a last example, a variation of the plot above in colour and using the predefined theme \texttt{void()} instead of our home-brewed theme settings.
+As a last example, a variation of the plot above in colour and using the predefined theme \Rfunction{theme\_void()} instead of our home-brewed theme settings.
 
 <<ggmap-17>>=
 ggplot(bbox_robin.data, aes(long,lat, group = group)) +
@@ -305,7 +304,7 @@ I will use as examples downsized cropped sections\footnote{A crop is used to mak
 
 The first example is a photograph taken in sunlight, with no filter on the camera objective---i.e.\ a \emph{normal} image.
 
-We read the image from a TIFF file with luminance data encoded in 8 bits per channel, i.e.\ as values in the range from 0 to 255. The image is saved as an object of class \code{"cimg"} as defined in package \pkgname{imager}.
+We use \Rfunction{load.image()} to read the image from a TIFF file with luminance data encoded in 8 bits per channel, i.e.\ as values in the range from 0 to 255. The image is saved as an object of class \code{"cimg"} as defined in package \pkgname{imager}.
 
 <<imager-01>>=
 dahlia01.img <- load.image("data/dahlia-vis.tif")
@@ -317,7 +316,7 @@ range(G(dahlia01.img))
 range(B(dahlia01.img))
 @
 
-We exemplify first the use of the \code{plot()} method from package \pkgname{imager}.
+We exemplify first the use of the \Rfunction{plot()} method from package \pkgname{imager}.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
@@ -331,7 +330,7 @@ plot(dahlia01.img)
 Read a different image, preferably one you have captured yourself. Images are not only photographs, so for example, you may want to play with electrophoresis gels. Several different bitmap file formats are accepted, and the path to a file can also be an URL (see Chapter \ref{chap:R:data} for details). Which file formats can be read depends on other tools installed in the computer you are using, in particular, if \pgrmname{ImageMagick} is available, many different file formats can automatically recognized and decoded/uncompressed when read. When playing, use a rather small bitmap, e.g.\ one mega pixel or smaller, to get a fast response when plotting.
 \end{playground}
 
-Converting the image to gray scale is easy if it is an 8 bit per channel image.
+Converting the image to gray scale is easy if it is an 8 bit per channel image. It is done with function \Rfunction{grayscale()}.
 
 <<imager-01b>>=
 dahlia01g.img <- grayscale(dahlia01.img)
@@ -356,12 +355,12 @@ plot(dahlia01t.img)
 @
 
 \begin{playground}
-Function \code{threshold()} has a parameter that allows to override the automatically chosen threshold value. Read the documentation of the function and play by passing different thresholds for the same image, and looking at the plotted result. As an additional task, try the behaviour of the default with different images, and by reading the documentation on how the default is chosen, try to make sense of how the different images were segmented using the default threshold.
+Function \Rfunction{threshold()} has a parameter that allows to override the automatically chosen threshold value. Read the documentation of the function and play by passing different thresholds for the same image, and looking at the plotted result. As an additional task, try the behaviour of the default with different images, and by reading the documentation on how the default is chosen, try to make sense of how the different images were segmented using the default threshold.
 \end{playground}
 
 \subsection[Plotting with  `ggplot2': 1st example]{Plotting with \ggplot: first example}
 
-Although a \code{plot()} method is provided for \code{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. For simplicity's sake we start with the gray scale image. The \code{as.data.frame()} method converts this image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
+Although a \Rfunction{plot()} method is provided for \code{"cimg"} objects, we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. For simplicity's sake we start with the gray scale image. The \Rfunction{as.data.frame()} method converts this image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
@@ -379,7 +378,7 @@ ggplot(dahlia01g.df, aes(value)) +
        geom_histogram(bins = 30)
 @
 
-And then we plot it as a raster image, mapping luminance to the \code{alpha} \emph{aesthetic} and setting \code{fill} to a constant \code{"black"}. Because the $y$-axis of the image is the reverse of the default expected by \code{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \code{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \code{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
+And then we plot it as a raster image adding a layer with \Rfunction{geom\_raster()}, mapping luminance to the \code{alpha} \emph{aesthetic} and setting \code{fill} to a constant \code{"black"}. Because the $y$-axis of the image is the reverse of the default expected by \code{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \Rfunction{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \Rfunction{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
 
 <<imager-04>>=
 ggplot(dahlia01g.df,
@@ -394,10 +393,10 @@ ggplot(dahlia01g.df,
 @
 
 \begin{playground}
-Plotting a large raster is slow, even with \code{geom\_raster}. Package \pkgname{imager} provides a function \code{resize()} that can be used to expand (by interpoaltion) or reduce the size of the image. Try reducing the $x$ and $y$ dimensions of the bitmap to 50\%, 20\%, and 5\% of their original size, and plotting it. With how much size reductio does the image quality deteriorate enough to be noticed on the monitor or laptop screen you are using?
+Plotting a large raster is slow, even with \Rfunction{geom\_raster()}. Package \pkgname{imager} provides a function \Rfunction{resize()} that can be used to expand (by interpoaltion) or reduce the size of the image. Try reducing the $x$ and $y$ dimensions of the bitmap to 50\%, 20\%, and 5\% of their original size, and plotting it. With how much size reductio does the image quality deteriorate enough to be noticed on the monitor or laptop screen you are using?
 \end{playground}
 
-After this first simple example, we handle the slightly more complicated case of working with the original RGB colour image. In this case, \code{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
+After this first simple example, we handle the slightly more complicated case of working with the original RGB colour image. In this case, \Rfunction{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
@@ -427,7 +426,7 @@ ggplot(dahlia01.df,
 opts_chunk$set(opts_fig_very_wide)
 @
 
-We now plot each channel as a separate raster, mapping luminance to the \code{alpha} \emph{aesthetic} and map the colour corresponding to each channel as a uniform \code{fill}. As above, because the $y$-axis of the image is the reverse of the default expected by \code{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. Also as above, we use \code{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \code{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one.
+We now plot each channel as a separate raster with \Rfunction{geom\_raster()}, mapping luminance to the \code{alpha} \emph{aesthetic} and map the colour corresponding to each channel as a uniform \code{fill}. As above, because the $y$-axis of the image is the reverse of the default expected by \Rfunction{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. Also as above, we use \Rfunction{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \Rfunction{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one.
 
 <<imager-07>>=
 ggplot(dahlia01.df,
@@ -458,7 +457,7 @@ We read the image from a TIFF file with luminance data encoded in 8 bits per cha
 dahlia02.img <- load.image("data/dahlia-uva.tif")
 @
 
-We use as above the \code{plot()} method from package \pkgname{imager}.
+We use as above the scale_alpha_identity(){plot()} method from package \pkgname{imager}.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
@@ -468,7 +467,7 @@ opts_chunk$set(opts_fig_narrow_square)
 plot(dahlia02.img)
 @
 
-Converting this image to gray scale is easy as it is an 8 bit per channel image\footnote{In the case of images with 16 bit data, one needs to re-scale the luminance values to avoid out-of-range errors.}.
+Converting this image to gray scale with \Rfucntion{grayscale()} is easy as it is an 8 bit per channel image\footnote{In the case of images with 16 bit data, one needs to re-scale the luminance values to avoid out-of-range errors.}.
 
 <<imager-11b>>=
 dahlia02g.img <- grayscale(dahlia02.img)
@@ -481,7 +480,7 @@ plot(dahlia02g.img)
 
 \subsection[Plotting with  `ggplot2': 2nd example]{Plotting with \ggplot: second example}
 
-To be able to use package \pkgname{ggplot2} we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. The \code{as.data.frame()} method converts the image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
+To be able to use package \pkgname{ggplot2} we convert the image into a data frame so as to be able to use the usual R functions to plot and operate on the data. The scale_alpha_identity(){as.data.frame()} method converts the image into a \emph{tidy} data frame with column \code{cc} identifying the three colour channels, and the luminance values in column \code{value}. We add a factor \code{channel} with `nice' labels and add a numeric variable \code{luminance} with the values re-encoded to be in the range zero to one.
 
 <<echo=FALSE,include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
@@ -511,7 +510,7 @@ ggplot(dahlia02.df,
 opts_chunk$set(opts_fig_very_wide)
 @
 
-We now plot each channel as a separate raster, mapping luminance to the \code{alpha} \emph{aesthetic} so as to be able to map the colour corresponding to each channel as a uniform \code{fill}. Because the $y$-axis of the image is the reverse of the default expected by \code{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \code{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \code{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
+We now plot each channel as a separate raster using \Rfunction{geom\_raster()}, mapping luminance to the \code{alpha} \emph{aesthetic} so as to be able to map the colour corresponding to each channel as a uniform \code{fill}. Because the $y$-axis of the image is the reverse of the default expected by \Rfunction{aes()} we need to reverse the scale, and we change expansion to zero, as we want the raster to extend up to the edges of the plotting area. As coordinates of pixel locations are not needed, we use \Rfunction{theme\_void()} to remove $x$- and $y$-axis labels, and the background grid. We use \Rfunction{coord\_fixed()} accepting the default ratio between $x$ and $y$ scales equal to one, as the image has square pixels.
 
 <<imager-14>>=
 ggplot(dahlia02.df,
@@ -530,7 +529,7 @@ ggplot(dahlia02.df,
 
 \subsection[Manipulating pixel data: 2nd example]{Manipulating pixel data: second example}
 
-After seeing the histograms, we guess values for constants to use to improve the white balance in a very simplistic way. Be aware that code equivalent to the one below, but using \code{ifelse()} triggers an error.
+After seeing the histograms, we guess values for constants to use to improve the white balance in a very simplistic way. Be aware that code equivalent to the one below, but using \Rfunction{ifelse()} triggers an error.
 
 <<imager-21>>=
 dahlia03.img <- dahlia02.img
@@ -573,7 +572,7 @@ Another approach would be to equalize the histograms. We start with the gray sca
 plot(as.cimg(ecdf(dahlia02g.img)(dahlia02g.img), dim = dim(dahlia02g.img)))
 @
 
-The line above is not that easy to understand. What is going on is that the call \code{ecdf(dahlia02g.img)} returns a \emph{function} built on the fly, and then with the additional set of parentheses we call it, and then pass the result to the \code{as.cimg()} method, and the object this method returns is passed as argument to the \code{plot()} method. It can be split as follows into four statements.
+The line above is not that easy to understand. What is going on is that the call \code{ecdf(dahlia02g.img)} returns a \emph{function} built on the fly, and then with the additional set of parentheses we call it, and then pass the result to the \Rfunction{as.cimg()} method, and the object this method returns is passed as argument to the \Rfunction{plot()} method. It can be split as follows into four statements.
 
 <<imager-32>>=
 eq.f <- ecdf(dahlia02g.img)
@@ -582,7 +581,7 @@ equalized_dahlia02g.img <- as.cimg(equalized_dahlia02g, dim = dim(dahlia02g.img)
 plot(equalized_dahlia02g.img)
 @
 
-A third syntax, is to use the \code{\%>\%} pipe operator. This operator is not native to the R language, but is defined by a package. However, in recent times its use has become rather popular for data transformations. These is equivalent to the nested calls in the one-line statement above.
+A third syntax, is to use the \Roperator{\%>\%} pipe operator. This operator is not native to the R language, but is defined by a package. However, in recent times its use has become rather popular for data transformations. These is equivalent to the nested calls in the one-line statement above.
 
 <<imager-33>>=
 ecdf(dahlia02g.img)(dahlia02g.img) %>%
@@ -622,10 +621,10 @@ Define a function that accepts as argument a \code{cimg} object, and returns an 
 \end{description}
 \end{playground}
 
-In the example above we used the \code{as.data.frame()} method defined in package \pkgname{imager} to obtain a tidy data frame with the luminance values in a single column. For some operations it may be better to work directly on the \code{cimg} object, which is simply a multidimensional numeric array with some ``frosting on top''.
+In the example above we used the \Rfunction{as.data.frame()} method defined in package \pkgname{imager} to obtain a tidy data frame with the luminance values in a single column. For some operations it may be better to work directly on the \code{cimg} object, which is simply a multidimensional numeric array with some ``frosting on top''.
 
 \begin{playground}
-Study the code of functions \code{R()}, \code{G()} and \code{B()}. Study the code, so as to understand why one could call them \emph{wrappers} of R array extraction operators. Then study the assignment version of the same functions \code{R<-()}, \code{G<-()} and \code{B<-()}.
+Study the code of functions \Rfunction{R()}, \Rfunction{G()} and \Rfunction{B()}. Study the code, so as to understand why one could call them \emph{wrappers} of R array extraction operators. Then study the assignment version of the same functions \code{R<-()}, \code{G<-()} and \code{B<-()}.
 
 <<imager-41>>=
 R
