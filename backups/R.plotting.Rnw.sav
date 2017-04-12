@@ -762,43 +762,135 @@ ggplot(randomf.df, aes(x, y, fill = z)) +
   geom_tile()
 @
 
-We can use \code{"white"} or some other contrasting color to better delineate the borders of the tiles.
+We can set \code{color = "grey50"} and \code{size = 1} to make the tile borders more visible as in the example below, or use a contrasting color to better delineate the borders of the tiles. What to use will depend on whether the individual tiles add meaningful information. In cases like when rows of tiles correspond to individual genes and columns to discrete treatments, contrasting tile borders are preferable. In contrast, in the case when the tiles are an approximation to a continuous surface such as measurements on a regular spatial grid, it is best to suppress the tile borders.
 
 <<>>=
 ggplot(randomf.df, aes(x, y, fill = z)) +
-  geom_tile(color = "white")
+  geom_tile(color = NA)
 @
+
+\begin{playground}
+Play with the \code{color} parameter in the example above, looking at what features of the data are most clearly perceived in each of the plots you create.
+\end{playground}
 
 Any continuous fill scale can be used to control the appearance. Here we show a tile plot using a grey gradient.
 
 <<>>=
 ggplot(randomf.df, aes(x, y, fill = z)) +
-  geom_tile(color = "black") +
+  geom_tile(color = "white") +
   scale_fill_gradient(low = "grey15", high = "grey85", na.value = "red")
 @
 \index{plots!tile plot|)}
-\section{Bar plots}\label{sec:plot:bar}
+\section{Bar and column plots}\label{sec:plot:bar}
+\index{plots!column plot|see {plots!bar plot}}
 \index{plots!bar plot|(}
-R users not familiar yet with \ggplot are frequently surprised by the default behaviour of \Rfunction{geom\_bar()} as it uses \Rfunction{stat\_count()} to compute the value plotted, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). The default can be changed, but \code{geom\_col} is equivalent to \Rfunction{geom\_bar()} used with \code{"identity"} as argument to parameter \code{stat}. The \emph{statistic} \Rfunction{stat\_identity()} just echoes its input. In previous sections, as when plotting points and lines, this statistic was used by default.
+R users not familiar yet with \ggplot are frequently surprised by the default behaviour of \Rfunction{geom\_bar()} as it uses \Rfunction{stat\_count()} to compute the value plotted, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). The default can be changed, but \code{geom\_col} is equivalent to \Rfunction{geom\_bar()} used with \code{"identity"} as argument to parameter \code{stat}. The \emph{statistic} \Rfunction{stat\_identity()} just echoes its input. In previous sections, as when plotting points and lines, this statistic was used by default. Starting from \ggplot ver. 2.2.1, a new \emph{geometry} is available, \Rfunction{geom\_col()} which the same as \Rfunction{geom\_bar()} but with \Rfunction{stat\_identity()} as default.
 
-In this bar plot, each bar shows the number of observations in each \code{class} of car in the data set. We use a data set included in \ggplot for this example based on the documentation.
+To create a figure in which the columns represent each a single value in \code{data} we will use \Rfunction{geom\_col()}, after creating some artificial data. We will reuse the same data in variations of the figure.
+
+<<>>=
+set.seed(654321)
+my.col.data <- data.frame(treatment = factor(rep(c("A", "B", "C"), 2)),
+                          group = factor(rep(c("male", "female"), c(3, 3))),
+                          measurement = rnorm(6) + c(5.5, 5, 7))
+@
+
+First we plot data for females only, using defaults for all \emph{aesthetics}.
+
+<<>>=
+ggplot(subset(my.col.data, group == "female"),
+       aes(x = treatment, y = measurement)) +
+   geom_col()
+@
+
+We play with \emph{aesthetics} to produce a plot with a semi-formal style---e.g.\ suitable for a science popularization article or book. See section \ref{sec:plot:scales} and section \ref{sec:plot:themes} for information on scales and themes, respectively. We set \code{width = 0.5} to make the bars narrower. Setting \code{color = "white"} overrides the default color of the lines bordering the bars.
+ 
+<<>>=
+ggplot(my.col.data, aes(x = treatment, y = measurement, fill = group)) +
+     geom_col(color = "white", width = 0.5) +
+     scale_fill_grey() + theme_dark()
+@
+
+We next use a formal style, and in addition put the bars side by side by setting \code{position = "dodge"} to override the default \code{position = "stack"}. Setting \code{color = NA} removes the lines bordering the bars.
+
+<<>>=
+ggplot(my.col.data, aes(x = treatment, y = measurement, fill = group)) +
+     geom_col(color = NA, position = "dodge") +
+     scale_fill_grey() + theme_classic()
+@
+
+\begin{playground}
+Change the argument to \code{position}, or let the default be active, until you understand its effect on the figure.
+\end{playground}
+
+\begin{playground}
+Use constants as arguments for \emph{aesthetics} or map variable \code{treatment} to one or more of the \emph{aesthetics} used by \Rfunction{geom\_col()}, such as \code{colour}, \code{fill}, \code{linetype}, \code{size}, \code{alpha} and \code{width}. The \emph{aesthetics} listed here for \Rfunction{geom\_col()} work in the same way for \Rfunction{geom\_bar()} described below.
+\end{playground}
+
+\begin{warningbox}
+If you are using version 2.1.0 or earlier of \ggplot, you will need to create the plots using \Rfunction{geom\_bar()} instead of \Rfunction{geom\_col()}. The code for the first figure in this section would need to be edited as bellow---this code also gives the desired plot with later versions of \ggplot.
+
+<<>>=
+ggplot(subset(my.col.data, group == "female"),
+       aes(x = treatment, y = measurement)) +
+   geom_bar(stat = "identity")
+@
+
+All other examples making use of \Rfunction{geom\_col()}  need to be similarly modified for versions of \ggplot lacking \Rfunction{geom\_col()}.
+\end{warningbox}
+
+Next we show an example of a bar plot, in which the columns represent counts, as a transition to the next section where we will describe how to plots summaries calculated on-the-fly within the ggplot code.
+
+In this bar plot, each bar shows the number of observations in each \code{class} of car in the data set. We use a data set included in \ggplot for this example based on the package documentation.
 <<>>=
 ggplot(mpg, aes(class)) + geom_bar()
 @
 
-We can easily get stacked bars grouped by the number of cylinders of the engine.
-
-<<>>=
-ggplot(mpg, aes(class, fill = factor(cyl))) + geom_bar()
-@
-
-The default palette used for \code{fill} is rather ugly, so we also show the same plot with another scale for fill.
+We can easily get stacked bars of counts, grouped by the number of cylinders of the engine.
 
 <<>>=
 ggplot(mpg, aes(class, fill = factor(cyl))) +
-  geom_bar(color = "black") +
-  scale_fill_brewer()
+   geom_bar()
 @
+
+We can as above plot side by side bars, which shows a different aspect of the data.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+   geom_bar()
+@
+
+The default palette used for \code{fill} is rather ugly, so we also show the same plot with another scale for fill. In addition with \code{color = "black"} we make the borders of the bars black.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black") +
+  scale_fill_brewer() +
+  theme_bw()
+@
+
+\begin{explainbox}
+The order of stacking\index{plots!stacked bar plot} in \ggplot is consistent and depends on the order of the levels in the corresponding factor by default. The different approaches to reordering factor levels are described in section \ref{sec:data:levels:order} on page \pageref{sec:data:levels:order}. It must be noted, however, that aesthetics can be mapped not only to factors, but also to character variables which are converted on the fly into factors. When a character variable is converted into a factor, by default the levels are ordered alphabetically. As a rule of thumb, if all figures that will be produced from the same data frame require or allow the same ordering, it is best to reorder the levels of the factor in the data frame. If only a single figure requires a special ordering of levels, then the approach shown below is preferable.
+
+If it is not desired to modify the data, the reordering of the stacking can be done in the ggplot. The simplest case, shown next, is to reverse the stacking order, however, this does not reverse the order in the key. This approach is useful when the behaviour of earlier versions of \ggplot needs to the restored.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black", position = position_stack(reverse = TRUE))
+@
+
+An arbitrary reordering can be achieved by setting \code{breaks} in a discrete scale. A simple example follows. See section \ref{sec:plot:scales} on page \pageref{sec:plot:scales} for additional information on \emph{scales}. In the case when \code{position} is set to \code{"dodge"}, the ordering will be reflected in the order of the different side-by-side bars within the groups mapped to the $x$ aesthetic.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black") +
+  scale_fill_discrete(breaks = c("2seater", "compact",  "subcompact",  
+                                 "midsize",  "suv",  "minivan", "pickup"))
+@
+
+The approaches discussed in this box apply to all \emph{geometries} that allow stacking of groups---i.e.\ \Rfunction{geom\_area()}, and \Rfunction{geom\_line()}, in addition to \code{geom\_col()} and \code{geom\_bar()}, and in relation to the mapping of factor levels to aesthetics values, to all discrete scales.
+\end{explainbox}
+
 \index{plots!bar plot|)}
 
 \section{Plotting summaries}\label{sec:plot:summaries}

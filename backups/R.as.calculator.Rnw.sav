@@ -690,10 +690,22 @@ Factors are used for indicating categories, most frequently the factors describi
 <<facors-1>>=
 my.vector <- c("treated", "treated", "control", "control", "control", "treated")
 my.factor <- factor(my.vector)
+levels(my.factor)
 my.factor <- factor(my.vector, levels=c("treatment", "control"))
+levels(my.factor)
 @
 
-It is always preferable to use meaningful names for levels, although it is possible to use numbers. The order of levels becomes important when plotting data, as it affects the order of the levels along the axes, or in legends. Converting factors to numbers is not intuitive, because even if the levels look like numbers when displayed, they are just character strings.
+The labels (``names'') of the levels can be set when the factor is created. In this case, both \code{levels} and \code{labels} should be set, and levels and matching labels must be in the same position of the two argument vectors.
+
+<<facors-1>>=
+my.vector <- c(1, 1, 0, 0, 0, 1)
+my.factor <- factor(my.vector, levels = 1:0, labels = c("treatment", "control"))
+levels(my.factor)
+@
+
+It is always preferable to use meaningful labels for levels, although it is possible to use numbers. 
+
+Converting factors into numbers is not intuitive, even in the case a vector was created from a \code{numeric} vector.
 
 <<factors-2>>=
 my.vector2 <- rep(3:5, 4)
@@ -702,9 +714,35 @@ as.numeric(my.factor2)
 as.numeric(as.character(my.factor2))
 @
 
-Internally factor levels are stored as running numbers starting from one, and those are the numbers returned by \code{as.numeric()} when applied to a factor.
+\begin{explainbox}
+\textbf{Why is a double conversion needed?} Internally factor levels are stored as running integers starting from one, and those are the numbers returned by \code{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels. If these character strings represent numbers, calling \Rfunction{as.numric()} on these characters strings makes it possible to retrieve the original numbers.
+\end{explainbox}
 
+\begin{playground}
+Create a factor with levels labeled with words. Create another factor with the levels labeled with the same words, but ordered differently. After this convert both factors to numeric vectors using \Rfunctio
+\end{playground}
 Factors are very important in \Rpgrm. In contrast to other statistical software in which the role of a variable is set when defining a model to be fitted or when setting up a test, in \Rpgrm models are specified exactly in the same way for ANOVA and regression analysis, as \emph{linear models}. What `decides' what type of model is fitted is whether the explanatory variable is a factor (giving ANOVA) or a numerical variable (giving regression). This makes a lot of sense, as in most cases, considering an explanatory variable as categorical or not, depends on the design of the experiment or survey, in other words, is a property of the data and the experiment or survey that gave origin to them, rather than of the data analysis.
+
+The order of the levels in a \code{factor} does not affect simple calculations or the values plotted, but it does affect how the output is printed, the order of the levels in the scales of plots, and in some cases the contrasts in significance tests. The default ordering is alphabetical, and is established at the time a factor is created. Consequently, rather frequently the default ordering of levels is not the one needed. As shown above, parameter \code{levels} in the constructor makes it possible to set the order of the levels. It is also possible to change the ordering of an existing factor. 
+
+\begin{explainbox}
+\textbf{Reordering factor levels.}\index{factors!reorder levels} The simplest approach is to use \Rfunction{factor()} and its \code{levels} parameter. The only complication is that the names of the existing levels and those passed as argument need to match, and typing mistakes can cause bugs. To avoid the error-prone step, in all examples except the first, we use \Rfunction{levels()} to retrieve the names of the levels from the factor itself.
+
+<<factors-3>>=
+levels(my.factor2)
+my.factor2 <- factor(my.factor2, levels = c("5", "3", "4"))
+levels(my.factor2)
+my.factor2 <- factor(my.factor2, levels = rev(levels(my.factor2)))
+levels(my.factor2)
+my.factor2 <- factor(my.factor2, levels = sort(levels(my.factor2), decreasing = TRUE))
+levels(my.factor2)
+my.factor2 <- factor(my.factor2, levels = levels(my.factor2)[c(2, 1, 3)])
+levels(my.factor2)
+@
+
+For methods used for reordering the levels of a factor based on summary quantities from data, please see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}.
+
+\end{explainbox}
 
 \section{Lists}
 \index{lists}
