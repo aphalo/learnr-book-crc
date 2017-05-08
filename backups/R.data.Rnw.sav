@@ -20,6 +20,7 @@ The aim of this chapter is to describe, and show how, some of the existing enhan
 For executing the examples listed in this chapter you need first to load the following packages from the library:
 
 <<message=FALSE>>=
+library(learnr)
 library(tibble)
 library(magrittr)
 library(stringr)
@@ -38,45 +39,25 @@ library(jsonlite)
 @
 
 \begin{infobox}
-The data sets used in this chapter are at the moment avaialble for download. The details of how to download files from within R is explained in section \ref{sec:files:remote} on page \pageref{sec:files:remote}. The examples for local data use the same files. As it is easier to first examplify reading local files, please, run the code in the chunk below at least once, before attempting to run the code in the next sections. Make sure that the current folder/directory is the same one that will be current when running the examples.
+Some data sets used in this and other chapters are available in package \pkgname{learnr}. In addition to the
+R data objects, we provide files saved in \emph{foreign} formats, which we used in examples on how to import data. The files can be either read from the R library, or from a copy in a local folder. In this chapter we
+assume the user has copied the folder \code{"extdata"} from the package to his working folder.
 
-The code chunk below will create a folder called \code{data} unless it already exists and download all files except one from my web server. Existing files with the same names will not be overwritten.
+Copy the files using:
 
-<<load-data-00,eval=FALSE>>=
-dir.name = "./data"
-if (!dir.exists(dir.name)) {
-  dir.create(dir.name)
-}
-# download file in text mode
-file.name <- paste(dir.name, "logger_1.txt", sep ="/")
-if (!file.exists(file.name)) {
-  download.file("http://r4photobiology.info/learnr/logger_1.txt",
-                file.name)
-}
-# download remaining files in binary mode
-bin.file.names <- c("my-data.xlsx", "Book1.xlsx", "BIRCH1.SYS",
-                    "thiamin.sav", "my-data.sav", "meteo-data.nc")
-for (file.name in bin.file.names) {
-  f <- paste(dir.name, file.name, sep ="/")
-  if (!file.exists(f)) {
-    download.file(paste("http://r4photobiology.info/learnr",
-                        file.name, sep="/"),
-                  f,
-                  mode = "wb")
-  }
-}
-# download NetCDF file from NOAA server
-file.name <- paste(dir.name, "pevpr.sfc.mon.ltm.nc", sep ="/")
-if (!file.exists(file.name)) {
-  my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
-                  "surface_gauss/pevpr.sfc.mon.ltm.nc",
-                  sep = "")
-  download.file(my.url,
-                mode = "wb",
-                destfile = paste(dir.name, "pevpr.sfc.mon.ltm.nc", sep ="/"))
-}
+<<load-pkg>>=
+pkg.path <- system.file("extdata", package = "learnr")
+file.copy(pkg.path, ".", overwrite = TRUE, recursive = TRUE)
 @
 
+We also make sure the folder used to save data read from the internet, exists.
+
+<<make-dir>>=
+save.path = "./data"
+if (!dir.exists(save.path)) {
+  dir.create(save.path)
+}
+@
 \end{infobox}
 
 \section{Introduction}
@@ -150,17 +131,17 @@ R provides some functions which help with portability, by hiding the idiosyncrac
 Under \pgrmname{MS-Windows} paths include backslash characters which are not ``normal'' characters in R, and many other languages, but rather ``escape'' characters. Within R forward slash can be used in their place,
 
 <<filenames-01>>=
-basename("C:/Users/aphalo/Documents/my-file.txt")
+basename("extdata/my-file.txt")
 @
 
 or backslash characters can be ``escaped'' by repeating them.
 <<filenames-02>>=
-basename("C:\\Users\\aphalo\\Documents\\my-file.txt")
+basename("extdata\\my-file.txt")
 @
 
 The complementary function is \Rfunction{dirname()} which extracts the bare path to the containing disk folder, from a full file path.
 <<filenames-03>>=
-dirname("C:/Users/aphalo/Documents/my-file.txt")
+dirname("extdata/my-file.txt")
 @
 
 \begin{warningbox}
@@ -448,13 +429,13 @@ This package exports only two functions for reading Excel workbooks in xlsx form
 
 We first list the sheets contained in the workbook file with \Rfunction{excel\_sheets()}.
 <<readxl-01>>=
-sheets <- excel_sheets("data/Book1.xlsx")
+sheets <- excel_sheets("extdata/Book1.xlsx")
 sheets
 @
 
 In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet.
 <<readxl-02>>=
-Book1.df <- read_excel("data/Book1.xlsx", sheet = "my data")
+Book1.df <- read_excel("extdata/Book1.xlsx", sheet = "my data")
 Book1.df
 @
 
@@ -471,14 +452,14 @@ citation(package = "xlsx")
 Here we use function \Rfunction{read.xlsx()}, idexing the worksheet by name.
 
 <<xlsx-01>>=
-Book1_xlsx.df <- read.xlsx("data/Book1.xlsx", sheetName = "my data")
+Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx", sheetName = "my data")
 Book1_xlsx.df
 @
 
 As above, but indexing by a numeric index.
 
 <<xlsx-02>>=
-Book1_xlsx2.df <- read.xlsx2("data/Book1.xlsx", sheetIndex = 1)
+Book1_xlsx2.df <- read.xlsx2("extdata/Book1.xlsx", sheetIndex = 1)
 Book1_xlsx2.df
 @
 
@@ -500,8 +481,8 @@ With function \Rfunction{write.xlsx()} we can also write data frames out to Exce
 <<xlsx-05>>=
 set.seed(456321)
 my.data <- data.frame(x = 1:10, y = 1:10 + rnorm(10))
-write.xlsx(my.data, file = "data/my-data.xlsx", sheetName = "first copy")
-write.xlsx(my.data, file = "data/my-data.xlsx", sheetName = "second copy", append = TRUE)
+write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "first copy")
+write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "second copy", append = TRUE)
 @
 
 When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
@@ -541,7 +522,7 @@ There are two different comprehensive packages for importing data saved from oth
 Functions in this package allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPPS} among others, and a function for writing data into files with formats native to these three programs. Documentation is included with R describing them in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved with a recent version of \pgrmname{SPSS}.
 
 <<foreign-01>>=
-my_spss.df <- read.spss(file = "data/my-data.sav", to.data.frame = TRUE)
+my_spss.df <- read.spss(file = "extdata/my-data.sav", to.data.frame = TRUE)
 head(my_spss.df)
 @
 
@@ -550,14 +531,14 @@ Dates were not converted into R's datetime objects, but instead into numbers.
 A second example, this time with a simple \code{.sav} file saved 15 years ago.
 
 <<foreign-02>>=
-thiamin.df <- read.spss(file = "data/thiamin.sav", to.data.frame = TRUE)
+thiamin.df <- read.spss(file = "extdata/thiamin.sav", to.data.frame = TRUE)
 head(thiamin.df)
 @
 
 Another example, for a Systat file saved on an PC more than 20 years ago, and rea.
 
 <<foreign-03>>=
-my_systat.df <- read.systat(file = "data/BIRCH1.SYS")
+my_systat.df <- read.systat(file = "extdata/BIRCH1.SYS")
 my_systat.df
 @
 
@@ -570,7 +551,7 @@ The recently released package \pkgname{haven} is less ambitious in scope, provid
 We here use function \Rfunction{read\_sav()} to import here a \code{.sav} file saved by a recent version of \pgrmname{SPSS}.
 
 <<haven-01>>=
-my_spss.tb <- read_sav(file = "data/my-data.sav")
+my_spss.tb <- read_sav(file = "extdata/my-data.sav")
 my_spss.tb
 head(my_spss.tb$harvest_date)
 @
@@ -580,7 +561,7 @@ In this case the dates are correctly decoded.
 And an \pgrmname{SPSS}'s \code{.sav} file saved 15 years ago.
 
 <<haven-02>>=
-thiamin.tb <- read_sav(file = "data/thiamin.sav")
+thiamin.tb <- read_sav(file = "extdata/thiamin.sav")
 thiamin.tb
 thiamin.tb <- as_factor(thiamin.tb)
 thiamin.tb
@@ -612,7 +593,7 @@ We first need to read an index into the file contents, and in additional steps w
 We first open a connection to the file with function \Rfunction{nc\_open()}.
 
 <<ncdf4-01>>=
-meteo_data.nc <- nc_open("data/pevpr.sfc.mon.ltm.nc")
+meteo_data.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
 # very long output
 # print(meteo_data.nc)
 @
@@ -675,7 +656,7 @@ Package RNetCDF supports NetCDF3 files, but not those saved using the current Ne
 We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print.nc()} we can find out the names and characteristics of the variables and attributes. We open the connection with function \Rfunction{open.nc()}.
 
 <<netcdf-01>>=
-meteo_data.nc <- open.nc("data/meteo-data.nc")
+meteo_data.nc <- open.nc("extdata/meteo-data.nc")
 str(meteo_data.nc)
 # very long output
 # print.nc(meteo_data.nc)
@@ -758,8 +739,8 @@ my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
                 sep = "")
 #download.file(my.url,
 #              mode = "wb",
-#              destfile = "data/pevpr.sfc.mon.ltm.nc")
-pet_ltm.nc <- nc_open("data/pevpr.sfc.mon.ltm.nc")
+#              destfile = "extdata/pevpr.sfc.mon.ltm.nc")
+pet_ltm.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
 @
 
 \begin{warningbox}
@@ -1574,3 +1555,13 @@ save(birch.tb, birch_summaries.tb, birch_plant_summaries.tb,
 \begin{playground}
 Repeat the same calculations for all the rows as I originally did. I eliminated the data from the borders of the trays, as those plants apparently did not really experience as crowded a space as that corresponding to the nominal spacing.
 \end{playground}
+
+\begin{infobox}
+It is always good to clean up, and in the case of the book, the best way to test that the examples
+can be run in a ``clean'' system.
+
+<<load-pkg>>=
+unlink("./data", recursie = 
+@
+
+\end{infobox}
