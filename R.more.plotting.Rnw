@@ -21,9 +21,20 @@ In contrast with previous chapters, I expect readers to first browse through the
 
 \section{Packages used in this chapter}
 
+If the packages used in this chapter are not yet installed in your computer, you can install them with, as long as package \pkgname{learnrbook} is already installed.
+
+<<eval=FALSE>>=
+packages_at_cran <- setdiff(learnrbook::pkgs_ch_ggplotext, learnrbook::pkgs_at_github)
+install.packages(packages_at_cran)
+for (p in learnrbook::pkgs_at_github) {
+  devtools::install_github(p)
+}
+@
+
 For executing the examples listed in this chapter you need first to load the following packages from the library:
 
 <<message=FALSE>>=
+library(learnrbook)
 library(tibble)
 library(ggplot2)
 library(showtext)
@@ -38,14 +49,14 @@ library(ggstance)
 library(ggbiplot)
 library(ggalt)
 library(ggExtra)
-# library(ggfortify) # loaded later
 library(ggnetwork)
 library(geomnet)
-# library(ggradar)
 library(ggsci)
 library(ggthemes)
 library(xts)
 library(MASS)
+# library(ggfortify) # loaded later
+# library(ggtern) # loaded later
 @
 
 We set a font larger size than the default
@@ -759,15 +770,6 @@ ggplot(data = blood$edges, aes(from_id = from, to_id = to)) +
 Change the graphic design of the plot in steps, by changing: 1) the shape of the nodes, 2) the color of the nodes, 3) the size of the nodes and the size of the text, 4) the type of arrows and their size, 5) the font used in nodes to italic.
 \end{playground}
 
-%\section[ggradar]{\pkgname{ggradar}}\label{sec:plot:ggradar}
-%
-%<<>>=
-%citation(package = "ggradar")
-%@
-%
-%Package \pkgname{ggradar} allows the creation of radar plots with \pkgname{ggplot2}. However, its user interface does not follow the grammar of graphics paradigm.
-
-
 \section[`ggforce']{\pkgname{ggforce}}\label{sec:plot:ggforce}
 
 <<>>=
@@ -1233,9 +1235,9 @@ ggplot(my.data, aes(x, y2, colour = group)) +
 
 \subsubsection{Other types of models}
 
-Another statistic, \Rfunction{stat\_fit\_glance()} allows lots of flexibility, but at the moment there is no equivalently flexible version of \Rfunction{stat\_smooth()}.
+Another statistic, \Rfunction{stat\_fit\_glance()} allows lots of flexibility. The current version \pkgname{ggplot2} implements \Rfunction{stat\_smooth()} in a way that also allows ample flexibility.
 
-We give an example with a linear model, showing a P-value (a frequent request for which I do not find much use).
+We give a first example with a linear model, showing a P-value (a frequent request for which I do not find much use).
 
 We use \Rfunction{geom\_debug()} to find out what values \Rfunction{stat\_glance()} returns for our linear model, and add labels with P-values for the fits.
 
@@ -1266,7 +1268,7 @@ ggplot(my.data, aes(x, y2, colour = group)) +
   theme(legend.position = "top")
 @
 
-We use \Rfunction{geom\_debug()} to find out what values \Rfunction{stat\_glance()} returns for our resistant linear model fitted with \Rfunction{rlm()} from package \pkgname{MASS}.
+We use \Rfunction{geom\_debug()} to find out what values \Rfunction{stat\_fit\_glance()} returns for our resistant linear model fitted with \Rfunction{rlm()} from package \pkgname{MASS}.
 
 <<>>=
 formula <- y ~ x + I(x^2) + I(x^3)
@@ -1298,7 +1300,49 @@ ggplot(my.data, aes(x, y2, colour = group)) +
   theme(legend.position = "top")
 @
 
-In a similar way one can generate labels for any fit supported by package \pkgname{broom}.
+In a similar way one can generate labels for any fit supported by package \pkgname{broom}, such as a Michaelis-Menten equation.
+
+<<>>=
+micmen.formula <- y ~ SSmicmen(x, Vm, K)
+ggplot(Puromycin, aes(conc, rate, colour = state)) +
+  geom_point() +
+  geom_smooth(method = "nls",
+              formula = micmen.formula,
+              se = FALSE) +
+  stat_fit_glance(method = "nls",
+                  method.args = list(formula = micmen.formula),
+                  geom = "text",
+                  aes(label = paste("AIC = ", signif(..AIC.., digits = 3),
+                                    ", BIC = ", signif(..BIC.., digits = 3),
+                                    sep = ""))) +
+  theme_bw() +
+  theme(legend.position = "top")
+@
+
+To add an equation, or the values of the fitted parameters we use the statistic \Rfunction{stat\_fit\_tidy()}. We show an example of adding an equation using paste to build a character string that is later parsed into a
+suitable expression.  We skip here the use of \code{geom\_debug()} as the names of the parameters
+can be found in the help page for \Rfunction{SSmicmen()}.
+
+<<>>=
+micmen.formula <- y ~ SSmicmen(x, Vm, K)
+ggplot(Puromycin, aes(conc, rate, colour = state)) +
+  geom_point() +
+  geom_smooth(method = "nls",
+              formula = micmen.formula,
+              se = FALSE) +
+  stat_fit_tidy(method = "nls",
+                method.args = list(formula = micmen.formula),
+                geom = "text",
+                label.x.npc = 0.9,
+                label.y.npc = 0.3,
+                aes(label = paste("V~`=`~frac(", signif(..Vm.., digits = 2), "~C,",
+                                  signif(..K.., digits = 2), "+C)",
+                                  sep = "")),
+                parse = TRUE) +
+  labs(x = "C", y = "V") +
+  theme_bw() +
+  theme(legend.position = "top")
+@
 
 \subsection{Highlighting deviations from fitted line}
 \index{plots!fitted curves!deviations}
@@ -1880,12 +1924,12 @@ ggplot(my.anscombe, aes(x = x, y = y)) +
 \index{plots!advanced examples!quadrat plot}
 
 <<>>=
+try(detach(package:ggtern))
 try(detach(package:ggfortify))
 try(detach(package:MASS))
 try(detach(package:xts))
 try(detach(package:ggthemes))
 try(detach(package:ggsci))
-#try(detach(package:ggradar))
 try(detach(package:geomnet))
 try(detach(package:ggnetwork))
 try(detach(package:ggExtra))
@@ -1902,5 +1946,5 @@ try(detach(package:viridis))
 try(detach(package:showtext))
 try(detach(package:ggplot2))
 try(detach(package:tibble))
+try(detach(package:learnrbook))
 @
-
