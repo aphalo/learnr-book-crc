@@ -1,0 +1,234 @@
+---
+title: "Model of survival of two competitors under stocharsticity"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+
+The main interest of this project is about two species that are competitor for the same resource. We will try to test if two consumers can persist while consuming a common resource under stochasticity. The focus of the analyse will be on the influence of only one factor: a gap between the growth ratio of the two populations. 
+This model shows that the population that have the bigger growth ration will survive the other population under stochasticity. We can imagine that it is because with a high growth ratio the population can adapt to a new environment faster than a population with a low grow ratio. However, the value of stochasticity is very hard to estimate, and the dependance of the value of stochasticity on the model is very strong. Therefore, further studies on how to estimate the stochasticity value in an environment would be useful. 
+
+##Model and Analysis
+
+###The following parameters were settled 
++	We will have two different species composed of a certain amount of individuals named N1 and N2.
+	The two populations will have the same starting amount of individuals, here 0.1.
++	As the two species are exactly competitors for the same resources, the competition factors were set as a12 and a21 (respectively the competition factor of the species 2 on the 1 and the competition factor of the population 1 on the 2) at 1. With such a value, it means that the competition into the species is the same than the competition between the two species. 
++	The carrying capacity represented with K1 and K2 respectively for the population 1 and 2 will was set up at 10. This represent the ability to take resource from a certain patch. Higher is the value more resources a species can take from the same patch. The value is not very important here but it must be the same in order to have no specific advantage for one species.
++	The evolution of the amount of individuals in the two populations were studied, through 400 generations (called "steps"). 
++	The stochasticity value e is a random number taken from a normal distribution with the mean of 0 and the standard deviation of 0.1 at first and then 0.2 (we compared the situation with a lower and higher stochasticity value). The value for the first population must be independent of the second one. 
++	Finally, the growth ratio of the population 1 (r1) was set at 0.1, and the one of the other population (r2) vary gradually from 0.1 to 4 with a gap of 0.1. 
+```{r parameters}
+r1 <- 1
+r2 <- 0.1
+K1  <- 10
+K2<- 10
+K<-10
+a21 <- 1
+a12 <- 1
+steps <- 400
+N1 <- numeric(steps); N1[1] <- 0.1
+N2 <- numeric(steps); N2[1] <- 0.1
+```
+
+###Analysis
+
+In this model, estimation on the percentage of extinction of the population were done, with a stable growth ratio value for population 2 and a value going from 0.1 to 2 with increment of 0.1 for the population 1. Extinction was considered when the population is equal or under 0.05. 
+
+First, for every stochasticity value, the evolution of the population’s size according to a Ricker model for 400 generations were studied. For each 400 generation, the number of time that the population size was equal or under 0.05 was counted and registered into two vectors: N1.p and N2.p for population 1 and 2. The estimations were run 200 times (hence the evolution of the populations for each gowth ratio value were studied with 200 stochasticity values). We have therefore 200 values in each storage vector N1.p and N2.p.
+ 
+Then, percentage of extinction for each population was calculated and added to a second storage vector L. To do so, mean value of N1.p and N2.p for each growth ratio were stored. Hence, we have L1 and L2 for the population 1 and 2. The analysis was done on the plot of L1 and L2. 
+
+```{r analysis}
+L1<-numeric(20)
+L2<-numeric(20)
+N1.p <- numeric(200)
+N2.p <- numeric(200)
+r1s <- seq(from=0.1,to=2,length=20)
+
+```
+
+
+###Ricker model
+To estimate the evolution of the number of each population, I choose the equation of Ricker. It was chosen because with the exponential function it will gave only positive numbers witch is easier to interpret.
+$$ N1[t+1]=N1[t]*exp(r1*(1-(N1[t]+a*N2[t])/K1))$$
+The stochasticity value *e* was added:
+$$N1[t+1]=N1[t]*exp(r1*(1-(N1[t]+a*N2[t])/K1)+ e1[t])$$
+##Results
+
+As a control figure, the probability of extinction of the two population with the same growth ratio was ploted. 
+
+```{r control}
+r2s <- seq(from=0.1,to=2,length=20) # here r2s is settled like r1s
+for (a in 1:20){
+r1 <- r1s[a]
+r2<-r2s[a]
+for(i in 1:200){
+  e1<- rnorm(steps,0 ,0.1)
+  e2<-rnorm(steps,0 ,0.1)
+  for(t in 1:(steps-1)){
+    N1[t+1] <- N1[t]*exp(r1*(1-(N1[t]+a21*N2[t])/K1)+ e1[t])
+    N2[t+1] <- N2[t]*exp(r2*(1-(N2[t]+a12*N1[t])/K2)+ e2[t])
+  }
+  N1.p[i] <- length(which(N1<=0.05))
+  N2.p[i] <- length(which(N2<=0.05))
+}
+
+L1[a]<-mean(N1.p)/200
+L2[a]<-mean(N2.p)/200
+}
+
+plot(r1s,L2,col="brown2",lwd=2,type='l',ylim=c(0, 1),
+     xlab = "growth ratio of the 2 populations ", ylab = "Percentage of extinction",
+     main="Evolution of two competitors under stochasticity", font.lab="3", font.main= "1", lab=c(6,6,7), mgp=c(1.6,0.4,0), sub= "Figure1: probability of extinction according to growth ratio, sd=0.2")
+lines(r1s, L1,col="seagreen",lwd=2)
+abline(h=0.2, lty=2)
+```
+We can see in the figure1 that the value of the growth ration is not very important, as long as it is the same for both population. the stocharsticity will permitt that one of the two population has randomly the advantage on the other.
+
+In a second time, probability of extinction of the two population was ploted, with the population 2 that have an increasing growth ratio, under a standart deviation for the stochasticity of 0.1.
+
+```{r model.stochasticity.0.1}
+
+for (a in 1:20){
+r1 <- r1s[a]
+r2 <- 0.1
+for(i in 1:200){
+  e1<- rnorm(steps,0 ,0.1)
+  e2<-rnorm(steps,0 ,0.1)
+  for(t in 1:(steps-1)){
+    N1[t+1] <- N1[t]*exp(r1*(1-(N1[t]+a21*N2[t])/K1)+ e1[t])
+    N2[t+1] <- N2[t]*exp(r2*(1-(N2[t]+a12*N1[t])/K2)+ e2[t])
+  }
+  N1.p[i] <- length(which(N1<=0.05))
+  N2.p[i] <- length(which(N2<=0.05))
+}
+
+L1[a]<-mean(N1.p)/200
+L2[a]<-mean(N2.p)/200
+}
+
+plot(r1s,L2,col="brown2",lwd=2,type='l',ylim=c(0, 1),
+     xlab = "growth ratio of population 1", ylab = "Percentage of extinction",
+     main="Evolution of two competitors under stochasticity", font.lab="3", font.main= "1", lab=c(6,6,7), mgp=c(1.6,0.4,0), sub= "Figure2: probability of extinction according to growth ratio, sd=0.1")
+lines(r1s, L1,col="seagreen",lwd=2)
+abline(h=0.5, lty=2)
+
+```
+The figure2 shows that when the population 1 has a higher growth ratio, the percentage of extinction of the population 2 is going up while the one of the population 1 is close to zero. 
+
+we are trying now to visualise when the population 2 goes extinct with r1=1.0 and r2=0.1. I will set as extinct a population with a size equal or under 0.05 individuals. The stochasitcity standart deviation value is 0.1.
+
+```{r first.extinction.function}
+
+position.N1<- numeric(200)
+position.N2<-numeric(200)
+
+set.seed(0907) # for reproductible data
+r1 <- 1.0
+r2 <- 0.1
+for(i in 1:200){
+  e1<- rnorm(steps,0 ,0.1)
+  e2<-rnorm(steps,0 ,0.1)
+  for(t in 1:(steps-1)){
+    N1[t+1] <- N1[t]*exp(r1*(1-(N1[t]+a21*N2[t])/K1)+ e1[t])
+    N2[t+1] <- N2[t]*exp(r2*(1-(N2[t]+a12*N1[t])/K2)+ e2[t])
+  }
+  
+  position.N1[i]<-which(N1<=0.05)[1] #gives the position of the first extinction
+  position.N2[i]<- which(N2<=0.05)[1]
+ 
+}
+
+```
+
+The generation when the first exctinction of the population 1 appear is shown bellow.
+```{r position.extinction.pop1}
+print(position.N1)
+```
+we can see for the population 1 that the population goes extinct only two times on two hundred runs, and very late in time. 
+
+The generation when the first exctinction of the population 2 appear is shown bellow.
+```{r position.extinction.pop2}
+print(position.N2)
+```
+The population 2 goes extinct many times.
+The analyse of the results was done bellow.
+```{r summary.pop2}
+summary(position.N2, na.rm=TRUE)
+```
+```{r}
+summary(position.N1, na.rm=TRUE)
+```
+
+The analyse shows that we have about half of non extinction and half extinction with two hundred runs for the population 2. We have about 1% extinction for the population 1. The mean generation for N2 which goes extinct is the 134th. We can see that it is quite late in time.
+
+In a third time, probability of extinction of the two population was ploted, with the population 2 that have an increasing growth ratio, under a stochasticity standart variation value of 0.2.
+```{r model.stochasticity.0.2}
+
+for (a in 1:20){
+r1 <- r1s[a]
+r2 <- 0.1
+for(i in 1:200){
+  e1<- rnorm(steps,0 ,0.2)
+  e2<-rnorm(steps,0 ,0.2)
+  for(t in 1:(steps-1)){
+    N1[t+1] <- N1[t]*exp(r1*(1-(N1[t]+a21*N2[t])/K1)+ e1[t])
+    N2[t+1] <- N2[t]*exp(r2*(1-(N2[t]+a12*N1[t])/K2)+ e2[t])
+  }
+  N1.p[i] <- length(which(N1<=0.05))
+  N2.p[i] <- length(which(N2<=0.05))
+}
+
+L1[a]<-mean(N1.p)/200
+L2[a]<-mean(N2.p)/200
+}
+
+plot(r1s,L2,col="brown2",lwd=2,type='l',ylim=c(0, 1),
+     xlab = "growth ratio population 1", ylab = "Percentage of extinction",
+     main="Evolution of two competitors under stochasticity", font.lab="3", font.main= "1", lab=c(6,6,7), mgp=c(1.6,0.4,0), sub= "Figure3: probability of extinction according to growth ratio, sd=0.2")
+lines(r1s, L1,col="seagreen",lwd=2)
+abline(h=0.8, lty=2)
+
+```
+In the figure3, both of the populations have increased their extinction rate. This could be explained by the increase of variability in the environment. In effect, we can see that the population 2 has a relative stable extinction rate, therefore the influance from the population 1 has not changed. 
+
+```{r first.extinction.function.0.2}
+set.seed(1421)
+position.N1<- numeric(200)
+position.N2<-numeric(200)
+
+set.seed(0907) # for reproductible data
+r1 <- 1.0
+r2 <- 0.1
+for(i in 1:200){
+  e1<- rnorm(steps,0 ,0.2)
+  e2<-rnorm(steps,0 ,0.2)
+  for(t in 1:(steps-1)){
+    N1[t+1] <- N1[t]*exp(r1*(1-(N1[t]+a21*N2[t])/K1)+ e1[t])
+    N2[t+1] <- N2[t]*exp(r2*(1-(N2[t]+a12*N1[t])/K2)+ e2[t])
+  }
+  
+  position.N1[i]<-which(N1<=0.05)[1] #gives the position of the first extinction
+  position.N2[i]<- which(N2<=0.05)[1]
+ 
+}
+```
+
+```{r}
+summary(position.N2, na.rm=TRUE)
+```
+```{r}
+summary(position.N1, na.rm=TRUE)
+```
+
+In the anaylsis of the first extinction, we can deduce that the gap of percentage of exinction between the two population is higher here. Hence, we can conclude that a higher stochasticity permit to give a stronger advantage to the population that has a higher growth ratio.
+
+##Discution
+
+The three figures expose the importance of growth ratio. With a high growth ratio a population can take advantage on the other. However, we have to take into accout the variability of the environment, represented here with the stochasticity. It has been demonstrated that higher the change are in the environment, more efficient the advantage of high growth ratio become. 
+
+Hence, a seconde issue arises: how to estimate the value of stochasticity? 
+More or less random value for the stochasticity were choosen here. However, it would be interesting to know if the values are closed to the one founed in nature, to be able to predict if a population could reach the exinction or not in case of the presence of a competitor.
+ 
