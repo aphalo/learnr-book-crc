@@ -342,7 +342,7 @@ if (printing) {
 }
 @
 
-The condition passed as argument to \code{if} enclosed in parentheses, can be anything yielding a \code{logical} vector, however, as this condition is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \code{a}.
+The condition passed as argument to \code{if} enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \code{a}.
 
 <<if-3>>=
 a <- 10.0
@@ -382,7 +382,7 @@ else print("'a' is not negative")
 Play with the use conditional execution, with both simple and compound statements, and also think how to combine \code{if} and \code{else} to select among more than two options.
 
 \begin{playground}
-Revise the conversion rules between \code{numeric} and \code{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics:
+Revise the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics:
 
 <<eval=FALSE>>=
 if (0) print("hello")
@@ -417,7 +417,7 @@ Do play with the use of the switch statement.
 
 \subsubsection{Vectorized}
 \index{ifelse}
-Vectorized conditional execution is coded by means of a \emph{function} called \Rfunction{ifelse()} (written as a single word). This function takes three arguments: a logical vector (\code{test}), a result vector for TRUE (\code{yes}), a result vector for FALSE (\code{no}). All three can be any construct giving the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will apply if they are not of the expected length. No recycling applies to \code{test}.
+Vectorized conditional execution is coded by means of a \emph{function} called \Rfunction{ifelse()} (written as a single word). This function takes three arguments: a \Rclass{logical} vector (\code{test}), a result vector for TRUE (\code{yes}), a result vector for FALSE (\code{no}). All three can be any construct giving the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will apply if they are not of the expected length. No recycling applies to \code{test}.
 
 <<ifelse-1>>=
 a <- 1:10
@@ -429,7 +429,7 @@ ifelse(NA, a + 1, a - 1) # as expected
 @
 
 \begin{warningbox}
-In the case of \\Rfunction{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as argument to its the first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} of length one, expecting that it will be recycled because arguments passed to the other parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining of the vectors being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
+In the case of \Rfunction{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as argument to its the first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} of length one, expecting that it will be recycled because arguments passed to the other parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining of the vectors being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
 
 <<>>=
 ifelse(TRUE, 1:5, -5:-1)
@@ -558,7 +558,7 @@ With \code{a} of length 1 or longer, the statements are equivalent, but when \co
 
 \end{warningbox}
 
-We sometimes may not be able to use vectorization, or may be easiest to not use it. However, whenever working with large data sets, or many similar datasets, we will need to take performance into account. As vectorization usually also makes code simpler, it is good style to use it whenever possible.
+We sometimes may not be able to use vectorization, or may be easiest to not use it. However, whenever working with large data sets, or many similar data sets, we will need to take performance into account. As vectorization usually also makes code simpler, it is good style to use it whenever possible.
 
 <<for-2>>=
 b <- numeric(length(a)-1)
@@ -702,7 +702,7 @@ print(row.sum)
 
 \code{A[i, ]} selects row \code{i} and all columns. In \langname{R}, the row index always comes first, which is not the case in all programming languages.
 
-Both explicit loops can be if we use an \emph{apply} function, such as \Rfunction{apply()}, \Rfunction{lapply()} and \Rfunction{sapply()}, in place of the outer \code{for} loop.\index{apply@\code{apply}}. See section \ref{}
+Both explicit loops can be if we use an \emph{apply} function, such as \Rfunction{apply()}, \Rfunction{lapply()} and \Rfunction{sapply()}, in place of the outer \code{for} loop.\index{apply@\code{apply}}. See section \ref{sec:data:apply} on page \pageref{sec:data:apply} for details on the use of R's \emph{apply} functions.
 
 <<nested-4>>=
 row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 inidcates rows
@@ -715,15 +715,54 @@ How would you change this last example, so that only the last three columns are 
 
 There are many variants of \emph{apply} functions, both in base \langname{R} and exported by contributed packages. See section \ref{sec:data:apply} for details on the use of several of the later ones.
 
+\section{Object names as character strings}
+
+In all assignment examples before this section, we have given the object names to be assigned to, as part of expressions. Sometimes, in scripts or packages, we may want to provide the object name to be assigned to as a character string. This requires the use of function \Rfunction{assign()} instead of the operator \code{<-}. The statements bellow demonstrate this.
+
+<<assignx-01>>=
+assign("a", 9.99)
+a
+assign("b", a)
+b
+@
+
+The two toy examples above do not demonstrate why one may want to use \code{assign()}. In scripts and package code there are a few typical cases where we may want to use character strings to store (future or existing) object names: 1) we may want to allow the user to provide names either interactively or as data as character objects, 2) in an iterative loop we may want to transverse a vector or list of object names, or 3) we may want to construct object names at runtime based on data or settings.
+
+<<assignx-02>>=
+for (i in 1:5) {
+   assign(paste("zz_", i, sep = ""), i^2)
+}
+ls(pattern = "zz_*")
+@
+
+The complementary operation is to \emph{get} an object when we have available its name as a character string. We use function \Rfunction{get()}.
+
+<<assignx-03>>=
+a <- 555
+get("a")
+@
+
+If we have available a character vector containing object names and we want to create a list containing these objects we can use function \Rfunction{mget()}. In the example below we use function \code{ls()} to obtain a character vector of object names matching a specific pattern.
+
+<<assignx-04>>=
+obj_names <- ls(pattern = "zz_*")
+obj_lst <- mget(obj_names)
+str(obj_lst)
+@
+
+\begin{playground}
+Think of possible uses of functions \code{assign()}, \code{get()} and \code{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revised this script until the result produced by the script matches your expectations.
+\end{playground}
+
 \section{Packages}\label{sec:script:packages}
 \index{packages!using}
-In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \code{install.packages()} is used to install packages, either from a file, or directly from the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \code{install.packages()} and \code{update.packages()}) to install and update packages.
+In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \Rfunction{install.packages()} is used to install packages, either from a file, or directly from the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install and update packages.
 
 <<packages-1>>=
 library(graphics)
 @
 
-Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \code{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
+Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \pkgname{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
 
 \Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under \pgrmname{MS-Windows}, very rarely the needed shell, commands and compilers are already available. Installing them is not too difficult (you will need \pgrmname{RTools}, and \pgrmname{\hologo{MiKTeX}}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \pgrmname{RStudio}. However, binaries are for most packages also readily available.
 

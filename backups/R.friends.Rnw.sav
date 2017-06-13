@@ -47,7 +47,7 @@ Studying the book \citetitle{Wickham2014advanced} \autocite{Wickham2014advanced}
 
 \section{Measuring and improving performance}
 
-In this section we present simple ``toy'' examples of how execution speed of R code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of R's built-in compiler to improve performance of R code. 
+In this section we present simple ``toy'' examples of how execution speed of R code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of R's built-in compiler to improve performance of R code.
 
 \subsection{Benchmarking}
 
@@ -222,13 +222,13 @@ my.fun13 <- function(row = 100, col = 100) {
 A round about but very effective way of improving performance with a runtime that is only 1.6\% of the starting one, or a reduction in execution time by more than 98\%.
 
 <<>>=
-microbenchmark(my.fun13(row = 100, col = 100), unit = "ms")
+microbenchmark(my.fun13(row = 500, col = 500), unit = "ms")
 @
 
 We may still want to know where time is being spent in the optimized version of the function.
 
-<<>>=
-prof13.df <- profr(my.fun13(row = 100, col = 100), interval = 0.00003)
+<<cache=FALSE>>=
+prof13.df <- profr(my.fun13(row = 500, col = 500), interval = 0.0001)
 
 ggplot(prof13.df)
 @
@@ -249,7 +249,7 @@ microbenchmark(my.fun14(row = 100, col = 100), unit = "ms")
 @
 
 \begin{playground}
-We have gone very far in optimizing the function. In this last version the function returns a \code{tibble} instead of a \code{data.frame}. This can be expected to affect the performance of different operations, from indexing and computations to summaries. Use bench marking to assess these differences, both for cases with substantially more columns than rows, and more rows than columns. Think carefully a test case that makes heave use of indexing, calculations combining several columns, and sorting.
+We have gone very far in optimizing the function. In this last version the function returns a \code{tibble} instead of a \code{data.frame}. This can be expected to affect the performance of different operations, from indexing and computations to summaries when applied to the returned object. Use bench marking to assess these differences, both for cases with substantially more columns than rows, and more rows than columns. Think carefully a test case that makes heavy use of indexing, calculations combining several columns, and sorting.
 \end{playground}
 
 Additional profiling tools such as those provided by package \pkgname{proftools} can be useful when dealing with more complex pieces of code.
@@ -261,7 +261,7 @@ We can see if a function is compiled, by printing it and looking if it contains 
 
 To test what speed-up compiling can achieve for this small function we switch-off default compiling momentarily with function \code{enaleJIT()}---JIT is an abbreviation for Just In Time compiler. Possible values of \code{levels} range from 0 to 3. Zero disables the compiler, while 1, 2 and 3 indicate use of the compiler by default in an increasing number of situations.
 
-We define, using a different name, the same function as earlier, and we check that it has not been compiled. Then we compile it. 
+We define, using a different name, the same function as earlier, and we check that it has not been compiled. Then we compile it.
 
 <<>>=
 old.level <- compiler::enableJIT(level = 0L)
@@ -299,7 +299,7 @@ One extremely important feature leading to the success of \langname{R} is extens
 
 Most common reasons for using other programming languages, are the availability of libraries written in \langname{FORTRAN}, \langname{C} and \langname{C++} that are well tested and optimized for performance. This is frequently the case for numerical calculations and time-consuming data manipulations like image analysis. In such cases the R code in packages is just a wrapper (or ``glue'') to allow the functions in the library to be called from R.
 
-In other cases we may diagnose a performance bottleneck, and decide to write a few functions within a package otherwise written in R, in a compiled language like \langname{C++}. In such cases is a good idea to use bench marking to compare implementations, as the use of a different language does not necessarily provide a worthwhile performance enhancement. The reason behind this is that different languages do not always store data in computer memory in the same format. Differences among languages can add overhead to function calls across them, specially when they execute very quickly when called from R and/or when large amounts of data need to be shuffled back and forth between R and functions written in other languages. The R proitself is written in the \langname{C} language. 
+In other cases we may diagnose a performance bottleneck, and decide to write a few functions within a package otherwise written in R, in a compiled language like \langname{C++}. In such cases is a good idea to use bench marking to compare implementations, as the use of a different language does not necessarily provide a worthwhile performance enhancement. The reason behind this is that different languages do not always store data in computer memory in the same format. Differences among languages can add overhead to function calls across them, specially when they execute very quickly when called from R and/or when large amounts of data need to be shuffled back and forth between R and functions written in other languages. The R program itself is written in the \langname{C} language.
 
 \subsection{C++}
 
@@ -339,7 +339,7 @@ As we will see below, this is not the case when calling Java and Python function
 
 \subsection{FORTRAN and C}
 
-In the case of \langname{FORTRAN} and \langname{C}, the process is less automated in the R code needed to call the compiled functions needs to be explicitly written (See \emph{Writing R Extensions} in the R documentation, for up-to-date details). Once written, the building and installation of the package is automatic. This is the way how many existing libraries are called from within R and R packages.
+In the case of \langname{FORTRAN} and \langname{C}, the process is less automated as the R code needed to call the compiled functions needs to be explicitly written (See \emph{Writing R Extensions} in the R documentation, for up-to-date details). Once written, the building and installation of the package is automatic. This is the way how many existing libraries are called from within R and R packages.
 
 \subsection{Python}
 
@@ -359,7 +359,7 @@ It is also possible to call R functions from \langname{Python}. However, this is
 
 \subsection{Java}
 
-Although \langname{Java} compilers exist, most frequently Java programs are compiled into intermediate byte code and this is interpreted, and usually the interpreter includes a JIT compiler. For calling \langname{Java} functions or accessing Java objects from R code, the solution is to use package \pkgname{rJava}. One important point to remember is that the Java Development Environment must be installed for this package to work. The usually installed runtime is not enough.
+Although native \langname{Java} compilers exist, most frequently Java programs are compiled into intermediate byte code and this is interpreted, and usually the interpreter includes a JIT compiler. For calling \langname{Java} functions or accessing Java objects from R code, the solution is to use package \pkgname{rJava}. One important point to remember is that the Java Development Environment must be installed for this package to work. The usually installed runtime is not enough.
 
 We need first to start the Java Virtual Machine (the byte-code interpreter).
 
@@ -407,7 +407,7 @@ The\index{command shell}\index{sh}\index{bash} operating system shell can be acc
 
 \section{Web pages, and interactive interfaces}
 
-There is a lot that could be written on the using R to create web pages, interactive widgets and gadgets for both local and remote use. This is an area currently under intense development. One example is the \pkgname{Shiny} package and Shiny server \url{https://shiny.rstudio.com/}. This package allows the creation of interactive displays to be viewed through any web browser.
+There is a lot that could be written on using R to create web pages, interactive widgets and gadgets for both local and remote user interaction. This is an area currently under intense development. One example is the \pkgname{Shiny} package and Shiny server \url{https://shiny.rstudio.com/}. This package allows the creation of interactive displays to be viewed through any web browser.
 
 \sloppy
 There are other packages for generating both static and interactive graphics in formats suitable for on-line display, as well as package \pkgname{knitr} \url{https://yihui.name/knitr/} used for writing the present book, which when using R Markdown for markup (with package \pkgname{rmarkdown} \url{http://rmarkdown.rstudio.com} or \pkgname{Bookdown} \url{https://bookdown.org/} can output self-contained HTML files in addition to RTF and PDF formats.
@@ -417,7 +417,7 @@ try(detach(package:ggplot2))
 try(detach(package:tibble))
 try(detach(package:profr))
 try(detach(package:microbenchmark))
-try(detach(package:rJava))
+# try(detach(package:rJava))
 # try(detach(package:rPython))
 try(detach(package:inline))
 try(detach(package:Rcpp))

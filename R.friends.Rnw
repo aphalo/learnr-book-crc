@@ -47,7 +47,7 @@ Studying the book \citetitle{Wickham2014advanced} \autocite{Wickham2014advanced}
 
 \section{Measuring and improving performance}
 
-In this section we present simple ``toy'' examples of how execution speed of R code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of R's built-in compiler to improve performance of R code. 
+In this section we present simple ``toy'' examples of how execution speed of R code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of R's built-in compiler to improve performance of R code.
 
 \subsection{Benchmarking}
 
@@ -225,10 +225,14 @@ A round about but very effective way of improving performance with a runtime tha
 microbenchmark(my.fun13(row = 100, col = 100), unit = "ms")
 @
 
+<<>>=
+microbenchmark(my.fun13(row = 1000, col = 1000), times = 20L, unit = "ms")
+@
+
 We may still want to know where time is being spent in the optimized version of the function.
 
 <<>>=
-prof13.df <- profr(my.fun13(row = 100, col = 100), interval = 0.00003)
+prof13.df <- profr(my.fun13(row = 1000, col = 1000), interval = 0.001)
 
 ggplot(prof13.df)
 @
@@ -248,6 +252,10 @@ Yes, indeed, using \code{as\_tibble()} instead of \code{as.data.frame()} halves 
 microbenchmark(my.fun14(row = 100, col = 100), unit = "ms")
 @
 
+<<>>=
+microbenchmark(my.fun14(row = 1000, col = 1000), unit = "ms")
+@
+
 \begin{playground}
 We have gone very far in optimizing the function. In this last version the function returns a \code{tibble} instead of a \code{data.frame}. This can be expected to affect the performance of different operations, from indexing and computations to summaries when applied to the returned object. Use bench marking to assess these differences, both for cases with substantially more columns than rows, and more rows than columns. Think carefully a test case that makes heavy use of indexing, calculations combining several columns, and sorting.
 \end{playground}
@@ -261,7 +269,7 @@ We can see if a function is compiled, by printing it and looking if it contains 
 
 To test what speed-up compiling can achieve for this small function we switch-off default compiling momentarily with function \code{enaleJIT()}---JIT is an abbreviation for Just In Time compiler. Possible values of \code{levels} range from 0 to 3. Zero disables the compiler, while 1, 2 and 3 indicate use of the compiler by default in an increasing number of situations.
 
-We define, using a different name, the same function as earlier, and we check that it has not been compiled. Then we compile it. 
+We define, using a different name, the same function as earlier, and we check that it has not been compiled. Then we compile it.
 
 <<>>=
 old.level <- compiler::enableJIT(level = 0L)
@@ -417,7 +425,7 @@ try(detach(package:ggplot2))
 try(detach(package:tibble))
 try(detach(package:profr))
 try(detach(package:microbenchmark))
-try(detach(package:rJava))
+# try(detach(package:rJava))
 # try(detach(package:rPython))
 try(detach(package:inline))
 try(detach(package:Rcpp))
