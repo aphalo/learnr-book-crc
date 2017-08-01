@@ -13,24 +13,24 @@ opts_knit$set(concordance=TRUE)
 
 In my experience, for those who have mainly used graphical user interfaces, understanding why and when scripts can help in communicating a certain data analysis protocol can be revelatory. As soon as a data analysis stops being trivial, describing the steps followed through a system of menus and dialogue boxes becomes extremely tedious.
 
-It is also usually the case that graphical user interfaces tend to be difficult extend or improve in a way that keeps step-by-step instructions valid over program versions and operating systems.
+It is also usually the case that graphical user interfaces tend to be difficult to extend or improve in a way that keeps step-by-step instructions valid across program versions and operating systems.
 
-Many times the same sequence of commands needs to be applied to different data sets, and scripts make validation of such a requirement easy.
+Many times exactly the same sequence of commands needs to be applied to different data sets, and scripts make both implementation and validation of such a requirement easy.
 
 In this chapter I will walk you through the use of \Rpgrm scripts, starting from a extremely simple script.
 
 \section{What is a script?}\label{sec:script:what:is}
 \index{scripts!definition}
-We call \textit{script} to a text file that contains the same commands that you would type at the console prompt. A true script is not for example an MS-Word file where you have pasted or typed some R commands. A script file has the following characteristics.
+We call \textit{script} to a text file that contains (almost) the same commands that you would type at the console prompt. A true script is not for example an MS-Word file where you have pasted or typed some R commands. A script file has the following characteristics.
 \begin{itemize}
-  \item The script is a text file (ASCII or some other encoding e.g.\ UTF-8 that \Rpgrm uses in your set-up).
+  \item The script is a text file (ASCII or some other encoding e.g.\ UTF-8 that \Rpgrm uses in your locale).
   \item The file contains valid R statements (including comments) and nothing else.
-  \item Comments start at a \code{\#} and end at the end of the line. (True end-of line as coded in file, the editor may wrap it or not at the edge of the screen).
+  \item Comments start at a \code{\#} and end at the end of the line. (True end-of line as coded in the file, the editor may wrap lines or not at the edge of the screen).
   \item The R statements are in the file in the order that they must be executed.
   \item R scripts have file names ending in \texttt{.r} or \texttt{.R}.
 \end{itemize}
 
-It is good practice to write scripts so that they are self-contained. Such a scripts will run in a new R session by including library commands to load all the required packages.
+It is good practice to write scripts so that they are self-contained. To make a script self-contained, one must include calls to \texttt{library()} to load the packages used in addition to all the data-analysis commands. Such scripts can be used to generate the output of the analysis and/or to reproduce an earlier analysis.
 
 <<setup-scripts, include=FALSE, cache=FALSE>>=
 show.results <- FALSE
@@ -54,9 +54,9 @@ And then source this file:
 source("my.first.script.r")
 @
 
-The results of executing the statements contained in the file will appear in the console. The commands themselves are not shown (the sourced file is not \emph{echoed} to the console) and the results will not be printed unless you include an explicit \Rfunction{print()} command in the script. This applies in many cases also to plots---e.g.\ A figure created with \Rfunction{ggplot()} needs to be printed if we want it to be included in the output when the script is run. Adding a redundant \Rfunction{print()} is harmless.
+The results of executing the statements contained in the file will appear in the console. The commands themselves are not shown (the sourced file is not \emph{echoed} to the console) and the results will not be printed unless you include explicit \Rfunction{print()} commands in the script. This applies in many cases also to plots---e.g.\ A figure created with \Rfunction{ggplot()} needs to be printed if we want it to be included in the output when the script is run. Adding a redundant \Rfunction{print()} is harmless.
 
-From within \RStudio, if you have an \Rpgrm script open in the editor, there will a ``source'' drop box ($\neq$ DropBox) visible from where you can choose ``source'' as described above, or ``source with echo'' for the currently open file.
+From within \RStudio, if you have an \Rpgrm script open in the editor, there will be a ``source'' drop box ($\neq$ DropBox) visible from where you can choose ``source'' as described above, or ``source with echo'' for the currently open file.
 
 When a script is \emph{sourced}, the output can be saved to a text file instead of being shown in the console. It is also easy to call \Rpgrm with the script file as argument directly at the command prompt of the operating system.
 \begin{shaded}
@@ -66,7 +66,7 @@ RScript my.first.script.r
 \end{verbatim}
 \end{shaded}
 
-You can open a operating system's \emph{shell} from the Tools menu in \RStudio, to run this command. The output will be printed to the shell console. If you would like to save the output to a file, use redirection.
+You can open an operating system's \emph{shell} from the Tools menu in \RStudio, to run this command. The output will be printed to the shell console. If you would like to save the output to a file, use redirection using the operating system's syntax.
 \begin{shaded}
 \footnotesize
 \begin{verbatim}
@@ -74,16 +74,16 @@ RScript my.first.script.r > my.output.txt
 \end{verbatim}
 \end{shaded}
 
-Sourcing is very useful when the script is ready, however, while developing a script, or sometimes when testing things, one usually wants to run (or \emph{execute}) one or a few statements at a time. This can be done using the ``run'' button after either positioning the cursor in the line to be executed, or selecting the text that one would like to run (the selected text can be part of a line, a whole line, or a group of lines, as long as it is syntactically valid).
+Sourcing is very useful when the script is ready, however, while developing a script, or sometimes when testing things, one usually wants to run (or \emph{execute}) one or a few statements at a time. This can be done using the ``run'' button\footnote{If you use a different IDE or editor with an R mode, the details will vary, but a run command will be usually available.} after either positioning the cursor in the line to be executed, or selecting the text that one would like to run (the selected text can be part of a line, a whole line, or a group of lines, as long as it is syntactically valid). The key-shortcut Ctrl-Enter is equivalent to pressing the ``run'' button in \RStudio.
 
 \section{How to write a script?}\label{sec:script:writing}
 \index{scripts!writing}
 
-The approach used, or mix of approaches will depend on your preferences, and on how confident you are that the statements will work as expected.
+As with any type of writing various approaches may be preferred by different users. In general, the approach used, or mix of approaches will also depend on how confident you are that the statements will work as expected---you already know the best approach vs.\ you are exploring different alternatives. 
 \begin{description}
 \item[If one is very familiar with similar problems] One would just create a new text file and write the whole thing in the editor, and then test it. This is rather unusual.
-\item[If one if moderately familiar with the problem] One would write the script as above, but testing it, part by part as one is writing it. This is usually what I do.
-\item[If ones mostly playing around] Then if one is using \RStudio, one type statements at the console prompt. As you should know by now, everything you run at the console is saved to the ``History''. In \RStudio the History is displayed in its own pane, and in this pane one can select any previous statement and by pressing a single having copy and pasted to either the console prompt, or the cursor position in the file visible in the editor. In this way one can build a script by copying and pasting from the history to your script file the bits that have worked as you wanted.
+\item[If one if moderately familiar with the problem] One would write the script as above, but testing it, step by step as one is writing it. This is usually what I do.
+\item[If one is mostly playing around] Then if one is using \RStudio, one can type statements at the console prompt. As you should know by now, everything you run at the console is saved to the ``History''. In \RStudio the History is displayed in its own pane, and in this pane one can select any previous statement(s) and by pressing a single button copy and paste them to either the console prompt, or the cursor position in the editor pane. In this way one can build a script by copying and pasting from the history to your script file the bits that have worked as you wanted.
 \end{description}
 
 \begin{playground}
@@ -100,13 +100,13 @@ By now you should be familiar enough with R to be able to write your own script.
 \section{The need to be understandable to people}\label{sec:script:readability}
 \index{scripts!readability}
 
-When you write a script, it is either because you want to document what you have done or you want re-use it at a later time. In either case, the script itself although still meaningful for the computer could become very obscure to you, and even more to someone seeing it for the first time.
+When you write a script, it is either because you want to document what you have done or you want re-use it at a later time. In either case, the script itself although still meaningful for the computer could become very obscure to you, and even more to someone seeing it for the first time. This must be avoided by spending time and effort.
 
 How does one achieve an understandable script or program?
 \begin{itemize}
   \item Avoid the unusual. People using a certain programming language tend to use some implicit or explicit rules of style\footnote{Style includes \textit{indentation} of statements, \textit{capitalization} of variable and function names.}. As a minimum try to be consistent with yourself.
-  \item Use meaningful names for variables, and any other object. What is meaningful depends on the context. Depending on common use a single letter may be more meaningful than a long word. However self explaining names are better: e.g. using \code{n.rows} and \code{n.cols} is much clearer than using \code{n1} and \code{n2} when dealing with a matrix of data. Probably \code{number.of.rows} and \code{number.of.columns} would just increase the length of the lines in the script, and one would spend more time typing without getting much in return.
-  \item How to make the words visible in names: traditionally in R one would use dots to separate the words and use only lower case. Some years ago, it became possible to use underscores. The use of underscores is quite common nowadays because in some contexts is ``safer'' as in some situations a dot may have a special meaning. What we call ``camel case'' is only infrequently used in R programming but is common in other languages like Pascal. An example of camel case is \code{NumCols}. In some cases it can become a bit confusing as in \code{UVMean} or \code{UvMean}.
+  \item Use meaningful names for variables, and any other object. What is meaningful depends on the context. Depending on common use a single letter may be more meaningful than a long word. However self explanatory names are better: e.g. using \code{n.rows} and \code{n.cols} is much clearer than using \code{n1} and \code{n2} when dealing with a matrix of data. Probably \code{number.of.rows} and \code{number.of.columns} would make the script verbose, take longer to type without gaining much in return.
+  \item How to make the words visible in names: traditionally in R one would use dots to separate the words and use only lower case. Some years ago, it became possible to use underscores. The use of underscores is quite common nowadays because in some contexts it is ``safer'' as in some situations a dot may have a special meaning. What we call ``camel case'' is only infrequently used in R programming but is common in other languages like Pascal. An example of camel case is \code{NumCols}. In some cases it can become a bit confusing as in \code{UVMean} or \code{UvMean}.
 \end{itemize}
 
 \begin{playground}
@@ -125,16 +125,16 @@ C -> variable
 @
 \end{playground}
 
-The points discussed above already help a lot. However, one can go further in achieving the goal of human readability by interspersing explanations and code ``chunks'' and using all the facilities of typesetting, even of maths, within the listing of the script. Furthermore, by including the results of the calculations and the code itself in a typeset report built automatically, we ensure that the results are indeed the result of running the code shown. This greatly contributes to data analysis reproducibility, which is becoming a widespread requirement for any data analysis both in academic research and in industry. It is possible not only to build whole books like this one, but also whole data-based web sites with these tools.
+The points discussed above already help a lot. However, one can go further in achieving the goal of human readability by interspersing explanations and code ``chunks'' and using all the facilities of typesetting, even of formatted maths formulas and equations, within the listing of the script. Furthermore, by including the results of the calculations and the code itself in a typeset report built automatically, we ensure that the results are indeed the result of running the code shown. This greatly contributes to data analysis reproducibility, which is becoming a widespread requirement for any data analysis both in academic research and in industry. It is possible not only to build whole books like this one, but also whole data-based web sites with these tools.
 
 In the realm of programming, this approach is called literate programming\index{literate programming} and was first proposed by Donald Knuth \autocite{Knuth1984a} through his \pgrmname{WEB} system. In the case of \Rpgrm programming the first support of literate programming was through \pkgname{Sweave}, which has been mostly superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of Markdown or \LaTeX\ \autocite{Lamport1994} as markup language for the textual contents, and also can format and add syntax highlighting to code chunks. Markdown\index{Markdown}\index{Bookdown} language has been extended to make it easier to include R code---R Markdown (\url{http://rmarkdown.rstudio.com/}), and in addition suitable for typesetting large and complex documents---Bookdown \autocite{Xie2016}. The use of \pkgname{knitr} is well integrated into the \RStudio IDE.
 
-This is not strictly an R programming subject, as it concerns programming in any language. On the other hand, this is an incredibly important skill to learn, but well described in other books and web sites cited in the previous paragraph. This whole book, including figures, has been generated using \pkgname{knitr} and the source scripts for the book are available through Bitbucket at \url{https://bitbucket.org/aphalo/using-r}.
+This is not strictly an R programming subject, as it concerns programming in any language. On the other hand, this is an incredibly important skill to learn, but well described in other books and web sites cited in the previous paragraph. This whole book, including figures, has been generated using \pkgname{knitr} and the source scripts for the book are available through Bitbucket at \url{https://bitbucket.org/aphalo/learnr-book}.
 
 \section{Debugging scripts}\label{sec:script:debug}
 \index{scripts!debugging}
 
-The use of the work \emph{bug} to describe a problem in computer hardware and software started in 1946 when a real bug, more precisely a moth, got between the contacts of a relay in an electromechanical computer causing it to malfunction and Grace Hooper described the first computer \emph{bug}. The use of the term bug in engineering predates the use in computer science, and consequently the first use of bug in computing did catch-on easily as it was memorable as it represented an earlier-used metaphor becoming real.
+The use of the word \emph{bug} to describe a problem in computer hardware and software started in 1946 when a real bug, more precisely a moth, got between the contacts of a relay in an electromechanical computer causing it to malfunction and Grace Hooper described the first computer \emph{bug}. The use of the term bug in engineering predates the use in computer science, and consequently the first use of bug in computing did catch-on easily as it was memorable as it represented an earlier-used metaphor becoming real.
 
 A suitable quotation from a letter written by Thomas Alva Edison 1878 (\autocite{Hughes2004}):
 \begin{quote}
@@ -145,7 +145,7 @@ The quoted paragraph above, makes clear, that only very exceptionally any new de
 
 Even for scripts used for analysing a single data set, we need to be confident that the algorithms and their implementation are valid, and able to return correct results. This is true both for scientific reports, expert data-based reports and any data analysis related to assessment of compliance with legislation or regulations. Of course, even in cases when we are not required to demonstrate validity, say for decision making purely internal to a private organization, we will still want to avoid costly mistakes.
 
-The first step in producing reliable computer code is to accept that any code that we write needs to be tested and if possible validated. Another important step is to make sure that input is validated within the script and a suitable error produced for bad input (or input values outside the range that can be reliably handled by the script).
+The first step in producing reliable computer code is to accept that any code that we write needs to be tested and, if possible, validated. Another important step is to make sure that input is validated within the script and a suitable error produced for bad input (or input values outside the range that can be reliably handled by the script).
 
 If during testing, or during normal use, a wrong value is returned by a calculation, or no value (e.g.\ the script crashes or triggers a fatal error), debugging consists in finding the cause of the problem. The cause can be either a mistake in the implementation of an algorithm, as well as in the algorithm itself. However, many apparent \emph{bugs} are caused by bad or missing handling of special cases like invalid input values, rounding errors, division by zero, etc.\ in which a program crashes instead of elegantly issuing a helpful error message.
 
@@ -155,14 +155,14 @@ Diagnosing the source of bugs is in most cases like detective work. One uses hun
   \paragraph{Error messages} When debugging keep in mind that in some cases a single bug can lead to a whole cascade of error messages. Do also keep in mind that typing mistakes, originating when code is entered through the keyboard, can break havock in a script: usually there is little correspondence between the number of error messages and the seriousness of the bug triggering them. When several errors are triggered, start by reading the error message printed first, as later errors can be an indirect consequence of earlier ones.
 \end{warningbox}
 
-There are special tools, called debuggers, available, and they help enormously. Debuggers allow one to step through the code, executing one statement at a time and at each pause allowing the user to inspect the objects present in the R environment and their values. It is even possible to execute additional statements, say to modify the value of a variable, while execution is paused. A debuggers is built-in in \RStudio and also available through the R console.
+There are special tools, called debuggers, available, and they help enormously. Debuggers allow one to step through the code, executing one statement at a time and at each pause allowing the user to inspect the objects present in the R environment and their values. It is even possible to execute additional statements, say to modify the value of a variable, while execution is paused. An R debugger is available within \RStudio and also through the R console.
 
-At first, when writing your first scripts, you will manage perfectly well, and learn more by running the script one line at a time and when needed temporarily inserting \code{print()} statements to ``look'' at how the value of variables changes at each step. A debugger, allows a lot more control, as one can ``step in'' and ``step out'' of functions definitions, set and un set break points where execution will stop, which is especially useful when developing R packages.
+At first, when writing your first scripts, you will manage perfectly well, and learn more by running the script one line at a time and when needed temporarily inserting \code{print()} statements to ``look'' at how the value of variables changes at each step. A debugger, allows a lot more control, as one can ``step in'' and ``step out'' of functions definitions, set and unset break points where execution will stop, which is especially useful when developing R packages.
 
-When reproducing the examples in this chapter, do keep this section in mind. In addition, if you get stuck trying to find the cause of a bug, do extend your search both to the most trivial of possible causes, and to the least likely ones (such as a bug in a CRAN package or R itself). Also remember, as discussed on page \pageref{sec:getting:help}, you will find on-line ready-answers to many of your likely questions. For example Googling for the text of an error message is usually well rewarded. Failing this, you can ask questions at, e.g., StackOverflow (\url{https://stackoverflow.com/}).
+When reproducing the examples in this chapter, do keep this section in mind. In addition, if you get stuck trying to find the cause of a bug, do extend your search both to the most trivial of possible causes, and to the least likely ones (such as a bug in a CRAN package or R itself). Of course, when suspecting a bug in code you have not written, it is wise to very carefully read the documentation, as the ``bug'' may be just in your understanding of what a certain piece of code is expected to do.  Also remember, as discussed on page \pageref{sec:getting:help}, you will find on-line ready-answersed questions to many of your likely problems and doubts. For example Googling for the text of an error message is usually well rewarded. Failing this, you can ask questions at, e.g., StackOverflow (\url{https://stackoverflow.com/}), after searching the site for possible existing answers.
 
 \begin{warningbox}
-When installing packages from other sources than CRAN (e.g.\ development versions from Github or Rforge, or in-house packages) there is no warranty that conflicts will not happen. Packages (and their versions) released through CRAN are regularly checked for inter-compatibility, while packages released through other channels are usually checked against only a few packages.
+When installing packages from other sources than CRAN (e.g.\ development versions from Github, Bitbucket or Rforge, or in-house packages) there is no warranty that conflicts will not happen. Packages (and their versions) released through CRAN are regularly checked for inter-compatibility, while packages released through other channels are usually checked against only a few packages.
 
 Conflicts among packages can easily arise, for example when they use the same names for objects or functions. In addition, many packages use functions defined in packages in the R distribution itself or other independently developed packages by importing them. Updates to depended upon packages can ``break'' (make non-functional) the dependent packages or parts of them. The rigorous testing by CRAN detects in most cases such problems when package revisions are submitted, forcing package maintainers to fix problems before distribution through CRAN is possible. However, if you use other repositories, I recommend that you make sure that revised (especially if under development) versions do work with your own script, before their use in ``production'' (important) data analyses.
 \end{warningbox}
@@ -192,6 +192,7 @@ a
 
 Any result that needs to be made available outside the function must be returned by the function. If the function \Rfunction{return()} is not explicitly used, the value returned by the last statement \emph{executed} within the body of the function will be returned.
 
+\label{chunck:print:funs}
 <<fun-02>>=
 print.x.1 <- function(x){print(x)}
 print.x.1("test")
@@ -208,10 +209,10 @@ print.x.4("test")
 Now we will define a useful function: a function for calculating the standard error of the mean from a numeric vector.
 
 <<fun-1NN>>=
-SEM <- function(x){sqrt(var(x)/length(x))}
+SEM <- function(x){sqrt(var(x) / length(x))}
 a <- c(1, 2, 3, -5)
 a.na <- c(a, NA)
-SEM(x=a)
+SEM(x = a)
 SEM(a)
 SEM(a.na)
 @
@@ -234,15 +235,15 @@ simple_SEM(a.na)
 R does not have a function for standard error, so the function above would be generally useful. If we would like to make this function both safe, and consistent with other R functions, one could define it as follows, allowing the user to provide a second argument which is passed as an argument to \Rfunction{var()}:
 
 <<fun-2>>=
-SEM <- function(x, na.rm=FALSE){
-  sqrt(var(x, na.rm=na.rm)/length(na.omit(x)))
+SEM <- function(x, na.rm = FALSE){
+  sqrt(var(x, na.rm = na.rm) / length(na.omit(x)))
 }
 SEM(a)
 SEM(a.na)
 SEM(a.na, TRUE)
-SEM(x=a.na, na.rm=TRUE)
+SEM(x = a.na, na.rm = TRUE)
 SEM(TRUE, a.na)
-SEM(na.rm=TRUE, x=a.na)
+SEM(na.rm = TRUE, x = a.na)
 @
 
 In this example you can see that functions can have more than one parameter, and that parameters can have default values to be used if no argument is supplied. In addition if the name of the parameter is indicated, then arguments can be supplied in any order, but if parameter names are not supplied, then arguments are assigned to parameters based on their position. Once one parameter name is given, all later arguments need also to be explicitly matched to parameters. Obviously if given by position, then arguments should be supplied explicitly for all parameters at `intermediate' positions.
@@ -250,7 +251,7 @@ In this example you can see that functions can have more than one parameter, and
 %We can assign to a variable defined `outside' a function with operator \code{<<-} but the usual recommendation is to avoid its use. This type of effects of calling a function are frequently called `side-effects'.
 
 \begin{playground}
-Test the behaviour of \code{print.x.1} and \code{print.x.5} at the command prompt, and in a script, by writing a script.
+Test the behaviour of functions \code{print.x.1()} and \code{print.x.5()}, as defined on page \pageref{chunck:print:funs}, at the command prompt, and in a script, by writing a script.
 The behaviour of one of these functions will be different when the script is source than at the command prompt. Explain why.
 \end{playground}
 
@@ -297,7 +298,7 @@ print.myclass <- function(x) {
 }
 @
 
-Once a specialized method exists, it will be used.
+Once a specialized method exists for a class, it will be used for objects of this class.
 
 <<explain-object-classes-03>>=
 print(a)
@@ -344,8 +345,8 @@ b
 @
 
 \begin{playground}
-1) What would be the most concise way of defining a specialization for \code{matrix}? Write one, and test it.
-2) How would you modify the code so that also columns to print can be selected?
+1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
+2) How would you modify the code of your \code{my\_print.matrix()} so that also columns to print can be selected?
 \end{playground}
 
 \section{Control of execution flow}\label{sec:script:flow:control}
@@ -368,7 +369,7 @@ print("A")
 }
 @
 
-The example above is pretty useless, but becomes useful when used together with `control' constructs. The \code{if} construct controls the execution of one statement, however, this statement can be a compound statement of almost any length or complexity. Play with the code below by changing the value assigned to variable \code{printing}, including \code{NA}, and \code{logical(0)}.
+The grouping of the last two statements above is of no consequence by itself, but grouping becomes useful when used together with `control' constructs. The \code{if} construct controls the execution of one statement, however, this statement can be a compound statement of almost any length or complexity. Play with the code below by changing the value assigned to variable \code{printing}, including \code{NA}, and \code{logical(0)}.
 
 <<if-2>>=
 printing <- TRUE
@@ -415,10 +416,12 @@ if (a < 0.0) print("'a' is negative")
 else print("'a' is not negative")
 @
 
+\begin{playground}
 Play with the use conditional execution, with both simple and compound statements, and also think how to combine \code{if} and \code{else} to select among more than two options.
+\end{playground}
 
 \begin{playground}
-Revise the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics:
+Study the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics:
 
 <<eval=FALSE>>=
 if (0) print("hello")
@@ -443,29 +446,46 @@ my.object <- "two"
 b <- switch(my.object,
             one = 1,
             two = 1 / 2,
-            three = 1/ 4,
+            three = 1 / 4,
             0
 )
 b
 @
 
-Do play with the use of the switch statement.
+\begin{playground}
+    Do play with the use of the switch statement. Look at the documentation for \code{switch()} using \code{help(switch)} and study the examples at the end of the help page.
+\end{playground}
 
 \subsubsection{Vectorized}
 \index{vectorized if-else}
-Vectorized conditional execution is coded by means of a \emph{function} called \Rfunction{ifelse()} (written as a single word). This function takes three arguments: a \Rclass{logical} vector (\code{test}), a result vector for TRUE (\code{yes}), a result vector for FALSE (\code{no}). All three can be any construct giving the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will apply if they are not of the expected length. No recycling applies to \code{test}.
+Vectorized \emph{if} is a peculiarity of the R language, but very useful for writing concise code that executes a lot faster than logically equivalent but not vectorized code.
+Vectorized conditional execution is coded by means of \emph{function} \Rfunction{ifelse()} (written as a single word). This function takes three arguments: a \Rclass{logical} vector (\code{test}), a result vector for TRUE (\code{yes}), a result vector for FALSE (\code{no}). All three can be any R construct giving the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will take place if they are shorter than the logical vector passed as argument to \code{test}. No recycling ever applies to \code{test}, even if  \code{yes} and/or \code{no} are longer than \code{test}. It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
+
+<<ifelse-0>>=
+my.test <- c(TRUE, FALSE, TRUE, TRUE)
+ifelse(test = my.test, yes = 1, no = -1)
+@
+
+In practice, the most common idiom is to have as argument passed to \code{test} the result of a comparison calculated on-the-fly. In the first example we compute the absolute values for a vector, equivalent to that returned by R function \code{abs()}.
+
+<<ifelse-0a>>=
+nums <- -3:+3
+ifelse(nums < 0, -nums, nums)
+@
+
+Some additional examples, with a few surprises.
 
 <<ifelse-1>>=
 a <- 1:10
 ifelse(a > 5, 1, -1)
 ifelse(a > 5, a + 1, a - 1)
-ifelse(any(a>5), a + 1, a - 1) # tricky
+ifelse(any(a > 5), a + 1, a - 1) # tricky
 ifelse(logical(0), a + 1, a - 1) # even more tricky
 ifelse(NA, a + 1, a - 1) # as expected
 @
 
 \begin{warningbox}
-In the case of \Rfunction{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as argument to its the first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} of length one, expecting that it will be recycled because arguments passed to the other parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining of the vectors being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
+In the case of \Rfunction{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as argument to its first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} of length one, expecting that it will be recycled because arguments passed to the other formal parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining of the vectors being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
 
 <<>>=
 ifelse(TRUE, 1:5, -5:-1)
@@ -477,7 +497,7 @@ ifelse(c(FALSE, TRUE), 1:5, 0)
 \end{warningbox}
 
 \begin{playground}
-Try to understand what is going on in the previous example. Create your own examples to test how \Rfunction{ifelse()} works.
+Try to understand what is going on in the previous examples. Create your own examples to test how \Rfunction{ifelse()} works. In other words, play with the code until you fully understand how \code{ifelse} works.
 \end{playground}
 
 \begin{playground}
@@ -490,7 +510,7 @@ c <- c(rep("a", 5), rep("b", 5))
 # your code
 @
 
-If you do not understand how the three vectors are built, or you cannot guess the values they contain by reading the code, print them, and play with the arguments, until you have clear what each parameter does.
+If you do not understand how the three vectors are built, or you cannot guess the values they contain by reading the code, print them, and play with the arguments, until you have clear what each parameter does. Also use \code{help()} to access the documentation.
 \end{playground}
 
 \subsection{Why using vectorized functions and operators is important}
@@ -501,7 +521,9 @@ However, there are cases were we need to repeatedly execute statements in a way 
 
 \subsection{Iteration}
 \index{for@\code{for}}\index{iteration!for loop}
-We call iteration to the repetitive execution of a program statement (simple or compound). The section of computer code being executed multiple times, conforms a loop (a closed path). Most loops contain a condition that determines when execution will continue outside the loop. The most frequently used type of loop is a \code{for} loop. These loops work in R on lists or vectors of values to act upon.
+We give the name \emph{iteration} to the process of repetitive execution of a program statement (simple or compound)---e.g.\ computed by iteration. We use the same word, iteration, also to name each one of these repetitions of the execution of a statement--e.g.\ the second iteration. 
+
+The section of computer code being executed multiple times, conforms a loop (a closed path). Most loops contain a condition that determines when execution will continue outside the loop. The most frequently used type of loop is a \code{for} loop. These loops work in R on lists or vectors of values to act upon.
 
 <<for-0>>=
 b <- 0
@@ -528,7 +550,7 @@ test.for(list("A", 1))
 test.for(c("z", letters[1:4]))
 @
 
-In contrast to other languages, in \Rpgrm function arguments are not checked for `type' when the function is called. The only requirement is that the function code can handle the argument provided. In this example you can see that the same function works with numeric and character vectors, and with lists. We haven't seen lists before. As earlier discussed all elements in a vector should have the same type. This is not the case for lists. It is also interesting to note that a list or vector of length zero is a valid argument, that triggers no error, but that as one would expect, causes the statements in the loop body to be skipped.
+In contrast to other languages, in \Rpgrm function arguments are not checked for `type' when the function is called. The only requirement is that the function code can handle the argument provided. In this example you can see that the same function works with numeric and character vectors, and with lists. We haven't seen lists before. As earlier discussed all elements in a vector should have the same type. This is not the case for lists. It is also interesting to note that a list or vector of length zero is a valid argument to \code{for()}, that triggers no error, but that as one would expect, causes the statements in the loop body to be skipped.
 
 Some examples of use of \code{for} loops --- and of how to avoid their use.
 
@@ -654,7 +676,7 @@ c
 @
 \end{playground}
 
-\code{repeat}\index{iteration!repeat loops} is seldom used, but adds flexibility as \Rfunction{break()} can be in the middle of the compound statement.
+\code{repeat}\index{iteration!repeat loops} is seldom used, but adds flexibility as \Rfunction{break()} can be located in the middle of the compound statement.
 
 <<repeat-1>>=
 a <- 2
@@ -739,7 +761,7 @@ print(row.sum)
 
 \code{A[i, ]} selects row \code{i} and all columns. In \langname{R}, the row index always comes first, which is not the case in all programming languages.
 
-Both explicit loops can be if we use an \emph{apply} function, such as \Rfunction{apply()}, \Rfunction{lapply()} and \Rfunction{sapply()}, in place of the outer \code{for} loop.\index{apply@\code{apply}}. See section \ref{sec:data:apply} on page \pageref{sec:data:apply} for details on the use of R's \emph{apply} functions.
+Both explicit loops can be eliminated if we use an \emph{apply} function, such as \Rfunction{apply()}, \Rfunction{lapply()} and \Rfunction{sapply()}, in place of the outer \code{for} loop.\index{apply@\code{apply}}. See section \ref{sec:data:apply} on page \pageref{sec:data:apply} for details on the use of R's \emph{apply} functions.
 
 <<nested-4>>=
 row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 inidcates rows
@@ -751,6 +773,12 @@ How would you change this last example, so that only the last three columns are 
 \end{playground}
 
 There are many variants of \emph{apply} functions, both in base \langname{R} and exported by contributed packages. See section \ref{sec:data:apply} for details on the use of several of the later ones.
+
+Calculating row sums is a frequent operation, so R has a built-in function for this. It is always worthwhile, when performance matters, to check if there is an existing function capable of doing the computations we need. In this case using \code{rowSums()} simplifies the code and optimizes performance.
+
+<<nested-5>>=
+rowSums(A)
+@
 
 \section{Object names as character strings}
 
@@ -788,20 +816,20 @@ str(obj_lst)
 @
 
 \begin{playground}
-Think of possible uses of functions \code{assign()}, \code{get()} and \code{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revised this script until the result produced by the script matches your expectations.
+Think of possible uses of functions \code{assign()}, \code{get()} and \code{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
 \end{playground}
 
 \section{Packages}\label{sec:script:packages}
 \index{packages!using}
-In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \Rfunction{install.packages()} is used to install packages, either from a file, or directly from the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install and update packages.
+In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \Rfunction{install.packages()} is used to install packages, either from a file, or directly from a repository in the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install and update packages.
 
 <<packages-1>>=
 library(graphics)
 @
 
-Currently there are thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \pkgname{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
+Currently there are many thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \pkgname{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
 
-\Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under \pgrmname{MS-Windows}, very rarely the needed shell, commands and compilers are already available. Installing them is not too difficult (you will need \pgrmname{RTools}, and \pgrmname{\hologo{MiKTeX}}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
+\Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under \pgrmname{MS-Windows}, very rarely the needed shell, commands and compilers are already available. Installing them is not too difficult (you will need \pgrmname{RTools}, and \pgrmname{\hologo{MiKTeX}}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
 
 The development of packages is beyond the scope of the current book, and very well explained in the book \citetitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folders for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the R help system when the package is loaded. In addition to \langname{R} code, packages can call \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, etc. functions and routines, but some kind of `glue' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. At least for \langname{C++}, the recently developed \pkgname{Rcpp} \langname{R} package makes the ``gluing'' extremely easy. See Chapter \ref{chap:R:performance} starting on page \pageref{chap:R:performance} for more information on performance-related and other limitations of \pgrmname{R} and how to solve possible bottlenecks.
 
