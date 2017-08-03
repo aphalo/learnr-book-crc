@@ -915,56 +915,6 @@ ggplot(AirPassengers, as.numeric = FALSE) +
   geom_line()
 @
 
-\subsection{Adding a table to a plot}\label{sec:plot:geom:table}
-\index{plots!adding tables}
-\index{plots!geometries!table@table}
-
-The \code{geom\_table} plots a data frame or tibble, nested in a tibble pased as data
-argument. The \emph{aesthetics} \code{x} and \code{y} are used for positioning, 
-and the \code{label} aesthetic for the data frame containing the table's content. 
-The table is created as a 'grid' \code{grob} and added as usual to the \code{ggplot} object. Justification, as in a text label, controls where within the table the $x$ and $y$ 
-coordinates used for positioning are to be referenced. The \code{angle} aesthetic
-can be used to rotate the whole table (not shown in the example).
-
-<<ggpmisc-A1>>=
-tb <- tibble(date = ymd(c("2017-05-21", "2007-05-21"), tz = "UCT"),
-             value = 1:2 * 10)
-data.tb <- tibble(x = 0, y = 8e5, tb = list(tb))
-ggplot(my.data, aes(x, y)) +
-  geom_point() +
-  geom_table(data = data.tb, aes(label = tb), hjust = 0, vjust = 0) +
-  theme_bw()
-@
-
-The \code{color} and \code{size} aesthetics control the text within the table. 
-
-<<ggpmisc-A2>>=
-tb <- tibble(date = ymd(c("2017-05-21", "2007-05-21"), tz = "UCT"),
-             value = 1:2 * 10)
-data.tb <- tibble(x = 25, y = 8e5, tb = list(tb))
-ggplot(my.data, aes(x, y)) +
-  geom_point() +
-  geom_table(data = data.tb, aes(label = tb), colour = "blue", size = 4) +
-  theme_bw()
-@
-
-Parsed text, using plotmath syntax is supported in the table, with fallback to
-plain text in case of parsing errors, on a cell by cell basis.
-
-<<ggpmisc-A3>>=
-tb.pm <- tibble(parameter = c("frac(beta[1], a^2)", "frac(beta[2], a^3)"),
-             value = c("10^2.4", "10^3.532"))
-data.tb <- tibble(x = 12.5, y = 8.5e5, tb = list(tb.pm))
-ggplot(my.data, aes(x, y)) +
-  geom_point() +
-  geom_table(data = data.tb, aes(label = tb), parse = TRUE) +
-  theme_bw()
-@
-
-\begin{explainbox}
-  This \emph{geometry} uses internally functions from package \pkgname{gridExtra}.
-\end{explainbox}
-
 \subsection{Peaks and valleys}
 \index{plots!statistics!peaks@peaks}
 \index{plots!statistics!valleys@valleys}
@@ -1055,14 +1005,16 @@ ggplot(AirPassengers) +
   stat_valleys(geom = "line", span = 9, linetype = "dashed")
 @
 
-\subsection{Equations as text or labels from model fits}
-\index{plots!fitted curves!equation annotation}
-\index{plots!annotations!fitted model labels}
-<<echo=FALSE,include=FALSE>>=
-opts_chunk$set(opts_fig_narrow)
-@
+\subsection{Adding a table to a plot}\label{sec:plot:geom:table}
+\index{plots!adding tables}
+\index{plots!geometries!table@table}
 
-How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \Rfunction{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
+The \code{geom\_table} plots a data frame or tibble, nested in a tibble pased as data
+argument. The \emph{aesthetics} \code{x} and \code{y} are used for positioning,
+and the \code{label} aesthetic for the data frame containing the table's content.
+The table is created as a 'grid' \code{grob} and added as usual to the \code{ggplot} object. Justification, as in a text label, controls where within the table the $x$ and $y$
+coordinates used for positioning are to be referenced. The \code{angle} aesthetic
+can be used to rotate the whole table (not shown in the example).
 
 We first generate some artificial data.
 
@@ -1077,6 +1029,87 @@ my.data <- data.frame(x,
                       y2 = y * c(0.5,2),
                       block = c("a", "a", "b", "b"))
 @
+
+The \code{data} for the table is included as a one row tibble, containing the coordinates for the location of the table, and an embedded tibble with the data for the table itself. To embed a tibble within a tibble we wrap it in a list. We use justification so that the x and y coordinates correspond to the lower left corner of the table---instead of the default which at
+the centre. This behaviour is the same as for justification in \code{geom\_text()} and 
+\code{geom\_label()}.
+
+<<ggpmisc-A1>>=
+tb <- tibble(date = ymd(c("2017-05-21", "2007-05-21"), tz = "UCT"),
+             value = 1:2 * 10)
+data.tb <- tibble(x = 0, y = 2e5, tb = list(tb))
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_table(data = data.tb, aes(label = tb), hjust = 0, vjust = 0) +
+  theme_bw()
+@
+
+The \code{color} and \code{size} aesthetics control the text within the table.
+
+<<ggpmisc-A2>>=
+tb <- tibble(date = ymd(c("2017-05-21", "2007-05-21"), tz = "UCT"),
+             value = 1:2 * 10)
+data.tb <- tibble(x = 25, y = 8e5, tb = list(tb))
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_table(data = data.tb, aes(label = tb), colour = "blue", size = 4) +
+  theme_bw()
+@
+
+It is also possible to rotate the table using \code{angle}. As with text labels, justification is interpreted in relation to table-text orientation. We set the \code{x = 0} in \code{data.tb} and then use \code{vjust = 1} to position the top of the
+table at this coordinate value.
+
+<<ggpmisc-A3>>=
+tb <- tibble(date = ymd(c("2017-05-21", "2007-05-21"), tz = "UCT"),
+             value = 1:2 * 10)
+data.tb <- tibble(x = 0, y = 8e5, tb = list(tb))
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_table(data = data.tb, aes(label = tb), angle = 90, vjust = 1) +
+  theme_bw()
+@
+
+Parsed text, using plotmath syntax is supported in the table, with fallback to
+plain text in case of parsing errors, on a cell by cell basis.
+
+<<ggpmisc-A4>>=
+tb.pm <- tibble(parameter = c("frac(beta[1], a^2)", "frac(beta[2], a^3)"),
+             value = c("10^2.4", "10^3.532"))
+data.tb <- tibble(x = 12.5, y = 8e5, tb = list(tb.pm))
+ggplot(my.data, aes(x, y)) +
+  geom_point() +
+  geom_table(data = data.tb, aes(label = tb), parse = TRUE) +
+  theme_bw()
+@
+
+We end this section with a simple example, which even if not very useful demonstrates that
+\code{geom\_table} behaves like a ``normal'' ggplot geometry and that a table can be the only
+data layer in a ggplot object if desired.
+
+<<ggpmisc-A5>>=
+tb.pm <- tibble('x^0' = 1,
+                'x^1' = 1:5,
+                'x^2' = (1:5)^2,
+                'x^3' = (1:5)^3)
+data.tb <- tibble(x = 1, y = 1, tb = list(tb.pm))
+ggplot(data.tb, aes(x, y, label = tb)) +
+  geom_table(size = 7, parse = TRUE) +
+  theme_void()
+@
+
+\begin{explainbox}
+  This \emph{geometry} uses internally functions from package \pkgname{gridExtra}. The use of
+  table themes is not yet supported by this geometry. Neither is the addition of multiple tables with a single call to \code{geom\_table} by passing a \code{tibble} with multiple rows as argument. These features will be added in a future version.
+\end{explainbox}
+
+\subsection{Equations as text or labels from model fits}
+\index{plots!fitted curves!equation annotation}
+\index{plots!annotations!fitted model labels}
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+How to add a label with a polynomial equation including coefficient estimates from a model fit seems to be a frequently asked question in Stackoverflow. The parameter estimates are extracted automatically from a fit object corresponding to each \textit{group} or panel in a plot and other aesthetics for the group respected. An aesthetic is provided for this, and only this. Such a statistics needs to be used together with another geom or stat like geom smooth to add the fitted line. A different approach, discussed in Stackoverflow, is to write a statistics that does both the plotting of the polynomial and adds the equation label. Package \ggpmisc defines \Rfunction{stat\_poly\_eq()} using the first approach which follows the `rule' of using one function in the code for a single action. In this case there is a drawback that the users is responsible for ensuring that the model used for the label and the label are the same, and in addition that the same model is fitted twice to the data.
 
 \subsubsection{Linear models}
 
@@ -1407,6 +1440,10 @@ The statistics \code{stat\_fit\_tb} makes it possible to add summary or ANOVA ta
 
 The default return value of \code{stat\_fit\_tb} is the default output from \code{tidy(mf)} where \code{mf} is the fitted model. In the first three examples we fit linear models.
 
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
 <<ggpmisc-B1>>=
 formula <- y ~ x + I(x^2) + I(x^3)
 ggplot(my.data, aes(x, y)) +
@@ -1414,7 +1451,8 @@ ggplot(my.data, aes(x, y)) +
   geom_smooth(method = "lm", formula = formula) +
   stat_fit_tb(method = "lm",
               method.args = list(formula = formula),
-              label.y.npc = "top", label.x.npc = "left")
+              label.y.npc = "top", label.x.npc = "left") +
+  theme_bw()
 @
 
 When \code{tb.type = "fit.anova"} the output returned is that from \code{tidy(anova(mf))} where \code{mf} is the fitted model.
@@ -1427,7 +1465,8 @@ ggplot(my.data, aes(x, y)) +
   stat_fit_tb(method = "lm",
               method.args = list(formula = formula),
               tb.type = "fit.anova",
-              label.y.npc = "top", label.x.npc = "left")
+              label.y.npc = "top", label.x.npc = "left") +
+  theme_bw()
 @
 
 When \code{tb.type = "fit.coefs"} the output returned is that of \code{tidy(mf)} after selecting the \code{term} and \code{estimate} columns.
@@ -1440,13 +1479,14 @@ ggplot(my.data, aes(x, y)) +
   stat_fit_tb(method = "lm",
               method.args = list(formula = formula),
               tb.type = "fit.coefs",
-              label.y.npc = "center", label.x.npc = "left")
+              label.y.npc = "center", label.x.npc = "left") +
+  theme_bw()
 @
 
 Faceting works as expected, but grouping is ignored as mentioned above. In this case, the colour aesthetic is not applied to the text of the tables. Furthermore,
 if \code{label.x.npc} or \code{label.y.npc} are passed numeric vectors of length > 1, the
 values are obeyed by the different panels. In addition, we use this example to show how
-tables of coefficient estimates for the fit of a function non-linear in its parameters, 
+tables of coefficient estimates for the fit of a function non-linear in its parameters,
 in this case the Michaelis-Menten fucntion can be obtained.
 
 <<ggpmisc-B4>>=
@@ -1463,7 +1503,8 @@ ggplot(Puromycin, aes(conc, rate, colour = state)) +
               label.x.npc = 0.67,
               label.y.npc = c(0.6, 0.3)) +
   theme(legend.position = "none") +
-  labs(x = "C", y = "V")
+  labs(x = "C", y = "V") +
+  theme_bw()
 @
 
 The data in the example below are split by \code{ggplot} into six groups based on the levels of the \code{feed} factor. However, as \code{stat\_fit\_tb()} ignores groupings, we can still fit a linear model to all the data in the panel. Using defaults for formula, we fit a linear model with a factor as explanatory variable, and add to the plot the ANOVA table.
@@ -1474,11 +1515,12 @@ ggplot(chickwts, aes(factor(feed), weight)) +
   stat_fit_tb(tb.type = "fit.anova",
               label.x.npc = 1.07, hjust = 1,
               label.y.npc = "bottom") +
-  expand_limits(y = 0)
+  expand_limits(y = 0) +
+  theme_bw()
 @
 
 We can flip the system of coordinates of the plot, if desired. Be aware that in this case
-the specification of the position and justification of the table is no longer intuitive.
+the specification of the position of the table refers to the aesthetics, which are now flipped.
 
 <<ggpmisc-B6>>=
 ggplot(chickwts, aes(factor(feed), weight)) +
@@ -1487,22 +1529,28 @@ ggplot(chickwts, aes(factor(feed), weight)) +
               label.x.npc = 1.1, hjust = 0,
               label.y.npc = 0, vjust = 1) +
   expand_limits(y = 0) +
-  coord_flip()
+  coord_flip() +
+  theme_bw()
 @
 
-It is also possible to rotate the table using \code{angle}.
+It is also possible to rotate the table using \code{angle}. The justification arguments are interpreted, as usual, with respect to the orientation of the table.
 
 <<ggpmisc-B7>>=
 ggplot(chickwts, aes(factor(feed), weight)) +
   stat_summary(fun.data = "mean_se") +
   stat_fit_tb(tb.type = "fit.anova",
               angle = 90,
-              label.x.npc = 1.1, hjust = 1,
+              size = 2,
+              label.x.npc = 0.5, hjust = 0.5,
               label.y.npc = 0, vjust = 1) +
   expand_limits(y = 0) +
-  coord_flip()
+  coord_flip() +
+  theme_bw()
 @
 
+<<echo=FALSE,include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
 
 \subsection{Highlighting deviations from fitted line}
 \index{plots!fitted curves!deviations}

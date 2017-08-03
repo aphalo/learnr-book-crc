@@ -4,9 +4,9 @@
 
 \section{Aims of this chapter}
 
-Once again plotting maps and bitmaps, is anything but trivial. Plotting maps usually involves downloading the map information, and applying a certain projection to create a suitable map on a flat surface. Of course, it is very common to plot other data, ranging from annotations of place names to miniature bar plots, histograms, etc.\ o filling different regions or countries with different colors. In the first half of the chapter we describe not only plotting of maps using the grammar of graphics, but also how to download map images, and shape files from service providers like Google and repositories.
+Plotting maps and bitmaps, is anything but trivial. Plotting maps usually involves downloading the map information, and applying a certain projection to create a suitable map on a flat surface. Of course, it is very common to plot other data, ranging from annotations of place names to miniature bar plots, histograms, etc.\ o filling different regions or countries with different colors. In the first half of the chapter we describe not only plotting of maps using the grammar of graphics, but also how to download map images, and shape files from service providers like Google and repositories.
 
-In the second half of the chapter we describe how to load, write and manipulate raster images in \R. \R is not designed to efficiently work with bitmap images as data. We describe a couple of packages that attempt to solve this limitation.
+In the second half of the chapter we describe how to load, write and manipulate raster images in \R. \R is not designed to efficiently work with bitmap images as data. We describe a couple of packages that attempt to solve this limitation by linking to compiled libraries. We also show how to efficiently add bitmaps to ggplots in cases when they do not need to be re-mapped using a fill scale. We finally briefly describe the use of public APIs for feature recognition.
 
 \section{Packages used in this chapter}
 
@@ -25,6 +25,7 @@ library(ggmap)
 library(rgdal)
 library(scatterpie)
 library(imager)
+library(magick)
 @
 
 \begin{infobox}
@@ -695,11 +696,43 @@ We can see above that function \Rfunction{nPix()} returns the number of pixels i
 Package \pkgname{imager} is a package containing many different functions wrapping functions from library \pgrmname{CImg}, the examples given here are only an introduction to the most basic of its capabilities. This library is written in \langname{C++} using templates, and can be instantiated at compile time for different types of pixel data. Consequently one cannot expect that calling these functions from R can be as fast as a good \langname{C++} implementation of the same operations with the same library. On the other hand, for relatively small images or small numbers of images, calling the library from R allows the use of R for computations on pixel data, which opens the door to the quick development and testing of pixel related statistical algorithms.
 \end{infobox}
 
+\section{Using ImageMagick STL library}
+
+Package \pkgname{magick} opens the door to using the ImageMagick library from within R. This package is quite new, but very promising.
+
+<<magick-00>>=
+citation(package = "magick")
+@
+
+The image formats supported depend on the \pgrmname{ImageMagick} version, so in case of doubt it is good to query the capabilities available.
+
+<<magick-01>>=
+str(magick::magick_config())
+@
+
+<<<magick-02>>=
+dandelion.image <- image_read("extdata/dandelion.jpg")
+image_info(dandelion.image)
+@
+
+<<magick-03>>=
+dandelion.image <- image_scale(dandelion.image, "500")
+@
+
+<<magick-04>>=
+print(dandelion.image)
+@
+
+<<magick-05>>=
+plot(as.raster(dandelion.image))
+@
+
 <<clear-up-img-folders>>=
 unlink("./extdata", recursive = TRUE)
 @
 
 <<>>=
+try(detach(package:magick))
 try(detach(package:imager))
 try(detach(package:scatterpie))
 try(detach(package:rgdal))

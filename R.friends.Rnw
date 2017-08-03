@@ -60,7 +60,7 @@ library(microbenchmark)
 
 A function using a loop without any optimization for performance, with a fairly usual structure.
 
-<<>>=
+<<microbenchmark-01>>=
 my.fun01 <- function(x) {
   y <- numeric()
   for (i in seq(along.with = x[-1])) {
@@ -72,7 +72,7 @@ my.fun01 <- function(x) {
 
 We time it. We are mainly interested in the \emph{median} time. We use as input a numeric vector of length 1000. Be default a suitable time unit is used, but we set it to milliseconds with \code{unit = "ms"} to make sure that the same units are used in all the examples.
 
-<<>>=
+<<microbenchmark-02>>=
 microbenchmark(my.fun01(runif(1e3)), unit = "ms")
 @
 
@@ -82,7 +82,7 @@ microbenchmark(my.fun01(runif(1e3)), unit = "ms")
 
 One simple step is to reserve storage space for the result vector \code{y} ahead of the iteration through a loop. We
 simply replace \code{y <- numeric()} by \code{y <- numeric(length(x))}.
-<<>>=
+<<microbenchmark-03>>=
 my.fun02 <- function(x) {
   y <- numeric(length(x))
   for (i in seq(along.with = x[-1])) {
@@ -94,13 +94,13 @@ my.fun02 <- function(x) {
 
 Benchmarking the new function shows that run time has decreased by 40\%.
 
-<<>>=
+<<microbenchmark-04>>=
 microbenchmark(my.fun02(runif(1e3)), unit = "ms")
 @
 
 Within the loop we have the calculation of the logarithm of a constant, a value that does not change from iteration to iteration, in technical terms, a \emph{loop invariant computation}. We move this invariant calculation out of the loop.
 
-<<>>=
+<<microbenchmark-05>>=
 my.fun03 <- function(x) {
   y <- numeric(length(x))
   k <- log10(123456)
@@ -113,13 +113,13 @@ my.fun03 <- function(x) {
 
 Benchmarking reveals that runtime is now decreased by almost 70\% in this step, and by more than 80\% from our starting point.
 
-<<>>=
+<<microbenchmark-06>>=
 microbenchmark(my.fun03(runif(1e3)), unit = "ms")
 @
 
 However, we can use subscripting with vectors and avoid using iteration in an explicit loop.
 
-<<>>=
+<<microbenchmark-07>>=
 my.fun04 <- function(x) {
   i <- seq(along.with = x[-1])
   x[i] * x[i+1] / log10(123456)
@@ -128,7 +128,7 @@ my.fun04 <- function(x) {
 
 Now execution is really fast! We have decreased runtime to 8\% of the starting point, a decrease of 92\%.
 
-<<>>=
+<<microbenchmark-08>>=
 microbenchmark(my.fun04(runif(1e3)), unit = "ms")
 @
 
@@ -165,7 +165,7 @@ Profiling is the estimation of how much different parts of the code contribute t
 
 We check that our code is correct and returns the expected value, in this case a 100$\times$100 data frame.
 
-<<>>=
+<<profiling-01>>=
 my.fun11 <- function(row = 100, col = 100) {
     df <- data.frame(1:row)
     for (i in 2:col)
@@ -174,26 +174,32 @@ my.fun11 <- function(row = 100, col = 100) {
 }
 @
 
-We check the total time as in the previous section, and at 15~ms seems quite slow.
+We check the total time as in the previous section, and at 15~ms seems quite slow. One interesting piece of information is how the time spent increases with increasing size of the problem. There are two aspects to this: the shape of the curve, e.g.\ linear or exponential, and the problem-size-independent time overhead.
 
-<<>>=
+<<profiling-02>>=
+microbenchmark(my.fun11(row = 10, col = 10), unit = "ms")
 microbenchmark(my.fun11(row = 100, col = 100), unit = "ms")
+microbenchmark(my.fun11(row = 1000, col = 1000), unit = "ms")
 @
 
-In the next two code chunks we find out whether adding columns or rows is more expensive in run time.
+In the next two code chunks we find out whether adding columns or rows is more expensive in terms of run time.
 
-<<>>=
+<<profiling-03>>=
 microbenchmark(my.fun11(row = 200, col = 100), unit = "ms")
 @
 
-<<>>=
+<<profiling-04>>=
 microbenchmark(my.fun11(row = 100, col = 200), unit = "ms")
 @
 
-We now know that what is expensive is to add columns. We look into this problem by profiling the code to find where most time is being spent. We need to adjust the sampling interval to match how many statements has the code under test and how long it takes to run. We can use the plot as a guide, if resolution is too little with too few levels and functions we need to decrease the interval, while if the plot looks like an unintelligible comb, the interval needs to be increases.
+We now know that what is expensive is to add columns. We look into this problem by profiling the code to find where most time is being spent. We need to adjust the sampling interval to match how many statements has the code under test and how long it takes to run them. We can use the plot as a guide, if resolution is too little with too few levels and functions we need to decrease the interval, while if the plot looks like an unintelligible comb, the interval needs to be increases.
 
-<<>>=
-prof.df <- profr(my.fun11(row = 100, col = 100), interval = 0.001)
+<<profiling-04a>>=
+microbenchmark(my.fun11(row = 200, col = 200), unit = "ms")
+@
+
+<<profiling-05>>=
+prof.df <- profr(my.fun11(row = 200, col = 200), interval = 0.001)
 
 ggplot(prof.df)
 @
@@ -204,8 +210,8 @@ Modify the value passed as argument to parameter \code{interval}, and find a goo
 
 The problem seems to be with data frame and column-binding. We try a different approach to building a data frame: building first a list and converting it into a data frame once assembled.
 
-<<>>=
-my.fun12 <- function(row = 100, col = 100) {
+<<profiling-06>>=
+my.fun12 <- function(row = 200, col = 200) {
 lst <- list()
     for (i in 1:col)
       lst <- c(lst, list(1:row))
@@ -215,14 +221,14 @@ lst <- list()
 
 We achieve a 40\% reduction in execution time.
 
-<<>>=
-microbenchmark(my.fun12(row = 100, col = 100), unit = "ms")
+<<profiling-07>>=
+microbenchmark(my.fun12(row = 200, col = 200), unit = "ms")
 @
 
 An optimization specific to this case---taking advantage that all values are numeric---is to use \code{rep()} to create a long vector, convert it into a matrix and the matrix into a data frame.
 
-<<>>=
-my.fun13 <- function(row = 100, col = 100) {
+<<profiling-08>>=
+my.fun13 <- function(row = 200, col = 200) {
   mtx <- matrix(rep(1:row, col), ncol = col)
   as.data.frame(mtx)
 }
@@ -230,26 +236,23 @@ my.fun13 <- function(row = 100, col = 100) {
 
 A round about but very effective way of improving performance with a runtime that is only 1.6\% of the starting one, or a reduction in execution time by more than 98\%.
 
-<<>>=
-microbenchmark(my.fun13(row = 100, col = 100), unit = "ms")
+<<profiling-09>>=
+microbenchmark(my.fun13(row = 200, col = 200), unit = "ms")
 @
 
-<<>>=
-microbenchmark(my.fun13(row = 1000, col = 1000), times = 20L, unit = "ms")
-@
+Unless we consider the current version fast enough, we will want to know where time is being spent in the improved version of the function.
+As the code runs now a lot faster it helps to increase the size of the problem for profiling.
 
-We may still want to know where time is being spent in the optimized version of the function.
-
-<<>>=
-prof13.df <- profr(my.fun13(row = 1000, col = 1000), interval = 0.001)
+<<profiling-11>>=
+prof13.df <- profr(my.fun13(row = 2000, col = 2000), interval = 0.001)
 
 ggplot(prof13.df)
 @
 
 Can we still improve it?
 
-<<>>=
-my.fun14 <- function(row = 100, col = 100) {
+<<profiling-12>>=
+my.fun14 <- function(row = 200, col = 200) {
   mtx <- matrix(rep(1:row, col), ncol = col)
   as_tibble(mtx)
 }
@@ -257,13 +260,13 @@ my.fun14 <- function(row = 100, col = 100) {
 
 Yes, indeed, using \code{as\_tibble()} instead of \code{as.data.frame()} halves runtime, and we have by now decreased execution time by over two orders of magnitude compared to the first version of our function.
 
-<<>>=
-microbenchmark(my.fun14(row = 100, col = 100), unit = "ms")
+<<profiling-13>>=
+microbenchmark(my.fun14(row = 200, col = 200), unit = "ms")
 @
 
-<<>>=
-microbenchmark(my.fun14(row = 1000, col = 1000), unit = "ms")
-@
+\begin{playground}
+Investigate how the size of the problem affects this heavily optimized code, as it was done with the initial version of the function at the start of this section.
+\end{playground}
 
 \begin{playground}
 We have gone very far in optimizing the function. In this last version the function returns a \code{tibble} instead of a \code{data.frame}. This can be expected to affect the performance of different operations, from indexing and computations to summaries when applied to the returned object. Use bench marking to assess these differences, both for cases with substantially more columns than rows, and more rows than columns. Think carefully a test case that makes heavy use of indexing, calculations combining several columns, and sorting.
@@ -273,7 +276,7 @@ We have gone very far in optimizing the function. In this last version the funct
 Profile, using \code{profvis::profvis()} or \code{proftools::profr()} the first three code chunks from section \ref{sec:nested:loops} starting at page \pageref{sec:nested:loops}. In which functions is most of the execution time spent? What are the differences between the three implementations?
 \end{playground}
 
-Profiling tools such as those provided by package \pkgname{proftools} can be useful when dealing with both simple and complex pieces of code. Furthermore, for interactive use, package \pkgname{profvis} should be used instead of package \pkgname{proftools}.
+Profiling tools such as those provided by package \pkgname{proftools} can be useful when dealing with both simple and complex pieces of code. Furthermore, package \pkgname{profvis} provides an interactive user interface within RStudio, which makes it extremely easy to navigate to the code sections from the plot displaying the corresponding timings.
 
 \index{code profiling|)}
 
@@ -287,7 +290,7 @@ To test what speed-up compiling can achieve for this small function we switch-of
 
 We define, using a different name, the same function as earlier, and we check that it has not been compiled. Then we compile it.
 
-<<>>=
+<<compiler-01>>=
 old.level <- compiler::enableJIT(level = 0L)
 
 my.fun11nc <- function(row = 100, col = 100) {
