@@ -33,6 +33,8 @@ Three main plotting systems are available to \R users: base R, package \pkgname{
 
 In this chapter you will learn the concepts of the grammar of graphics, on which package \pkgname{ggplot2} is based. You will as well learn how to do many of the data plots that can be produced with package \pkgname{ggplot2}. We will focus only on the grammar of graphics, as it is currently the most used plotting approach in R. As a consequence of this popularity and its flexibility, many extensions to \pkgname{ggplot2} have been developed and deposited in public repositories. Several of these packages will be described in Chapter \ref{chap:R:more:ggplotting} starting on page \pageref{chap:R:more:ggplotting} and in Chapter \ref{chap:R:maps} starting on page \pageref{chap:R:maps}. As previous chapters, this chapter is intended to be read in whole.
 
+This chapter focuses mainly on how to construct different types of graphical data displays using the grammar of graphics. We also discuss how to alter de ``graphical design'' of the plots produced, but in less depth, mostly leaving for the reader to try by herself/himself the different combinations of types of plots and themes and color palettes described. The book \citetitle{Burchell2016} \autocite{Burchell2016} has a strong focus on the control of how plots look, and can be a good source of worked out examples. For a cook book with a broader scope and detailed explanations consult \citetitle{Chang2013} \autocite{Chang2013}. The contents of the current chapter to some extent overlap with that of Chang's book, but using a different approach for presentation. Deeper explanations of technical aspects are available in the book \citetitle{Murrell2011} \autocite{Murrell2011}. Finally, the book \citetitle{Wickham2016} \autocite{Wickham2016} written by the developers of package \pkgname{ggplot2} is the main reference, and describes the grammar of graphics in more detail than we have space here for. In particular, the hands-on approach followed here makes this chapter a good complement to \citetitle{Wickham2016}.
+
 \section{Packages used in this chapter}
 
 <<>>=
@@ -80,30 +82,33 @@ What separates \ggplot from base-R and trellis/lattice plotting functions is the
 
 When we design a plot, we need to map data variables to aesthetics\index{plots!aesthetics} (or graphic `properties'). Most plots will have an $x$ dimension, which is considered an aesthetic, and a variable containing numbers mapped to it. The position on a 2D plot of say a point will be determined by $x$ and $y$ aesthetics, while in a 3D plot, three aesthetics need to be mapped $x$, $y$ and $z$. Many aesthetics are not related to coordinates, they are properties, like color, size, shape, line type or even rotation angle, which add an additional dimension on which to represent the values of variables and/or constants.
 
-\subsection{Geometries}
+\subsection{Scales}
 
-\sloppy%
-Geometries\index{plots!geometries} describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a `point' or symbol for each observation, while \gggeom{geom\_line()}, draws line segments between successive observations. Some geometries rely on statistics, but most `geoms' default to the identity statistics.
+Scales\index{plots!scales} give the relationship between data values and the aesthetic values to be actually plotted. Mapping a variable to the `color' aesthetic only tells that different values stored in the mapped variable will be represented by different colors. A scale, such as \ggscale{scale\_color\_continuous()} will determine which color in the plot corresponds to which value in the variable. The observations falling outside the limits of a scale are ignored rather than passed to the next step (statistics or geometries)---this can easily take place unintentionally when only summaries are included in a plot and a user does not pay attention to warning messages. Scales can also define transformations on the data, which are used to map data values to values to be plotted, while retaining the original values for tick labels.  Scales are used for continuous variables, such as numbers, and for categorical ones such as factors.
 
 \subsection{Statistics}
 
 Statistics\index{plots!statistics} are `words' that represent calculation of summaries or some other operation on the values from the data, and these summary values can be plotted with a geometry. For example \ggstat{stat\_smooth()} fits a smoother, and \ggstat{stat\_summary()} applies a summary function. Statistics are applied automatically by group when data has been grouped by mapping additional aesthetics such as color to a factor.
 
-\subsection{Scales}
+\subsection{Geometries}
 
-Scales\index{plots!scales} give the relationship between data values and the aesthetic values to be actually plotted. Mapping a variable to the `color' aesthetic only tells that different values stored in the mapped variable will be represented by different colors. A scale, such as \ggscale{scale\_color\_continuous()} will determine which color in the plot corresponds to which value in the variable. Scales are used both for continuous variables, such as numbers, and categorical ones such as factors.
+\sloppy%
+Geometries\index{plots!geometries} describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a `point' or symbol for each observation, while \gggeom{geom\_line()}, draws line segments between successive observations. Some geometries rely by default on statistics, but most `geoms' default to the identity statistics.
 
 \subsection{Coordinate systems}
 
-The most frequently used coordinate system\index{plots!coordinates} when plotting data is the cartesian system, which is the default for most \emph{geometries}. In the cartesian system, $x$ and $y$ are represented as distances on two orthogonal (at 90$^\circ$) axes. In the polar system of coordinates, angles around a central point are used instead of distances on a straight line. However, package \pkgname{ggtern} adds a ternary system of coordinates, to allow the extension of the grammar to allow the construction of ternary plots.
+The most frequently used coordinate system\index{plots!coordinates} when plotting data is the cartesian system, which is the default for most \emph{geometries}. In the cartesian system, $x$ and $y$ are represented as distances on two orthogonal (at 90$^\circ$) axes. In the polar system of coordinates, angles around a central point are used instead of distances on a straight line. However, package \pkgname{ggtern} adds a ternary system of coordinates, to allow the extension of the grammar to allow the construction of ternary plots. Setting limits to a coordinate system changes the region of the plotting space visible in the plot, but does not discard observations. In other words, when using \emph{statistics}, observations located outside the coordinate limits---i.e.\ not visible in the rendered plot---, will still be included in computations.
 
 \subsection{Themes}
 
 How the plots look when displayed or printed can be altered by means of themes\index{plots!themes}. A plot can be saved without adding a theme and then printed or displayed using different themes. Also individual theme elements can be changed, and whole new themes defined. This adds a lot of flexibility and helps in the separation of the data representation aspects from those related to the graphical design.
 
-As discussed above the grammar of graphics is based on aesthetics (\code{aes}) as for example color, geometric elements \code{geom\_\ldots} such as lines, and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, labels \code{labs}, \code{coordinate} systems and themes \code{theme\_\ldots}. Plots are assembled from these elements, we start with a plot with two aesthetics, and one geometry.
+As discussed above the grammar of graphics is based on aesthetics (\code{aes}) as for example color, geometric elements \code{geom\_\ldots} such as lines, and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, labels \code{labs}, \code{coordinate} systems and themes \code{theme\_\ldots}. Plots are assembled from these elements. More than one \emph{geometry} and/or \emph{statistic} can be added to the same plot, resulting in \emph{layers} conceptually with the first one added located at the bottom of the ``pile''. 
 
-As the workings and use of the grammar are easier to show by example than to explain with words, after this short introduction we will focus on examples showing how to produce graphs of increasing complexity.
+Even if we do not explicitly add them all, default, in many cases ``identity'' versions are involved. The production of a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information:
+\textsf{data $\to$ scale $\to$ statistic $\to$ aesthetic $\to$ geometry $\to$ coordinate $\to$ ggplot $\to$ theme $\to$ rendered graphic}
+
+As the workings and use of the grammar are easier to show by example than to explain with words, after this short introduction we will focus on examples of how to produce graphs of increasing complexity. We start with a plot with two aesthetics, and one geometry.
 
 \section{Scatter plots}\label{sec:plot:scatter}\label{sec:simple:points:lines}
 \index{plots!scatter plot|(}
@@ -1968,7 +1973,7 @@ Modify the plot above to show the cosine instead of the sine function, replacing
 \section{Coordinates and circular plots}
 \index{plots!circular|(}
 
-In this section I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \Rfunction{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
+In this section I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \ggcoordinate{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
 
 \subsection{Pie charts}
 \index{plots!pie charts|(}

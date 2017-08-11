@@ -11,9 +11,9 @@ opts_knit$set(concordance=TRUE)
 
 \section{Aims of this chapter}
 
-Base R includes many functions for importing and or manipulating data. This is a complete set, that supports all the usually needed operations. However, many of these functions have not been designed to perform optimally on very large data sets \autocite[see][]{Matloff2011}. The usual paradigm consists in indexing more complex objects, such as arrays and data frames to apply math operantions on vectors. Quite some effort has been put into improving the implementation of these operations on several fronts, 1) designing an enhanced user interface, that it is simpler to use and also easier to optimize for performance, 2) adding to the existing paradigm of allways copying arguments passed to functions, an additional semantics based on the use of \emph{references} to variables, and 3) allowing reading data into memory selectively from files.
+Base R includes many functions for importing and or manipulating data. This is a complete set, that supports all the usually needed operations. However, many of these functions have not been designed to perform optimally on very large data sets \autocite[see][]{Matloff2011}. The usual paradigm consists in indexing more complex objects, such as arrays and data frames to apply math operations on vectors. Quite some effort has been put into improving the implementation of these operations on several fronts, 1) designing an enhanced user interface, that it is simpler to use and also easier to optimize for performance, 2) adding to the existing paradigm of always copying arguments passed to functions, an additional semantics based on the use of \emph{references} to variables, and 3) allowing reading data into memory selectively from files.
 
-The aim of this chapter is to describe, and show how, some of the existing enhancements available through CRAN, can be useful both with small and large data sets.
+The aim of this chapter is to describe, and show how, some of the existing enhancements available through CRAN, can be useful both with small and large data sets. We focus more on the available tools than on how to use them on their role in the analysis of data. The books \citetitle{Wickham2017} \autocite{Wickham2017} and \citetitle{Peng2016} \autocite{Peng2016} cover some of the same subjects we cover here, but we take a hands-on approach that can complement them.
 
 \section{Packages used in this chapter}
 
@@ -212,9 +212,38 @@ Function \Rfunction{file.path()} can be used to construct a file path from its c
 
 \subsection{Text files}\label{sec:files:txt}
 
+\begin{warningbox}
+\textbf{Not all text files are born equal.} When reading text files, and \emph{foreign} binary files which may contain embedded text strings, there is potential for their misinterpretation during the import operation. One common source of problems, is that column headers are to be read as R names. As earlier discussed, there are strict rules, such as avoiding spaces or special characters if the names are to be used with the normal syntax. On import, some functions will attempt to sanitize the names, but others not. Most such names are still accessible in R statements, but a special syntax is needed to protect them from triggering syntax errors through their interpretation as something different than variable or function names---in R jargon we say that they need to be quoted.
+
+Some of the things we need to be on the watch for are:
+1) Mismatches between the character encoding expected by the function used to read the file, and the encoding used for saving the file.
+2) In some cases the cleanest solution is to rename the offending (column) names either before or after import.
+3) Is particularly disconcerting to the user, is when (invisible) leading or trailing spaces are present in the character strings stored in a worksheet.
+4) It is also important to realize that in most functions used for reading text files, by default the type of values is guessed at, either by reading a certain number of text lines at the top of the file or after reading the whole text. Typing mistakes, including the wrong kind of decimal marker, even in a single text line in a large file can prevent a whole column to be recognized as numeric and being stored as character values contrary to expectations.
+5) Finally the default decimal marker used for saving and expected when reading text files depends on the locale (language and sometimes country) settings of the computer or program being used.
+
+If you encounter problems after import, such as failure of indexing of data frame columns by name, use function \code{names()} to get the names printed to the console as a character vector. This is useful because character vectors are always printed with each string delimited by quotation marks.
+
+To demonstrate some of these problems in the first statement belwo I create a data frame with name sanitation disabled. And in the second statement with sanitation enabled.
+<<file-io-txt-00a>>=
+data.frame(a = 1, "a " = 2, " a" = 3, check.names = FALSE)
+data.frame(a = 1, "a " = 2, " a" = 3)
+@
+
+An even more subtle case is when characters can be easily confused by the user reading the output: not too difficult to distinguish are zero and o (\code{a0} vs.\ \code{aO}) or el and one (\code{al} vs.\ \code{a1}), except for the case of some specific fonts. When using encodings capable of storing many character shapes, such as unicode, in some cases two characters with almost identical visual shape may be encoded as different characters.
+
+<<file-io-txt-00b>>=
+data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
+@
+
+Even in some cases the import may result in very odd looking values stored in R variables, when for example a CSV file saved with MS-Excel is silently encoded using 16 bits unicode format, but read as an 8-bit encoded file.
+
+The hardest part of all these problems is to diagnose the origin of the problem, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages.
+\end{warningbox}
+
 \subsubsection[Base R and `utils']{Base R and \pkgname{utils}}
 
-Text files come many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
+Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
 
 In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV). Function \Rfunction{write.csv()} and \Rfunction{read.csv()} can be used to write and read these files using the conventions used in this example.
 \begin{verbatim}
@@ -1235,6 +1264,11 @@ Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb}
 \end{playground}
 \end{explainbox}
 
+\section{Grammar for manipulation of character strings}\label{sec:data:strings}
+
+\begin{warningbox}
+  This section will contain an introduction to character-string manipulation with methods from packages \pkgname{stringr} and \pkgname{stringi}.
+\end{warningbox}
 
 \section{Pipes and tees}\label{sec:data:pipes}
 

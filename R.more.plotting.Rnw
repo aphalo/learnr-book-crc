@@ -13,15 +13,19 @@ opts_knit$set(concordance=TRUE)
 
 In this chapter I describe packages that add additional functionality or \emph{graphical designs} of plots to package \pkgname{ggplot2}. Several new packages were written after \pkgname{ggplot2} version 2.0.0 was released, because this version for the first time made it straightforward to write these extensions. To keep up-to-date with the release of new extensions I recommend to regularly check the site `ggplot2 Extensions' (maintained by Daniel Emaasit) at \url{https://www.ggplot2-exts.org/}.
 
-In contrast with previous chapters, I expect readers to first browse through the whole chapter looking to get an idea of what is possible and cherry pick the sections they find useful and worth of detailed study. Some of the packages are generally useful, but others are more specialized. I have tried to cover a wide array of plot types, but, I have described in more depth packages that I have written myself, or that I am more familiar with---i.e.\ the space dedicated to each package description is not to be taken as a measure of their usefulness for your own work.
+In contrast with previous chapters, I expect readers to first browse through the whole chapter so as to get an idea of what is possible and then cherry pick the sections they find useful and worth of detailed study. Some of the packages are generally useful, but others are more specialized. I have tried to cover a wide array of plot types, but, I have described in more depth packages that I have written myself, or that I am more familiar with---i.e.\ the space dedicated to each package description is not to be taken as a measure of their usefulness for your own work.
 
 \begin{warningbox}
-  In this chapter we use mostly the modernized data frames of package \pkgname{tibble}. The main reason is that the \Rfunction{tibble()} constructor does not by default convert character variables into factors as the \Rfunction{data.frame()} constructor does. The format used for printing is also improved. It is possible to use \Rfunction{data.frame()} instead of \Rfunction{tibble()} in the examples below, but in some cases you will need to add \code{stringsAsFactors = FALSE} to the call.
+  In this chapter we use mostly the modernized data frames of package \pkgname{tibble}. The main reason is that the \Rfunction{tibble()} constructor does not by default convert character variables into factors as the \Rfunction{data.frame()} constructor does. The format used for printing is also improved. It is possible to use \Rfunction{data.frame()} instead of \Rfunction{tibble()} in most examples given in this chapter, but in some cases you will need to add \code{stringsAsFactors = FALSE} to the call.
 \end{warningbox}
+
+As the previous chapter, the present one focuses mainly on how to construct different types of graphical data displays using the grammar of graphics. We also discuss how to alter de ``graphical design'' of the plots produced, but in less depth, mostly leaving for the reader to try by herself/himself the different combinations of types of plots and themes and color palettes described. There is no book covering the use of all the packages described here, and for each package additional examples and explanations will be found in their documentation, which in many cases includes vignettes with extended use examples.
 
 \section{Packages used in this chapter}
 
-If the packages used in this chapter are not yet installed in your computer, you can install them with, as long as package \pkgname{learnrbook} is already installed.
+The list of packages used in the current chapter is very long. However, there are only few incompatibilities among them. Even if one is not attempting to use functions from different packages within the same plot, one may want to use them to create different figures within the same document when using the literate approach to programming and scripting (see \ref{sec:script:readability} on page \pageref{sec:script:readability}), with incompatibilities requiring additional coding to work around them.
+
+If the packages used in this chapter are not yet installed in your computer, you can install them with the code shown below, as long as package \pkgname{learnrbook} is already installed.
 
 <<eval=FALSE>>=
 packages_at_cran <- setdiff(learnrbook::pkgs_ch_ggplotext, learnrbook::pkgs_at_github)
@@ -36,7 +40,7 @@ For executing the examples listed in this chapter you need first to load the fol
 <<message=FALSE>>=
 library(learnrbook)
 library(tibble)
-library(purrr)
+library(magrittr)
 library(lubridate)
 library(ggplot2)
 library(showtext)
@@ -432,7 +436,7 @@ gganimate(p, title_frame = FALSE)
 citation(package = "ggstance")
 @
 
-Package \pkgname{ggstance} defines horizontal versions of common ggplot \emph{geometries}, \emph{statistics} and \emph{positions}. Although \ggplot defines \code{coord\_flip}, \pkgname{ggstance} provides a more intuitive user interface and more consistent plot formatting.
+Package \pkgname{ggstance} defines horizontal versions of common ggplot \emph{geometries}, \emph{statistics} and \emph{positions}. Although \ggplot defines \ggcoordinate{coord\_flip}, \pkgname{ggstance} provides a more intuitive user interface and more consistent plot formatting.
 
 \sloppy
 Currently the package defines \textbf{horizontal} \emph{geoms} \gggeom{geom\_barh()}, \gggeom{geom\_histogramh()}, \gggeom{geom\_linerangeh()}, \gggeom{geom\_pointrangeh()}, \gggeom{geom\_errorbarh()}, \gggeom{geom\_crossbarh()}, \gggeom{geom\_boxploth()}, and \gggeom{geom\_violinh()}. It also defines
@@ -610,8 +614,8 @@ We generate an artificial data set by drawing pseudo-random data from Normal dis
 <<ggbeeswarm-02>>=
 set.seed(12345)
 my.data <-
-  data.frame(y = c(rnorm(n = 100, mean = -1, sd = 1), 
-                   rnorm(n = 50, mean = 1, sd = 1), 
+  data.frame(y = c(rnorm(n = 100, mean = -1, sd = 1),
+                   rnorm(n = 50, mean = 1, sd = 1),
                    rnorm(n = 50, mean = 1, sd = 0.3)),
              group = factor(x = rep(c("A", "B", "c"), times = c(100, 50, 50))) )
 @
@@ -848,7 +852,7 @@ data(blood, package = "geomnet")
 
 Using mostly defaults, the plot is not visually attractive. For the layout to be deterministic, we need to set the seed used by the pseudorandom number generator. To assemble the plot we add three layers of data with \gggeom{geom\_edges()}, \gggeom{geom\_nodes()} and \gggeom{geom\_nodetext()}. We use \ggtheme{theme\_blank()} as axes and their labels play no function in a plot like this.
 
-\Attention{Bug} The code in the chunks below stopped working with recent package updates. The problem is triggered by columns in the data frame returned by `ggnetwork()` being of class \code{"matrix"} instead of a \code{"numeric"} vector as expected by \code{ggplot()}. As a temporary work around I have added code that does the required class conversion. 
+\Attention{Bug} The code in the chunks below stopped working with recent package updates. The problem is triggered by columns in the data frame returned by `ggnetwork()` being of class \code{"matrix"} instead of a \code{"numeric"} vector as expected by \code{ggplot()}. As a temporary work around I have added code that does the required class conversion.
 
 <<ggnetwork-02>>=
 set.seed(12345)
@@ -2205,7 +2209,9 @@ In this example of the use of \Rfunction{ggtern()}, we use colors pre-defined in
 opts_chunk$set(opts_fig_wide_square)
 @
 
-\Attention{BROKEN} Function \Rfunction{coord\_tern()} and consequently also \Rfunction{ggtern()} trigger fatal error under `ggplot2' $\leq$ 2.2.1.9000. We temporarily disable evaluation of the code chunck bellow.
+\begin{warningbox}
+\textbf{Known bug.} Function \ggcoordinate{coord\_tern()} and consequently also \Rfunction{ggtern()} trigger fatal error under `ggplot2' $\leq$ 2.2.1.9000. We temporarily disable evaluation of the code chunck bellow.
+\end{warningbox}
 
 <<ggtern-04, eval=FALSE>>=
 colours <- c("red", "green", "yellow", "white",
@@ -2320,7 +2326,7 @@ try(detach(package:pals))
 try(detach(package:viridis))
 try(detach(package:showtext))
 try(detach(package:ggplot2))
-try(detach(package:purrr))
+try(detach(package:magrittr))
 try(detach(package:tibble))
 try(detach(package:learnrbook))
 @
