@@ -11,7 +11,12 @@ Yes, the book draft is available for download at (http://leanpub.com/learnr).
 
 ### Just clone the repository ###
 
-To build the pdf you will need XeLaTeX and the KOMA script classes, and R and knitr. The source files are in Rnw format using 'knitr'.
+To build the pdf you will need XeLaTeX and the KOMA script classes, and current versions of R and knitr. 
+The source files are in Rnw format using 'knitr'.
+As many different packages are used, R's limit of 100 loaded DLLs is reached. 
+To increase this limit operating system variable `R_MAX_NUM_DLLS` needs to be
+set to a higher value. Using 120 or larger should be more than enough. Be aware that
+this variable is recognized only by R (>= 3.4.0).
 
 ### Contribution guidelines ###
 
