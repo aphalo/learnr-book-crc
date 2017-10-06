@@ -47,6 +47,7 @@ library(ggplot2)
 library(showtext)
 library(viridis)
 library(pals)
+library(ggsignif)
 library(ggrepel)
 library(ggforce)
 library(ggpmisc)
@@ -1873,6 +1874,70 @@ ggplot(mpg, aes(class, hwy, color = class)) +
                geom = "debug", summary.fun = as_tibble, summary.fun.args = list())
 @
 
+\section[`ggsignif']{\ggsignif}\label{sec:plot:ggsignif}
+\index{plots!geometries!significance labels}
+<<ggsignif-0>>=
+citation(package = "ggsignif")
+@
+
+Package \ggsignif does a single thing, facilitates labelling of significant differences among groups. This is achieved through
+one geometry and one statistic, \gggeom{geom\_signif} and \ggstat{stat\_signif}. They can be used both as a dumb geometry and passed the results of tests done outwith the plot, or as a statistic which carries out the tests of significance based on the plotted data. We reproduce the example from section \ref{sec:plot:stat:summaries} on page \pageref{sec:plot:stat:summaries}, and add annotations for tests of significance.
+
+<<ggsignif-01>>=
+set.seed(567879)
+fake.data <- data.frame(
+               y = c(rnorm(20, mean = 2, sd = 0.5),
+                     rnorm(20, mean = 4, sd = 0.7)),
+               group = gl(2, 20, labels = LETTERS),
+               subgroup = gl(4, 10, labels = letters)
+)
+@
+
+In the first example we directly print the $p$-value.
+
+<<ggsignif-02>>=
+ggplot(data=fake.data, aes(y = y, x = group)) +
+    geom_point(shape = 21) +
+    stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
+    geom_signif(comparisons = list(c("A", "B")), 
+                test = "t.test",
+                colour = "blue")
+@
+
+In the second example we map it to asterisks.
+
+<<ggsignif-03>>=
+ggplot(data=fake.data, aes(y = y, x = group)) +
+    geom_point(shape = 21) +
+    stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
+    geom_signif(comparisons = list(c("A", "B")),
+                test = "t.test", 
+                map_signif_level = TRUE,
+                colour = "blue")
+@
+
+In the third example, we manually enter the label and the positions for the bar.
+
+<<ggsignif-04>>=
+ggplot(data=fake.data, aes(y = y, x = group)) +
+    geom_boxplot(width = 0.2) +
+    geom_signif(annotations = "A-B",
+                y_position = 6, xmin = 1, xmax = 2,
+                colour = "blue")
+@
+
+Finally a more complicated example, taking advantage of some of the flexibility that can be obtained by means of additional arguments.
+
+<<ggsignif-05>>=
+ggplot(data=fake.data, aes(y = y, x = subgroup)) +
+    geom_boxplot(width = 0.4) +
+    geom_signif(comparisons = list(c("a", "b"), c("a", "c"), c("a", "d")),
+                test = "t.test",
+                map_signif_level = TRUE,
+                step_increase = 0.15)
+@
+
+
 \section[`ggrepel']{\ggrepel}\label{sec:plot:ggrepel}
 \index{plots!text in}
 \index{plots!geometries!repulsive text}
@@ -1881,7 +1946,7 @@ ggplot(mpg, aes(class, hwy, color = class)) +
 citation(package = "ggrepel")
 @
 
-Package \ggrepel is under development by Kamil Slowikowski. It does a single
+Package \ggrepel was developed and is maintained by Kamil Slowikowski. It does a single
 thing, relocates text labels so that they do not overlap. This is achieved through
 two geometries that work similarly to those provided by \ggplot except for the
 relocation. This is incredibly useful both when labeling peaks and valleys and when

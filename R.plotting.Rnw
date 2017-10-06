@@ -910,7 +910,7 @@ The approaches discussed in this box apply to all \emph{geometries} that allow s
 
 The summaries discussed in this section can be superimposed on raw data plots, or plotted on their own. Beware, that if scale limits are manually set, the summaries will be calculated from the subset of observations within these limits. Scale limits can be altered when explicitly defining a scale or by means of functions \Rfunction{xlim()} and \Rfunction{ylim}. See the text box on \pageref{box:plot:coord:lims} for a way of constraining the viewport (the region visible in the plot) by changing coordinate limits while keeping the scale limits on a wider range of $x$ and $y$ values.
 
-\subsection{Statistical ``summaries''}
+\subsection{Statistical ``summaries''}\label{sec:plot:stat:summaries}
 \index{plots!statistics|(}
 \index{plots!statistics!summary}
 It is possible to summarize data on-the-fly when plotting. We describe in the same section the calculation of measures of central position and of variation, as \ggstat{stat\_summary()} allows them to be calculated in the same function call.
@@ -1522,9 +1522,9 @@ fake2.data <-
 
 \subsection{Continuous scales for $x$ and $y$}
 
-\subsubsection{Limits}
+\subsubsection{Limits}\label{sec:plot:scales:limits}
 
-To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale.
+To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale. Setting hard limits in \emph{scales} excludes all observations outside these boundaries not only from appearing on the plotting area, but also from any calculations done by \emph{statisitcs} (See section \ref{sec:plot:coord:limits} on page \pageref{sec:plot:coord:limits} on the use of limits to \emph{coordinates} to limit only the boundaries of the plotting area without excluding observations from the input to \emph{statistics}).
 
 We can set both limits, minimum and maximum.
 
@@ -1544,13 +1544,59 @@ We can set one limit and leave the other one free.
 ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, NA)
 @
 
-We can use \code{lims} with discrete scales, listing all the levels that are to be included in the scale, even if they are missing from a given data set, such as after subsetting.
-
-And we can expand the limits, to set a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in data frame \code{fake2.data}.
+We can expand the limits, to set a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in data frame \code{fake2.data}.
 
 <<>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
 @
+
+In addition to with these convenience functions for x and y aesthetics, limits can be set to constant values and/or the automatic expansion set through a call to most of \emph{scale} functions.
+
+We here set the upper limit to be expanded by adding a value of 10\% of the range of the scale.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(expand = expand_scale(add = c(0, 0.1)))
+@
+
+Here we instead use a multiplier to a similar effect as above.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1)))
+@
+
+Here we set hard limits, which will exclude observations from both the plot and from any calculations of summaries or smoothers.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(limits = c(0, 50))
+@
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(limits = c(50, 100))
+@
+
+To set only one limit leaving the other free, we use \code{NA}.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(limits = c(50, NA))
+@
+
+In the case of scales, we cannot reverse their direction through the use of limits. We need instead to use a transformation as described in the next section. 
+
+We can also use \code{limits} with discrete scales, listing all or some of the levels of a factor that are to be included in the scale. This works even if the levels are defined in the factor but not present in a given data set, such as after subsetting.
+
+\begin{playground}
+Test what is the result if the first limit is larger than the second one. Is it the same as when setting these same values as limits with \code{ylim()} as shown above?
+
+<<eval=FALSE>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() +
+  scale_y_continuous(limits = c(100, 0))
+@
+\end{playground}
 
 \subsubsection{Transformed scales}
 
@@ -1969,6 +2015,37 @@ Modify the plot above to show the cosine instead of the sine function, replacing
 \index{plots!circular|(}
 
 In this section I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \ggcoordinate{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
+
+\subsection{Coordinate limits}\label{sec:plot:coord:limits}
+\index{plots!coordinates!cartesian}
+\index{plots!coordinates!setting limits}
+
+The limits of set using \emph{scales}, such as \code{scale\_x\_continuous()} or \code{scale\_y\_continuous()}, and the convenience functions \code{xlim()} and \code{ylim()}, set boundaries to the data used by both \emph{geometries} and \emph{statistics} (See section \ref{sec:plot:scales:limits} on page \pageref{sec:plot:scales:limits}). When plotting individual observations this does not come as a surprise, but for \emph{statistics} it frequently does when we have only layers based on computed summaries in a given plot. For example plots using only \code{stat\_summary()} or \code{geom\_smooth()} can be easily and seriously distorted when setting limits manually excludes from computations individual observations that are not plotted on their own.
+
+The limits in \emph{coordinates} work differently, they do not set boundaries to the data included. Instead, these limits only affect the plotting area. A simple example demonstrates this.
+
+<<>>=
+set.seed(12345)
+fake3.data <- data.frame(x = 1:20, y = (1:20)^2 + rnorm(20))
+p <- ggplot(fake3.data, aes(x, y)) + 
+       geom_point() +
+       geom_smooth(method = "lm")
+p
+@
+
+Uses all data, so the smooth curve is the same, but only part is visible.
+
+<<>>=
+p + coord_cartesian(xlim = c(1, 10))
+@
+
+The smooth line is fitted only to the data within limits.
+
+<<>>=
+p + xlim(1, 10)
+@
+
+Depending on the case coordinate limits or scale limits will be the correct ones to use. However, whenever there are calculations involved, and observations present outside the limits, only one of these two approaches will give the correct plot. One should think of scale limits as a kind of data subsetting and of coordinate limits as setting a zoomed window onto the plotting area.
 
 \subsection{Pie charts}
 \index{plots!pie charts|(}
