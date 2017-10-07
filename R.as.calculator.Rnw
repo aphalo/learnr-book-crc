@@ -110,7 +110,21 @@ d <- c(b, a)
 d
 @
 
-One can also create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
+Concatenate takes two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as R provides a function capable of directly doing this operation. Although it can be used to ``insert'' values it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
+
+<<numbers-4a>>=
+append(a, b)
+@
+
+The output above is the same as for \code{c(a, b)}, however, \code{append()} accepts as argument an index position after which to append its second argument. This results in an insert operation.
+
+<<numbers-4b>>=
+append(a, values = b, after = 2L)
+@
+
+Both \code{c()} and \code{append()} can be also used with lists.
+
+One can create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
 
 <<numbers-5>>=
 a <- -1:5
@@ -728,6 +742,14 @@ levels(control.factor)
 
 It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.
 
+\begin{explainbox}
+When the pattern of levels is regular is it possible to use function \code{gl()} to \emph{generate levels} in a factor. Nowadays, it is more usual to read data into R from files in which the treatment codes are already available as character strings or numeric values, however, when we need to create a factor within R, \code{gl()} can save some typing.
+
+<<factors-bx-01>>=
+gl(2, 5, labels = c("A", "B"))
+@
+\end{explainbox}
+
 Converting factors into numbers is not intuitive, even in the case a factor was created from a \code{numeric} vector.
 
 <<factors-2>>=
@@ -765,19 +787,32 @@ my.factor2 <- factor(my.factor2, levels = levels(my.factor2)[c(2, 1, 3)])
 levels(my.factor2)
 @
 
-For methods used for reordering the levels of a factor based on summary quantities from data, please see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}.
+Reordering the levels of a factor based on summary quantities from data is very useful, especially when plotting. Function \code{reorder()} can be used in this case. It defaults to using \code{mean()} for summaries, but other suitable functions can be supplied in its place.
+
+<<factors-4>>=
+my.factor3 <- gl(2, 5, labels = c("A", "B"))
+my.vector3 <- c(5.6, 7.3, 3.1, 8.7, 6.9, 2.4, 4.5, 2.1, 1.4, 2.0)
+levels(my.factor3)
+my.factor3ord <- reorder(my.factor3, my.vector3)
+levels(my.factor3ord)
+@
 
 \end{explainbox}
 
 \section{Lists}
 \index{lists}
-\emph{Lists'} main difference to other collections is, in \Rlang, that they can be heterogeneous. In \langname{R}, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as vectors. However, most frequently members of a list are given names, and retrieved (indexed) through these names. Lists are created using function \Rfunction{list()}.
+\emph{Lists'} main difference to other collections is, in \Rlang, that they can be heterogeneous. In \langname{R}, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as vectors. However, frequently members of a list are given names, and retrieved (indexed) through these names. Lists are created using function \Rfunction{list()}.
 
-\emph{Lists} as usually defined in languages like \langname{C} are based on pointers stored at each node, that chain the different member nodes. In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \langname{R}, \code{list} members can be accessed through positional indexes. Of course, insertions and deletions in the middle of a list, whatever their implementation, modifies any position-based indexes. Elements in list can be named, and are normally accessed by name.
+\emph{Lists} as usually defined in languages like \langname{C} are based on pointers stored at each node, that chain the different member nodes. In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \langname{R}, \code{list} members can be accessed through positional indexes. Of course, insertions and deletions in the middle of a list, whatever their implementation, modifies any position-based indexes.
 
-<<lists-1>>=
+<<lists-0>>=
 a.list <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
 a.list
+@
+
+Some examples of indexing.
+
+<<lists-1>>=
 a.list$x
 a.list[["x"]]
 a.list[[1]]
@@ -793,61 +828,73 @@ To investigate the returned values, function \Rfunction{str()} for \emph{structu
 str(a.list)
 @
 
-Using double square brackets for indexing gives the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, \code{a.list[[c(1,3)]]}.
+Using double square brackets for indexing gives the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, while \code{a.list[[c(1,3)]]} is an error.
+
+In other languages the two most common operations on lists are insertions and deletions. In R function \code{append()} can be used both to append elements at the end of a list and insert elements into the head or any position in the middle of a list. To delete a member from a list we assign \code{NULL} to it.
+
+<<lists-1b>>=
+another.list <- append(a.list, list(yy = 1:10, zz = letters[5:1]), 2L)
+another.list
+@
+
+<<lists-1c>>=
+a.list$y <- NULL
+a.list
+@
 
 Lists can be also nested.
 
 <<lists-2>>=
-a.list <- list("a", "ff")
-b.list <- list("b", "ff")
-c.list <- list(a = a.list, b = b.list)
-c.list
+a.list <- list("a", "aa", "aaa")
+b.list <- list("b", "bb")
+nested.list <- list(A = a.list, B = b.list)
+nested.list
 @
 
-The nesting can be also done within a single statement.
+The nesting can be also done within a single statement in which several lists are defined. Here we combine the first three statements in the previous chunk into a single one.
 
 <<lists-3>>=
-d.list <- list(a = list("a", "ff"), b = list("b", "ff"))
-d.list
+nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
+nested.list
 @
 
 \begin{playground}
 What do you expect the each of the statements to return? \emph{Before running the code} predict what value and of which mode each statement will return. You may use implicit, or explicit, calls to \Rfunction{print()}, or calls to \Rfunction{str()} to visualize the structure of the different objects.
 <<lists-4, eval=FALSE>>=
-c.list[c(1,2,1,3)]
-c.list[1]
-c.list[[1]][2]
-c.list[[1]][[2]]
-c.list[2][[1]][[2]]
+nested.list[c(1,2,1,3)]
+nested.list[1]
+nested.list[[1]][2]
+nested.list[[1]][[2]]
+nested.list[2][[1]][[2]]
 @
 \end{playground}
 
 \begin{explainbox}
 Sometimes we need to flatten a list, or a nested structure of lists within lists. Function \Rfunction{unlist()} is what should be normally used in such cases.
 
-The \code{c.list} is a nested system of lists, but all the ``terminal'' members are character strings. In other words, terminal nodes are all of the same mode.
+The list \code{nested.list} is a nested system of lists, but all the ``terminal'' members are character strings. In other words, terminal nodes are all of the same mode.
 
 <<lists-5>>=
-c.vec <- unlist(c.list)
+c.vec <- unlist(nested.list)
 c.vec
-is.list(c.list)
+is.list(nested.list)
 is.list(c.vec)
-mode(c.list)
+mode(nested.list)
 mode(c.vec)
-names(c.list)
+names(nested.list)
 names(c.vec)
 @
 
-The returned value is a vector with named member elements. Function \Rfunction{str()} helps figure out what this object looks like. The names, in this case are based in the names of list elements when available, but numbers used for anonymous node in the list. We can access the members of the vector either through numeric indexes, or names.
+The returned value is a vector with named member elements. Function \Rfunction{str()}---for \emph{structure}--- helps figure out what this object looks like. The names, in this case are based in the names of list elements when available, but numbers are used for anonymous nodes in the list. We can access the members of the vector either through numeric indexes, or names.
 
 <<lists-6>>=
 str(c.vec)
 c.vec[2]
-c.vec["a2"]
+c.vec["A2"]
 @
 
 \begin{playground}
-Function \Rfunction{unlist()}, has two additional parameters, for which we did not change their default argument in the example above. These are \code{recursive} and \code{use.names}, both of them expecting a \code{logical} values a argument. Modify the statement \code{c.vec <- unlist(c.list)}, by passing \code{FALSE} to each of them, in turn, and in each case study the value returned and how it differs with respect to the one obtained above.
+Function \Rfunction{unlist()}, has two additional parameters, with default argument values, which we did not modify in the example above. These are \code{recursive} and \code{use.names}, both of them expecting a \code{logical} value as argument. Modify the statement \code{c.vec <- unlist(c.list)}, by passing \code{FALSE} as argument to these two parameters, in turn, and in each case study the value returned and how it differs with respect to the one obtained above.
 \end{playground}
 
 \end{explainbox}
@@ -855,7 +902,7 @@ Function \Rfunction{unlist()}, has two additional parameters, for which we did n
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames}
 \index{worksheet@`worksheet'|see{data frame}}
-Data frames are a special type of list, in which each element is a vector or a factor of the same length. The are created with function \code{data.frame} with a syntax similar to that used for lists. When a shorter vector is supplied as argument, it is recycled, until the full length of the variable is filled. This is very different to what we obtained in the previous section when we created a list.
+Data frames are a special type of list, in which each element is a vector or a factor of the same length. They are created with function \code{data.frame} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from list. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the full length required is reached.
 
 <<data-frames-0>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -867,7 +914,7 @@ is.data.frame(a.df)
 is.list(a.df)
 @
 
-Indexing of data frames is somehow similar to that of the underlying list, but not exactly equivalent. We can index with \code{[[ ]]} to extract individual variables, thought as being stored as columns in a matrix-like list or ``worksheet''.
+Indexing of data frames is similar to that of the underlying list, but not exactly equivalent. We can index with operator \code{[[ ]]} to extract individual variables, thought as being the columns in a matrix-like list or ``worksheet''.
 
 <<data-frames-1>>=
 a.df$x
@@ -886,7 +933,7 @@ a.df$x3 <- "b"
 a.df
 @
 
-We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behaviour. In a data frame, although class and mode can be different for different variables (columns), they are required to have the same length. In the case of lists, there is no such requirement, and recycling never takes place when adding a node. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
+We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behaviour. In a data frame, although class and mode can be different for different variables (columns), they are required to be vectors or factors of the same length. In the case of lists, there is no such requirement, and recycling never takes place when adding a node. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
 
 <<data-frames-2a>>=
 a.ls <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -896,14 +943,43 @@ a.ls$x3 <- "b"
 a.ls
 @
 
-Data frames are extremely important to anyone analysing or plotting data in \Rpgrm. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there are several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can to some extent be treated as elements in a list, and can be accessed both by name or index (position). When accessed by name, using \Roperator{\$} or double square brackets a single column is returned as a vector or factor. In contrast to lists, data frames are `rectangular' and for this reason the values stored can be also accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors indexes can be vectors of integer numbers or vectors of logical values. For columns they can in addition be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
+Data frames are extremely important to anyone analysing or plotting data in \Rpgrm. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there are several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can be treated as members in a list, and can be accessed both by name or index (position). When accessed by name, using \Roperator{\$} or double square brackets a single column is returned as a vector or factor. In contrast to lists, data frames are `rectangular' and for this reason the values stored can be also accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors, indexes can be vectors of integer numbers or vectors of logical values. For columns they can in addition be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
+
+\begin{explainbox}
+Indexing of data frames can in all cases be done as if they were lists, which is preferable, as it ensures compatibility with regular R lists and with newer implementations of data-frame-like structures like those defined in package \pkgname{tibble}. Using this approach, extracting two values from the second and third positions in the first column of \code{a.df} is done as follows, using numerical indexes.
+
+<<data-frames-bx-01>>=
+a.df[[1]][2:3]
+@
+
+Or using the column name.
+
+<<data-frames-bx-02>>=
+a.df[["x"]][2:3]
+@
+
+The less portable, matrix-like indexing is done as follows, with the first index indicating rows and the second one indicating columns. This notation allows simultaneous extraction from multiple columns, which is not possible with lists. The value returned is a ``smaller'' data frame.
+
+<<data-frames-bx-03>>=
+a.df[2:3, 1:2]
+@
+
+If the length of the column indexing vector is one, the returned value is a vector, which is not consistent with the previous example which returned a data frame. This is not only surprising in everyday use, but can be the source of bugs when coding algorithms in which the length of the second index vector cannot be guaranteed to be always more than one.
+
+<<data-frames-bx-04>>=
+a.df[2:3, 1]
+@
+
+In contrasts, indexing of \code{tibble}s---defined in package \pkgname{tibble}---is always consistent, independently of the length of the second indexing vector (See chapter \ref{chap:R:data} for details).
+\end{explainbox}
+
 
 <<data-frames-3>>=
-a.df[ , 1]   # first column
-a.df[ , "x"] # first column
+a.df[ , 1]   # first column, a.df[[1]] preferred
+a.df[ , "x"] # first column, use a.df[["x"]] or a.df$x preferred
 a.df[1, ]    # first row
-a.df[1:2, c(FALSE, FALSE, TRUE, FALSE, FALSE)]
-             # first two rows of the third column
+a.df[1:2, c(FALSE, FALSE, TRUE, TRUE, FALSE)]
+             # first two rows of the third and fourth columns
 a.df[a.df$z , ] # the rows for which z is true
 a.df[a.df$x > 3, -3] # the rows for which x > 3 for
                  # all columns except the third one
@@ -934,15 +1010,19 @@ x.list$ab
 x.list$a
 @
 
-Both in the case of lists and data frames, when using square brackets, an exact match is required between the name set in the object and the name used for indexing. In contrast, with \Roperator{\$} any unambiguous partial match will be accepted. For interactive use, partial matching is helpful in reducing typing. However, in scripts, and especially R code in packages it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g.\ when someone else revises the script, can lead to very difficult to diagnose errors. In addition, as \Roperator{\$} is implemented by first attempting a match the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}.
+Both in the case of lists and data frames, when using double square brackets, an exact match is required between the name in the object and the name used for indexing. In contrast, with \Roperator{\$} any unambiguous partial match will be accepted. For interactive use, partial matching is helpful in reducing typing. However, in scripts, and especially R code in packages it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g.\ when someone else revises the script, can lead to very difficult to diagnose errors. In addition, as \Roperator{\$} is implemented by first attempting a match to the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}. It is possible to set an R option so that partial matching triggers a warning.
 \end{warningbox}
 
-When the names of data frames are long, complex conditions become awkward to write using indexing---i.e.\ subscripts. In such cases \Rfunction{subset()} is handy because evaluation is done in the `environment' of the data frame, i.e.\ the names of the columns are recognized if entered directly when writing the condition.
+When the names of data frames are long, complex conditions become awkward to write using indexing---i.e.\ subscripts. In such cases \Rfunction{subset()} is handy because evaluation is done in the `environment' of the data frame, i.e.\ the names of the columns are recognized if entered directly when writing the condition. Function  \code{subset()} ``filters'' rows, usually corresponding to observations or experimental units. The condition is computed for each row, and if it returns \code{TRUE} the row is included in the returned data frame, and excluded if \code{FALSE}.
 
 <<data-frames-4>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
 subset(a.df, x > 3)
 @
+
+\begin{playground}
+What is the behaviour of \code{subset()} when the condition is \code{NA}? Find the answer by writing code to test this, for a case where tests for different rows return \code{NA}, \code{TRUE} and \code{FALSE}.
+\end{playground}
 
 When calling functions that return a vector, data frame, or other structure, the square brackets can be appended to the rightmost parenthesis of the function call, in the same way as to the name of a variable holding the same data.
 
@@ -951,7 +1031,7 @@ subset(a.df, x > 3)[ , -3]
 subset(a.df, x > 3)$x
 @
 
-None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original Another way to delete a column from a data frame is to assign \code{NULL} to it.
+None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original one. Another way to delete a column from a data frame is to assign \code{NULL} to it.
 
 <<data-frames-6>>=
 a.df[["x2"]] <- NULL
@@ -959,20 +1039,22 @@ a.df$x3 <- NULL
 a.df
 @
 
+\begin{playground}
 In the previous code chuck we deleted the last two columns of the data frame \code{a.df}.
-Finally an esoteric trick for you think about.
+Here is an esoteric trick for you to first untangle and then think how and why it can be useful.
 
 <<data-frames-7>>=
 a.df[1:6, c(1,3)] <- a.df[6:1, c(3,1)]
 a.df
 @
+\end{playground}
 
-Although in this last example we used numeric indexes to make in more interesting, in practice, especially in scripts or other code that will be reused, do use column names instead of positional indexes. This makes your code much more reliable, as changes elsewhere in the script are much less likely to lead to undetected errors.
+Although in this last example we used numeric indexes to make it more interesting, in practice, especially in scripts or other code that will be reused, do use column names instead of positional indexes for lists and data frame columns whenever possible. This makes your code much more reliable, as changes elsewhere in the script which could alter the order of columns will not affect the computations or will be easily detected.
 
 \section{Simple built-in statistical functions}
 \index{functions!built-in|see@{functions, base-R}}
 \index{functions!base R}
-Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. we will start with the simple ones.
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. We will start with simple functions implementing the calculation of frequently used data summaries.
 
 <<stat-fun-1>>=
 x <- 1:20
@@ -989,7 +1071,7 @@ length(x)
 
 \section{Functions and execution flow control}
 
-Although functions can be defined and used at the command prompt, we will discuss them on their own, in Chapter \ref{chap:R:functions} starting on page \pageref{chap:R:functions}. Flow-control statements (e.g.\ repetition and conditional execution) are introduced in Chapter \ref{chap:R:scripts}, immediately following.
+Although functions can be defined and used at the command prompt, we will discuss them on their own, in Chapter \ref{chap:R:functions} starting on page \pageref{chap:R:functions}. Flow-control statements (e.g.\ repetition and conditional execution) are introduced in Chapter \ref{chap:R:scripts}.
 
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
