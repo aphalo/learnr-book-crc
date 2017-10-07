@@ -1839,18 +1839,96 @@ ggplot(my.2d.data, aes(x, y, color = group)) +
 
 A related stat \ggstat{stat\_dens2d\_label()}, also defined in package \ggpmisc is described in section \ref{sec:repel:dens} on page \pageref{sec:repel:dens}.
 
+\subsection{Layer arcana}
+\index{plots!layers!manipulation}
+\index{plots!grammar of graphics!exceptional operations}
+Layers in \code{ggplot} objects (\pkgname{ggplot2} (>= 2.0.0)) are stored as lists of \code{ggproto} objects. They are self contained, and their position in the internal list in the object determines the plotting order. This means that \emph{breaking the rules} of the Grammar of Graphics is possible. In most circumstances this is a very bad idea, but in some cases ``breaking the rules'' can simplify the coding of higher level functions, or allow the tweaking of the output from such functions. In other words, the functions briefly described here should be used with caution, and only when no good solution to a problem is available within the grammar.
+
+We first create and save a plot to be used in the examples. We map colour to constants so as to show that these mappings are preserved, and also to make it easier to recognise the different layers. We also print it to have a reference to compare to the manipulated plots created in the rest of this section.
+
+<<ggpmisc-80>>=
+formula <- y ~ poly(x, 3, raw = TRUE)
+p <- 
+    ggplot(my.data, aes(x, y)) +
+          geom_point(colour = "darkgreen") +
+          geom_smooth(method = "lm", formula = formula, alpha = 0.5) +
+          stat_fit_deviations(formula = formula, colour = "darkorange") +
+          theme_bw()     
+p
+@
+
+As an example we will \emph{delete} the layer with the individual observations.
+
+<<ggpmisc-81>>=
+delete_layers(p, "GeomPoint")
+@
+
+In the example above, the layers to operate on are selected by matching the class of the layer objects---both \emph{geometries} and \emph{statistics} can be matched to. Had the plot contained two separate \code{"GeomPoint"} layers, both would have been deleted. It is also possible to select layers using integers as indexes.
+
+<<ggpmisc-81a>>=
+delete_layers(p, idx = 1)
+@
+
+We can also \emph{move} the same layer to the top of the list so as to be plotted last, ``covering'' the remaining layers. 
+
+<<ggpmisc-82>>=
+move_layers(p, "GeomPoint", position = "top")
+@
+  
+We can \emph{append} a new layer at any position in the stack of layers.
+
+<<ggpmisc-83>>=
+append_layers(p, 
+              geom_hline(yintercept = 0, 
+                         size = 1.5, 
+                         colour = "purple"), 
+              position = "bottom")
+@
+
+When passed a numeric index as argument for \code{position}, \code{append\_layers()} behaves as base R's \code{append()} function does, the new layer(s) are ``inserted'' after the given position (\code{position = 0L} is a valid argument).
+
+<<ggpmisc-83a>>=
+append_layers(p,
+              geom_hline(yintercept = 0,
+                         size = 2,
+                         colour = "purple"),
+              position = 2L)
+@
+
+With function \code{move\_layers()} we can move a layer to a specific position in the list, while with \code{shift\_layers()} we can shift the position of a layer up or down in the list relative to its current position. Look carefully at the next plot, and you will see that the segments marking the deviations from the fit are now behind the observations and the smooth line.
+
+<<ggpmisc-84>>=
+shift_layers(p, "StatFitDeviations", shift = -2L)
+@
+
+When using indexes to select which layer to operate on, we will frequently want to programmatically locate the position of layers in the layer list.
+
+<<ggpmisc-85>>=
+num_layers(p)
+top_layer(p)
+bottom_layer(p) # always 1L, unless the list is empty
+which_layers(p, "GeomPoint")
+@
+
+Function \code{extract\_layers()} returns a list containing the matching layers. This final example copies one layer from an existing plot into a newly defined one. This function is included for completeness, and is used internally, but probably rarely of much use in user code.
+
+<<ggpmisc-86>>=
+ggplot(my.data, aes(x, y)) +
+  extract_layers(p, "GeomPoint")
+@
+
 \subsection{Learning and/or debugging}
 \index{plots!debugging}
 \index{plots!statistics!debug}
 \index{plots!geometries!debug}
 A very simple stat named \ggstat{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \Rfunction{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \ggstat{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
 
-<<ggpmisc-81>>=
+<<ggpmisc-91>>=
 ggplot(lynx) + geom_line() +
   stat_debug_group()
 @
 
-<<ggpmisc-82>>=
+<<ggpmisc-92>>=
 ggplot(lynx,
        aes(time, lynx,
            color = ifelse(time >= 1900, "XX", "XIX"))) +
@@ -1861,13 +1939,13 @@ ggplot(lynx,
 
 By means of \gggeom{geom\_debug()} it is possible to "print" to the console the data returned by a ggplot \emph{statistic}.
 
-<<ggpmisc-83>>=
+<<ggpmisc-93>>=
 ggplot(mpg, aes(class, hwy, color = class)) +
   geom_point(alpha = 0.2) +
   stat_summary(fun.data = mean_se, size = 0.6)
 @
 
-<<ggpmisc-84>>=
+<<ggpmisc-94>>=
 ggplot(mpg, aes(class, hwy, color = class)) +
   geom_debug() +
   stat_summary(fun.data = mean_se,
@@ -1899,7 +1977,7 @@ In the first example we directly print the $p$-value.
 ggplot(data=fake.data, aes(y = y, x = group)) +
     geom_point(shape = 21) +
     stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
-    geom_signif(comparisons = list(c("A", "B")), 
+    geom_signif(comparisons = list(c("A", "B")),
                 test = "t.test",
                 colour = "blue")
 @
@@ -1911,7 +1989,7 @@ ggplot(data=fake.data, aes(y = y, x = group)) +
     geom_point(shape = 21) +
     stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
     geom_signif(comparisons = list(c("A", "B")),
-                test = "t.test", 
+                test = "t.test",
                 map_signif_level = TRUE,
                 colour = "blue")
 @
