@@ -1848,12 +1848,12 @@ We first create and save a plot to be used in the examples. We map colour to con
 
 <<ggpmisc-80>>=
 formula <- y ~ poly(x, 3, raw = TRUE)
-p <- 
+p <-
     ggplot(my.data, aes(x, y)) +
           geom_point(colour = "darkgreen") +
           geom_smooth(method = "lm", formula = formula, alpha = 0.5) +
           stat_fit_deviations(formula = formula, colour = "darkorange") +
-          theme_bw()     
+          theme_bw()
 p
 @
 
@@ -1869,19 +1869,19 @@ In the example above, the layers to operate on are selected by matching the clas
 delete_layers(p, idx = 1)
 @
 
-We can also \emph{move} the same layer to the top of the list so as to be plotted last, ``covering'' the remaining layers. 
+We can also \emph{move} the same layer to the top of the list so as to be plotted last, ``covering'' the remaining layers.
 
 <<ggpmisc-82>>=
 move_layers(p, "GeomPoint", position = "top")
 @
-  
+
 We can \emph{append} a new layer at any position in the stack of layers.
 
 <<ggpmisc-83>>=
-append_layers(p, 
-              geom_hline(yintercept = 0, 
-                         size = 1.2, 
-                         colour = "purple"), 
+append_layers(p,
+              geom_hline(yintercept = 0,
+                         size = 1.2,
+                         colour = "purple"),
               position = "bottom")
 @
 
@@ -1921,7 +1921,7 @@ ggplot(my.data, aes(x, y)) +
 \index{plots!debugging}
 \index{plots!statistics!debug}
 \index{plots!geometries!debug}
-A very simple stat named \ggstat{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \Rfunction{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \ggstat{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.
+A very simple stat named \ggstat{stat\_debug()} can save the work of adding print statements to the code of stats to get information about what data is being passed to the \Rfunction{compute\_group()} function. Because the code of this function is stored in a \code{ggproto} object, at the moment it is impossible to directly set breakpoints in it. This \ggstat{stat\_debug()} may also help users diagnose problems with the mapping of aesthetics in their code or just get a better idea of how the internals of \ggplot work.\label{ggpmisc:plotex:lynx:century}
 
 <<ggpmisc-91>>=
 ggplot(lynx) + geom_line() +
@@ -1974,7 +1974,7 @@ fake.data <- data.frame(
 In the first example we directly print the $p$-value.
 
 <<ggsignif-02>>=
-ggplot(data=fake.data, aes(y = y, x = group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
     geom_point(shape = 21) +
     stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
     geom_signif(comparisons = list(c("A", "B")),
@@ -1985,7 +1985,7 @@ ggplot(data=fake.data, aes(y = y, x = group)) +
 In the second example we map it to asterisks.
 
 <<ggsignif-03>>=
-ggplot(data=fake.data, aes(y = y, x = group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
     geom_point(shape = 21) +
     stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7) +
     geom_signif(comparisons = list(c("A", "B")),
@@ -1997,17 +1997,17 @@ ggplot(data=fake.data, aes(y = y, x = group)) +
 In the third example, we manually enter the label and the positions for the bar.
 
 <<ggsignif-04>>=
-ggplot(data=fake.data, aes(y = y, x = group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
     geom_boxplot(width = 0.2) +
     geom_signif(annotations = "A-B",
                 y_position = 6, xmin = 1, xmax = 2,
                 colour = "blue")
 @
 
-Finally a more complicated example, taking advantage of some of the flexibility that can be obtained by means of additional arguments.
+A slightly more complicated example, taking advantage of some of the flexibility that can be obtained by means of additional arguments.
 
 <<ggsignif-05>>=
-ggplot(data=fake.data, aes(y = y, x = subgroup)) +
+ggplot(data = fake.data, aes(y = y, x = subgroup)) +
     geom_boxplot(width = 0.4) +
     geom_signif(comparisons = list(c("a", "b"), c("a", "c"), c("a", "d")),
                 test = "t.test",
@@ -2015,6 +2015,20 @@ ggplot(data=fake.data, aes(y = y, x = subgroup)) +
                 step_increase = 0.15)
 @
 
+All the previous examples are for tests that are run on-the-fly. In the case of the first plots in this section, with a single contrast, the uncorrected $p$-values from the t-test are suitable. In the example immediately above, we have set three pair-wise comparisons. The $p$-values from these are not adjusted for multiple comparisons, and the tests done are based on the data for the two treatments compared. In most cases this in not a satisfactory/valid approach to multiple testing. See section \ref{sec:plotex:pairwise:contrasts} on page \pageref{sec:plotex:pairwise:contrasts} for examples of the use of \code{fit.contrast()} and \code{p.adjust} together with \code{geom\_signif()} in its ``manual'' mode in the case of a split-plot experiment with two factors in a randomized complete blocks design.
+
+The manual mode of \code{geom\_signif()} can be used to highlight ranges of $x$, labelling them with any character string. We revisit the example from page \pageref{ggpmisc:plotex:lynx:century}, but now we use bars to highlight the centuries instead of colours.
+
+<<ggsignif-06>>=
+ggplot(data = lynx, aes(time, lynx)) +
+       geom_line() +
+       geom_signif(data = data.frame(start = c(1800, 1900),
+                                     end = c(1899, 1999),
+                                     label = c("XIX", "XX"),
+                                     y_pos = rep(7.2e3, 2)),
+                   aes(xmin = start, xmax = end, annotations = label, y_position = y_pos),
+                   manual = TRUE)
+@
 
 \section[`ggrepel']{\ggrepel}\label{sec:plot:ggrepel}
 \index{plots!text in}
@@ -2442,7 +2456,190 @@ ggplot(my.anscombe, aes(x = x, y = y)) +
 \subsection{Quadrat plots}\label{sec:plotex:quadrat}
 \index{plots!advanced examples!quadrat plot}
 
+\subsection{Significance bars for pairwise contrasts}\label{sec:plotex:pairwise:contrasts}
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+The best flexibility in tests of significance can be achieved by fitting specific contrasts of interest after a broader analysis. It is in general recommended that $p$-value estimates from such multiple contrasts should be adjusted. Many variations are possible, so no packaged \emph{statistics} layer can do this automatically. Package \pkgname{ggsignif} currently supports pairwise contrasts computed one by one, which in most cases is not a good approach. In this worked-out example we use \code{geom\_signif()} in its manual mode to highlight the results from fitted contrasts, compute with function \code{fit.contrast()} from package \pkgname{gmodels}. Once computed, we adjust the $p$-values with R's function \code{p.adjust()}, build suitable character labels from these values and then use them to label the plot with the labels. We will use the \code{oats} data set from package \pkgname{MASS} in the examples.
+
+<<signif-fit-contrast-00>>=
+library(nlme)
+library(gmodels)
+data(oats, package = "MASS")
+num.V <- length(levels(oats$V))
+num.N <- length(levels(oats$N))
+@
+
+The data set describes an experiment using split plots, with varieties (\code{V}) in main plots and nitrogen treatments (\code{N}) in the subplots. Replication was in six complete blocks (\code{B}). The response variable is the harvest yield (\code{Y}). We start by plotting the data.
+
+<<signif-fit-contrast-01>>=
+ggplot(oats, aes(N, Y)) +
+  stat_summary(fun.data = "mean_se", size = 0.4) +
+  expand_limits(y = 0) +
+  facet_wrap(~V, ncol = num.V)
+@
+
+We next fit a linear mixed effects model (LME) and test the main effects and interaction.
+
+<<signif-fit-contrast-02>>=
+oats.lme <- lme(Y ~ V * N, random = ~ 1 | B / V, data = oats)
+anova(oats.lme)
+@
+
+Most interesting treatment factor is \code{N}. We plot again, but with all treatments in the same panel.
+
+<<signif-fit-contrast-02a>>=
+ggplot(oats, aes(N, Y, colour = V)) +
+  stat_summary(fun.data = "mean_se", size = 0.4) +
+  expand_limits(y = 0)
+@
+
+We update the model by removing the interaction term.
+
+<<signif-fit-contrast-02b>>=
+oats1.lme <- update(oats.lme, fixed = Y ~ V + N)
+anova(oats1.lme)
+@
+
+We will compare each of the non-zero N application levels, to the zero control. For this we first create a matrix.
+
+<<signif-fit-contrast-03>>=
+contrast.matrix <- rbind("0 vs. 0.2" = c(-1, 1, 0, 0),
+                         "0 vs. 0.4" = c(-1, 0, 1, 0),
+                         "0 vs. 0.6" = c(-1, 0, 0, 1))
+num.contrasts <- nrow(contrast.matrix)
+@
+
+Next we fit the contrasts, and adjust the resulting $p$-values.
+
+<<signif-fit-contrast-03a>>=
+contrasts.p.values <-
+  p.adjust(fit.contrast(oats1.lme, "N", contrast.matrix)[ , 4])
+@
+
+Using numerical $p$-values we create suitable labels for plotting. The values in the vector, are named according to the row names we set above, when defining the matrix of contrasts.
+
+<<signif-fit-contrast-04>>=
+contrast.labels <- gsub("N", "", names(contrasts.p.values))
+p.labels <-
+  gsub("^0$", "<0.001", sprintf("%.2g", round(contrasts.p.values, 3)))
+@
+
+To make it easier to adjust the positions of the bars we set the position of the lowest bar and a vertical distance between bars in units of \code{Y}.
+ 
+<<signif-fit-contrast-05>>=
+y_pos_first <- 125
+y_step <- 10
+@
+
+We assemble a data frame with three rows (\code{num.contrasts}). In this case, we have fitted contrasts pooling over varieties (\code{V} levels), so we do not need to include a variable \code{V} in this data frame.
+
+<<signif-fit-contrast-06>>=
+p.values.df <-
+  data.frame(start = rep(levels(oats$N)[1], num.contrasts),
+             end = levels(oats$N)[-1],
+             label.p.val = p.labels,
+             label.contrast = contrast.labels,
+             y_pos = y_pos_first + 0:2 * y_step)
+print(p.values.df)
+@
+
+We add the contrast annotations to the plot.
+
+<<signif-fit-contrast-07>>=
+ggplot(data = oats, aes(N, Y, colour = V)) +
+  stat_summary(fun.data = "mean_se", position = position_dodge(0.2))+
+  expand_limits(y = 0) +
+  geom_signif(data = p.values.df,
+              colour = "black",
+              aes(xmin = start, xmax = end,
+                  annotations = label.p.val,
+                  y_position = y_pos),
+              textsize = 2.8,
+              tip_length = 0.01,
+              manual= TRUE)
+@
+
+<<signif-fit-contrast-08>>=
+ggplot(data = oats, aes(N, Y, colour = V)) +
+  stat_summary(fun.data = "mean_se", position = position_dodge(0.2))+
+  expand_limits(y = 0)+
+  geom_signif(data = p.values.df,
+              colour = "black",
+              aes(xmin = start, xmax = end,
+                  annotations = paste(label.contrast, label.p.val, sep = ": "),
+                  y_position = y_pos),
+              textsize = 2.8,
+              tip_length = 0.01,
+              manual= TRUE)
+@
+
+Had we observed an interaction, we would have really needed to use one panel per variety and separate pairwise contrasts for each of them. Below, we pretend that this approach is needed and valid for this data set and draw the corresponding plot.
+
+We start by fitting separately a model describing the response of \code{Y} to \code{N} to data for each variety (level of \code{V}). 
+
+<<signif-fit-contrast-10>>=
+oatsV1.lme <- lme(Y ~ N, random = ~ 1 | B, data = oats, subset = V == levels(V)[1])
+anova(oatsV1.lme)
+oatsV2.lme <- lme(Y ~ N, random = ~ 1 | B, data = oats, subset = V == levels(V)[2])
+anova(oatsV2.lme)
+oatsV3.lme <- lme(Y ~ N, random = ~ 1 | B, data = oats, subset = V == levels(V)[3])
+anova(oatsV3.lme)
+@
+
+We here do the adjustment of $p$-values globally for the experiment after fitting the same set of contrasts to each of three models, each fitted separately to subset of the data corresponding to one variety.
+
+<<signif-fit-contrast-11>>=
+contrasts.V.p.values <-
+  p.adjust(c(fit.contrast(oatsV1.lme, "N", contrast.matrix)[ , 4],
+             fit.contrast(oatsV2.lme, "N", contrast.matrix)[ , 4],
+             fit.contrast(oatsV3.lme, "N", contrast.matrix)[ , 4]))
+@
+
+As above, we create suitable character labels.
+
+<<signif-fit-contrast-12>>=
+contrast.V.labels <- gsub("N", "", names(contrasts.V.p.values))
+p.V.labels <-
+  gsub("^0$", "<0.001", sprintf("%.2g", round(contrasts.V.p.values, 3)))
+@
+
+We assemble a data frame, now with nine rows, each row corresponding to a pairwise contrast.  In this case, we have fitted contrasts separately for each variety (\code{V} level), which need to be plotted on different panels. In contrast with the examples above, we need to include a variable \code{V} in this data frame, so that the correct $p$-values are plotted in each panel.
+
+<<signif-fit-contrast-13>>=
+p.values.V.df <-
+  data.frame(V = rep(levels(oats$V), rep(num.contrasts, num.V)),
+             end = rep(levels(oats$N)[-1], num.V),
+             start = rep(rep(levels(oats$N)[1], num.contrasts), num.V),
+             label.p.val = p.V.labels,
+             label.contrast = contrast.V.labels,
+             y_pos= rep(y_pos_first + 0:2 * y_step, num.V))
+print(p.values.V.df)
+@
+
+Finally we create a three panel plot with different annotations in each panel.
+
+<<signif-fit-contrast-14>>=
+ggplot(oats, aes(N, Y)) +
+  stat_summary(fun.data = "mean_se")+
+  expand_limits(y = 0) +
+  geom_signif(data = p.values.V.df,
+              aes(xmin = start, xmax = end,
+                  annotations = label.p.val,
+                  y_position = y_pos),
+              textsize = 2.8,
+              tip_length = 0.01,
+              manual= TRUE) +
+  facet_wrap(~ V, ncol = num.V)
+@
+
+\newpage
+
 <<more-plotting-cleanup>>=
+try(detach(package:gmodels))
+try(detach(package:nlme))
 try(detach(package:ggtern))
 try(detach(package:ggfortify))
 try(detach(package:MASS))
