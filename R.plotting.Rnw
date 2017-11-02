@@ -56,6 +56,7 @@ library(scales)
 library(ggplot2)
 library(tikzDevice)
 library(lubridate)
+library(tidyverse)
 @
 
 We set a font of larger size than the default
@@ -336,13 +337,13 @@ We can set the labels for the different aesthetics, and give a title (\verb!\n! 
 
 <<scatter-21>>=
 ggplot(data = mtcars,
-       aes(x=disp, y=hp, colour=factor(cyl),
-           shape=factor(cyl))) +
+       aes(x = disp, y = hp, colour = factor(cyl),
+           shape = factor(cyl))) +
   geom_point() +
-  labs(x="Engine displacement)",
-       y="Gross horsepower",
-       colour="Number of\ncylinders",
-       shape="Number of\ncylinders")
+  labs(x = "Engine displacement)",
+       y = "Gross horsepower",
+       colour = "Number of\ncylinders",
+       shape = "Number of\ncylinders")
 @
 
 \begin{playground}
@@ -379,14 +380,14 @@ In addition to plotting data from a data frame with variables to map to $x$ and 
 We start with the Normal distribution function.
 
 <<function-plot-01>>=
-ggplot(data.frame(x=-3:3), aes(x=x)) +
-  stat_function(fun=dnorm)
+ggplot(data.frame(x = -3:3), aes(x = x)) +
+  stat_function(fun = dnorm)
 @
 
 Using a list we can even pass by name additional arguments to a function.
 
 <<function-plot-02>>=
-ggplot(data.frame(x=-3:3), aes(x=x)) +
+ggplot(data.frame(x = -3:3), aes(x = x)) +
   stat_function(fun = dnorm, args = list(mean = 1, sd = .5))
 @
 
@@ -425,7 +426,7 @@ ggplot(data.frame(x = c(0, 2 * pi)), aes(x = x)) +
     breaks = c(0, 0.5, 1, 1.5, 2) * pi,
     labels = c("0", expression(0.5~pi), expression(pi),
              expression(1.5~pi), expression(2~pi))) +
-  labs(y="sin(x)")
+  labs(y = "sin(x)")
 @
 
 There are three things in the above code that you need to understand: the use of the R built-in numeric constant \code{pi}, the use of argument `recycling' to avoid having to type \code{pi} many times, and the use of R \emph{expressions} to construct suitable tick labels for the $x$ axis. Do also consider why \code{pi} is interpreted differently within \code{expression} than within the numeric statements.
@@ -447,7 +448,7 @@ my.data <-
              label = c("a", "b", "c", "d", "e"))
 
 ggplot(my.data, aes(x, y, label = label)) +
-  geom_text(angle = 45, hjust=1.5, size = 8) +
+  geom_text(angle = 45, hjust = 1.5, size = 8) +
   geom_point()
 @
 
@@ -471,7 +472,7 @@ my.data <-
              label = c("a", "b", "c", "d", "e"))
 
 ggplot(my.data, aes(x, y, label = label)) +
-  geom_text(angle = 45, hjust=1.5, size = 8, family = "serif") +
+  geom_text(angle = 45, hjust = 1.5, size = 8, family = "serif") +
   geom_point()
 @
 
@@ -483,7 +484,7 @@ my.data <-
              label = paste(c("a", "ab", "abc", "abcd", "abcde"), " "))
 
 ggplot(my.data, aes(x, y, label = label)) +
-  geom_text(angle = 45, hjust=1, color = "blue") +
+  geom_text(angle = 45, hjust = 1, color = "blue") +
   geom_point()
 @
 
@@ -497,7 +498,7 @@ Plotting expressions (mathematical expressions) involves mapping to the \code{la
 <<>>=
 my.data <-
   data.frame(x = 1:5, y = rep(2, 5),
-             label=paste("alpha[", 1:5, "]", sep = ""))
+             label = paste("alpha[", 1:5, "]", sep = ""))
 
 ggplot(my.data, aes(x, y, label = label)) +
   geom_text(hjust = -0.2, parse = TRUE, size = 6) +
@@ -528,7 +529,7 @@ As \gggeom{geom\_label()} obeys the same parameters as \gggeom{geom\_text()} exc
 <<>>=
 my.data <-
   data.frame(x = 1:5, y = rep(2, 5),
-             label=paste("alpha[", 1:5, "]", sep = ""))
+             label = paste("alpha[", 1:5, "]", sep = ""))
 ggplot(my.data, aes(x, y, label = label)) +
   geom_label(hjust = -0.2, parse = TRUE, size = 6) +
   geom_point() +
@@ -540,7 +541,7 @@ We may want to alter the default width of the border line or the color used to \
 <<>>=
 my.data <-
   data.frame(x = 1:5, y = rep(2, 5),
-             label=paste("alpha[", 1:5, "]", sep = ""))
+             label = paste("alpha[", 1:5, "]", sep = ""))
 ggplot(my.data, aes(x, y, label = label)) +
   geom_label(hjust = -0.2, parse = TRUE, size = 6,
              label.size = NA,
@@ -919,8 +920,8 @@ For the examples we will generate some normally distributed artificial data.
 
 <<>>=
 fake.data <- data.frame(
-  y = c(rnorm(10, mean=2, sd=0.5),
-        rnorm(10, mean=4, sd=0.7)),
+  y = c(rnorm(10, mean = 2, sd = 0.5),
+        rnorm(10, mean = 4, sd = 0.7)),
   group = factor(c(rep("A", 10), rep("B", 10)))
   )
 @
@@ -929,39 +930,39 @@ We first use scatter plots for the examples, later we give some additional examp
 We will reuse a ``base'' plot in a series of examples, so that the differences are easier to appreciate. We first add just the mean. In this case we need to pass as argument to \ggstat{stat\_summary()} the \code{geom} to use, as the default one, \gggeom{geom\_pointrange()}, expects data for plotting error bars in addition to the mean.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.y = "mean", geom="point", color="red", shape="-", size=10)
+  stat_summary(fun.y = "mean", geom = "point", color = "red", shape = "-", size = 10)
 @
 
 Then the median, by changing the argument passed to \code{fun.y}.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.y = "median", geom="point", colour="red", shape="-", size=10)
+  stat_summary(fun.y = "median", geom = "point", colour = "red", shape = "-", size = 10)
 @
 
 We can add the mean and $p = 0.95$ confidence intervals assuming normality (using the $t$ distribution):
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.data = "mean_cl_normal", colour="red", size=1, alpha=0.7)
+  stat_summary(fun.data = "mean_cl_normal", colour = "red", size = 1, alpha = 0.7)
 @
 
 We can add the means and $p = 0.95$ confidence intervals not assuming normality (using the actual distribution of the data by bootstrapping):
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.data = "mean_cl_boot", colour="red", size=1, alpha=0.7)
+  stat_summary(fun.data = "mean_cl_boot", colour = "red", size = 1, alpha = 0.7)
 @
 
 If needed, we can display less restrictive confidence intervals, at $p = 0.90$ in this example, by means of \code{conf.int = 0.90} passed as a list to the underlying function being called.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
   stat_summary(fun.data = "mean_cl_boot",
                fun.args = list(conf.int = 0.90),
@@ -971,10 +972,10 @@ ggplot(data=fake.data, aes(y=y, x=group)) +
 We can plot error bars corresponding to $\pm$s.e. (standard errors) with the function \Rfunction{"mean\_se"}, added in \ggplot 2.0.0.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
   stat_summary(fun.data = "mean_se",
-               colour="red", size=1, alpha=0.7)
+               colour = "red", size = 1, alpha = 0.7)
 @
 
 \begin{warningbox}\label{box:plot:coord:lims}
@@ -988,18 +989,18 @@ outlier.data[1, "y"] <- outlier.data[1, "y"] * 5
 This figure has the wrong values for mean and standard error, as the outlier has been excluded from the calculations. A warning is issued, reporting that observations have been excluded. One should never ignore such warnings before one understands why they are being triggered and is confident that this what one really intended to do!
 
 <<>>=
-ggplot(data=outlier.data, aes(y=y, x=group)) +
+ggplot(data = outlier.data, aes(y = y, x = group)) +
   stat_summary(fun.data = "mean_se",
-               colour="red", size=1, alpha=0.7) +
+               colour = "red", size = 1, alpha = 0.7) +
   ylim(range(fake.data$y))
 @
 
 This figure has the correct values for mean and standard error, as the outlier has been included in the calculations.
 
 <<>>=
-ggplot(data=outlier.data, aes(y=y, x=group)) +
+ggplot(data = outlier.data, aes(y = y, x = group)) +
   stat_summary(fun.data = "mean_se",
-               colour="red", size=1, alpha=0.7) +
+               colour = "red", size = 1, alpha = 0.7) +
   coord_cartesian(ylim = range(fake.data$y))
 @
 
@@ -1008,28 +1009,28 @@ ggplot(data=outlier.data, aes(y=y, x=group)) +
 As \code{mult} is the multiplier based on the probability distribution used, by default student's {t}, by setting it to one, we get also standard errors of the mean.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
   stat_summary(fun.data = "mean_cl_normal",
                fun.args = list(mult = 1),
-               colour="red", size=1, alpha=0.7)
+               colour = "red", size = 1, alpha = 0.7)
 @
 
 However, be aware that the code such as below (NOT EVALUATED HERE), as used in earlier versions of \ggplot, needs to be rewritten as above.
 
 <<eval=FALSE>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
   stat_summary(fun.data = "mean_cl_normal", mult = 1,
-               colour="red", size=1, alpha=0.7)
+               colour = "red", size = 1, alpha = 0.7)
 @
 
 Finally we can plot error bars showing $\pm$s.d. (standard deviation).
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.data = "mean_sdl", colour="red", size=1, alpha=0.7)
+  stat_summary(fun.data = "mean_sdl", colour = "red", size = 1, alpha = 0.7)
 @
 
 We do not give an example here, but instead of using these functions (from package \Hmisc) it is possible to define one's own functions. In addition as arguments to any function used, except for the first one containing the actual data, are supplied as a list through formal argument \code{fun.args}, there is a lot of flexibility with respect to what functions can be used.
@@ -1037,13 +1038,13 @@ We do not give an example here, but instead of using these functions (from packa
 Finally we plot the means in a scatter plot, with the observations superimposed and $p = 0.95$ confidence interval (the order in which the geoms are added is important: by having \gggeom{geom\_point()} last it is plotted on top of the bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets mapping them to factors in the data set can be used to distinguish them. Adding \ggstat{stat\_summary()} twice allows us to plot the mean and the error bars using different colors.
 
 <<>>=
-ggplot(data=fake.data, aes(y=y, x=group)) +
+ggplot(data = fake.data, aes(y = y, x = group)) +
   stat_summary(fun.y = "mean", geom = "point",
-               fill="white", colour="black") +
+               fill = "white", colour = "black") +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "errorbar",
-               width=0.1, size=1, colour="red") +
-  geom_point(size=3, alpha=0.3)
+               width = 0.1, size = 1, colour = "red") +
+  geom_point(size = 3, alpha = 0.3)
 @
 
 Similarly as with scatter plots, we can plot summaries as bars plots and add error bars.
@@ -1123,7 +1124,7 @@ ggplot(data = mtcars, aes(x = disp, y = mpg)) +
 In most cases we will want to plot the observations as points together with the smoother. We can plot the observation on top of the smoother, as done here, or the smoother on top of the observations.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg)) +
+ggplot(data = mtcars, aes(x = disp, y = mpg)) +
   stat_smooth() +
   geom_point()
 @
@@ -1131,7 +1132,7 @@ ggplot(data = mtcars, aes(x=disp, y=mpg)) +
 Instead of using the default spline, we can fit a different model. In this example we use a linear model as smoother, fitted by \Rfunction{lm()}.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg)) +
+ggplot(data = mtcars, aes(x = disp, y = mpg)) +
   stat_smooth(method="lm") +
   geom_point()
 @
@@ -1139,24 +1140,24 @@ ggplot(data = mtcars, aes(x=disp, y=mpg)) +
 These data are really grouped, so we map the grouping to the \code{color} \emph{aesthetic}. Now we get three groups of points with different colours but also three separate smooth lines.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
-  stat_smooth(method="lm") +
+ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
+  stat_smooth(method = "lm") +
   geom_point()
 @
 
 To obtain a single smoother for the three groups, we need to set the mapping of the \code{color} \emph{aesthetic} to a constant within \ggstat{stat\_smooth}. This local value overrides the default for the whole plot set with \code{aes} just for this single \emph{statistic}. We use \code{"black"} but this could be replaced by any other color definition known to R.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
-  stat_smooth(method="lm", colour="black") +
+ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
+  stat_smooth(method = "lm", colour = "black") +
   geom_point()
 @
 
 Instead of using the default \code{formula} for a linear regression as smoother, we pass a different \code{formula} as argument. In this example we use a polynomial of order 2 fitted by \Rfunction{lm()}.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, color=factor(cyl))) +
-  stat_smooth(method="lm", formula=y~poly(x,2), colour="black") +
+ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
+  stat_smooth(method = "lm", formula = y ~ poly(x, 2), colour = "black") +
   geom_point()
 @
 
@@ -1189,17 +1190,17 @@ ggplot(Puromycin, aes(conc, rate, colour = state)) +
 The different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. The \code{alpha} (transparency) aesthetic can be mapped to a constant to make underlying layers visible, or \code{alpha} can be mapped to a data variable for example making the transparency of points in a plot depend on the number of observations used in its calculation.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
+ggplot(data = mtcars, aes(x = disp, y = mpg, colour = factor(cyl))) +
   geom_point() +
-  geom_smooth(colour="black", alpha=0.7) +
+  geom_smooth(colour = "black", alpha = 0.7) +
   theme_bw()
 @
 
 The plot looks different if the order of the \emph{geometries} is swapped. The data points overlapping the confidence band are more clearly visible in this second example because they are above the shaded area instead of bellow it.
 
 <<>>=
-ggplot(data = mtcars, aes(x=disp, y=mpg, colour=factor(cyl))) +
-  geom_smooth(colour="black", alpha=0.7) +
+ggplot(data = mtcars, aes(x = disp, y = mpg, colour = factor(cyl))) +
+  geom_smooth(colour = "black", alpha = 0.7) +
   geom_point() +
   theme_bw()
 @
@@ -1412,7 +1413,7 @@ p + facet_grid(vs ~ am)
 @
 
 <<>>=
-p + facet_grid(vs ~ am, margins=TRUE)
+p + facet_grid(vs ~ am, margins = TRUE)
 @
 
 <<echo=FALSE>>=
@@ -1432,7 +1433,7 @@ opts_chunk$set(opts_fig_very_wide)
 @
 
 <<>>=
-p + facet_grid(. ~ vs + am, margins=TRUE)
+p + facet_grid(. ~ vs + am, margins = TRUE)
 @
 
 <<echo=FALSE>>=
@@ -1514,10 +1515,10 @@ We generate new fake data.
 
 <<>>=
 fake2.data <-
-  data.frame(y = c(rnorm(20, mean=20, sd=5),
-                   rnorm(20, mean=40, sd=10)),
+  data.frame(y = c(rnorm(20, mean = 20, sd = 5),
+                   rnorm(20, mean = 40, sd = 10)),
              group = factor(c(rep("A", 20), rep("B", 20))),
-             z = rnorm(40, mean=12, sd=6))
+             z = rnorm(40, mean = 12, sd = 6))
 @
 
 \subsection{Continuous scales for $x$ and $y$}
@@ -1842,7 +1843,7 @@ Replace \Rfunction{grep()} by \Rfunction{grepl()} in the example above. What is 
 Although the vector of indexes, or the logical vector, could be used to extract the subset of matching color names with code like,
 
 <<>>=
-colors()[grep("dark",colors())]
+colors()[grep("dark", colors())]
 @
 
 a simpler approach is available.
@@ -1988,23 +1989,23 @@ Modify the examples above to use the \code{line} \emph{geometry} for the annotat
 In this third example, in addition to adding expressions as annotations, we also pass expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data, but using the same coordinates and units as for plotting the data.
 
 <<annotate-03>>=
-ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
-  stat_function(fun=sin) +
+ggplot(data.frame(x = c(0, 2 * pi)), aes(x = x)) +
+  stat_function(fun = sin) +
   scale_x_continuous(
-    breaks=c(0, 0.5, 1, 1.5, 2) * pi,
-    labels=c("0", expression(0.5~pi), expression(pi),
+    breaks = c(0, 0.5, 1, 1.5, 2) * pi,
+    labels = c("0", expression(0.5~pi), expression(pi),
              expression(1.5~pi), expression(2~pi))) +
-  labs(y="sin(x)") +
-  annotate(geom="text",
-           label=c("+", "-"),
-           x=c(0.5, 1.5) * pi, y=c(0.5, -0.5),
-           size=20) +
-  annotate(geom="point",
-           colour="red",
-           shape=21,
-           fill="white",
-           x=c(0, 1, 2) * pi, y=0,
-           size=6)
+  labs(y = "sin(x)") +
+  annotate(geom = "text",
+           label = c("+", "-"),
+           x = c(0.5, 1.5) * pi, y = c(0.5, -0.5),
+           size = 20) +
+  annotate(geom = "point",
+           colour = "red",
+           shape = 21,
+           fill = "white",
+           x = c(0, 1, 2) * pi, y = 0,
+           size = 6)
 @
 
 \begin{playground}
@@ -2194,16 +2195,34 @@ ggplot(viikki_d29.dat, aes(WindDir_D1_WVT, WindSpd_S_WVT)) +
 
 \section{Themes}\label{sec:plot:themes}
 \index{plots!themes|(}
-For ggplot2 themes are the equivalent of style sheets for text. They determine how the different elements of a plot are rendered when displayed, printed or saved to a file. They do not alter how the data themselves are displayed, but instead that of text-labels, titles, axes, grids, etc. are formatted. Package \ggplot includes several predefined themes, and some extension packages define additional ones. In addition to switching between themes, the user can modify the format applied to individual elements, or define totally new themes.
+For ggplot2 themes are the equivalent of style sheets for text. They determine how the different elements of a plot are rendered when displayed, printed or saved to a file. They do not alter how the data themselves are displayed, but instead that of text-labels, titles, axes, grids, etc. are formatted. Package \ggplot includes several predefined themes, and some extension packages described in the next chapter define additional ones. In addition to switching between themes, the user can modify the format applied to individual elements, or define totally new themes.
 
 \subsection{Predefined themes}
 \index{plots!themes!predefined|(}
 The theme used by default is \ggtheme{theme\_grey()}. Themes are defined as functions, with parameters. These parameters allow changing some ``base'' properties. The base size for text elements is given in points, and affects all text elements in a plot (except those produced by \emph{geometries}) as the size of them is by default defined relative to the base size. Another parameter, \code{base\_family}, allows the font family to be set.
 
+Even the default \ggtheme{theme\_grey()} can come in handy because the first parameter to themes is the base point size.
+
+
 <<themes-01>>=
 ggplot(fake2.data, aes(z, y)) +
   geom_point() +
-  theme_grey(15, "serif")
+  theme_grey(10)
+@
+
+<<themes-01a>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  theme_grey(15)
+@
+
+We can also set the base family.
+
+<<themes-01b>>=
+ggplot(fake2.data, aes(z, y)) +
+  geom_point() +
+  theme_grey(base_size = 15,
+             base_family = "serif")
 @
 
 \begin{playground}
@@ -2459,15 +2478,15 @@ We also use a Greek $\alpha$ character, but with $i$ as subscript, instead of a 
 We label each observation with a subscripted $alpha$, offset from the point position and rotated. We finally add an annotation with the same formula as used for the title but in red. Annotations are plotted ignoring the default aesthetics, but still make use of \emph{geometries}. We cannot pass expressions to \emph{geometries} by simply mapping them to the label aesthetic. Instead, we pass character strings that can be parsed into expressions. In simpler terms, a string, that is written using the syntax of expressions but not using the function \Rfunction{expression()}. We need to set \code{parse = TRUE} so that the strings instead of being plotted as is, are parsed into expressions at the time the plot is output. When using \gggeom{geom\_text()}, the argument passed to parameter \code{label} must be a character string. Consequently, expressions to be plotted through this \emph{geometry} need always to be parsed.
 
 <<plotmath-02>>=
-ggplot(my.data, aes(x,y,label=greek.label)) +
+ggplot(my.data, aes(x, y, label = greek.label)) +
    geom_point() +
-   geom_text(angle=45, hjust=1.2, parse=TRUE) +
+   geom_text(angle = 45, hjust = 1.2, parse = TRUE) +
    labs(x = expression(alpha[i]),
         y = expression(Speed~~(m~s^{-1})),
         title = expression(sqrt(alpha[1] + frac(beta, gamma)))
         ) +
-   annotate("text", label="sqrt(alpha[1] + frac(beta, gamma))",
-           y=2.5, x=3, size=8, colour="red", parse=TRUE) +
+   annotate("text", label = "sqrt(alpha[1] + frac(beta, gamma))",
+           y = 2.5, x = 3, size = 8, colour = "red", parse = TRUE) +
    expand_limits(y = c(-2, 4))
 @
 
@@ -2475,30 +2494,30 @@ We can also use a character string stored in a variable, and use \Rfunction{pars
 
 <<plotmath-02a>>=
 my_eq.char <- "sqrt(alpha[1] + frac(beta, gamma))"
-ggplot(my.data, aes(x,y,label=greek.label)) +
+ggplot(my.data, aes(x, y, label = greek.label)) +
    geom_point() +
-   geom_text(angle=45, hjust=1.2, parse=TRUE) +
+   geom_text(angle = 45, hjust = 1.2, parse = TRUE) +
    labs(x = expression(alpha[i]),
         y = expression(Speed~~(m~s^{-1})),
         title = parse(text = my_eq.char)
         ) +
    annotate("text", label = my_eq.char,
-           y=2.5, x=3, size=8, colour="red", parse=TRUE) +
+           y = 2.5, x = 3, size = 8, colour = "red", parse = TRUE) +
    expand_limits(y = c(-2, 4))
 @
 
 The examples above are moderately complex, but do not use expressions for all the elements in a ggplot that accept them. The next example uses them for scale labels. In the cases of scales, there are alternative approaches. One approach is to use user-supplied expressions.
 
 <<plotmath-03>>=
-ggplot(my.data, aes(x,y,label=greek.label)) +
+ggplot(my.data, aes(x,y,label = greek.label)) +
    geom_point() +
-   geom_text(angle=45, hjust=1.2, parse=TRUE) +
+   geom_text(angle = 45, hjust = 1.2, parse = TRUE) +
    labs(x = NULL,
         y = expression(Speed~~(m~s^{-1})),
         title = expression(sqrt(alpha[1] + frac(beta, gamma)))
         ) +
-   annotate("text", label="sqrt(alpha[1] + frac(beta, gamma))",
-           y=2.5, x=3, size=8, colour="red", parse=TRUE) +
+   annotate("text", label = "sqrt(alpha[1] + frac(beta, gamma))",
+           y = 2.5, x = 3, size = 8, colour = "red", parse = TRUE) +
    scale_x_continuous(breaks = c(1,3,5),
                       labels = c(expression(alpha[1]),
                                  expression(alpha[3]),
@@ -2510,15 +2529,15 @@ ggplot(my.data, aes(x,y,label=greek.label)) +
 As expression accepts multiple arguments separated by commas, the labels can be written more concisely using a single call to \Rfunction{expression()}.
 
 <<plotmath-03a>>=
-ggplot(my.data, aes(x,y,label=greek.label)) +
+ggplot(my.data, aes(x, y, label = greek.label)) +
    geom_point() +
-   geom_text(angle=45, hjust=1.2, parse=TRUE) +
+   geom_text(angle = 45, hjust = 1.2, parse = TRUE) +
    labs(x = NULL,
         y = expression(Speed~~(m~s^{-1})),
         title = expression(sqrt(alpha[1] + frac(beta, gamma)))
         ) +
-   annotate("text", label="sqrt(alpha[1] + frac(beta, gamma))",
-           y=2.5, x=3, size=8, colour="red", parse=TRUE) +
+   annotate("text", label = "sqrt(alpha[1] + frac(beta, gamma))",
+           y = 2.5, x = 3, size = 8, colour = "red", parse = TRUE) +
    scale_x_continuous(breaks = c(1,3,5),
                       labels = expression(alpha[1], alpha[3], alpha[5])
                       ) +
@@ -2552,15 +2571,15 @@ And now we can use the function in a plot.
 
 <<plotmath-06>>=
 breaks <- c(1,3,5)
-ggplot(my.data, aes(x,y,label=greek.label)) +
+ggplot(my.data, aes(x, y, label = greek.label)) +
    geom_point() +
-   geom_text(angle=45, hjust=1.2, parse=TRUE) +
+   geom_text(angle = 45, hjust = 1.2, parse = TRUE) +
    labs(x = NULL,
         y = expression(Speed~~(m~s^{-1})),
         title = expression(sqrt(alpha[1] + frac(beta, gamma)))
         ) +
-   annotate("text", label="sqrt(alpha[1] + frac(beta, gamma))",
-           y=2.5, x=3, size=8, colour="red", parse=TRUE) +
+   annotate("text", label = "sqrt(alpha[1] + frac(beta, gamma))",
+           y = 2.5, x = 3, size = 8, colour = "red", parse = TRUE) +
    scale_x_continuous(breaks = breaks,
                       labels = make_labels("alpha", breaks)
                       ) +
@@ -2709,9 +2728,9 @@ In R,\index{plots!printing}\index{plots!saving}\index{plots!output to files} fil
 A very\index{plots!PDF output} simple example of PDF output (width and height in inches):
 
 <<eval=FALSE>>=
-fig1 <- ggplot(data.frame(x=-3:3), aes(x=x)) +
-  stat_function(fun=dnorm)
-pdf(file="fig1.pdf", width=8, height=6)
+fig1 <- ggplot(data.frame(x = -3:3), aes(x = x)) +
+  stat_function(fun = dnorm)
+pdf(file = "fig1.pdf", width = 8, height = 6)
 print(fig1)
 dev.off()
 @
@@ -2719,7 +2738,7 @@ dev.off()
 Encapsulated\index{plots!Postscript output} Postscript output (width and height in inches):
 
 <<eval=FALSE>>=
-postscript(file="fig1.eps", width=8, height=6)
+postscript(file = "fig1.eps", width = 8, height = 6)
 print(fig1)
 dev.off()
 @
@@ -2727,7 +2746,7 @@ dev.off()
 There are Graphics devices for\index{plots!bitmap output} BMP, JPEG, PNG and TIFF format bitmap files. In this case the default units for width and height is pixels. For example we can generate TIFF output:
 
 <<eval=FALSE>>=
-tiff(file="fig1.tiff", width=1000, height=800)
+tiff(file = "fig1.tiff", width = 1000, height = 800)
 print(fig1)
 dev.off()
 @
@@ -2758,30 +2777,31 @@ The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows on
   Build a graphically complex data plot of your interest, step by step. By step by step, I do not refer to using the grammar in the construction of the plot as earlier, but of taking advantage of this modularity to test intermediate version in an iterative design process, first by building up the complex plot in stages as a tool in debugging, and later using iteration in the processes of improving the graphic design of the plot and improving its readability and effectiveness.
 \end{playground}
 
-\subsection{Using the grammar of graphics for series of plots with consistent design}
-
 As in any type of script with instructions (for humans or computers), we should avoid unnecessary repetition, as repetition conspires against consistent results and is a major source of errors when the script needs to be modified. Not less important, a shorter script, if well written is easier to read.
 
-One approach is to use user-defined functions\index{plots!consistent format using functions}. One can for example, write simple wrapper functions on top functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \Rfunction{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, the wrapper can be a specialization of the generic, and become almost invisible to users (e.g.\ not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses the last two approaches.
+One approach is to use user-defined functions\index{plots!consistent format using functions}. One can for example, write simple wrapper functions on top functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \Rfunction{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, instead of a wrapper we can use a specialization of the generic. Such a specialized methods is almost invisible to users (e.g.\ does not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses both approaches.
+
+The graphic style of plots is best adjusted by means of themes. Although themes can be also used as building blocks as described below in the together with layers and scales, in can be better to add them when plots are being rendered as we may want to use different themes when, for example, rendering the same plot on different devices such as a printer or screen.
 
 As \Rclass{ggplot}\index{plots!reusing parts of} objects are composed using operator \code{+} to assemble together the different components, one can also store in a variable these components, or using a list, partial plots, which can be used to compose the final figure.
 
-\begin{explainbox}
+\subsection{Saving plot layers and scales in variables}
+
 We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
 
 <<>>=
 myplot <- ggplot(data = mtcars,
-                 aes(x=disp, y=mpg,
-                 colour=factor(cyl))) +
+                 aes(x = disp, y = mpg,
+                 colour = factor(cyl))) +
           geom_point()
 
-mylabs <- labs(x="Engine displacement)",
-               y="Gross horsepower",
-               colour="Number of\ncylinders",
-               shape="Number of\ncylinders")
+mylabs <- labs(x = "Engine displacement)",
+               y = "Gross horsepower",
+               colour = "Number of\ncylinders",
+               shape = "Number of\ncylinders")
 @
 
-And now we can assemble them into plots.
+And now we can assemble the final plot by putting the saved ``blocks'' together. A \code{"gg"} object should always be on the left side of the \code{+} operator. We add layers or other elements to it.
 
 <<>>=
 myplot
@@ -2796,26 +2816,68 @@ mylogplot <- myplot + scale_y_log10(limits=c(8,55))
 mylogplot + mylabs + theme_bw(16)
 @
 
-If the pieces to put together do not include a "ggplot" object, we can put them
-into a "list" object.
+\subsection{Saving plot layers and scales in variables in lists}
+
+If the pieces to be put together do not include a \code{"gg"} object, we can group them
+into a "list" object. When we later add the list to a \code{"gg"} object, the members of the list are added one by one to the plot.
 
 <<>>=
 myparts <- list(mylabs, theme_bw(16))
 mylogplot + myparts
 @
 
-Frequently, simpler program code can be written when null objects and null operations are available. If one adds \code{NULL} to a \code{ggplot} object, the same object is returned unchanged. In contrast, currently  (\pkgname{ggplot2} = 2.2.1), if an ``empty'' list is added, a copy of the object is returned. In the two cases the rendered plot is the same.
+\begin{playground}
+Revise the code you wrote for the ``playground'' exercise in section \ref{sec:plot:composition}, but this time, pre-building and saving groups of elements that you expect to be useful unchanged when composing a different plot of the same type, or a plot of a different type from the same data.
+\end{playground}
+
+\index{examples!modular plot construction|)}
+
+\subsection{Using functions as building blocks}
+
+When the blocks we assemble need to accept arguments when used, we have to define functions instead of saving constant blocks to variables either individually or grouped in lists. The functions we define, have to return either a \code{"gg"} object, a list of components or a single plot component. The simplest use is to alter some defaults in existing functions which return \code{"gg"} objects or layers. The ellipsis (\code{...}) allows passing named arguments to a nested function. In this case, every single passed by name to \code{bw\_ggplot()} will be copied as argument to the nested call the \code{ggplot()}. Be aware, that supplying arguments by position, is not possible, unless, one includes the parameters explicitly in the wrapper function.
 
 <<>>=
-identical(myplot, myplot + NULL)
-identical(myplot, myplot + list())
+bw_ggplot <- function(...) {
+  ggplot(...) + 
+  theme_bw()
+}
 @
 
-The\index{plots!themes} are a few predefined themes in package \ggplot and additional ones in other packages such as \cowplot, even the default \ggtheme{theme\_grey()} can come in handy because the first parameter to themes is the point size used as reference to calculate all other font sizes. You can see in the two examples bellow, that the size of all text elements changes proportionally when we set a different base size in points.
+Which could be used as follows.
 
 <<>>=
-myplot + mylabs + theme_grey(10)
-myplot + mylabs + theme_grey(16)
+bw_ggplot(data = mtcars,
+          aes(x = disp, y = mpg,
+          colour = factor(cyl))) +
+          geom_point()
+@
+
+We can also write a function that encompasses all the needed blocks. This can be used, for example, to define new specialized \code{plot()} methods for the generic function \code{plot()}. The example below would plot objects of a hypothetical class \code{"zzz"}, containing variables $x$ and $y$. To show a bit fancier use, we scale both variables to a mean of 1, and then we plot them on a coordinate system with a fixed ratio of 1 between $x$ and $y$ scales.
+
+<<>>=
+plot.zzz <- function(data, ...) {
+  ggplot(data = data, aes(x / mean(x), y / mean(y), ...)) +
+  geom_point() +
+  coord_fixed() +
+  labs(x = "scaled x", y = "scaled y", title = "Plot of a \"zzz\" object")
+}
+@
+
+<<>>=
+some_data <- data.frame(x = rnorm(20),
+                        y = rnorm(20, 5, 3))
+class(some_data) <- c("zzz", class(some_data))
+plot(some_data)
+@
+
+\begin{explainbox}
+Frequently, simpler program code can be written when null objects and null operations are available. The return value of adding \code{NULL} or \code{list()} to a \code{ggplot} object is a copy of the object. In both cases the rendered plot is the same as the one from the original object.
+
+<<eval=FALSE>>=
+# not run
+myplot
+myplot + NULL
+myplot + list()
 @
 
 The code in the next chunk is valid, it returns a blank plot. This apparently useless plot, can be very useful when writing functions that return \Rclass{ggplot} objects or build them piece by piece in a loop.
@@ -2824,12 +2886,82 @@ The code in the next chunk is valid, it returns a blank plot. This apparently us
 ggplot()
 @
 
-\begin{playground}
-Revise the code you wrote for the ``playground'' exercise in section \ref{sec:plot:composition}, but this time, pre-building and saving groups of elements that you expect to be useful unchanged when composing a different plot of the same type, or a plot of a different type from the same data.
-\end{playground}
+It is also important to keep in mind that code in the next two chunks is valid. In other words, the default aesthetics mapping does not need to be defined within the call to function \code{ggplot()}, neither is a default mapping needed at all when a mapping is passed to each layer in the plot.
 
+<<>>=
+ggplot(mtcars) +
+  aes(x = disp, y = mpg, colour = factor(cyl)) +
+  geom_point()
+@
+
+or 
+
+<<>>=
+ggplot() +
+  geom_point(data = mtcars, 
+             aes(x = disp, y = mpg, colour = factor(cyl)))
+@
 \end{explainbox}
-\index{examples!modular plot construction|)}
+
+\subsection{Using the data pipes}
+
+We can pass as data argument to \code{ggplot()} the value returned by a pipe, and as \code{data} is the first parameter, \code{ggplot()} can be connected to a pipe. The example below is equivalent to that in the previous section.
+
+<<>>=
+ mtcars %>%
+  ggplot(aes(x = disp, y = mpg, colour = factor(cyl))) +
+          geom_point()
+@
+
+Or if we want to modify the data on the fly, in this case converting miles per gallon into litres per 100~km.  As seen earlier calculations like this can be done within the call to \code{aes()} but using a pipe can result in easier to understand code.
+
+<<>>=
+ mtcars %>%
+  mutate(L_100km = 270 / mpg) %>%
+  ggplot(aes(x = disp, y = L_100km, colour = factor(cyl))) +
+          geom_point()
+@
+
+Another way in which the flexibility of package \pkgname{ggplot2}'s implementation of the grammar of graphics can be exploited is by accessing and modifying the default data within a layer. The simplest example is plotting selected observations from the data in a certain layer, doing the selection on-the-fly. To make this code work, several of the packages comprising the \pkgname{tidyverse} need to be loaded. In this case we use a dot \code{.} to get access to the global default data for the plot.
+
+<<>>=
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = cyl)) +
+  geom_point(colour = "blue") +
+  geom_point(data = . %>% filter(cyl == 8), shape = 21, colour = "red", size = 3)
+@
+
+Instead of function \code{filter()} we can use any R function that returns a data frame or a \code{tibble}, or as shown below a \emph{pipe}. If we want to reuse the global aesthetic mappings, we should maintain the same column names.
+
+<<>>=
+p1 <-
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl))) +
+  geom_point() +
+  geom_text(data = . %>% group_by(cyl) %>%
+                   summarise(disp = mean(disp),
+                   mpg = mean(mpg),
+                   mpg_lab = format(mpg, digits = 1)),
+            aes(label = mpg_lab))
+p1
+@
+
+This is particularly useful when saving layers in a list or individually as a building block, as in such case we do not know what will be the data argument when our ``block'' is used. This is not equivalent to a \emph{statistic} as we are manipulating the data using the original variable names in the data frame passed as argument. Within a \emph{statistic} we access the data after they have been mapped to aesthetics, such as $x$, $y$, label, colour, etc.
+
+<<>>=
+means_text <-
+  geom_text(data = . %>% group_by(cyl) %>%
+                   summarise(disp = mean(disp),
+                   mpg = mean(mpg),
+                   mpg_lab = format(mpg, digits = 1)),
+            aes(label = mpg_lab))
+
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl))) +
+       stat_smooth(colour = "black", method = "lm", formula = y ~ poly(x, 2)) +
+       geom_point() +
+       means_text
+@
 
 \section{Extended examples}
 \index{plots!advanced examples|(}
@@ -2848,8 +2980,8 @@ For the examples in this section we use artificial data to build a correlation m
 
 <<>>=
 set.seed(123)
-x <- matrix(rnorm(200), nrow=20, ncol=10)
-y <- matrix(rnorm(200), nrow=20, ncol=10)
+x <- matrix(rnorm(200), nrow = 20, ncol = 10)
+y <- matrix(rnorm(200), nrow = 20, ncol = 10)
 cor.mat <- cor(x,y)
 cor.df <- data.frame(cor = as.vector(cor.mat),
            x = rep(letters[1:10], 10),
@@ -3005,7 +3137,7 @@ I will redraw the Wikipedia figure using \ggplot, but first I rearrange the orig
 
 <<>>=
 # we rearrange the data
-my.mat <- matrix(as.matrix(anscombe), ncol=2)
+my.mat <- matrix(as.matrix(anscombe), ncol = 2)
 my.anscombe <- data.frame(x = my.mat[ , 1],
                           y = my.mat[ , 2],
                           case=factor(rep(1:4, rep(11,4))))
@@ -3016,17 +3148,17 @@ Once the data is in a data frame, plotting the observations plus the regression 
 <<>>=
 ggplot(my.anscombe, aes(x,y)) +
   geom_point() +
-  geom_smooth(method="lm") +
-  facet_wrap(~case, ncol=2)
+  geom_smooth(method = "lm") +
+  facet_wrap(~case, ncol = 2)
 @
 
 It is not much more difficult to make it look similar to the Wikipedia original.
 
 <<>>=
 ggplot(my.anscombe, aes(x,y)) +
-  geom_point(shape=21, fill="orange", size=3) +
-  geom_smooth(method="lm", se=FALSE) +
-  facet_wrap(~case, ncol=2) +
+  geom_point(shape = 21, fill = "orange", size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~case, ncol = 2) +
   theme_bw(16)
 @
 
@@ -3034,9 +3166,9 @@ Although I think that the confidence bands make the point of the example much cl
 
 <<>>=
 ggplot(my.anscombe, aes(x,y)) +
-  geom_point(shape=21, fill="orange", size=3) +
-  geom_smooth(method="lm") +
-  facet_wrap(~case, ncol=2) +
+  geom_point(shape = 21, fill = "orange", size = 3) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~case, ncol = 2) +
   theme_bw(16)
 @
 \index{plots!advanced examples!Anscombe's linear regression plots|)}
@@ -3188,20 +3320,21 @@ example.data <-
              cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
   )
 
-ggplot(example.data, aes(x=cols, y=values, fill=cols)) +
+ggplot(example.data, aes(x = cols, y = values, fill = cols)) +
   geom_col(width = 1) +
-  facet_grid(.~examples) +
+  facet_grid(. ~ examples) +
   scale_fill_identity()
-ggplot(example.data, aes(x=factor(1), y=values, fill=cols)) +
+ggplot(example.data, aes(x = factor(1), y = values, fill = cols)) +
   geom_col(width = 1) +
-  facet_grid(.~examples) +
+  facet_grid(. ~ examples) +
   scale_fill_identity() +
-  coord_polar(theta="y")
+  coord_polar(theta = "y")
 @
 \index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|)}
 \index{plots!advanced examples|(}
 
 <<eco=FALSE>>=
+try(detach(package:tidyverse))
 try(detach(package:lubridate))
 try(detach(package:tikzDevice))
 try(detach(package:ggplot2))
