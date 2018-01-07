@@ -8,7 +8,13 @@ opts_knit$set(unnamed.chunk.label = 'data-chunk')
 
 \chapter{Storing and manipulating data with R}\label{chap:R:data}
 
-\dictum[Patrick J. Burns (1998) S Poetry. \url{http://www.burns-stat.com/documents/books/s-poetry/}]{Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.}
+\begin{VF}
+Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.
+
+\VA{Patrick J. Burns}{S Poetry}
+\end{VF}
+
+%\dictum[Patrick J. Burns (1998) S Poetry. \url{http://www.burns-stat.com/documents/books/s-poetry/}]{Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.}
 
 \section{Aims of this chapter}
 
@@ -34,6 +40,8 @@ library(tidyr)
 library(readr)
 library(readxl)
 library(xlsx)
+library(pdftools)
+library(tabulizer)
 library(foreign)
 library(haven)
 library(xml2)
@@ -190,7 +198,7 @@ Combine the use of \Rfunction{basename()} with \Rfunction{list.files()} to obtai
 \end{playground}
 
 \begin{playground}
-Compare the behaviour of functions \code{dir} and \Rfunction{lis.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
+Compare the behaviour of functions \code{dir} and \Rfunction{list.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
 \end{playground}
 
 Base R provides several functions for working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for the ``family'' of functions.
@@ -719,6 +727,53 @@ uvi.tb <-
            uvi = var.get.nc(meteo_data.nc, "UVindex")[6,2,]
            )
 uvi.tb
+@
+
+\subsection{.PDF files}
+
+In the case of PDF files two clearly different needs exist: 1) reading words to be used in text analysis, and 2) extracting data from tables embedded in a PDF file. Not all PDF files are equal, as PDF files can contain text encoded as such, but also vector graphics commands and bitmaps. PDF files created by scanning a printed document are in their simplest form, bitmap images of the scanned document. Depending on the software used, a second stage after scanning is Optical Character Recognition (OCR), which attempts to recover the original text from the bitmap, and embed it in the same PDF file. This allows searching for textual content. OCR is subject to errros, and its rate of success is affected by both settings in the scanning software and properties of the printed original. Two key aspects are correctly setting in the software the language used in the text and the font used in the original. Handwritten text and cursive or unusual fonts usually result in failure. Miss-recognition is also common when the ``inking'' of printing plates has been excessive or deficient, resulting in the closing of open characters or incomplete printing of characters. All this is to warn that in the case of PDF documents originating from scanning, any imported data should be very carefully checked for errors. Spell-checking is usually not enough, as OCR software uses dictionaries as one of its tools. For the examples in this section we will use a paper from arXiv \autocite{Sagi2017}.
+
+\subsubsection[pdftools]{\pkgname{pdftools}}
+
+We first extract embedded information, printing two slots.
+
+<<pdftools-01>>=
+my.info <- pdf_info("extdata/acp-17-1791-2017.pdf")
+my.info[c("created", "pages")]
+@
+
+We next extract the text. The returned value is a character vector, with one element per page.
+
+<<pdftools-02>>=
+my.text <- pdf_text("extdata/acp-17-1791-2017.pdf")
+class(my.text)
+length(my.text)
+@
+
+Using functions from package \pkgname{stringr} we first obtain the length in characters of each character string (or page in the original document). In the second statement we extract the first words from the second page.
+
+<<pdftools-03>>=
+stringr::str_length(my.text)
+stringr::word(my.text[2])
+@
+
+\subsubsection[tabulizer]{\pkgname{tabulizer}}
+
+<<tabulizer-01>>=
+my.meta <- extract_metadata("extdata/acp-17-1791-2017.pdf")
+names(my.meta)
+my.meta[c("created", "pages")]
+@
+
+<<tabulizer-02>>=
+my.text <- extract_text("extdata/acp-17-1791-2017.pdf", page = 2L)
+class(my.text)
+length(my.text)
+@
+
+<<tabulizer-03>>=
+stringr::str_length(my.text)
+stringr::word(my.text)
 @
 
 \subsection{Remotely located data}\label{sec:files:remote}
@@ -1616,6 +1671,8 @@ try(detach(package:RNetCDF))
 try(detach(package:xml2))
 try(detach(package:haven))
 try(detach(package:foreign))
+try(detach(package:tabulizer))
+try(detach(package:pdftools))
 try(detach(package:xlsx))
 try(detach(package:readxl))
 try(detach(package:readr))
