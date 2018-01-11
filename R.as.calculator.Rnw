@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'calculator-chunk')
 @
 
-\chapter{R as a powerful calculator}\label{chap:R:as:calc}
+\chapter{The R language: ``words'' and ``sentences''}\label{chap:R:as:calc}
 
 \begin{VF}
 The desire to economize time and mental effort in arithmetical computations, and to eliminate human liability to error, is probably as old as the science of arithmetic itself.
@@ -18,27 +18,51 @@ The desire to economize time and mental effort in arithmetical computations, and
 
 \section{Aims of this chapter}
 
-In my experience, for those not familiar with computing programming or scripting languages, and who have mostly used computer programs through visual interfaces making heavy use of menus and icons, the best first step in learning \Rlang is to learn the basics of the language through its use at the R command prompt. This will teach not only the syntax and grammar rules, but also give a glimpse at the advantages and flexibility of this approach to data analysis.
+In my experience, for those not familiar with computer programming languages, the best first step in learning \Rlang is to use it at the R command prompt by issuing textual commands. This will teach not only the syntax and grammar rules, but also give a glimpse at the advantages and flexibility of this approach to data analysis.
 
-Menu-driven programs are not necessarily bad, they are just unsuitable when there is a need to set very many options and choose from many different actions. They are also difficult to maintain when extensibility is desired, and when independently developed modules of very different characteristics need to be integrated. Textual languages also have the advantage, to be dealt with in the next chapter, that command sequences can be stored in human- and computer readable text files. Such files constitute a record of all the steps used and in most cases makes it trivial to reproduce the same steps at a later time. Scripts are also a very simple and handy way of communicating to others how to do a given data analysis.
+In the first part of the chapter we will use \Rlang to do everyday calculations that should be so easy and familiar that you will not need to think about the operations themselves. This easy start will give you a chance to focus on learning how to issue textual commands at the command prompt.
 
-\section{Working at the R console}
+Later in the chapter, you will gradually need to focus more on the \Rlang language and less on how commands are entered. By the end of the chapter you will be familiar with most of the kinds of ``words'' used in the R language and you will be able write simple ``sentences''.
 
-I\index{console} assume here that you have installed or have had installed by someone else \Rpgrm and \RStudio and that you are already familiar enough with \RStudio to find your way around its user interface. The examples in this chapter use only the console window, and results are printed to the console. The values stored in the different variables are visible in the Environment tab in \RStudio.
+Along the chapter, I will show occasionally the equivalent of the R code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
 
-In the console you can type commands at the \code{>} prompt.
-When you end a line by pressing the return key, if the line can be interpreted as an R command, the result will be printed in the console, followed by a new \code{>} prompt.
-If the command is incomplete a \code{+} continuation prompt will be shown, and you will be able to type-in the rest of the command. For example if the whole calculation that you would like to do is $1 + 2 + 3$, if you enter in the console \code{1 + 2 +} in one line, you will get a continuation prompt where you will be able to type \code{3}. However, if you type \code{1 + 2}, the result will be calculated, and printed.
+\section{Natural and computer languages}
 
-When working at the command prompt, results are printed by default, but in other cases you may need to use the function \Rfunction{print()} explicitly. The examples here rely on the automatic printing.
+Computer languages have strict rules and interpreters and compilers are unforgiving about errors. They will issue error messages, but in contrast to human readers or listeners, will not guess your intentions and continue. However, computer languages have a much smaller set of words than natural languages, such as English. If you are new to computer programming, understanding the parallels between computer and natural languages may be useful.
 
-The idea with these examples is that you learn by working out how different commands work based on the results of the example calculations listed. The examples are designed so that they allow the rules, and also a few quirks, to be found by `detective work'. This should hopefully lead to better understanding than just studying rules.
+One can think of constant values and variables (values stored under a name) as nouns and of operators and functions as verbs. A complete command, or statement, is the equivalent of a natural language sentence: ``a comprehensible utterance''. The simple statement \code{a + 1} has three components: \code{a}, a variable, \code{+}, an operator and \code{1} a constant. The statement \code{sqrt(4)} has two components, a function \code{sqrt()} and a numerical constant \code{4}. We say that ``to compute $\sqrt{4}$ we \emph{call} \code{sqrt()} with \code{4} as its \emph{argument}''.
+
+In later chapters you will learn how to write compound statements, the equivalent of natural-language paragraphs, and scripts, the equivalent of essays. You will also learn how to define new verbs, user defined functions and operators, and new nouns, user defined classes.
 
 \section{Arithmetic and numeric values}
 \index{mode!numeric|(}\index{math operators}\index{math functions}\index{numeric values}
-When working with arithmetic expressions the normal mathematical precedence rules are respected, but parentheses can be used to alter this order. Parentheses can be nested and at all nesting levels the normal rounded parentheses are used. The number of opening (left side) and closing (right side) parentheses must be balanced, and they must be located so that each enclosed term is a valid mathematical expression. For example while \code{(1 + 2) * 3} is valid, \code{(1 +) 2 * 3} is a syntax error as \code{1 +} is incomplete and cannot be calculated.
+When working in \Rlang with arithmetic expressions, the normal mathematical precedence rules are respected, but parentheses can be used to alter this order. Parentheses can be nested, but in contrast to the usual practice in mathematics, the same parenthesis symbol is used at all nesting levels.
 
-<<numbers-1>>=
+The equivalent of the math expression
+$$
+\frac{3 + e^2}{\sin \pi}
+$$
+is
+<<numbers-0>>=
+(3 + exp(2)) / sin(pi)
+@
+
+It can be seen above that mathematical constants and functions are part of the \Rlang language. One thing to remember when translating complex fractions as above into R code, is that the bar in the fraction generates a grouping that alters the normal precedence, requiring additional parentheses in the \Rlang version.
+
+If you are in doubt about how precedence rules work, you can add parentheses to make sure the order of computations is the one you intend.
+
+<<numbers-00>>=
+1 + 2 * 3
+1 + (2 * 3)
+(1 + 2) * 3
+@
+
+The number of opening (left side) and closing (right side) parentheses must be balanced, and they must be located so that each enclosed term is a valid mathematical expression. For example while \code{(1 + 2) * 3} is valid, \code{(1 +) 2 * 3} is a syntax error as \code{1 +} is incomplete and cannot be calculated.
+
+\begin{playground}
+Here results are not shown. These are examples for you to type at the command prompt. In general you should not skip them, as in many cases, as with the statements highlighted with comments in the code chunk bellow, they have something to teach or demonstrate. You are also strongly encouraged to \emph{play}, in other words, create new variations of the examples and execute them to explore how \Rlang works.
+
+<<numbers-1, eval=eval_playground>>=
 1 + 1
 2 * 2
 2 + 10 / 5
@@ -54,7 +78,9 @@ log2(8)
 exp(1)
 @
 
-One can use variables\index{variables}\index{assignment} to store values. The `usual' assignment operator is \Roperator{<-}. Variable names and all other names in R are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be quite long, but usually it is not a good idea to use very long names. Here I am using very short names, that is usually a very bad idea. However, in cases like these examples where the stored values have no real connection to the real world and are used just once or twice, these names emphasize the abstract nature.
+\end{playground}
+
+Variables\index{variables}\index{assignment} are used to store values. The `usual' assignment operator is \Roperator{<-}. All names in \Rlang are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be quite long, but usually it is not a good idea to use very long names. Here I am using very short names, something that is usually a very bad idea. However, in the examples in this chapter where the stored values have no connection to the real world, simple names emphasize their abstract nature.
 
 <<numbers-2>>=
 a <- 1
@@ -66,9 +92,10 @@ b
 3e-2 * 2.0
 @
 
-There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The important thing is that you write commands consistently. The assignment `backwards' assignment operator \Roperator{->} resulting code like \code{1 -> a}\index{assignment!leftwise} is valid but rarely used. The use of the equals sign (\Roperator{=}) for assignment although valid is generally discouraged as it is seldom used as this meaning has not earlier been part of the \Rpgrm language. Chaining\index{assignment!chaining} assignments as in the first line below is sometimes used, and signals to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
+\begin{playground}
+There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The `backwards' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{->} although valid is generally discouraged as this redundant use was not part of the \Rlang language as originally defined. Chaining\index{assignment!chaining} assignments as in the first line below is sometimes used, and signals to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
 
-<<numbers-3, tidy=FALSE>>=
+<<numbers-3, tidy=FALSE, eval=eval_playground>>=
 a <- b <- c <- 0.0
 a
 b
@@ -79,18 +106,23 @@ a = 3
 a
 @
 
+\end{playground}
+
 \begin{explainbox}
-Here I very briefly introduce the concept of \emph{mode} of an R object. In the case of \Rpgrm, numbers, belong to mode \Rclass{numeric}. We can query if the mode of an object is \Rclass{numeric} with function \Rfunction{is.numeric()}.
+Here I very briefly introduce the concept of \emph{mode} of an R object. In the case of \Rlang, numbers, belong to mode \Rclass{numeric}. We can query if the mode of an object is \Rclass{numeric} with function \Rfunction{is.numeric()}.
 
 <<classes-01>>=
-is.numeric(1)
+mode(1)
 a <- 1
+mode(a)
 is.numeric(a)
 @
 
-One can think informally of a \emph{mode}, as a ``type'' or ``kind'' of objects. Constants like \code{1} or variables such as \code{a} in the code chunk above, belong to, or have a mode, that indicates that they are numbers. Other modes that we will use later in the present chapter are \code{logical} and \code{character} (We will discuss the concepts of \emph{mode} and \emph{class}, as used in \langname{R}, in section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode} for more details).
+One can think informally of a \emph{mode}, as a ``type'' or ``kind'' of objects. Constants like \code{1} or variables such as \code{a} in the code chunk above, belong to, or have a mode, that indicates that they are numbers. Other modes that we will use later in the present chapter are \code{logical} and \code{character} (We will discuss the concepts of \emph{mode} and \emph{class}, as used in \langname{R}, in section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}).
 
-As in computers numbers can be stored in different ways, most computing languages allow the use of several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} can be used everywhere where a number is expected. In some cases in can be more efficient to explicitly indicate whether we will store or operate on integer numbers, in which case we can use class \Rclass{integer}, with integer constants indicated with a trailing capital `L', as in  \code{32L}. When the intention is to represent Real numbers, but restricted a finite range and with a finite resolution, in other words, \emph{floats} (or \emph{floating-point} numbers), we can directly use class \Rclass{double} and the constructor \Rfunction{double()}.
+As in computers numbers can be stored in different formats requiring different amounts of memory, most computing languages implement several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} can be used everywhere where a number is expected. In some cases it can be more efficient to explicitly indicate whether we will store or operate on integer numbers, in which case we can use class \Rclass{integer}, with integer constants indicated with a trailing capital `L', as in  \code{32L}. 
+
+Real numbers are a mathematical abstraction, and do not have an exact equivalent in computers. Instead of Real numbers, computers store and operate on numbers that are restricted to a broad but finite range values and have a finite resolution. They are called, \emph{floats} (or \emph{floating-point} numbers), in R they go by the name of \Rclass{double} and can be created with the constructor \Rfunction{double()}.
 
 <<classes-02>>=
 is.numeric(1L)
@@ -101,9 +133,9 @@ is.double(1L)
 The name \code{double} originates from the \pgrmname{C} language, in which there are different types of floats available. With the word \code{double} used to mean ``double-precision floating-point numbers''. Similarly, the use of \code{L} stems the \texttt{long} type in \pgrmname{C}, meaning ``long integer numbers''.
 \end{explainbox}
 
-Numeric variables can contain more than one value. Even single numbers are in \langname{R} \Rclass{vector}s of length one. We will later see why this is important. As you have seen above the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line.
+Numeric variables can contain more than one value. Even single numbers are in \langname{R} \Rclass{vector}s of length one. We will later see why this is important. As you have seen above, the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line.
 
-One can use \Rmethod{c} `concatenate' to create a vector from other vectors, including vectors of length 1, such as the \code{numeric} and \code{character} constants in the statements below.
+One can use \Rmethod{c()} `concatenate' to create a vector from other vectors, including vectors of length 1, such as the \code{numeric} constants in the statements below.
 
 <<numbers-4>>=
 a <- c(3, 1, 2)
@@ -116,13 +148,13 @@ d <- c(b, a)
 d
 @
 
-Concatenate takes two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as R provides a function capable of directly doing this operation. Although it can be used to ``insert'' values it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
+Method \code{c()} accepts as argument two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as R provides a function capable of directly doing this operation. Although it can be used to ``insert'' values it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
 
 <<numbers-4a>>=
 append(a, b)
 @
 
-The output above is the same as for \code{c(a, b)}, however, \code{append()} accepts as argument an index position after which to append its second argument. This results in an insert operation.
+The output above is the same as for \code{c(a, b)}, however, \code{append()} accepts as argument an index position after which to ``append'' its second argument. This results in an \emph{insert} operation when the index points at any position different from the end of the vector.
 
 <<numbers-4b>>=
 append(a, values = b, after = 2L)
@@ -130,9 +162,10 @@ append(a, values = b, after = 2L)
 
 Both \code{c()} and \code{append()} can be also used with lists.
 
+\begin{playground}
 One can create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
 
-<<numbers-5>>=
+<<numbers-5, eval=eval_playground>>=
 a <- -1:5
 a
 b <- 5:-1
@@ -143,7 +176,9 @@ d <- rep(-5, 4)
 d
 @
 
-Now something that makes \Rlang different from most other programming languages: vectorized arithmetic\index{vectorized arithmetic}.
+\end{playground}
+
+Next something that makes \Rlang different from most other programming languages: vectorized arithmetic\index{vectorized arithmetic}. Operators and functions that are vectorized accept as argument vectors of arbitrary length, in which case the result returned is equivalent to having applied the same function or operator to each element of the vector individually.\label{par:vectorized:numeric}
 
 <<numbers-6>>=
 a + 1 # we add one to vector a defined above
@@ -152,7 +187,7 @@ a + b
 a - a
 @
 
-As it can be seen in the first line above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of arguments:\index{recycling@recycling of arguments} as vector \code{a} is of length 6, but the constant 1 is a vector of length 1, this 1 is extended by recycling into a vector of ones of the same length as the longest vector in the statement, in this case, \code{a}.
+As it can be seen in the first line above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of arguments:\index{recycling@recycling of arguments} as vector \code{a} is of length 6, but the constant 1 is a vector of length 1, this 1 is extended by recycling into a vector of ones of the same length as the longest vector in the statement, in this case, \code{a}.\label{par:recycling:numeric}
 
 Make sure you understand what calculations are taking place in the chunk above, and also the one below.
 
@@ -165,16 +200,15 @@ a + 1:4
 @
 
 \begin{explainbox}
-A useful thing to know: a vector can have length zero. Vectors of length zero may seem at first sight quite useless, but in fact they are very useful. They allow the handling of ``no input'' or ``nothing to do'' cases as normal cases, which in the absence of vectors of length zero would require to be treated as special cases. We also introduce here two useful functions, \Rfunction{length()} which returns the length of a vector, and \Rfunction{is.numeric()} that can be used to test if an \Rlang object is \Rclass{numeric}.
+A useful thing to know: a vector can have length zero. Vectors of length zero may seem at first sight quite useless, but in fact they are very useful. They allow the handling of ``no input'' or ``nothing to do'' cases as normal cases, which in the absence of vectors of length zero would require to be treated as special cases. I describe here a useful function, \Rfunction{length()} which returns the length of a vector or list.
 
 <<>>=
 z <- numeric(0)
 z
 length(z)
-is.numeric(z)
 @
 
-Vectors of length zero, behave in most cases, as expected---e.g.\ they can be concatenated as shown here.
+Vectors and lists of length zero, behave in most cases, as expected---e.g.\ they can be concatenated as shown here.
 
 <<>>=
 length(c(a, numeric(0), b))
@@ -192,12 +226,11 @@ Even when of length zero, vectors do have to belong to a class acceptable for th
 
 \end{explainbox}
 
-It is possible to \emph{remove} variables from the workspace with \Rfunction{rm()}. Function \Rfunction{ls()} returns a list all objects in the current environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}. The pattern is given as a regular expression, with \verb|[]| enclosing alternative matching characters, \verb|^| and \verb|$| indicating the extremes of the name (start and end, respectively). For example \verb|"^z$"| matches only the single character `z' while \verb|"^z"| matches any name starting with `z'. In contrast \verb|"^[zy]$"| matches both `z' and `y' but neither `zy' nor `yz', and \verb|"^[a-z]"| matches any name starting with a lower case ASCII letter. If you are using \pgrmname{RStudio}, all objects are listed in the Environment pane, and the search box of the panel can be used to find a given object.
+It is possible to \emph{remove} variables from the workspace with \Rfunction{rm()}. Function \Rfunction{ls()} returns a \emph{list} all objects in the current environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}. The pattern is given as a regular expression, with \verb|[]| enclosing alternative matching characters, \verb|^| and \verb|$| indicating the extremes of the name (start and end, respectively). For example \verb|"^z$"| matches only the single character `z' while \verb|"^z"| matches any name starting with `z'. In contrast \verb|"^[zy]$"| matches both `z' and `y' but neither `zy' nor `yz', and \verb|"^[a-z]"| matches any name starting with a lower case ASCII letter. If you are using \pgrmname{RStudio}, all objects are listed in the Environment pane, and the search box of the panel can be used to find a given object.
 
 <<numbers-7>>=
 ls(pattern="^z$")
 rm(z)
-try(z)
 ls(pattern="^z$")
 @
 
@@ -226,7 +259,7 @@ A + Inf
 \begin{playground}
 \textbf{When to use vectors of length zero, and when \code{NA}s?} Make sure you understand the logic behind the different behaviour of functions and operators with respect to \code{NA} and \code{numeric()} or its equivalent \code{numeric(0)}. What do they represent? Why \code{NA}s are not ignored, while vectors of length zero are?
 
-<<>>=
+<<eval=eval_playground>>=
 123 + numeric()
 123 + NA
 @
@@ -242,26 +275,13 @@ Any operation, even tests of equality, involving one or more \code{NA}'s return 
 is.na(c(NA, 1))
 @
 
-One thing\index{precision!math operations}\index{numbers!floating point} to be aware of, and which we will discuss again later, is that numbers in computers are almost always stored with finite precision. This means that they not always behave as Real numbers as defined in mathematics. In \Rpgrm the usual numbers are stored as \emph{double-precision floats}, which means that there are limits to the largest and smallest numbers that can be represented (approx.\  $-1 \cdot 10^{308}$ and $1 \cdot 10^{308})$, and the number of significant digits that can be stored (usually described as $\epsilon$ (epsilon, abbreviated \emph{eps}, defined as the largest number for which $ 1 + \epsilon = 1$)). This can be sometimes important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1 due to insufficient resolution. \label{par:float}
+One thing\index{precision!math operations}\index{numbers!floating point} to be aware of are the consequences of the fact that numbers in computers are almost always stored with finite precision and/or range: the expectations derived from the mathematical definition of Real numbers are not always fulfilled. See box on page \pageref{box:floats} for an in-depth explanation.
 
 <<numbers-9>>=
 1 - 1e-20
 @
 
-It is usually safer not to test for equality to zero when working with floating-point values, \Rlang's \code{double} and \code{numeric}. One alternative is comparing against a suitably small number, which will depend on the situation, although \code{eps} is usually a safe bet, unless the expected range of values is known to be small. This type of precautions are specially important in what is usually called ``production'' code: a script or program that will be used many times and with little further intervention by the researcher or programmer. Such code must work correctly, or not work at all, and it should not return under any imaginable circumstances a wrong answer.
-
-<<numbers-10>>=
-eps <- .Machine$double.eps
-abs(-1)
-abs(1)
-x <- 1e-40
-abs(x) < eps * 2
-abs(x) < 1e-100
-@
-
-The same precautions apply to tests for equality, so whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be treated as above, for example replacing \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simple words, makes all values positive or zero, by changing the sign of negative values.
-
-When comparing integer values these problems do not exist, as integer arithmetic is not affected by loss of precision in calculations restricted to integers (the \code{L} comes from `long', a name sometimes used for a machine representation of integers). Because of the way integers are stored in the memory of computers, within the acceptable range, they are stored exactly. One can think of computer integers as a subset of whole numbers restricted to a certain range of values.
+When comparing integer values these problems do not exist, as integer arithmetic is not affected by loss of precision in calculations restricted to integers (the \code{L} comes from `long', a name sometimes used for a machine representation of integers). Because of the way integers are stored in the memory of computers, within the representable range, they are stored exactly. One can think of computer integers as a subset of whole numbers restricted to a certain range of values.
 
 <<integers-1>>=
 1L + 3L
@@ -284,20 +304,21 @@ is.numeric(1L / 3L)
 @
 \index{class!numeric|)}
 
-\section{Boolean operations and logical values}
+\section{Boolean algebra and logical values}
 \index{class!logical|(}\index{logical operators}\index{logical values}\index{Boolean arithmetic}
-What in maths are usually called Boolean values, are called \code{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). They are vectors as all other simple types in \Rlang. There are also logical operators that allow Boolean algebra (and support for set operations that we will only describe very briefly). In the chunk below we work with logical vectors of length one.
+What in Mathematics are usually called Boolean values, are called \code{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). They are vectors as all other atomic types in \Rlang. There are also logical operators that allow Boolean algebra. In the chunk below we operate on \code{logical} vectors of length one.
 
 <<logical-1>>=
 a <- TRUE
 b <- FALSE
+mode(a)
 a
 !a # negation
 a && b # logical AND
 a || b # logical OR
 @
 
-Again vectorization is possible. I present this here, and will come back to this later, because this is one of the most troublesome aspects of the \Rlang language for beginners. There are two types of `equivalent' logical operators that behave differently, but use similar syntax! The vectorized operators have single-character names \verb|&| and \verb:|:, while the non vectorized ones have double-character names \verb|&&| and \verb:||:. There is only one version of the negation operator \verb|!| that is vectorized. In some, but not all cases, a warning will indicate that there is a possible problem.
+As with arithmetic operators vectorization is available with \emph{some} logical operators. That availability of two kinds of logical operators is one of the most troublesome aspects of the \Rlang language for beginners. Pairs of `equivalent' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names \verb|&| and \verb:|:, while the non vectorized ones have double-character names \verb|&&| and \verb:||:. There is only one version of the negation operator \verb|!| that is vectorized. In some, but not all cases, a warning will indicate that there is a possible problem.
 
 <<logical-2>>=
 a <- c(TRUE,FALSE)
@@ -310,7 +331,7 @@ a && b # not vectorized
 a || b # not vectorized
 @
 
-Functions \Rfunction{any()} and \Rfunction{all()} take a logical vector as argument, and return a single logical value `summarizing' the logical values in the vector. \code{all} returns \code{TRUE} only if every value in the argument is \code{TRUE}, and \code{any} returns \code{TRUE} unless every value in the argument is \code{FALSE}.
+Functions \Rfunction{any()} and \Rfunction{all()} take a logical vector as argument, and return a single logical value `summarizing' the logical values in the vector. Function \code{all()} returns \code{TRUE} only if every value in the vector passed as argument is \code{TRUE}, and \code{any()} returns \code{TRUE} unless every value in its argument is \code{FALSE}.
 
 <<>>=
 any(a)
@@ -319,7 +340,7 @@ any(a & b)
 all(a & b)
 @
 
-Another important thing to know about logical operators is that they `short-cut' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard preventing a later condition to be evaluated when its computation would result in an error (and possibly abort of the whole computation).
+Another important thing to know about logical operators is that they `short-cut' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard preventing a later condition to be evaluated when its computation would result in an error.
 
 <<logical-3>>=
 TRUE || NA
@@ -338,6 +359,17 @@ a & b & c(NA, NA)
 a | b | c(NA, NA)
 @
 
+\begin{playground}
+Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to device several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
+
+<<logical-PG01,eval=eval_playground>>=
+l <- c(TRUE, FALSE, TRUE, NA)
+l & FALSE
+l | c(TRUE, FALSE)
+@
+
+\end{playground}
+
 \section{Comparison operators and operations}
 \index{comparison operators}
 Comparison operators yield as result \code{logical} values.
@@ -353,7 +385,7 @@ a <- 20
 a < 100 && a > 10
 @
 
-Again these operators can be used on vectors of any length, returning as result a logical vector. Recycling of \code{logical} values works in the same way as described above for \code{numeric} values.
+These operators can be used on vectors of any length, returning as result a logical vector. In other words, they behave in the same way as the arithmetic operators described on page \pageref{par:vectorized:numeric}: their arguments are recycled when needed.
 
 <<comparison-2>>=
 a <- 1:10
@@ -367,6 +399,21 @@ b
 any(b)
 all(b)
 @
+
+Precedence rules also apply to comparison operators and they can be overridden by means of parentheses.
+
+<<comparison-2a>>=
+a > 2 + 3
+(a > 2) + 3
+@
+
+\begin{playground}
+Use the statement below as a starting point in exploring how precedence works when logical and arithmetic operators are part of the same statement. \emph{Play} with the example by adding parentheses at different positions and based on the returned values, work out what is the default order of precedence used for the evaluation of the example given below.
+<<comparison-PG00, eval=eval_playground>>=
+a <- 1:10
+a > 3 | a + 2 < 3
+@
+\end{playground}
 
 Be once more aware of `short-cut evaluation'. If the result would not be affected by the missing value then the result is returned. If the presence of the \code{NA} makes the end result unknown, then \code{NA} is returned.
 
@@ -383,7 +430,7 @@ any(is.na(c))
 all(is.na(c))
 @
 
-This behaviour can be modified in the case of many base \Rlang's functions, by means of an optional argument passed through parameter \code{na.rm}, which if \code{TRUE}, removes \code{NA} values \textbf{before} the function is applied. Even some functions defined in packages extending \Rlang, have an \code{na.rm} parameter.
+The behaviour of many base \Rlang's functions when \code{NA}s are present in their input arguments can be modified. \code{TRUE} passed as argument to parameter \code{na.rm}, results in \code{NA} values being \emph{removed} from the input \textbf{before} the function is applied.
 
 <<comparison-4>>=
 all(c < 20)
@@ -393,13 +440,34 @@ any(c > 20, na.rm=TRUE)
 @
 
 \begin{explainbox}
+\label{box:floats} \label{par:float}\index{floats}\index{rounding errors}%
 You may skip this box on first reading. See also page \pageref{par:float}. Here I give some examples for which the finite resolution of computer machine floats, as compared to Real numbers as defined in mathematics makes an important difference.
 
+In \Rpgrm the usual numbers are stored as \emph{double-precision floats}, which have limits to the largest and smallest numbers that can be represented, and the number of significant digits that can be stored (usually described as $\epsilon$ (epsilon, abbreviated \emph{eps}, defined as the largest number for which $ 1 + \epsilon = 1$)). This can be important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1 due to insufficient resolution.
+
+<<numbers-EB9>>=
+0 - 1e-20
+1 - 1e-20
+@
+
+The finiteness of floats also affects tests of equality, which is more likely to result in errors of important consequences.
+ 
 <<comparison-5>>=
 1e20 == 1 + 1e20
 1 == 1 + 1e-20
 0 == 1e-20
 @
+
+It is usually safer not to test for equality to zero when working with floating-point values, \Rlang's \code{double} and \code{numeric}. One alternative is comparing against a suitably small number, which will depend on the situation, although a small multiple of \code{eps} is usually a safe bet. This type of precautions are specially important in what is usually called ``production'' code: a script or program that will be used many times and with little further intervention by the researcher or programmer. Such code must work correctly, or not work at all, and it should not return under any imaginable circumstances a wrong answer.
+
+<<numbers-EB10>>=
+eps <- .Machine$double.eps
+x <- 1e-40
+abs(x) < eps * 2
+abs(x) < 1e-100
+@
+
+Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be treated as above, for example replacing \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simple words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
 
 \index{machine arithmetic precision}
 \index{EPS|see{machine arithmetic precision}}
@@ -428,7 +496,8 @@ As \code{integer} values are stored in machine memory without loss of precision,
 2147483699L
 @
 
-In the last statement in the previous code chunk, the out-of-range \code{integer} constant is promoted to a \Rclass{numeric} to avoid the loss of information. A similar promotion does not take place when operations result in an \emph{overflow}, or out-of-range values. However, if one of the operands is a \code{double}, then other operands are promoted before the operation is attempted.
+
+In those statements in the chunk bellow where at least one operand is \code{double} the \code{integer} operands are promoted to \code{double} before computation. A similar promotion does not take place when operations are among \code{integer} values, resulting in \emph{overflow}, or numbers that are too big to be represented as \code{integer} values.
 
 <<machine-eps-04>>=
 2147483600L + 99L
@@ -437,11 +506,9 @@ In the last statement in the previous code chunk, the out-of-range \code{integer
 2147483600L * 2147483600
 2147483600L^2
 @
+\end{explainbox}
 
-\begin{playground}
-Explore with examples similar to the ones above, but making use of other operands and functions, when does promotion to a ``wider'' type of storage take place, and when it does not.
-\end{playground}
-
+\begin{warningbox}
 In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors. As the example shows, rounding errors may accumulate, and in practice \verb|.Machine$double.eps| is not always a good value to safely use in tests for ``zero'', a larger value may be needed.
 
 <<machine-eps-05>>=
@@ -454,10 +521,98 @@ abs(sin(2 * pi)) < 1e-15
 sin(pi)
 sin(2 * pi)
 @
-
-\end{explainbox}
+\end{warningbox}
 
 \index{class!logical|)}
+
+\section{Sets}
+\index{sets|(}
+
+The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to have character vectors of gene tags. We may have list for different samples, and need to compare then. However, we start with something more mundane, everyday shopping.
+
+<<sets-00>>=
+fruits <- c("apple", "pear", "orange", "lemon", "tangerine")
+bakery <- c("bread", "buns", "cake", "cookies")
+dairy <- c("milk", "butter", "cheese")
+shopping <- c("bread", "butter", "apple", "cheese", "orange")
+intersect(fruits, shopping)
+intersect(bakery, shopping)
+intersect(dairy, shopping)
+"lemon" %in% dairy
+"lemon" %in% fruits
+setdiff(union(bakery, dairy), shopping)
+@
+
+And continue with abstract (symbolic) examples.
+
+<<sets-01>>=
+my.set <- c("a", "b", "c", "b")
+@
+
+To test if a given value belongs to a set, we use operator \code{\%in\%}. In the algebra of sets notation this is written $a \in A$, where $A$ is a set and $a$ a member.
+
+<<sets-02>>=
+"a" %in% my.set
+c("a", "a", "z") %in% my.set
+@
+
+The negation of inclusion is $a \not\in A$, and coded in R by adding the negation operator \code{!} to the result of the test done with \code{\%in\%}.
+
+Although inclusion is a set operation, it is also very useful for the simplification of chains of \code{if() .. else} statements when used to tests a set of alternative constant values of the same \code{mode}.
+
+With \code{unique()} we convert a vector of values, possibly repeated, into a set of unique values. In algebra of sets a certain object belongs or not to a set. Consequently, multiple copies of the same object or value are meaningless.
+
+<<sets-03>>=
+unique(my.set)
+c("a", "a", "z") %in% unique(my.set)
+@
+
+In the notation used in algebra of sets, the set union operator is $\cup$ while the intersection operator is $\cap$. If we have sets $A$ and $B$, their union is given by $A \cup B$.
+
+<<sets-04>>=
+union(c("a", "a", "z"), my.set)
+@
+
+If we have sets $A$ and $B$, their intersection is given by $A \cap B$.
+
+<<sets-05>>=
+intersect(c("a", "a", "z"), my.set)
+@
+
+\begin{playground}
+What do you expect to be the difference between the values returned by the three statements? Before running them, write down your expectations about the value each one will return. Only then run the code. Independently of whether your predictions were correct or not, write down an explanation of what each statement's operation is.
+
+<<sets-PG01, eval=eval_playground>>=
+union(c("a", "a", "z"), my.set)
+c(c("a", "a", "z"), my.set)
+c("a", "a", "z", my.set)
+@
+
+In the algebra of sets notation $A \subseteq B$ where $A$ and $B$ are sets indicates that $A$ is a subset or equal to $B$. For a true subset, notation is $a \subset A$. The operators with the reverse direction are $\supseteq$ and $\supset$. Implement these four operations in four R statements, and test them on sets with different ``overlap''.
+
+\end{playground}
+
+\begin{explainbox}
+  All set algebra examples above use character vectors and character constants. This is just the most frequent use case. Sets operations are valid on any atomic vectors, and computed values can be part of the code statements.
+  <<sets-EB01>>=
+1 %in% 2:3
+9 %in% (1:10)^2
+c(1,5) %in% (1:10)^2
+1 %in% numeric()
+@
+
+A vector of zero length functions as an empty set.
+
+<<sets-EB02>>=
+setequal(fruits, union(fruits, character()))
+setdiff(fruits, union(fruits, character()))
+@
+
+Empty sets are an important component of the algebra of sets. Vectors and lists of zero length, which the \Rlang language fully supports, can be used to ``encode'' emptiness also in other contexts.
+
+\end{explainbox}
+\index{sets|)}
+
 \section{Character values}
 \index{character strings}\index{class!character|(}
 Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used for delimiting \code{character} constants.
@@ -486,15 +641,9 @@ h <- "1"
 try(h + 2)
 @
 
-Vectors of characters are not the same as character strings. In character vectors each position in the vector is occupied by a single character, while in character strings, each string of characters, like a word enclosed in double or single quotes occupies a single position or slot in the vector.
-
-<<char-2>>=
-f <- c("1", "2", "3")
-g <- "123"
-f == g
-f
-g
-@
+\begin{explainbox}
+In many computer languages vectors of characters are distinct from vectors of character strings. In character vectors each position in the vector is occupied by a single character, while in a vector of character strings, strings of characters of various lengths, like words are stored at each position. \Rlang's \code{character} vectors are vectors of character strings. In contrast to in \langname{C} language, in \Rlang character string constants can be enclosed either in double or single quotes.
+\end{explainbox}
 
 One can use the `other' type of quotes as delimiter when one wants to include quotes within a string. Pretty-printing is changing what I typed into how the string that is stored in \Rpgrm: I typed \code{b <- 'He said "hello" when he came in'} in the second statement below, try it.
 
@@ -513,11 +662,12 @@ print(c)
 cat(c)
 @
 
-Above, you will not see any effect of these escapes when using \Rfunction{print()}: \verb|\n| represents `new line' and \verb|\t| means `tab' (tabulator). The \textit{scape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. They also are very useful when one wants to split an axis-label, title or label in a plot into two or more lines as they can be embedded in any string.
+Above, you will not see any effect of these escape codes when using \Rfunction{print()}: \verb|\n| represents `new line' and \verb|\t| means `tab' (tabulator). The \textit{scape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. They also are very useful when one wants to split an axis-label, title or label in a plot into two or more lines as they can be embedded in any string.
 \index{class!character|)}
+
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
 \index{object!mode}
-Variables have a \emph{mode} that depends on what can be stored in them. But differently to other languages, assignment to variable of a different mode is allowed and in most cases its mode changes together with its contents. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode. While this is not required for lists, which can be heterogenous. In practice this means that we can assign an object, such as a vector, with a different \code{mode} to a name already in use, but, we cannot use indexing to assign an object of a different mode, to certain members of a vector, matrix or array. Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}. Function \Rfunction{mode()} returns the mode of an object, as a character string.
+Variables have a \emph{mode} that depends on what is stored in them. But differently to other languages, assignment to a variable of a different mode is allowed and in most cases its mode changes together with its contents. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode. While this is not required for lists, which can be heterogenous. In practice this means that we can assign an object, such as a vector, with a different \code{mode} to a name already in use, but, we cannot use indexing to assign an object of a different mode, to certain members of a vector, matrix or array. Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}. Function \Rfunction{mode()} returns the mode of an object, as a character string.
 
 <<mode-1>>=
 my_var <- 1:5
@@ -529,7 +679,7 @@ my_var <- "abc"
 mode(my_var)
 @
 
-While \emph{mode} is a fundamental property, and limited to those modes defined as part of the R language, the concept of \emph{class}, is different in that classes can be defined by user code. In particular, different R objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed briefly in section \ref{sec:funcs:method:dispatch} on page \pageref{sec:funcs:method:dispatch}, in relation to object oriented programming in \langname{R}.
+While \emph{mode} is a fundamental property, and limited to those modes defined as part of the R language, the concept of \emph{class}, is different in that classes can be defined by user code. In particular, different R objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed in section \ref{sec:funcs:method:dispatch} on page \pageref{sec:funcs:method:dispatch}, in relation to object oriented programming in \langname{R}.
 
 \section{`Type' conversions}
 \index{type conversion}
@@ -537,38 +687,54 @@ The least intuitive ones are those related to logical values. All others are as 
 
 <<convert-1>>=
 as.character(1)
-as.character(3.0e10)
 as.numeric("1")
+as.logical("TRUE")
+as.logical("NA")
+@
+
+Conversion can also take place automatically.
+<<convert-1a>>=
+TRUE + 10
+1 || 0
+FALSE | -2:2
+@
+
+\begin{playground}
+There is some flexibility in the conversion from character strings into \code{numeric} and \code{character} values. Use the examples below plus your own variations to get an idea of what strings are acceptable and correctly converted and which as not. Do also pay attention at the conversion between \code{numeric} and \code{logical} values.
+
+<<convert-PG1>>=
+as.character(3.0e10)
 as.numeric("5E+5")
 as.numeric("A")
 as.numeric(TRUE)
 as.numeric(FALSE)
-TRUE + TRUE
-TRUE + FALSE
-TRUE * 2
-FALSE * 2
 as.logical("T")
 as.logical("t")
-as.logical("TRUE")
 as.logical("true")
 as.logical(100)
 as.logical(0)
 as.logical(-1)
 @
 
+\end{playground}
+
+\begin{explainbox}
+With conversions, it becomes obvious the difference between the length of a \code{character} vector and the number of characters composing each member ``string'' within a vector.
+
 <<convert-2>>=
 f <- c("1", "2", "3")
+length(f)
 g <- "123"
+length(g)
 as.numeric(f)
 as.numeric(g)
 @
+\end{explainbox}
 
-Some tricks useful when dealing with results. Be aware that the printing is being done by default, these functions return numerical values that are different from their input. Look at the help pages for further details. Very briefly \Rfunction{round()} is used to round numbers to a certain number of decimal places after or before the decimal point, while \Rfunction{signif()} keeps the requested number of significant digits.
+Some tricks useful when dealing with \code{numeric} results from calculation. Be aware that in the examples bellow printing is being done by default, these functions return \code{numeric} values that are different from their input. Look at the help pages for further details. Very briefly \Rfunction{round()} is used to round numbers to a certain number of decimal places after or before the decimal point, while \Rfunction{signif()} keeps the requested number of significant digits.
 
 <<convert-3, tidy=FALSE>>=
 round(0.0124567, digits = 3)
-round(0.0124567, digits = 1)
-round(0.0124567, digits = 5)
 signif(0.0124567, digits = 3)
 round(1789.1234, digits = 3)
 signif(1789.1234, digits = 3)
@@ -606,30 +772,46 @@ What does value truncation mean? Function \Rfunction{trunc()} truncates a numeri
 Other functions relevant to the ``conversion'' of numbers and other values are \Rfunction{format()}, and \Rfunction{sprintf()}. These two functions return \Rclass{character} strings, instead of \code{numeric} or other values, and are useful for printing output. One could think of these functions as advanced conversion functions returning formatted, and possibly combined and annotated, character strings. However, they are usually not considered normal conversion functions, as they are very rarely used in a way that preserves the original precision of the input values.
 
 \begin{playground}
-Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunction{sprintf()} is more flexible and powerful. Those with experience in the use of the \langname(C) language will already know about \Rfunction{sprintf()} and its use of templates for formatting output. Look up the help pages for both functions, and practice, by trying to create the same output by means of the two functions.
+Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunction{sprintf()} is more flexible and powerful. Those with experience in the use of the \langname{C} language will already know about \Rfunction{sprintf()} and its use of templates for formatting output. Look up the help pages for both functions, and practice, by trying to create the same output by means of the two functions.
 \end{playground}
 
-\section{Vectors}
+\section{Vector manipulation}\label{sec:vectors}
 \index{vectors}
 \index{vectors!indexing}
-You already know how to create a vector. Now we are going to see how to extract individual elements (e.g.\ numbers or characters) out of a vector. Elements are accessed using an index. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. What in maths would be $x_i$ for a vector $x$, in \Rpgrm is represented as \code{x[i]}. (In \Rpgrm indexes (or subscripts) always start from one, while in some other programming languages such as \pgrmname{C} and \pgrmname{C++}, indexes start from zero. This difference is important, as code implementing many algorithms will need to be modified when implemented in a language using a different convention for indexes.)
+If you have read earlier sections of this chapter, you already know how to create a vector. \Rlang's vectors are equivalent to what would be written in mathematical notation as $x_{1\ldots n} = a_1, a_2, \ldots, a_i, \ldots, a_n$, they are not the equivalent to the vectors, common in Physics, which are symbolized with an arrow as ``accent'', such as $\overrightarrow{\mathbf{F}}$.
+
+In this section we are going to see how to extract or retrieve, replace, and move elements such as $a_2$ from a vector. Elements are extracted using an index enclosed in single square brackets. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. What in maths would be $a_i$ for a vector $a_{1\ldots n}$, in \Rpgrm is represented as \code{a[i]} and the whole vector as earlier seen as \code{a}.
 
 <<vectors-1>>=
 a <- letters[1:10]
 a
 a[2]
+@
+
+\begin{explainbox}
+In \Rlang indexes always start from one, while in some other programming languages such as \pgrmname{C} and \pgrmname{C++}, indexes start from zero. It is important to be aware of this difference, as many computation algorithms are valid only under a given indexing convention.
+\end{explainbox}
+It is possible to extract a subset of the elements of a vector in a single operation, using a vector of indexes. The positions of the extracted elements in the result (``returned value'') are determined by the ordering of the vector of indexes.
+
+<<vectors-2>>=
 a[c(3,2)]
 a[10:1]
 @
 
-The examples below demonstrate what is the result of using a longer vector of indexes than the indexed vector. The length of the indexing vector is not restricted by the length of the indexed vector, individual values in the indexing vector pointing to positions that are not present in the indexed vector, result in \code{NA}s. This is easier to demonstrate, than explain.
+\begin{playground}
+The length of the indexing vector is not restricted by the length of the indexed vector. However, only numerical indexes that match positions present in the indexed vector can extract values. Those values in the indexing vector pointing to positions that are not present in the indexed vector, result in \code{NA}s. This is easier to learn by \emph{playing} with \Rlang, than from explanations. Play with \Rlang, using the following examples as starting point.
 
-<<vectors-2>>=
+<<vectors-PG1, eval=eval_playground>>=
 length(a)
 a[c(3,3,3,3)]
 a[c(10:1, 1:10)]
 a[c(1,11)]
+a[11]
 @
+
+Have you tried some of your own examples? If not yet, do \emph{play} with additional variations of your own before continuing.
+
+\end{playground}
 
 Negative indexes have a special meaning, they indicate the positions at which values should be excluded. Be aware that it is \emph{illegal} to mix positive and negative values in the same indexing operation.
 
@@ -640,16 +822,10 @@ a[-3:-2]
 # a[c(-3,2)]
 @
 
-As shown above, results from indexing with out-of-range values may be surprising.
+\begin{playground}
+Results from indexing with special values may be surprising. Try to build a logic explanation from the examples bellow, a logic that will help you remember what to expect next time you are confronted with similar statements.
 
-<<vectors-4>>=
-a[11]
-a[1:11]
-@
-
-Results from indexing with special values may be surprising.
-
-<<vectors-5>>=
+<<vectors-5, eval=eval_playground>>=
 a[ ]
 a[0]
 a[numeric(0)]
@@ -658,8 +834,9 @@ a[c(1, NA)]
 a[NULL]
 a[c(1, NULL)]
 @
+\end{playground}
 
-Another way of indexing, which is very handy, but not available in most other programming languages, is indexing with a vector of \code{logical} values. In practice, the vector of \code{logical} values used for `indexing' is in most cases of the same length as the vector from which elements are going to be selected. However, this is not a requirement, and if the \code{logical} vector is shorter it is `recycled' as discussed above in relation to operators.
+Another way of indexing, which is very handy, but not available in most other programming languages, is indexing with a vector of \code{logical} values. The \code{logical} vector used for `indexing' is usually of the same length as the vector from which elements are going to be selected. However, this is not a requirement, and if the \code{logical} vector is shorter it is `recycled' as discussed above in relation to operators. As comparison operators are vectorized, when applied to a vector, they return a \code{logical} vector, a vector that can be used to extract the elements for which the result of the comparison test was \code{TRUE}.
 
 <<vectors-6>>=
 a[TRUE]
@@ -668,17 +845,31 @@ a[c(TRUE, FALSE)]
 a[c(FALSE, TRUE)]
 a > "c"
 a[a > "c"]
-selector <- a > "c"
-a[selector]
-which(a > "c")
-indexes <- which(a > "c")
-a[indexes]
+@
+
+\begin{playground}
+The following examples demonstrate further uses of logical vectors: 1) the logical vector returned by a vectorized comparison can be stored in a variable, and the variable used as a ``selector'' for extracting a subset of values from the same vector, or from a different vector.
+
+<<vectors-PG6, eval=eval_playground>>=
+a <- letters[1:10]
 b <- 1:10
+selector <- a > "c"
+selector
+a[selector]
 b[selector]
+@
+
+Numerical indexes can be obtained from a logical vector by means of function \code{which()}.
+
+<<vectors-PG6a, eval=eval_playground>>=
+indexes <- which(a > "c")
+indexes
+a[indexes]
 b[indexes]
 @
 
-Make sure to understand the examples above. These type of constructs are very widely used in \Rpgrm scripts because they allow for concise code that is easy to understand once you are familiar with the indexing rules. However, if you do not command these rules, many of these `terse' statements will be unintelligible to you.
+Make sure to understand the examples above. These constructs are very widely used in \Rlang because they allow for concise code that is easy to understand once you are familiar with the indexing rules. However, if you do not command these rules, many of these `terse' statements will be unintelligible to you.
+\end{playground}
 
 Indexing can be used on both sides of an assignment. This may look rather esoteric at first sight, but it is just a simple extension of the logic of indexing described above.
 
@@ -713,6 +904,122 @@ a
 Do play with subscripts to your heart's content, really grasping how they work and how they can be used, will be very useful in anything you do in the future with \Rlang.
 \end{playground}
 
+\section{Matrices and multidimensional arrays}
+\index{matrices}\index{arrays}
+
+Vectors have a single dimension, and, as we saw above we can query their length with method \code{length()}. Matrices have two dimensions, which can be queried with \code{dim()}, \code{ncol()} and \code{nrow()}. R's arrays can have any number of dimensions, even a single dimension, which can be queried with method \code{dim()}. As expected \code{is.vector()}, \code{is.matrix()} and \code{is.array()} can be used to query the class.
+
+We can create a new matrix using the \code{matrix()} or \code{as.matrix()} constructors. The first argument of \code{matrix()} is a vector. In the same way as vectors, matrices are homogeneous, all elements are of the same type.
+
+<<matrix-01>>=
+matrix(1:15, ncol = 3)
+matrix(1:15, nrow = 3)
+@
+
+When a vector is converted to a matrix, R's default is to allocate the values in the vector to the matrix starting from the leftmost column, and within the column, down from the top. Once the first column is filled, the process continues from the top of the next column, as can be seen above. This order can be changed as you will discover in the playground below.
+
+\begin{playground}
+Check in the help page for the \code{matrix} constructor how to use the \code{byrow} parameter to alter the default order in which the elements of the vector are allocated to columns and rows of the new matrix.
+
+<<matrix-PG00, eval=eval_playground>>=
+help(matrix)
+@
+
+While you are looking at the help page, also consider the default number of columns and rows.
+
+<<matrix-PG00a, eval=eval_playground>>=
+matrix(1:15)
+@
+
+And to start getting a sense of how to interpret error messages, try the code below and make sure you understand what is the problem.
+
+<<matrix-PG00b, eval=FALSE>>=
+matrix(1:15, ncol = 2)
+@
+
+\end{playground}
+
+Subscripting of matrices and arrays is consistent with that used for vectors, we only need to supply, or leave a blank space, for each dimension. A matrix has two dimensions, so to access any element or group of elements, we use two indices. The only complication is that there are two possible orders in which, in principle, indexes could be supplied. In R and S, indexes for matrices are written ``row-first'', in simpler words the first index value selects rows, and the second one columns.
+
+<<matrix-10>>=
+A <- matrix(1:20, ncol = 4)
+A
+A[1, 1]
+@
+
+Remind yourself of how indexing of vectors works in R (see section \ref{sec:vectors} on page \pageref{sec:vectors}). We will now apply the same rules in two dimensions.
+
+<<matrix-11>>=
+A[1, ]
+A[ , 1]
+A[2:3, c(1,3)]
+A[3, 4] <- 99
+A
+A[4:3, 2:1] <- A[3:4, 1:2]
+A
+@
+
+In R, arrays are similar to matrices, but have more dimensions, which are specified with the \code{dim} argument to the \code{array()} constructor.
+
+<<matrix-21>>=
+B <- array(1:27, dim = c(3, 3, 3))
+B
+B[2, 2, 2]
+@
+
+In the chunk above, the length of the supplied vector is the product of the dimensions, $27 = 3 \times 3 \times 3$.
+
+\begin{playground}
+  How do you use indexes to extract the second element of the original vector, in each of the following matrices and arrays?
+  <<matrix-PG01, eval=eval_playground>>=
+  v <- 1:10
+  m2c <- matrix(v, ncol = 2)
+  m2cr <- matrix(v, ncol = 2, byrow = TRUE)
+  m2r <- matrix(v, nrow = 2)
+  m2rc <- matrix(v, nrow = 2, byrow = TRUE)
+@
+
+  <<matrix-PG02, eval=eval_playground>>=
+  v <- 1:10
+  a2c <- array(v, dim = c(5, 2))
+  a2c <- array(v, dim = c(5, 2), dimnames = list(NULL, c("c1", "c2")))
+  a2r <- array(v, dim = c(2, 5))
+@
+
+Be aware that vectors and one-dimensional arrays are not the same thing, while two dimensional arrays are matrices.
+  \begin{enumerate}
+      \item Use the different constructors and query methods to explore this, and its consequences.
+      \item Convert a matrix into a vector using \code{unlist()} and \code{as.vector()} and compare the returned values.
+\end{enumerate}
+
+\end{playground}
+
+Operators for matrices are available in R, as matrices are used in many statistical algorithms. We will not describe them all here, only \code{t()} and some specializations of arithmetic operators. Function \code{t()} transposes a matrix, by swapping columns and rows.
+
+<<matrix-31>>=
+A <- matrix(1:20, ncol = 4)
+A
+t(A)
+@
+
+As with vectors, recycling applies to arithmetic operators when applied to matrices.
+
+<<matrix-32>>=
+A + 2
+A * 0:1
+A * 1:0
+@
+
+In the examples above with the usual multiplication operator \code{*}, the operation described is not a matrix product, but instead the products between individual elements of the matrix and vectors. Matrix multiplication is indicated by operator \code{\%*\%}.
+
+<<matrix-33>>=
+B <- matrix(1:16, ncol = 4)
+B * B
+B %*% B
+@
+
+Other operators and functions for matrix algebra like cross-product (\code{crossprod()}), extracting or replacing the diagonal (\code{diag()}) are available in base R. Packages, including \pkgname{matrixStats}, provide additional functions and operators for matrices.
+
 \section{Factors}
 \index{factors}
 \index{categorical variables|see{factors}}
@@ -726,7 +1033,7 @@ my.factor <- factor(x = my.vector, levels = c("treated", "control"))
 my.factor
 @
 
-The labels (``names'') of the levels can be set when the factor is created. In this case, both \code{levels} and \code{labels} should be set, and levels and matching labels must be in the same position of the two argument vectors. The argument passed to \code{levels} determines the order of the levels, and the argument passed to \code{labels} gives new names to the levels. The ordering of \code{levels} and \code{labels} must be matched. The argument passed to \code{levels} must contain the same values as present in the vector passed as first argument.
+The labels (``names'') of the levels can be set when the factor is created. In this case, both \code{levels} and \code{labels} should be set, and levels and matching labels must be in the same position of the two argument vectors. The argument passed to \code{levels} determines the order of the levels, and the argument passed to \code{labels} gives new names to the levels. The argument passed to \code{levels} must contain the same values as present in the vector passed as first argument.
 
 <<factors-1a>>=
 my.vector <- c(1, 1, 0, 0, 0, 1)
@@ -769,7 +1076,7 @@ as.numeric(as.character(my.factor2))
 \textbf{Why is a double conversion needed?} Internally factor levels are stored as running integers starting from one, and those are the numbers returned by \code{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels. If these character strings representing numbers, are converted, in a second step, using \Rfunction{as.numric()} we retrieve the original numbers.
 
 \begin{playground}
-Create a factor with levels labeled with words. Create another factor with the levels labeled with the same words, but ordered differently. After this convert both factors to numeric vectors using \Rfunction{as.numeric()}. Explain why the two numeric vectors differ from each other.
+Create a factor with levels labeled with words. Create another factor with the levels labeled with the same words, but ordered differently. After this convert both factors to numeric vectors using \Rfunction{as.numeric()}. Explain why the two numeric vectors differ or not from each other.
 \end{playground}
 
 \end{explainbox}
@@ -809,8 +1116,6 @@ levels(my.factor3ord)
 \index{lists}
 \emph{Lists'} main difference to other collections is, in \Rlang, that they can be heterogeneous. In \langname{R}, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as vectors. However, frequently members of a list are given names, and retrieved (indexed) through these names. Lists are created using function \Rfunction{list()}.
 
-\emph{Lists} as usually defined in languages like \langname{C} are based on pointers stored at each node, that chain the different member nodes. In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \langname{R}, \code{list} members can be accessed through positional indexes. Of course, insertions and deletions in the middle of a list, whatever their implementation, modifies any position-based indexes.
-
 <<lists-0>>=
 a.list <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
 a.list
@@ -827,6 +1132,10 @@ a.list[1]
 a.list[c(1,3)]
 try(a.list[[c(1,3)]])
 @
+
+\begin{explainbox}
+\emph{Lists} as usually defined in languages like \langname{C} are based on pointers stored at each node, that chain the different member nodes. In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \langname{R}, \code{list} members can be accessed through positional indexes. Of course, insertions and deletions in the middle of a list, whatever their implementation, modifies any position-based indexes.
+\end{explainbox}
 
 To investigate the returned values, function \Rfunction{str()} for \emph{structure} tends to help, especially when the lists have many members, as it formats lists more compactly than function \code{print()}.
 
@@ -860,19 +1169,26 @@ nested.list
 The nesting can be also done within a single statement in which several lists are defined. Here we combine the first three statements in the previous chunk into a single one.
 
 <<lists-3>>=
-nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
-nested.list
+list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
 @
 
 \begin{playground}
-What do you expect the each of the statements to return? \emph{Before running the code} predict what value and of which mode each statement will return. You may use implicit, or explicit, calls to \Rfunction{print()}, or calls to \Rfunction{str()} to visualize the structure of the different objects.
-<<lists-4, eval=FALSE>>=
-nested.list[c(1,2,1,3)]
+What do you expect each of the statements to return? \emph{Before running the code} predict what value and of which mode each statement will return. You may use implicit, or explicit, calls to \Rfunction{print()}, or calls to \Rfunction{str()} to visualize the structure of the different objects.
+
+<<lists-PG4, eval=eval_playground>>=
+nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
+str(nested.list)
+nested.list[2:1]
+@
+
+<<lists-PG4a, eval=eval_playground>>=
 nested.list[1]
 nested.list[[1]][2]
 nested.list[[1]][[2]]
-nested.list[2][[1]][[2]]
+nested.list[2]
+nested.list[2][[1]]
 @
+
 \end{playground}
 
 \begin{explainbox}
@@ -976,7 +1292,7 @@ If the length of the column indexing vector is one, the returned value is a vect
 a.df[2:3, 1]
 @
 
-In contrasts, indexing of \code{tibble}s---defined in package \pkgname{tibble}---is always consistent, independently of the length of the second indexing vector (See chapter \ref{chap:R:data} for details).
+In contrast, indexing of \code{tibble}s---defined in package \pkgname{tibble}---is always consistent, independently of the length of the second indexing vector (See chapter \ref{chap:R:data} for details).
 \end{explainbox}
 
 
@@ -1049,20 +1365,22 @@ a.df
 In the previous code chuck we deleted the last two columns of the data frame \code{a.df}.
 Here is an esoteric trick for you to first untangle and then think how and why it can be useful.
 
-<<data-frames-7>>=
+<<data-frames-7, eval=eval_playground>>=
 a.df[1:6, c(1,3)] <- a.df[6:1, c(3,1)]
 a.df
 @
 \end{playground}
 
+\begin{warningbox}
 Although in this last example we used numeric indexes to make it more interesting, in practice, especially in scripts or other code that will be reused, do use column names instead of positional indexes for lists and data frame columns whenever possible. This makes your code much more reliable, as changes elsewhere in the script which could alter the order of columns will not affect the computations or will be easily detected.
+\end{warningbox}
 
 \section{Simple built-in statistical functions}
 \index{functions!built-in|see@{functions, base-R}}
 \index{functions!base R}
-Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. We will start with simple functions implementing the calculation of frequently used data summaries.
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of frequently used data summaries.
 
-<<stat-fun-1>>=
+<<stat-fun-1, eval=eval_playground>>=
 x <- 1:20
 mean(x)
 var(x)
