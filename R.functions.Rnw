@@ -1,12 +1,11 @@
 % !Rnw root = appendix.main.Rnw
-
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 @
 
-\chapter{R language: defining new ``words''}\label{chap:R:functions}
+\chapter{The R language: adding ``words''}\label{chap:R:functions}
 
 \begin{VF}
 Computer Science is a science of abstraction---creating the right model for a problem and devising the appropriate mechanizable techniques to solve it.
@@ -22,190 +21,208 @@ The aim of this chapter is to introduce some of the frequently used functions av
 
 This chapter provides by necessity a very incomplete introduction to the capabilities of base R. This chapter is designed to give the reader only a quick introduction to base \R, as there are many good texts on the capabilities of \Rpgrm, going from the brief and concise books \citetitle{Beckerman2012} \autocite{Beckerman2012} and \citetitle{Allerhand2011} \autocite{Allerhand2011} at one extreme to the bulky and comprehensive \citetitle{Crawley2012} \autocite{Crawley2012} at the other. Books most useful as companions to the present book will be those somewhere in-between these two extremes. Three good examples with broad scope are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{??} \autocite{??}. Furthermore, many of base \R's functions are specific to different statistical procedures, maths and calculus, that transcend the description of \langname{R} as a programming language. The use of \pgrmname{R} for the analysis of different kinds of data and using different methods is covered by a vast bibliography, to which we provide some pointers in chapter \ref{chap:R:readings} on page \pageref{chap:R:readings}.
 
-\section{Loading data}
-\index{data!loading data sets}
-To start with, we need some data to run the examples. Here we use \code{cars}, a data set included in base R. How to read or import ``foreign'' data is discussed in R's documentation in \emph{R Data Import/Export}, and in this book, in Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}. In general \Rfunction{data()} is used load R objects saved in a file format used by R. Text files con be read with functions \Rfunction{scan()}, \Rfunction{read.table()}, \Rfunction{read.csv()} and their variants. It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in R urls are accepted as arguments to the \code{file} argument (see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details and examples on how to import data from different ``foreign'' formats and sources).
 
-In the examples of the present chapter we use data included in R, as R objects, which can be loaded with function \code{data}. \code{cars} is a data frame.
+\section{Packages}\label{sec:script:packages}
+\index{packages!using}
+In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \Rfunction{install.packages()} is used to install packages, either from a file, or directly from a repository in the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install and update packages.
 
-<<data-1>>=
-data(cars)
+<<packages-1>>=
+library(graphics)
 @
 
-\section{Looking at data}
-\index{data!exploring at the console}
-There are several functions in \langname{R} that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \Rfunction{str()}, outputs is abbreviated but in a way that preserves the structure of the object.
-<<exploring-dfs-1>>=
-class(cars)
-nrow(cars)
-ncol(cars)
-names(cars)
-head(cars)
-tail(cars)
-str(cars)
-@
+Currently there are many thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are included. In some cases you may need or want to install less stable code, and this is also possible. With package \pkgname{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
 
-\begin{playground}
-Look up the help pages for \Rfunction{head()} and \Rfunction{tail()}, and edit the code above to print only the first line, or only the last line of \code{cars}, respectively. As a second exercise print the 25 topmost rows of \code{cars}.
-\end{playground}
+\Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require quite a lot of additional software to be available. Under \pgrmname{MS-Windows}, very rarely the needed shell, commands and compilers are already available. Installing them is not too difficult (you will need \pgrmname{RTools}, and \pgrmname{\hologo{MiKTeX}}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
 
-Data frames consist in columns of equal length (see Chapter \ref{chap:R:as:calc}, section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames} for details). The different columns of a data frame can contain data of different modes (e.g.\ numeric, factor and/or character).
+The development of packages is beyond the scope of the current book, and very well explained in the book \citetitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folders for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the R help system when the package is loaded. In addition to \langname{R} code, packages can call \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, etc. functions and routines, but some kind of `glue' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. At least for \langname{C++}, the recently developed \pkgname{Rcpp} \langname{R} package makes the ``gluing'' extremely easy. See Chapter \ref{chap:R:performance} starting on page \pageref{chap:R:performance} for more information on performance-related and other limitations of \pgrmname{R} and how to solve possible bottlenecks.
 
-To explore the mode of the columns of \code{cars}, we can use an \emph{apply} function. In the present case, we want to apply function \code{mode()} to each column of the data frame \code{cars}.
-
-<<exploring-dfs-2>>=
-sapply(cars, mode)
-@
-
-The statement above returns a vector of character strings, with the mode of each column. Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the second argument, to the one of current interest.
-
-\begin{playground}
-Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables are included, their modes, the number of rows, etc.
-\end{playground}
-
-There is in \Rpgrm a function called \Rfunction{summary()}, which can be used to obtain a suitable summary from objects of most classes. We can also use \Rfunction{sapply()} or \Rfunction{lapply()} to apply any suitable function to individual columns. See section \ref{sec:data:apply} on page \pageref{sec:data:apply} for details about R's \emph{apply} functions.
-<<exploring-dfs-3>>=
-summary(cars)
-sapply(cars, range)
-@
-
-\begin{playground}
-Obtain the summary of \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column.
-\end{playground}
-
-\section{Plotting}
-\index{plots!base R graphics}
-The base \langname{R}'s generic function \code{plot()} can be used to plot different data. It is a generic function that has suitable methods for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe either the Trellis and Lattice approach to plotting \autocite{Sarkar2008}. We describe in detail the use of the grammar of graphics and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
-
-<<plot-2>>=
-plot(dist ~ speed, data = cars)
-@
-
-\section{Fitting linear models}
-\index{models!linear}
-\index{linear models}
-\index{LM|see{linear models}}
-One important thing to remember is that model `formulas' are used in different contexts: plotting, fitting of models, and tests like $t$-test. The basic syntax is rather consistently followed, although there are some exceptions.
-
-\subsection{Regression}
-\index{linear regression}
-The R function \Rfunction{lm()} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. In the example below, \code{speed} is a numeric variable (floating point in this case). In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
-
-We first fit the model and save the output as \code{fm1} (A name I invented to remind myself that this is the first fitted-model in this chapter.%
-\label{xmpl:fun:lm:fm1}
-
-<<models-1>>=
-fm1 <- lm(dist ~ speed, data=cars)
-@
-
-The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably fulfilled? In R it is most common to use plots to this end. We show here only one of the four plots normally produced. This quantile vs.\ quantile plot allows to assess how much the residuals deviate from being normally distributed.
-
-<<models-1a>>=
-plot(fm1, which = 2)
-@
-
-In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. \Rfunction{anova()} applied to the same fitted object, returns the ANOVA table.
-
-<<models-1b>>=
-summary(fm1) # we inspect the results from the fit
-anova(fm1) # we calculate an ANOVA
-@
-
-Let's look at each argument separately: \verb|dist ~ speed| is the specification of the model to be fitted. The intercept is always implicitly included. To `remove' this implicit intercept from the earlier model we can use \verb|dist ~ speed - 1|. In what follows we fit a straight line through the origin ($x = 0$, $y = 0$).
-
-<<models-2>>=
-fm2 <- lm(dist ~ speed - 1, data=cars)
-plot(fm2, which = 2)
-summary(fm2)
-anova(fm2)
-@
-
-We now we fit a second degree polynomial.
-
-<<models-3>>=
-fm3 <- lm(dist ~ speed + I(speed^2), data = cars) # we fit a model, and then save the result
-plot(fm3, which = 3) # we produce diagnosis plots
-summary(fm3) # we inspect the results from the fit
-anova(fm3) # we calculate an ANOVA
-@
-
-The ``same'' fit using an orthogonal polynomial. Higher degrees can be obtained by supplying as second argument to \code{poly()} a different positive integer value.
-
-<<models-3a>>=
-fm3a <- lm(dist ~ poly(speed, 2), data=cars) # we fit a model, and then save the result
-plot(fm3a, which = 3) # we produce diagnosis plots
-summary(fm3a) # we inspect the results from the fit
-anova(fm3a) # we calculate an ANOVA
-@
-
-We can also compare two models, to test whether one of models describes the data better than the other.
-
-<<models-4>>=
-anova(fm2, fm1)
-@
-
-Or three or more models. But be careful, as the order of the arguments matters.
-
-<<models-5>>=
-anova(fm2, fm1, fm3, fm3a)
-@
-
-We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC and BIC penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
-
-<<>>=
-BIC(fm2, fm1, fm3, fm3a)
-AIC(fm2, fm1, fm3, fm3a)
-@
-
-One can see above that these three criteria not necessarily agree on which is the model to be chosen.
-
-\begin{description}
-\item[anova] \code{fm1}
-\item[BIC] \code{fm1}
-\item[AIC] \code{fm3}
-\end{description}
-
-\subsection{Analysis of variance, ANOVA}\label{sec:anova}
-\index{analysis of variance}
-\index{ANOVA|see{analysis of variance}}
-We use as the \code{InsectSpray} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
-\label{xmpl:fun:lm:fm4}
-
-<<models-6>>=
-fm4 <- lm(count ~ spray, data = InsectSprays)
-@
-
-<<model-6a>>=
-plot(fm4, which = 2)
-@
-
-<<model-6b>>=
-anova(fm4)
-@
-
-\subsection{Analysis of covariance, ANCOVA}
-\index{analysis of covariance}
-\index{ANCOVA|see{analysis of covariance}}
-
-When a linear model includes both explanatory factors and continuous explanatory variables, we say that analysis of covariance (ANCOVA) is used. The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
-
-\section{Generalized linear models}
-\index{generalized linear models}
-\index{GLM|see{generalized linear models}}
-
-Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
-For the analysis of the \code{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
-
-For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal.
-
-<<model-10>>=
-fm10 <- glm(count ~ spray, data = InsectSprays, family = quasipoisson)
-plot(fm10, which = 2)
-anova(fm10, test = "F")
-@
+One good way of learning how R works, is by experimenting with it, and whenever using a certain function looking at its help, to check what are all the available options. How much documentation is included with packages varies a lot, but many packages include comprehensive user guides or examples as \emph{vignettes} in addition to the help pages for individual functions or data sets.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
 R_diag()
 other_diag()
 @
+
+\section{Functions}\label{sec:script:functions}
+\index{functions!defining new}
+
+When writing scripts, or any program, one should avoid repeating blocks of code (groups of statements). The reasons for this are: 1) if the code needs to be changed---e.g.\ to fix a bug or error---, you have to make changes in more than one place in the file, or in more than one file. Sooner or later, some copies will remain unchanged by mistake. This leads to inconsistencies and hard to track bugs; 2) it makes the script file longer, and this makes debugging, commenting, etc. more tedious, and error prone; 3) abstraction and division of a problem into smaller chunks, helps with keeping the code understandable to humans.
+
+How do we avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and then \emph{call} (``use'') the function in their place.
+
+Functions are defined by means of \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable. In the example below \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as ``arguments'' when the function is called. One can think of parameter names as place-holders.
+
+<<fun-00>>=
+my.prod <- function(x, y){x * y}
+my.prod(4, 3)
+@
+
+First\index{functions:arguments} some basic knowledge. In R, arguments are passed by copy. This is something very important to remember. Whatever you do within a function to modify an argument, its value outside the function will remain (almost) always unchanged.
+
+<<fun-01>>=
+my.change <- function(x){x <- NA}
+a <- 1
+my.change(a)
+a
+@
+
+Any result that needs to be made available outside the function must be returned by the function. If the function \Rfunction{return()} is not explicitly used, the value returned by the last statement \emph{executed} within the body of the function will be returned.
+
+\label{chunck:print:funs}
+<<fun-02>>=
+print.x.1 <- function(x){print(x)}
+print.x.1("test")
+print.x.2 <- function(x){print(x); return(x)}
+print.x.2("test")
+print.x.3 <- function(x){return(x); print(x)}
+print.x.3("test")
+print.x.4 <- function(x){return(); print(x)}
+print.x.4("test")
+print.x.5 <- function(x){x}
+print.x.4("test")
+@
+
+Now we will define a useful function: a function for calculating the standard error of the mean from a numeric vector.
+
+<<fun-1NN>>=
+SEM <- function(x){sqrt(var(x) / length(x))}
+a <- c(1, 2, 3, -5)
+a.na <- c(a, NA)
+SEM(x = a)
+SEM(a)
+SEM(a.na)
+@
+
+For example in \code{SEM(a)} we are calling function \Rfunction{SEM()} with \code{a} as argument.
+
+The function we defined above may sometimes give a wrong answer because NAs will be counted by \code{length()}, so we need to remove NAs before calling \code{length()}.
+
+<<fun-1-safe>>=
+simple_SEM <- function(x) {
+ sqrt(var(x, na.rm=TRUE)/length(na.omit(x)))
+}
+a <- c(1, 2, 3, -5)
+a.na <- c(a, NA)
+simple_SEM(x=a)
+simple_SEM(a)
+simple_SEM(a.na)
+@
+
+R does not have a function for standard error, so the function above would be generally useful. If we would like to make this function both safe, and consistent with other R functions, one could define it as follows, allowing the user to provide a second argument which is passed as an argument to \Rfunction{var()}:
+
+<<fun-2>>=
+SEM <- function(x, na.rm = FALSE){
+  sqrt(var(x, na.rm = na.rm) / length(na.omit(x)))
+}
+SEM(a)
+SEM(a.na)
+SEM(a.na, TRUE)
+SEM(x = a.na, na.rm = TRUE)
+SEM(TRUE, a.na)
+SEM(na.rm = TRUE, x = a.na)
+@
+
+In this example you can see that functions can have more than one parameter, and that parameters can have default values to be used if no argument is supplied. In addition if the name of the parameter is indicated, then arguments can be supplied in any order, but if parameter names are not supplied, then arguments are assigned to parameters based on their position. Once one parameter name is given, all later arguments need also to be explicitly matched to parameters. Obviously if given by position, then arguments should be supplied explicitly for all parameters at `intermediate' positions.
+
+%We can assign to a variable defined `outside' a function with operator \code{<<-} but the usual recommendation is to avoid its use. This type of effects of calling a function are frequently called `side-effects'.
+
+\begin{playground}
+Test the behaviour of functions \code{print.x.1()} and \code{print.x.5()}, as defined on page \pageref{chunck:print:funs}, at the command prompt, and in a script, by writing a script.
+The behaviour of one of these functions will be different when the script is source than at the command prompt. Explain why.
+\end{playground}
+
+\begin{playground}
+Define your own function to calculate the mean in a similar way as \Rfunction{SEM()} was defined above. Hint: function \Rfunction{sum()} could be of help.
+\end{playground}
+
+\begin{playground}
+Create some additional vectors containing \code{NA}s or not. Use them to test functions \Rfunction{simple\_SEM()} and \Rfunction{SEM()} defined above, and then explain why \code{SEM()} returns always the correct value, even though ``\code{na.omit(x)}'' is non-conditionally (always) applied to \code{x} before calculating its length.
+\end{playground}
+
+\begin{explainbox}
+\Rpgrm handles evaluation of function arguments differently to many other computer languages. Not only arguments are passed by value, but in addition they are evaluated only at the time of first use in the function body code. This is called \emph{lazy evaluation} and before evaluation arguments remain as \emph{promises}. In many cases this is advantageous by improving computation efficiency. However, if the value of the variable used as argument or in an expression used as argument changes, the value of the variable at the time of evaluation will be used. This is rarely a problem, but being aware of this behaviour is helpful specially when programmatically defining functions. Very rarely, an argument will not the evaluated when it should (e.g.\ because of bugs in packages, or use of ``trickery''). Earlier evaluation can be forced at any time with function \code{force()}.
+\end{explainbox}
+
+\section{Objects, classes and methods}\label{sec:script:objects:classes:methods}
+
+An\index{objects}\index{classes}\index{methods} in-depth discussion of object oriented programming in \langname{R} is outside the scope of this book. Several books describe in detail the different class systems available and how to take best advantage of them when developing packages extending R. For the non-programmer user, a basic understanding can be useful, even if he or she do not intend to create new classes. This basic knowledge is what we intend to convey in this section. For an in-depth treatment of the subject please consult the recently published book \citetitle{Wickham2014} \autocite{Wickham2014}.
+
+We start with a quotation form \citetitle{Burns1998} \autocite[][, page 13]{Burns1998}.
+\begin{quotation}
+The idea of object-oriented programming is simple, but carries a lot of weight.
+Here's the whole thing: if you told a group of people ``dress for work'', then
+you would expect each to put on clothes appropriate for that individual's job.
+Likewise it is possible for S[R] objects to get dressed appropriately depending on
+what class of object they are.
+\end{quotation}
+
+\langname{R} supports the use of the object oriented programming paradigm, but as a system that has evolved over the years, currently \langname{R} includes different approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a generic name like ``plot'' can be used as a generic name, and that which specific version of \Rfunction{plot()} is called depends on the arguments of the call. Using computing terms we could say that the generic version of \Rfunction{plot()} dispatches the original call to different specific versions of \Rfunction{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions the specializations of a generic are recognized/identified only by their name. And the class of an object by a character string stored as an attribute to the object.
+
+The most basic approach is to create a new class, pre-pending its name to the existing class attribute of an object. This would normally take place within a constructor.
+
+<<explain-object-classes-01>>=
+a <- 123
+class(a)
+class(a) <- c("myclass", class(a))
+class(a)
+@
+
+Now we create a print method specific to \code{"myclass"} objects.
+<<explain-object-classes-02>>=
+print.myclass <- function(x) {
+    sprintf("[myclass] %.g4", x)
+}
+@
+
+Once a specialized method exists for a class, it will be used for objects of this class.
+
+<<explain-object-classes-03>>=
+print(a)
+print(as.numeric(a))
+@
+
+The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather fragile in that most of the responsibility about consistency and correctness of the design---e.g.\ not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc.-- is not checked by the R interpreter.
+
+Defining a new S3 generic is also quite simple. A generic method and a default method need to be created.
+
+<<explain-object-classes-04>>=
+my_print <- function (x, ...) {
+   UseMethod("my_print", x)
+ }
+
+my_print.default <- function(x, ...) {
+   print(class(x))
+   print(x, ...)
+}
+@
+
+<<explain-object-classes-05>>=
+my_print(123)
+my_print("abc")
+@
+
+Up to now, \Rfunction{my\_print()}, has no specialization. We now write one for data frames.
+
+<<explain-object-classes-06>>=
+my_print.data.frame <- function(x, rows = 1:5, ...) {
+   print(x[rows, ], ...)
+   invisible(x)
+}
+@
+
+We add the second statement so that the function returns invisibly the whole data frame, rather than the lines printed. We now do a quick test of the function.
+
+<<explain-object-classes-07>>=
+my_print(cars)
+my_print(cars, 8:10)
+my_print(cars, TRUE)
+b <- my_print(cars)
+b
+@
+
+\begin{playground}
+1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
+2) How would you modify the code of your \code{my\_print.matrix()} so that also columns to print can be selected?
+\end{playground}
+
