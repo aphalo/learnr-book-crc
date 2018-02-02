@@ -177,17 +177,16 @@ Conflicts among packages can easily arise, for example when they use the same na
 
 \section{Control of execution flow}\label{sec:script:flow:control}
 \index{control of execution flow}
-We call control of execution statements those that allow the execution of sections of code when a certain dynamically computed condition is \code{TRUE}. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others, allow statements to executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
+We give the name \emph{control of execution statements} to those statements that allow the execution of sections of code when a certain dynamically computed condition is \code{TRUE}. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others, allow statements to executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
 
-\subsection{Conditional execution}
-\index{conditional execution}
-\subsubsection{Non-vectorized}
+\subsection{Coumpound statements}
+\index{compound code statements}\index{simple code statements}
 
 \Rpgrm has two types of \emph{if}\index{if} statements, non-vectorized and vectorized. We will start with the non-vectorized one, which is similar to what is available in most other computer programming languages.
 
 Before this we need to explain compound statements. Individual statements can be grouped into compound statements by enclosed them in curly braces.
 
-<<if-1>>=
+<<compound-1>>=
 print("A")
 {
   print("B")
@@ -195,7 +194,35 @@ print("A")
 }
 @
 
-The grouping of the last two statements above is of no consequence by itself, but grouping becomes useful when used together with `control' constructs. The \code{if} construct controls the execution of one statement, however, this statement can be a compound statement of almost any length or complexity. Play with the code below by changing the value assigned to variable \code{printing}, including \code{NA}, and \code{logical(0)}.
+The grouping of the last two statements above is of no consequence by itself, but grouping becomes useful when used together with `control' constructs.
+
+\subsection{Conditional execution}
+\index{conditional execution}
+
+Conditional execution allows handling different values, such as negative and non-negative values, differently in a script. It also allows switching ON and OFF parts of a script using a so-called \emph{flag} that can be manually set, preferable near the top of the script. Use of flags is specially important when switching between two ``modes'' affects multiple sections of code. I frequent use is enabling and disabling printing of output from multiple statements scattered in over long script. Below I start by giving simple examples demonstrating how \emph{if} and \emph{if-else} statements work. Only afterwards I provide examples closer to how these statements are profitably used in \Rlang scripts.
+
+\subsubsection{Non-vectorized}
+
+The \code{if} construct ``decides'' depending on a \code{logical} value whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}).
+
+<<if-1z>>=
+flag <- TRUE
+if (flag) print("Hello!")
+@
+
+\begin{playground}
+Play with the code above by changing the value assigned to variable \code{flag}, \code{FALSE}, \code{NA}, and \code{logical(0)}.
+
+In the example above we use variable \code{flag} as the \emph{condition}.
+
+Nothing in the R language prevents this condition to be a \code{logical} constant. Explain why this use case is of no practical use.
+
+<<if-1>>=
+if (TRUE) print("Hello!")
+@
+\end{playground}
+
+Conditional execution is much more useful than what could be expected from the previous example, because the statement whose execution is being controlled can be a compound statement of almost any length or complexity. A very simple example follows.
 
 <<if-2>>=
 printing <- TRUE
@@ -205,7 +232,7 @@ if (printing) {
 }
 @
 
-The condition passed as argument to \code{if} enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \code{a}.
+The condition passed as argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \code{a}.
 
 <<if-3>>=
 a <- 10.0
@@ -299,9 +326,10 @@ nums <- -3:+3
 ifelse(nums < 0, -nums, nums)
 @
 
-Some additional examples, with a few surprises.
+\begin{playground}
+Some additional examples to play with, with a few surprises.
 
-<<ifelse-1>>=
+<<ifelse-1, eval=eval_playground>>=
 a <- 1:10
 ifelse(a > 5, 1, -1)
 ifelse(a > 5, a + 1, a - 1)
@@ -309,6 +337,7 @@ ifelse(any(a > 5), a + 1, a - 1) # tricky
 ifelse(logical(0), a + 1, a - 1) # even more tricky
 ifelse(NA, a + 1, a - 1) # as expected
 @
+\end{playground}
 
 \begin{warningbox}
 In the case of \Rfunction{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as argument to its first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} of length one, expecting that it will be recycled because arguments passed to the other formal parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining of the vectors being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
@@ -532,18 +561,7 @@ All the execution-flow control statements seen above can be nested. We will show
 <<nested-1>>=
 A <- matrix(1:50, 10)
 A
-A <- matrix(1:50, 10, 5)
-A
-# argument names used for clarity
-A <- matrix(1:50, nrow = 10)
-A
-A <- matrix(1:50, ncol = 5)
-A
-A <- matrix(1:50, nrow = 10, ncol = 5)
-A
 @
-
-All the statements above are equivalent, but some are easier to read than others. We next show some alternative ways of coding nested loops.
 
 <<nested-21>>=
 row.sum <- numeric() # slower as size needs to be expanded

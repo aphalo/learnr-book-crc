@@ -5,27 +5,77 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 @
 
-\chapter{The R language: statistics}\label{chap:R:functions}
+\chapter{The R language: Statistics}\label{chap:R:functions}
 
 \begin{VF}
+The purpose of computing is insight, not numbers.
 
-\VA{NN}{TT}
+\VA{Richard W. Hamming}{Numerical Methods for Scientists and Engineers, 1962}
 \end{VF}
 
 \section{Aims of this chapter}
+
+In this chapter you will learn the approach used in \Rlang for fitting models and doing tests of significance. We will use linear models, \emph{t}-test and linear correlation as examples. In this chapter I aim at explaining how to specify models, contrasts and data used, and how to access different components of the returned values.
+
+This chapter is designed to give the reader only a quick introduction to Statistics in base \R, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{??} \autocite{??}. The book \citetitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures, maths and calculus, that transcend the description of \langname{R} as a programming language. The use of \pgrmname{R} for the analysis of different kinds of data and using different methods is covered by a vast bibliography, to which we provide some pointers in chapter \ref{chap:R:readings} on page \pageref{chap:R:readings}.
+
+Along the chapter, I will show occasionally the equivalent of the R code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
+
+\section{Correlation}
+
+Both parametric and non-parametric robust methods for the estimation of the (linear) correlation between pairs of variables can be easily computed in \Rlang.
+
+\subsection{Pearson's $r$}
+
+<<cor-01>>=
+cor(cars)
+@
+
+<<cor-02>>=
+cor(x = cars$speed, y = cars$dist)
+@
+
+<<cor-03>>=
+cor.test(x = cars$speed, y = cars$dist)
+@
+
+\subsection{Kendall's $\tau$ and Spearman's $\rho$}
+
+We use the same functions as for Pearson's $r$ but explicitly request the use of one of these methods.
+
+<<cor-04>>=
+cor(x = cars$speed, y = cars$dist, method = "kendall")
+cor(x = cars$speed, y = cars$dist, method = "spearman")
+@
+
+Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
 
 \section{Fitting linear models}
 \index{models!linear}
 \index{linear models}
 \index{LM|see{linear models}}
-One important thing to remember is that model `formulas' are used in different contexts: plotting, fitting of models, and tests like $t$-test. The basic syntax is rather consistently followed, although there are some exceptions.
+
+In \Rlang, the models to be fitted are described by ``model formulas'' such \verb|y ~ x| which we read as $y$ is explained by $x$. Model `formulas' are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax model formulas is consistently followed in base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax.
+
+As most things in \Rlang model formulas can be stored in variables. In addition, contrary to the usual behaviour of other statistical software, the result of a model fit is returned as an object, containing different components of the fit. Different methods allow us to extract and further manipulate the components of the \Rlang object containing the result of fitting the model. Most of these methods have been implemented for model fit objects for many different types of statistical models. Consequently what is described in the chapter using linear models as examples, also applies in many respects to the fit of classes of models not described here.
+
+The \Rlang function \Rfunction{lm()} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratio between two variances.
+
+\begin{warningbox}
+  If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit Chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
+\end{warningbox}
 
 \subsection{Regression}
 \index{linear regression}
-The R function \Rfunction{lm()} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. In the example below, \code{speed} is a numeric variable (floating point in this case). In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
+In the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
 
-We first fit the model and save the output as \code{fm1} (A name I invented to remind myself that this is the first fitted-model in this chapter.%
+We first fit the model and save the output as \code{fm1} (A name I invented to remind myself that this is the first fitted-model in this chapter.)%
 \label{xmpl:fun:lm:fm1}
+
+<<models-1z>>=
+is.factor(cars$speed)
+is.numeric(cars$speed)
+@
 
 <<models-1>>=
 fm1 <- lm(dist ~ speed, data=cars)
@@ -40,63 +90,64 @@ plot(fm1, which = 2)
 In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. \Rfunction{anova()} applied to the same fitted object, returns the ANOVA table.
 
 <<models-1b>>=
-summary(fm1) # we inspect the results from the fit
-anova(fm1) # we calculate an ANOVA
+summary(fm1)
+anova(fm1)
 @
 
 Let's look at each argument separately: \verb|dist ~ speed| is the specification of the model to be fitted. The intercept is always implicitly included. To `remove' this implicit intercept from the earlier model we can use \verb|dist ~ speed - 1|. In what follows we fit a straight line through the origin ($x = 0$, $y = 0$).
 
 <<models-2>>=
 fm2 <- lm(dist ~ speed - 1, data=cars)
-plot(fm2, which = 2)
 summary(fm2)
 anova(fm2)
 @
 
-We now we fit a second degree polynomial.
+Diagnosis plots can be obtained calling method \code{plot()} on the fitted model object. To save space we display only the plot in the third position in the full output.
 
-<<models-3>>=
-fm3 <- lm(dist ~ speed + I(speed^2), data = cars) # we fit a model, and then save the result
-plot(fm3, which = 3) # we produce diagnosis plots
-summary(fm3) # we inspect the results from the fit
-anova(fm3) # we calculate an ANOVA
+<<models-2a>>=
+plot(fm2, which = 3)
+@
+
+\begin{playground}
+You will now fit a second degree polynomial. The function used is the same as the one used above for linear regression. We only need to alter the formulation of the model. The identity function \code{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated and the result is used as the explanatory variable.
+
+<<models-3, eval=eval_playground>>=
+fm3 <- lm(dist ~ speed + I(speed^2), data = cars)
+plot(fm3, which = 3)
+summary(fm3)
+anova(fm3)
 @
 
 The ``same'' fit using an orthogonal polynomial. Higher degrees can be obtained by supplying as second argument to \code{poly()} a different positive integer value.
 
-<<models-3a>>=
-fm3a <- lm(dist ~ poly(speed, 2), data=cars) # we fit a model, and then save the result
-plot(fm3a, which = 3) # we produce diagnosis plots
-summary(fm3a) # we inspect the results from the fit
-anova(fm3a) # we calculate an ANOVA
+<<models-3a, eval=eval_playground>>=
+fm3a <- lm(dist ~ poly(speed, 2), data=cars)
+summary(fm3a)
+anova(fm3a)
 @
 
 We can also compare two models, to test whether one of models describes the data better than the other.
 
-<<models-4>>=
+<<models-4, eval=eval_playground>>=
 anova(fm2, fm1)
 @
 
 Or three or more models. But be careful, as the order of the arguments matters.
 
-<<models-5>>=
+<<models-5, eval=eval_playground>>=
 anova(fm2, fm1, fm3, fm3a)
 @
 
-We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC and BIC penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
+We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.
 
-<<>>=
+<<models-5a, eval=eval_playground>>=
 BIC(fm2, fm1, fm3, fm3a)
 AIC(fm2, fm1, fm3, fm3a)
 @
 
-One can see above that these three criteria not necessarily agree on which is the model to be chosen.
+Once have run the code in the chunks above, you will be able see that these three criteria not necessarily agree on which is the ``best'' model. Fill in the blanks, for the examples above: $p$-value from ANOVA favours and BIC both favour \code{fm1}, and AIC favours \code{fm3}. In addition the two different formulations of the quadratic polynomial are identical.
 
-\begin{description}
-\item[anova] \code{fm1}
-\item[BIC] \code{fm1}
-\item[AIC] \code{fm3}
-\end{description}
+\end{playground}
 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 \index{analysis of variance}
@@ -104,23 +155,74 @@ One can see above that these three criteria not necessarily agree on which is th
 We use as the \code{InsectSpray} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
 \label{xmpl:fun:lm:fm4}
 
+The call is exactly the same as the one for linear regression, only the names of the variables and data frame are different. What determines that this is an ANOVA is that \code{spray}, the explanatory variable, is a \code{factor}.
+
+<<models-6z>>=
+is.factor(InsectSprays$spray)
+is.numeric(InsectSprays$spray)
+@
+
 <<models-6>>=
 fm4 <- lm(count ~ spray, data = InsectSprays)
 @
 
 <<model-6a>>=
-plot(fm4, which = 2)
+plot(fm4, which = 3)
 @
 
 <<model-6b>>=
 anova(fm4)
 @
 
+
 \subsection{Analysis of covariance, ANCOVA}
 \index{analysis of covariance}
 \index{ANCOVA|see{analysis of covariance}}
 
 When a linear model includes both explanatory factors and continuous explanatory variables, we say that analysis of covariance (ANCOVA) is used. The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
+
+\begin{playground}
+There are additional methods that can be used to extract information from a model fit. As the returned values belong to classes reflecting the type of model, methods with the same name can co-exist.
+
+<<model-PG01,eval=eval_playground>>=
+class(fm1)
+coef(fm1)
+resid(fm1)
+@
+
+
+Do explore these if you know enough about statistics to recognize them. In the case of prediction with \code{predict()} new data needs to be supplied as argument as in the case of linear models no default is provided for this parameter, which are the data used in the fit. Be aware that the name of the variable (= column) within the data frame needs to match the name of the explanatory variable in the data to which the model was fit, in our case \code{speed}.
+
+<<model-PG02a,eval=eval_playground>>=
+my.new.data <- data.frame(speed = 5:10)
+@
+
+<<model-PG02b,eval=eval_playground>>=
+predict(fm1, newdata = my.new.data)
+@
+
+<<model-PG02c,eval=eval_playground>>=
+predict(fm1, newdata = my.new.data, interval = "confidence", level = 0.9)
+@
+
+Some other components of the fitted model object can be extracted with the usual syntax for list, once we discover the names of the components. As shown earlier, we can use \code{str()} to this end.
+
+<<model-PG03a,eval=eval_playground>>=
+names(fm1)
+@
+
+<<model-PG03c,eval=eval_playground>>=
+fm1$df.residual
+@
+
+To see the whole structure of the fitted model object we can use \code{str()}, which reveals the nesting of members and all their attributes. In this case attributes contain very important information about the fit.
+
+<<model-PG04,eval=eval_playground>>=
+str(fm1, max.level = 1)
+@
+
+\end{playground}
+
 
 \section{Generalized linear models}
 \index{generalized linear models}
@@ -133,9 +235,356 @@ For count data GLMs provide a better alternative. In the example below we fit th
 
 <<model-10>>=
 fm10 <- glm(count ~ spray, data = InsectSprays, family = quasipoisson)
-plot(fm10, which = 2)
 anova(fm10, test = "F")
 @
+
+<<model-11>>=
+plot(fm10, which = 3)
+@
+
+\section{Non-linear regression}
+
+Function \code{nls} is R's workhorse for fitting non-linear models. By \emph{non-linear} it is meant not linear \emph{in the parameters} whose value is being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of all degrees are linear models.
+
+
+
+\section{Model formulas}
+  In the examples above we fitted very simple linear models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of \code{*} and explicitly define all individual main effects and interactions. The syntax implemented in base R allows grouping by means of parentheses, so it is also possible to use grouping to exclude some interactions.
+
+\begin{explainbox}
+  Here we show some examples of models in mathematical notation together with the equivalent formulation using R's syntax.
+
+  MISSING!
+
+\end{explainbox}
+
+The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \code{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two explanatory variables in the model. In the second case \code{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does its argument.
+
+<<mformulas-000,eval=FALSE>>=
+y ~ I(x1 + x2)
+y ~ log(x1 + x2)
+@
+
+R's formula syntax allows alternative ways for specifying interaction terms. They allow ``abbreviated'' ways of entering formulas, which for complex experimental designs saves typing and can improve clarity. As seen above operator \code{*} saves us from having to explicitly indicate all the interaction terms in a full factorial model.
+
+<<mformulas-00,eval=FALSE>>=
+y ~ x1 + x2 + x3 + x1:x2 + x1:x3 + x2:x3 + x1:x2:x3
+@
+
+Can be replaced by a concise equivalent.
+
+<<mformulas-00a,eval=FALSE>>=
+y ~ x1 * x2 * x3
+@
+
+When the model to be specified does not include all possible interaction terms, we can combine the concise notation with parentheses.
+
+<<mformulas-01,eval=FALSE>>=
+y ~ x1 + (x2 * x3)
+y ~ x1 + x2 + x3 + x2:x3
+@
+
+That the two model formulas above are equivalent, can be seen using \code{term()}
+
+<<mformulas-01a>>=
+terms(y ~ x1 + (x2 * x3))
+@
+
+<<mformulas-02,eval=FALSE>>=
+y ~ x1 * (x2 + x3)
+y ~ x1 + x2 + x3 + x1:x2 + x1:x3
+@
+
+<<mformulas-02a>>=
+terms(y ~ x1 * (x2 + x3))
+@
+
+The \code{\textasciicircum{}} operator can be used to limit the order of the interaction terms included in a formula.
+
+<<mformulas-03,eval=FALSE>>=
+y ~ (x1 + x2 + x3)^2
+y ~ x1 + x2 + x3 + x1:x2 + x1:x3 + x2:x3
+@
+
+<<mformulas-03a>>=
+terms(y ~ (x1 + x2 + x3)^2)
+@
+
+\begin{playground}
+ For operator \code{\textasciicircum{}} to behave as expected its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas.
+
+<<mformulas-PG01, eval=eval_playground>>=
+y ~ (x1 + x2 + x3)^2
+y ~ (x1 * x2 * x3)^2
+@
+
+\end{playground}
+
+Operator \code{\%in\%} can also be used as a shortcut to including only some of all the possible interaction terms in a formula.
+
+<<mformulas-04,eval=FALSE>>=
+y ~ x1 + x2 + x1 %in% x2
+@
+
+<<mformulas-04a>>=
+terms(y ~ x1 + x2 + x1 %in% x2)
+@
+
+\begin{playground}
+The following examples of the use of formulas in ANOVA, plus your own variations on the same theme will help understand the syntax of model formulas.
+
+<<mformulas-PG02, eval=eval_playground>>=
+data(npk)
+anova(lm(yield ~ N * P * K, data = npk))
+@
+
+<<mformulas-PG03, eval=eval_playground>>=
+anova(lm(yield ~ (N + P + K)^2, data = npk))
+@
+
+<<mformulas-PG04, eval=eval_playground>>=
+anova(lm(yield ~ N + P + K + P %in% N + K %in% N, data = npk))
+@
+
+<<mformulas-PG05, eval=eval_playground>>=
+anova(lm(yield ~ N + P + K + N %in% P + K %in% P, data = npk))
+@
+
+\end{playground}
+
+Nesting of factors results in the computation of additional error terms, with different degrees of freedom. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base R formulas the nesting needs to be accounted by explicit definition of error terms by means of \code{Error()} within the formula. The numerical example below is just a demonstration of the consequences of using an invalid design. Of the two model formulas used, only one yields a valid data analysis!
+
+<<mformulas-05,eval=FALSE>>=
+y ~ x1 + x2 + Error(x1 * x2)
+@
+
+Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base R's model formula syntax to allow the description of nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These fall outside the scope of this book.
+
+\begin{warningbox}
+  R will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is the responsibility of the user to ensure that models are meaningful. The most common, and dangerous, mistake are missing simple interactions in factorial ANOVA.
+
+  Fitting models like those below to three-way ANOVA should be avoided. In both cases simpler terms are missing, while interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
+
+  <<mformulas-W01,eval=FALSE>>=
+  y ~ A + B + A * C + B * C + A * B
+  y ~ A + B + C + A * B * C
+  @
+
+  Models such as those below are interpretable, even though ``incomplete'' (not including all possible interactions).
+  <<mformulas-W02,eval=FALSE>>=
+  y ~ A + B + C + A * C + B * C + A * B
+  y ~ A + B + C + A * B
+  @
+
+  The full three-way factorial models includes all possible combinations of factors.
+  <<mformulas-W03,eval=FALSE>>=
+  y ~ A + B + C + A * C + B * C + A * B + A * B * C
+  @
+
+\end{warningbox}
+
+\begin{explainbox}
+  \textbf{Manipulation of model formulas.} Being this a book about the R language, it is pertinent to describe how formulas can be manipulated. As seen in chapter \ref{chap:R:data} almost everything in the R language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{formula}. The first consequence is that formulas as any other R objects can be saved in variables including in lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a for loop that walks through a list of model formulas. Or we can write a new function that accepts one or more formulas as arguments.
+
+<<mformulas-EB01a>>=
+class(y ~ x)
+@
+
+<<mformulas-EB01b>>=
+a <- y ~ x
+class(a)
+plyr::is.formula(a)
+@
+
+Method \code{is.formula()} is not part of the R language, but instead defined in package \pkgname{plyr}.
+
+The use of \code{for} \emph{loops} for iteration is described in section \ref{sec:script:flow:control} on page \pageref{sec:script:flow:control}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
+<<mformulas-EB02>>=
+  my.data <- data.frame(x = 1:10, y = (1:10) / 2 + rnorm(10))
+anovas <- list()
+formulas <- list(a = y ~ x - 1, b = y ~ x, c = y ~ x + x^2)
+for (formula in formulas) {
+ anovas <- c(anovas, list(lm(formula, data = my.data)))
+ }
+ str(anovas, max.level = 1)
+@
+
+As could be expected a conversion constructor is available with name \code{as.formula}. It becomes useful when formulas are input interactively by the user or read from text files. We can convert a character string into a formula.
+
+<<mformulas-EB03>>=
+my.string <- "y ~ x"
+lm(as.formula(my.string), data = my.data)
+@
+
+As there are many functions available in base R and through packages for the manipulation of character strings, it is straightforward to build model formulas programmatically as strings. We can use functions like \code{paste()} to assemble a formula as text, and then use \code{as.formula()} to convert it to an object of class \code{formula}, usable for fitting a model.
+
+<<mformulas-EB04>>=
+my.string <- paste("y", "x", sep = "~")
+lm(as.formula(my.string), data = my.data)
+@
+
+For the reverse operation of converting a formula into a string, we have available methods \code{as.character()} and \code{format()}. The first of these methods returns a character vector containing the components of the formula as individual strings, while \code{format()} returns a single character string with the formula formatted for printing.
+
+<<mformulas-EB05>>=
+formatted.string <- format(y ~ x)
+formatted.string
+as.formula(formatted.string)
+@
+
+It is also possible to \emph{edit} formula objects with method \code{update()}. In the replacement formula, a dot can replace either the left hand side (lhs) or the right hand side (rhs) of the existing formula in the replacement formula. We can also remove terms as can be seen below. In some cases the dot corresponding to the lhs con be omitted, but including it makes the syntax clearer.
+
+<<mformulas-EB06>>=
+my.formula <- y ~ x1 + x2
+update(my.formula, . ~ . + x3)
+update(my.formula, . ~ . - x1)
+update(my.formula, . ~ x3)
+update(my.formula, z ~ .)
+update(my.formula, . + z ~ .)
+@
+
+R provides high level functions for model selection. Consequently many R users will rarely need to edit model formulas in their scripts. For example, step wise model selection is possible with R method \code{step()}.
+
+A matrix of dummy coefficients can be derived from a model formula, a type of contrast and the data for the explanatory variables.
+<<mformulas-EB07>>=
+treats.df <- data.frame(A = rep(c("yes", "no"), c(4, 4)), 
+                        B = rep(c("white", "black"), 4))
+treats.df
+@
+
+The default contrasts types currently in use.
+<<mformulas-EB08>>=
+options("contrasts")
+@
+
+A model matrix for a model for a two-way factorial design with no interaction term.
+<<mformulas-EB09>>=
+model.matrix(~ A + B, treats.df)
+@
+
+A model matrix for a model for a two-way factorial design with interaction term.
+<<mformulas-EB10>>=
+model.matrix(~ A * B, treats.df)
+@
+
+\end{explainbox}
+
+\section{Time series}
+
+Longitudinal data, when replicated is usually named repeated measurements, but when not replicated, is named time series. 
+Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models. 
+
+Time series data are data collected in such a way that there is only one observation, possibly of multiple variables, available at each time step. This brief section introduces only the most basic aspects of time-series analysis. In most cases time steps are of uniform duration and occur regularly. Given this properties, it is possible to take advantage of this for their storage. \Rlang not only provides methods for the analysis and manipulation of this type data, but also a specialized class for their storage, \code{ts}. A regular time series does not store the time value at each observation: only a combination of two of start time, step size and end time needs to be stored.
+
+We start by creating a time series from a numeric vector. By now, you surely guessed that you need to use a constructor called \code{ts()} or a conversion constructor called \code{as.ts()} and that you can look up the arguments they accept by reading the corresponding help pages.
+
+For example for a time series of monthly values we could use.
+<<ts-00>>=
+my.ts <- ts(1:10, start = 2018, deltat = 1/12)
+class(my.ts)
+str(my.ts)
+@
+
+We next use a data set included in R.
+<<ts-01>>=
+class(austres)
+is.ts(austres)
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+This time series of the number of Australian residents is dominated by the increasing trend.
+<<ts-02>>=
+plot(austres)
+@
+
+A different example, in this case meteorological data, shows an important cyclic component. The annual cycle of mean air temperatures is clearly seen in the plot.
+<<ts-03>>=
+data(nottem)
+is.ts(nottem)
+plot(nottem)
+@
+
+In the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use loess for the decomposition, a method for which the acronym STL is used. LOESS is a local-regression-based smoothing method.
+<<ts-04>>=
+nottem.celcius <- (nottem - 32) * 5/9
+plot(decompose(nottem.celcius))
+@
+
+<<ts-05>>=
+plot(stl(nottem.celcius, s.window = 6))
+@
+
+\section{Multivariate statistics}
+
+\subsection{Multivariate analysis of variance}
+
+Multivariate methods take into account several response variables simultaneously, as part of a single analysis. In practice it is usual to use contributed packages for multivariate data analysis in R, except for simple cases. We will look first at \emph{multivariate} ANOVA or MANOVA. In the same way as \code{aov()} is a wrapper that uses internally \code{lm()}, \code{manova()} is a wrapper that uses internally \code{aov()}.
+
+Multivariate model formulas in some cases use the same syntax as univariate ones, but contain more than one response variable on their left hand side (lhs). 
+<<manova-01>>=
+y1 + y2 + y3 ~ x1 * x2
+@
+
+In other cases, a special syntax is used. In the case of function \code{manova()} we use function \code{cbind()} (column bind) to assemble the lhs of the formula.
+<<manova-02>>=
+data(iris)
+m.fit <- manova(cbind(Petal.Length, Petal.Width) ~  Species, data = iris)
+anova(m.fit)
+summary(m.fit)
+@
+
+\subsection{Principal components analysis}
+
+Principal components analysis is used to simplify a data set by combing variables with similar behaviour into ``principal components''. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base R's function \code{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
+
+<<pca-01>>=
+pc <- prcomp(iris[c("Sepal.Length", "Sepal.Width",  
+                    "Petal.Length", "Petal.Width")],
+             center = TRUE,
+             scale. = TRUE)
+@
+
+<<pca-02>>=
+pc
+@
+
+The rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
+<<pca-03>>=
+summary(pc)
+@
+
+Method \code{plot()} 
+<<pca-04>>=
+plot(pc)
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<pca-05>>=
+biplot(pc)
+@
+
+Visually more elaborate plots of can be obtained with packages \pkgname{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:performance} and package \pkgname{ggbiplot} described in section \ref{sec:plot:ggbiplot} on page \pageref{sec:plot:ggbiplot}.
+
+\begin{playground}
+   For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
+\end{playground}
+
+\subsection{Clustering}
+
+Clustering uses a measure of distance between observations to attempt to group them. This method does not rely on a grouping known beforehand, it derives the clusters from the observed data.
+
+Different measures of distance can be used as well as algorithms. We here show a simple example.
+
+
+
+\subsection{Classification}
+
+Classification consists in the generation of a model or algorithm for classification of observations into categories known beforehand. Only in a second stage the model can be used to attempt the classification of new observations into the predefined categories or groups.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
