@@ -20,6 +20,9 @@ Computer Science is a science of abstraction---creating the right model for a pr
 In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. In the first part of the chapter I will focus on using existing packages to expand the functionality of \Rlang. In the second part you will learn how to define new functions and classes by yourself. We will not consider the important, but more advanced question of packaging functions and classes into new packages.
 
 \section{Packages}\label{sec:script:packages}
+
+\subsection{Download, installation and used}
+
 \index{packages!using}
 In \langname{R} speak `library' is the location where `packages' are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \langname{R} session to make them available so that they can be used in the same way as built-in \langname{R} functions and data. The function \code{library()} is used to load packages, already installed in the local \langname{R} library, into the current session, while the function \Rfunction{install.packages()} is used to install packages, either from a file, or directly from a repository in the internet into the library. When using RStudio it is easiest to use RStudio commands (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install and update packages.
 
@@ -33,13 +36,27 @@ Currently there are many thousands of packages available. The most reliable sour
 
 The development of packages is beyond the scope of the current book, and very well explained in the book \citetitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folders for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the R help system when the package is loaded. In addition to \langname{R} code, packages can call \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, etc. functions and routines, but some kind of `glue' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. At least for \langname{C++}, the recently developed \pkgname{Rcpp} \langname{R} package makes the ``gluing'' extremely easy. See Chapter \ref{chap:R:performance} starting on page \pageref{chap:R:performance} for more information on performance-related and other limitations of \pgrmname{R} and how to solve possible bottlenecks.
 
-One good way of learning how R works, is by experimenting with it, and whenever using a certain function looking at its help, to check what are all the available options. How much documentation is included with packages varies a lot, but many packages include comprehensive user guides or examples as \emph{vignettes} in addition to the help pages for individual functions or data sets.
+One good way of learning how R works, is by experimenting with it, and whenever using a certain function looking at its help, to check what are all the available options. How much documentation is included with packages varies a lot, but many packages include comprehensive user guides or examples as \emph{vignettes} in addition to the help pages for individual functions or data sets. It is not unusual to decide which package to use from a set of alternatives based on the available documentation. In the case of some packages adding many new capabilities, packages may be documented in depth in a whole book. Well known examples are \citetitle{Pinheiro2000} \autocite{Pinheiro2000}, \citetitle{Sarkar2008} \autocite{Sarkar2008} and \citetitle{Wickham2016} \autocite{Wickham2016}.
 
-<<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
-knitter_diag()
-R_diag()
-other_diag()
+\begin{warningbox}
+\textbf{Naming conflicts} When two objects with the same name are present in the search path used by R to match names to stored objects, conflicts can occur. Not all names belong to the same namespace, and consequently, in many situations different object with identical names can coexist in the R environment. It is important that you realize than in such cases all these objects remain within reach of our code, but that the one nearest to the top of the search path will returned when a ``plain'' name is used. The name of the namespace can be prepended to that of the object separated by double colons (\code{::}). In recent versions of R, every package is required to use a namespace to isolate the names used, and even names used in base R are in their own name space. This greatly facilitates the resolution of naming conflicts.
+    
+<<namespaces-00>>=
+mean(1:5)
+base::mean(1:5)
 @
+
+If no packages are loaded or if the loaded packages and user code do not reuse the name ``mean'', the two statements above are identical. If \code{mean} is redefined in user code, or exported by a package that has been loaded, the first statement will refer to the redefinition, while the second statement will continue to refer to the definition in base R.
+
+When using packages naming conflicts can rather easily occur among packages. On the other hand very few packages use names for objects, classes or functions that are already in use in base R, and when they do, these are sometimes backwards compatible with the objects they hide. In general it is bad practice to redefine names from base R as those names are part the language, and a change in the behaviour of the R language is unexpected by users. In addition, such redefinitions can make valid R language scripts invalid, or result in the return wrong results. In many other computer programming languages, such reuse of names is disallowed and enforced: such a program is illegal and impossible to execute. R is more permissive, and this is sometimes useful, but only in exceptional cases such reuse of names can be considered as being within ``good coding practice''.
+
+In production code, and specially when writing packages, one should use the namespace plus name notation for any names not defined within the package itself, to ensure that the package can reliable work independently of the names used in user code and any other packages concurrently loaded. In many cases, using the double colon notation makes the code of a script easier to read, although at the cost of a loss of conciseness.
+\end{warningbox}
+
+\subsection{Finding suitable packages}
+
+There being so many different contributed R packages, can make it difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built within base R. Base R plus the recommended packages (installed when R is installed) cover a lot of ground. To analyse data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate and or extend the functionality in base R with advantage. When one considers the use of novel or specialized types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to chose from within the available contributed packages.
+
 
 \section{Functions}\label{sec:script:functions}
 \index{functions!defining new}
@@ -223,3 +240,8 @@ b
 2) How would you modify the code of your \code{my\_print.matrix()} so that also columns to print can be selected?
 \end{playground}
 
+<<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
+knitter_diag()
+R_diag()
+other_diag()
+@
