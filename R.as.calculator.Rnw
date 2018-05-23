@@ -1486,7 +1486,40 @@ Although in this last example we used numeric indexes to make it more interestin
 
 \section{Attributes of R objects}\label{sec:calc:attributes}
 
-TO BE WRITTEN
+\Rlang objects can have attributes. Attributes are normally used to store ancillary data. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. Of the attributes defined in \Rlang the one that is expected to be set by users is \code{"comment"}. We use it for this first example as comments can be very useful to store metadata together with data in a given object.
+
+<<attributes-01>>=
+a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
+comment(a.df)
+comment(a.df) <- "this is stored as a comment"
+comment(a.df)
+@
+
+Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()} and \Rfunction{attributes()} can be used with any attribute. In addition, method \Rfunction{str()} displays all components of \Rlang objects including their attributes.
+
+<<attributes-02>>=
+names(a.df)
+names(a.df) <- toupper(names(a.df))
+names(a.df)
+attr(a.df, "names") # same as previous line
+attr(a.df, "my.attribute") <- "this is stored in my attribute"
+attributes(a.df)
+@
+
+\begin{warningbox}
+There is no restriction to the creation, setting, resetting and reading of attributes, but not all methods and operators that can be used to modify objects will preserve non-standard attributes. So, using private attributes is a double edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} described in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}.
+
+Even the class of S3 objects is stored as an attribute that is accessible as any other attribute---this is in contrast to the mode and atomic class of an object. Object-oriented programming in \Rlang in described in section \ref{sec:script:objects:classes:methods} on page \ref{sec:script:objects:classes:methods}.
+
+<<attributes_WB1>>=
+numbers <- 1:10
+class(numbers)
+attributes(numbers)
+a.factor <- factor(numbers)
+class(a.factor)
+attributes(a.factor)
+@
+\end{warningbox}
 
 \section{Loading data}
 \index{data!loading data sets|(}

@@ -271,7 +271,7 @@ We use the same functions as for Pearson's $r$ but explicitly request the use of
 
 Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
 
-\section{Fitting linear models}
+\section{Fitting linear models}\label{sec:stat:LM}
 \index{models!linear|see{linear models}}
 \index{linear models|(}
 \index{LM|see{linear models}}
@@ -345,7 +345,7 @@ The next step is diagnosis of the fit. Are assumptions of the linear model proce
 
 \end{knitrout}
 
-In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. 
+In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors.
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -370,6 +370,13 @@ In the case of a regression, calling \Rfunction{summary()} with the fitted model
 ## Residual standard error: 15.38 on 48 degrees of freedom
 ## Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
 ## F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
+\end{verbatim}
+\begin{alltt}
+\hlkwd{coef}\hlstd{(fm1)}
+\end{alltt}
+\begin{verbatim}
+## (Intercept)       speed 
+##  -17.579095    3.932409
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -486,10 +493,102 @@ Once you have run the code in the chunks above, you will be able see that these 
 
 \end{playground}
 
+\begin{explainbox}
+The objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them.
+
+We rarely need to manually explore the structure of these objects, but it is rather frequently good to have an idea of what is going on in the background. We can use \Rfunction{str()} to explore some of the fitted models.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(fm1,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)} \hlcom{# not evaluated}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. In fact, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(}\hlkwd{anova}\hlstd{(fm1))}
+\end{alltt}
+\begin{verbatim}
+## Classes 'anova' and 'data.frame':	2 obs. of  5 variables:
+##  $ Df     : int  1 48
+##  $ Sum Sq : num  21185 11354
+##  $ Mean Sq: num  21185 237
+##  $ F value: num  89.6 NA
+##  $ Pr(>F) : num  1.49e-12 NA
+##  - attr(*, "heading")= chr  "Analysis of Variance Table\n" "Response: dist"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(}\hlkwd{summary}\hlstd{(fm1))}
+\end{alltt}
+\begin{verbatim}
+## List of 11
+##  $ call         : language lm(formula = dist ~ 1 + speed, data = cars)
+##  $ terms        :Classes 'terms', 'formula'  language dist ~ 1 + speed
+##   .. ..- attr(*, "variables")= language list(dist, speed)
+##   .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. ..$ : chr [1:2] "dist" "speed"
+##   .. .. .. ..$ : chr "speed"
+##   .. ..- attr(*, "term.labels")= chr "speed"
+##   .. ..- attr(*, "order")= int 1
+##   .. ..- attr(*, "intercept")= int 1
+##   .. ..- attr(*, "response")= int 1
+##   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+##   .. ..- attr(*, "predvars")= language list(dist, speed)
+##   .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. ..- attr(*, "names")= chr [1:2] "dist" "speed"
+##  $ residuals    : Named num [1:50] 3.85 11.85 -5.95 12.05 2.12 ...
+##   ..- attr(*, "names")= chr [1:50] "1" "2" "3" "4" ...
+##  $ coefficients : num [1:2, 1:4] -17.579 3.932 6.758 0.416 -2.601 ...
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##   .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##  $ aliased      : Named logi [1:2] FALSE FALSE
+##   ..- attr(*, "names")= chr [1:2] "(Intercept)" "speed"
+##  $ sigma        : num 15.4
+##  $ df           : int [1:3] 2 48 2
+##  $ r.squared    : num 0.651
+##  $ adj.r.squared: num 0.644
+##  $ fstatistic   : Named num [1:3] 89.6 1 48
+##   ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##  $ cov.unscaled : num [1:2, 1:2] 0.19311 -0.01124 -0.01124 0.00073
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##  - attr(*, "class")= chr "summary.lm"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Once we know the nesting and the names of components we can simply extract them using indexing.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{adj.r.squared}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.6438102
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{explainbox}
+
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 \index{analysis of variance}\index{linear models!analysis of variance}
 \index{ANOVA|see{analysis of variance}}
-We use as the \code{InsectSpray} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
+We use as the \code{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
 \label{xmpl:fun:lm:fm4}
 
 The call is exactly the same as the one for linear regression, only the names of the variables and data frame are different. What determines that this is an ANOVA is that \code{spray}, the explanatory variable, is a \code{factor}.
@@ -497,11 +596,7 @@ The call is exactly the same as the one for linear regression, only the names of
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{data}\hlstd{(InsectSpray)}
-\end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning in data(InsectSpray): data set 'InsectSpray' not found}}\begin{alltt}
+\hlkwd{data}\hlstd{(InsectSprays)}
 \hlkwd{is.factor}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
 \end{alltt}
 \begin{verbatim}
@@ -565,8 +660,10 @@ In ANOVA we are normally mainly interested in testing hypotheses, and \Rfunction
 
 When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
 
+As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite{}.
+
 \begin{playground}
-There are additional methods that can be used to extract information from model fits. As objects containing the results of model fitting belong to different classes reflecting the type of model, methods with the same name can co-exist and selected invisibly to the user.\qRfunction{coef()}\qRfunction{resid()}
+There are additional methods for extracting information from model fits. As objects containing the results of model fitting belong to different classes reflecting the type of model, methods with the same name can co-exist and be selected automatically. The output will not be necessarily the same, and some the parameters accepted will differ.\qRfunction{coef()}\qRfunction{resid()}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -635,19 +732,43 @@ To see the whole structure of the fitted model object we can use \code{str()}, w
 \end{playground}
 \index{linear models|)}
 
-\section{Generalized linear models}
+\section{Generalized linear models}\label{sec:stat:GLM}
 \index{generalized linear models|(}\index{models!generalized linear|see{generalized linear models}}
 \index{GLM|see{generalized linear models}}
 
 Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
 For the analysis of the \code{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
 
-For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal.
+For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal. In addition to the model formula we need can pass an argument through \code{family} giving the error distribution to be assumed---the default for \code{family} is \code{gaussian} or Normal distribution.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{fm10} \hlkwb{<-} \hlkwd{glm}\hlstd{(count} \hlopt{~} \hlstd{spray,} \hlkwc{data} \hlstd{= InsectSprays,} \hlkwc{family} \hlstd{= quasipoisson)}
+\hlkwd{anova}\hlstd{(fm10)}
+\end{alltt}
+\begin{verbatim}
+## Analysis of Deviance Table
+## 
+## Model: quasipoisson, link: log
+## 
+## Response: count
+## 
+## Terms added sequentially (first to last)
+## 
+## 
+##       Df Deviance Resid. Df Resid. Dev
+## NULL                     71     409.04
+## spray  5   310.71        66      98.33
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The print-out from the \Rfunction{anova()} method for GLM fits has some differences to that for LM fits. By default no significance test is computed, as a knowledgable choice is required depending on the characteristics of the model and data. We here use \code{"F"} as argument to request an $F$-test.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
 \hlkwd{anova}\hlstd{(fm10,} \hlkwc{test} \hlstd{=} \hlstr{"F"}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
@@ -669,6 +790,8 @@ For count data GLMs provide a better alternative. In the example below we fit th
 \end{kframe}
 \end{knitrout}
 
+Method \Rfunction{plot()} as for LM fits, produces diagnosis plots. We show as above the q-q-plot of residuals.
+
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -683,11 +806,18 @@ For count data GLMs provide a better alternative. In the example below we fit th
 
 
 \end{knitrout}
-\index{generalized linear models|(}
-\section{Non-linear regression}
+\index{generalized linear models|)}
+
+\section{Non-linear regression}\label{sec:stat:NLS}
 \index{non-linear models|(}\index{models!non-linear|see{non-linear models}}
 
-Function \Rfunction{nls} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant not linear \emph{in the parameters} whose value is being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of all degrees are linear models.
+Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non linear \emph{in the parameters} whose values is being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of any degree are linear models.
+
+In the case of \Rfunction{nls()} the specification of the model to be fitted differs from that used for linear models. We will use as example fitting the Michaelis-Menten equation describing reaction kinetics in biochemistry and chemistry. The mathematical formulation is given by:
+
+\begin{equation}\label{eq:michaelis:menten}
+v = \frac{\mathrm{d} [P]}{\mathrm{d} t} = \frac{V_{\mathrm{max}} [S]}{K_{\mathrm{M}} + [S]}
+\end{equation}
 
 \index{non-linear models|)}
 
@@ -1062,7 +1192,7 @@ As could be expected a conversion constructor is available with name \code{as.fo
 ## 
 ## Coefficients:
 ## (Intercept)            x  
-##     -0.4382       0.5050
+##      0.4582       0.4266
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -1082,7 +1212,7 @@ As there are many functions available in base \Rlang and through packages for th
 ## 
 ## Coefficients:
 ## (Intercept)            x  
-##     -0.4382       0.5050
+##      0.4582       0.4266
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -1241,7 +1371,7 @@ A model matrix for a model for a two-way factorial design with interaction term.
 
 \end{explainbox}
 
-\section{Time series}
+\section{Time series}\label{sec:stat:time:series}
 
 Longitudinal data, when replicated is usually named repeated measurements, but when not replicated, is named time series.
 Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models.
@@ -1360,7 +1490,7 @@ In the next two code chunks two different approaches to time series decompositio
 
 \end{knitrout}
 
-\section{Multivariate statistics}
+\section{Multivariate statistics}\label{sec:stat:MV}
 
 \subsection{Multivariate analysis of variance}
 
@@ -1409,7 +1539,7 @@ In other cases, a special syntax is used. In the case of function \Rfunction{man
 \end{kframe}
 \end{knitrout}
 
-\subsection{Principal components analysis}
+\subsection{Principal components analysis}\label{sec:stat:PCA}
 
 Principal components analysis is used to simplify a data set by combing variables with similar behaviour into ``principal components''. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base \Rlang's function \Rfunction{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
 
