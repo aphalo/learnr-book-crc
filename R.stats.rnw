@@ -15,11 +15,13 @@ The purpose of computing is insight, not numbers.
 
 \section{Aims of this chapter}
 
-In this chapter you will learn the approach used in \Rlang for fitting models and doing tests of significance. We will use linear models, \emph{t}-test and linear correlation as examples. In this chapter I aim at explaining how to specify models, contrasts and data used, and how to access different components of the returned values.
+In this chapter you will learn the approach used in \Rlang for fitting models and doing tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
 
-This chapter is designed to give the reader only a quick introduction to Statistics in base \Rpgrm, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{??} \autocite{??}. The book \citetitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures, maths and calculus, that transcend the description of \Rlang as a programming language. The use of \Rpgrm for the analysis of different kinds of data and using different methods is covered by a vast bibliography, to which we provide some pointers in chapter \ref{chap:R:readings} on page \pageref{chap:R:readings}.
+This chapter is designed to give the reader only a quick introduction to Statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{??} \autocite{??}. The book \citetitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
 
 Along the chapter, I will show occasionally the equivalent of \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
+
+\emph{\textcolor[rgb]{1.00,0.50,0.25}{As a stop-gap we use examples from the help pages of several of the functions described.}}
 
 \section{Correlation}
 
@@ -39,6 +41,19 @@ cor(x = cars$speed, y = cars$dist)
 cor.test(x = cars$speed, y = cars$dist)
 @
 
+\begin{playground}
+Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \ref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
+
+<<cor-PG01, eval=eval_playground>>=
+a <- cor(cars)
+class(a)
+attributes(a)
+str(a)
+@
+
+Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt of the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data directly from the object.
+\end{playground}
+
 \subsection{Kendall's $\tau$ and Spearman's $\rho$}
 
 We use the same functions as for Pearson's $r$ but explicitly request the use of one of these methods.
@@ -49,6 +64,10 @@ cor(x = cars$speed, y = cars$dist, method = "spearman")
 @
 
 Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
+
+\begin{playground}
+Repeat the exercise in the playground immediately above, but now using non-default methods as argument to \Rfunction{cor()}. How does the information stored in the returned \code{matrix} differ depending on the method, and how can we extract information about the method used for calculation of the correlation from the returned object.
+\end{playground}
 
 \section{Fitting linear models}\label{sec:stat:LM}
 \index{models!linear|see{linear models}}
@@ -62,7 +81,7 @@ As most things in \Rlang model formulas can be stored in variables. In addition,
 The \Rlang function \Rfunction{lm()} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratio between two variances.
 
 \begin{warningbox}
-  If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit Chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
+If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit Chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
 \end{warningbox}
 
 \subsection{Regression}
@@ -302,13 +321,6 @@ v = \frac{\mathrm{d} [P]}{\mathrm{d} t} = \frac{V_{\mathrm{max}} [S]}{K_{\mathrm
 \section{Model formulas}
   In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of \code{*} and explicitly define all individual main effects and interactions. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to use grouping to exclude some interactions.
 
-\begin{explainbox}
-  Here we show some examples of models in mathematical notation together with the equivalent formulation using R's syntax.
-
-  MISSING!
-
-\end{explainbox}
-
 The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two explanatory variables in the model. In the second case \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does its argument.
 
 <<mformulas-000,eval=FALSE>>=
@@ -434,30 +446,50 @@ Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base R's 
 
 \end{warningbox}
 
-\begin{explainbox}
-  \textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{formula}. The first consequence is that formulas as any other \Rlang objects can be saved in variables including in lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a for loop that walks through a list of model formulas. Or we can write a new function that accepts one or more formulas as arguments.
+As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{"formula"}.
 
-<<mformulas-EB01a>>=
+<<mformulas-W11>=
 class(y ~ x)
 @
 
-<<mformulas-EB01b>>=
+<<mformulas-W12>>=
 a <- y ~ x
 class(a)
-plyr::is.formula(a)
+inherits(a, "formula")
 @
 
-Method \Rfunction{is.formula()} is not part of the \Rlang language, but instead defined in package \pkgname{plyr}.
+\begin{warningbox}
+No method \Rfunction{is.formula()} is part of the \Rlang language, but instead methods \Rfunction{is.formula()} and \Rfunction{is\_formula()} provided by packages \pkgname{plyr} and \pkgname{rlang}, respectively.
+
+<<mformulas-EB01c>>=
+plyr::is.formula(a)
+rlang::is_formula(a)
+@
+
+However, it would be unwise to add a dependency on either of these packages for such a trivial function. We could directly use \Rlang method \Rfunction{inherits()} as shown above.
+
+To see how these methods have been defined, we can print them, simply by not supplying the ``function-call'' parentheses.
+
+<<mformulas-EB01d>>=
+plyr::is.formula
+rlang::is_formula
+@
+
+It can be seen that they call \Rfunction{inherits()} with \code{"formula"} as its second argument, demonstrating how trivial their definitions are. This servers as an example of how sometimes unnecessary dependencies on packages can creep into our own scripts and packages, as dependency one package does not only adds a dependency on the used package but also on the further packages it directly and indirectly depends on. If needed or desired one can very easily define a \Rfunction{is.formula()} method that adds no external dependencies.
+\end{warningbox}
+
+\begin{explainbox}
+\textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. Formulas as any other \Rlang objects can be saved in variables including lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a \code{for} loop that walks through a list of model formulas. Or we can write a function that accepts one or more formulas as arguments.
 
 The use of \code{for} \emph{loops} for iteration is described in section \ref{sec:script:flow:control} on page \pageref{sec:script:flow:control}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
 <<mformulas-EB02>>=
-  my.data <- data.frame(x = 1:10, y = (1:10) / 2 + rnorm(10))
+my.data <- data.frame(x = 1:10, y = (1:10) / 2 + rnorm(10))
 anovas <- list()
 formulas <- list(a = y ~ x - 1, b = y ~ x, c = y ~ x + x^2)
 for (formula in formulas) {
  anovas <- c(anovas, list(lm(formula, data = my.data)))
  }
- str(anovas, max.level = 1)
+str(anovas, max.level = 1)
 @
 
 As could be expected a conversion constructor is available with name \code{as.formula}. It becomes useful when formulas are input interactively by the user or read from text files. We can convert a character string into a formula.
@@ -611,6 +643,15 @@ Method \code{plot()}
 plot(pc)
 @
 
+\begin{explainbox}
+As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components. Further computations and/or formatting can be applied.
+
+<<pca-EB-01>>=
+str(pc)
+@
+
+\end{explainbox}
+
 <<include=FALSE, cache=FALSE>>=
 opts_chunk$set(opts_fig_wide_square)
 @
@@ -619,11 +660,43 @@ opts_chunk$set(opts_fig_wide_square)
 biplot(pc)
 @
 
-Visually more elaborate plots of can be obtained with packages \pkgname{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:performance} and package \pkgname{ggbiplot} described in section \ref{sec:plot:ggbiplot} on page \pageref{sec:plot:ggbiplot}.
+Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgname{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:performance}, package \pkgname{ggfortify} described in section \ref{sec:plot:ggfortify} on page \pageref{sec:plot:ggfortify} and package \pkgname{ggbiplot} described in section \ref{sec:plot:ggbiplot} on page \pageref{sec:plot:ggbiplot}.
 
 \begin{playground}
-   For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
+For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
 \end{playground}
+
+\subsection{Multidimensional scaling}\label{sec:stat:MDS}
+
+In multidimensional scaling we start with a matrix of distances among observations that will need to be calculated from the raw data. We use for the example distances between geographic locations in Europe.
+
+<<mds-01>>=
+loc <- cmdscale(eurodist)
+@
+
+We can see that the returned object \code{loc} is a \code{matrix}, with names for one of the dimensions.
+<<mds-02>>=
+class(loc)
+head(loc)
+@
+
+Two make the code easier to read two vectors are first extracted from the matrix and named \code{x} and \code{y}.
+<<mds-03>>=
+x <- loc[, 1]
+y <- -loc[, 2] # reflect so North is at the top
+## note asp = 1, to ensure Euclidean distances are represented correctly
+plot(x, y, type = "n", xlab = "", ylab = "", asp = 1, axes = FALSE,
+     main = "cmdscale(eurodist)")
+text(x, y, rownames(loc), cex = 0.6)
+@
+
+\subsection{Clustering}\label{sec:stat:cluster}
+
+In clustering analysis the aim is to group observations into discrete groups with maximal internal homogeneity and maximum group to group differences. Examples of functions in \Rlang and \Rfunction{hclust()} and \Rfunction{kmeans()}.
+
+\subsection{Discrimination analysis}\label{sec:stat:DA}
+
+In discrimination analysis the categories or groups to which objects belong are known \emph{a priori}. The aim is to fit/bild a classifier to will allow us to assign future observations to the different non-overlapping groups.
 
 \subsection{What next?}
 
