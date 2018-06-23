@@ -22,7 +22,7 @@ In my experience, for those not familiar with computer programming languages, th
 
 In the first part of the chapter we will use \Rlang to do everyday calculations that should be so easy and familiar that you will not need to think about the operations themselves. This easy start will give you a chance to focus on learning how to issue textual commands at the command prompt.
 
-Later in the chapter, you will gradually need to focus more on the \Rlang language and its grammar and less on how commands are entered. By the end of the chapter you will be familiar with most of the kinds of ``words'' used in the \Rlang language and you will be able write simple ``sentences'' in \Rlang.
+Later in the chapter, you will gradually need to focus more on the \Rlang language and its grammar and less on how commands are entered. By the end of the chapter you will be familiar with most of the kinds of ``words'' used in the \Rlang language and you will be able to write simple ``sentences'' in \Rlang.
 
 Along the chapter, I will show occasionally the equivalent of the \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
 
@@ -283,7 +283,7 @@ Any operation, even tests of equality, involving one or more \code{NA}'s return 
 is.na(c(NA, 1))
 @
 
-In the example above, we can also see the \code{is.na()} is vectorized, and that it applies the test, to each of the to elements of the vector individually, returning the result as a new vector.
+In the example above, we can also see that \code{is.na()} is vectorized, and that it applies the test, to each of the to elements of the vector individually, returning the result as a new vector.
 
 One thing\index{precision!math operations}\index{numbers!floating point} to be aware of are the consequences of the fact that numbers in computers are almost always stored with finite precision and/or range: the expectations derived from the mathematical definition of Real numbers are not always fulfilled. See box on page \pageref{box:floats} for an in-depth explanation.
 
@@ -409,7 +409,7 @@ a <- 20
 a < 100 && a > 10
 @
 
-These operators can be used on vectors of any length, returning as result a logical vector. In other words, they behave in the same way as the arithmetic operators described on page \pageref{par:vectorized:numeric}: their arguments are recycled when needed.
+These operators can be used on vectors of any length, returning as result a logical vector. In other words, they behave in the same way as the arithmetic operators described on page \pageref{par:vectorized:numeric}: their arguments are recycled when needed. Hint: if you do not know what to expect as value for the vector returned by \code{1:10}, execute the statement \code{print(a)} after the first code statement below, or, alternatively, \code{1:10} without saving the result to a variable.
 
 <<comparison-2>>=
 a <- 1:10
@@ -439,7 +439,7 @@ a > 3 | a + 2 < 3
 @
 \end{playground}
 
-Be once more aware of `short-cut evaluation'. If the result would not be affected by the missing value then the result is returned. If the presence of the \code{NA} makes the end result unknown, then \code{NA} is returned.
+Be once more aware of `short-cut evaluation'. If the result would not be affected by the missing value then the result, \code{TRUE} or \code{FALSE} is returned. If the presence of the \code{NA} makes the end result unknown, then \code{NA} is returned.
 
 <<comparison-3>>=
 c <- c(a, NA)
@@ -482,20 +482,9 @@ The finiteness of floats also affects tests of equality, which is more likely to
 0 == 1e-20
 @
 
-It is usually safer not to test for equality to zero when working with floating-point values, \Rlang's \code{double} and \code{numeric}. One alternative is comparing against a suitably small number, which will depend on the situation, although a small multiple of \code{eps} is usually a safe bet. This type of precautions are specially important in what is usually called ``production'' code: a script or program that will be used many times and with little further intervention by the researcher or programmer. Such code must work correctly, or not work at all, and it should not return under any imaginable circumstances a wrong answer.
-
-<<numbers-EB10>>=
-eps <- .Machine$double.eps
-x <- 1e-40
-abs(x) < eps * 2
-abs(x) < 1e-100
-@
-
-Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be treated as above, for example replacing \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simple words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
-
 \index{machine arithmetic precision}
 \index{EPS|see{machine arithmetic precision}}
-As \Rpgrm can run on different types of computer hardware, the actual machine limits for storing numbers in memory may vary depending on the type of processor and even compiler used to build the \Rpgrm itself. However, it is possible to obtain these values at run time from variable \code{.Machine}. Please, see the help page for \code{.Machine} for a detailed, and up-to-date, description of the available constants.
+As \Rpgrm can run on different types of computer hardware, the actual machine limits for storing numbers in memory may vary depending on the type of processor and even compiler used to build the \Rpgrm program executable itself. However, it is possible to obtain these values at run time from the variable \code{.Machine}, which is part of the \Rlang language. Please, see the help page for \code{.Machine} for a detailed, and up-to-date, description of the available constants.
 
 <<machine-eps-01>>=
 .Machine$double.eps
@@ -520,19 +509,25 @@ As \code{integer} values are stored in machine memory without loss of precision,
 2147483699L
 @
 
-In those statements in the chunk below where at least one operand is \code{double} the \code{integer} operands are promoted to \code{double} before computation. A similar promotion does not take place when operations are among \code{integer} values, resulting in \emph{overflow}, or numbers that are too big to be represented as \code{integer} values.
+In those statements in the chunk below where at least one operand is \code{double} the \code{integer} operands are \emph{promoted} to \code{double} before computation. A similar promotion does not take place when operations are among \code{integer} values, resulting in \emph{overflow}, or numbers that are too big to be represented as \code{integer} values.
 
 <<machine-eps-04>>=
 2147483600L + 99L
 2147483600L + 99
 2147483600L * 2147483600L
 2147483600L * 2147483600
-2147483600L^2
+@
+
+We see next that the exponentiation operator \verb|^| forces the promotion of its arguments to \code{double}, resulting in no overflow. In contrast, as seen above, the multiplication operator \verb|*| operates on integers resulting in overflow.
+
+<<machine-eps-04>>=
+2147483600L * 2147483600L
+2147483600L^2L
 @
 \end{explainbox}
 
 \begin{warningbox}
-In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors. As the example shows, rounding errors may accumulate, and in practice \verb|.Machine$double.eps| is not always a good value to safely use in tests for ``zero'', a larger value may be needed.
+In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors. As the example shows, rounding errors may accumulate, and in practice \verb|.Machine$double.eps| is not always a good value to safely use in tests for ``zero'', a larger value may be needed. Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be done replacing tests like \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simple words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
 
 <<machine-eps-05>>=
 a == 0.0 # may not always work
@@ -552,7 +547,7 @@ sin(2 * pi)
 \section{Sets and set operations}
 \index{sets|(}\index{operators!set|(}
 
-The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to have character vectors of gene tags. We may have a vector for each of a set of different samples, and need to compare them. However, we start with something more mundane, everyday shopping.
+The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to have character vectors of gene tags. We may have a vector for each of a set of different samples, and need to compare them. However, we start by using a more mundane example, everyday shopping.
 
 <<sets-00>>=
 fruits <- c("apple", "pear", "orange", "lemon", "tangerine")
@@ -597,7 +592,7 @@ x == "a" | x == "b" | x == "c" | x == "d"
 @
 \end{playground}
 
-With \code{unique()} we convert a vector of values, possibly repeated, into a set of unique values. In algebra of sets a certain object belongs or not to a set. Consequently, multiple copies of the same object or value are meaningless.
+With \code{unique()} we convert a vector of, possibly repeated, values into a set of unique values. In algebra of sets a certain object belongs or not to a set. Consequently, in a set multiple copies of the same object or value are meaningless.
 
 <<sets-03>>=
 unique(my.set)
@@ -646,7 +641,7 @@ length(integer())
 setdiff(1L:4L, union(1L:4L, integer()))
 @
 
-Although set operators are defined for \code{numeric} vectors, rounding errors in `floats' can result in unexpected results (see \ref{box:floats} on page \pageref{box:floats}). The next two examples do, however, return the correct answers.\qRoperator{\%in\%}
+Although set operators are defined for \code{numeric} vectors, rounding errors in `floats' can result in unexpected results (see section \ref{box:floats} on page \pageref{box:floats}). The next two examples do, however, return the correct answers.\qRoperator{\%in\%}
 
 <<sets-EB03>>=
 9 %in% (2:4)^2
@@ -686,10 +681,10 @@ try(h + 2)
 @
 
 \begin{explainbox}
-In many computer languages vectors of characters are distinct from vectors of character strings. In character vectors each position in the vector is occupied by a single character, while in a vector of character strings, strings of characters of various lengths, like words or sentences are stored at each position of the vector. \Rlang's \code{character} vectors are vectors of character strings, and there is no predefined class for vectors of individual characters. In \Rlang character string constants can be enclosed either in double or single quotes. In you are familiar with \Clang or \Cpplang you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are totally different.
+In many computer languages vectors of characters are distinct from vectors of character strings. In character vectors each position in the vector is occupied by a single character, while in a vector of character strings, strings of characters of various lengths, like words or sentences are stored at each position of the vector. \Rlang's \code{character} vectors are vectors of character strings, and there is no predefined class for vectors of individual characters. In \Rlang character string constants can be enclosed either in double or single quotes. If you are familiar with \Clang or \Cpplang you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are totally different.
 \end{explainbox}
 
-One can use the `other' type of quotes as delimiter when one wants to include quotes within a string. Pretty-printing is changing what I typed into how the string is stored in \Rpgrm: I typed \code{b <- 'He said "hello" when he came in'} in the second statement below, try it.
+One can use the `other' type of quotes as delimiter when one wants to include quotes within a string.
 
 <<char-3>>=
 a <- "He said 'hello' when he came in"
@@ -706,7 +701,7 @@ print(c)
 cat(c)
 @
 
-The \textit{escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. They also are very useful when one wants to split an axis-label, title or label in a plot into two or more lines as they can be embedded in any string.
+The \textit{escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. They are also very useful when one wants to split an axis-label, title or label in a plot into two or more lines as they can be embedded in any string.
 \index{classes and modes!character@\texttt{character}|)}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
@@ -723,7 +718,7 @@ my_var <- "abc"
 mode(my_var)
 @
 
-While \emph{mode} is a fundamental property, and limited to those modes defined as part of the \Rlang language, the concept of \emph{class}, is different in that new classes can be defined in user code. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed in section \ref{sec:funcs:method:dispatch} on page \pageref{sec:funcs:method:dispatch}, in relation to object oriented programming in \Rlang. Method \Rfunction{class()} is used to query the class of an object, and method \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
+While \emph{mode} is a fundamental property, and limited to those modes defined as part of the \Rlang language, the concept of \emph{class}, is different in that new classes can be defined in user code. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}, in relation to object oriented programming in \Rlang. Method \Rfunction{class()} is used to query the class of an object, and method \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
 
 <<mode-2>>=
 class(my_var)
@@ -750,7 +745,7 @@ FALSE | -2:2
 @
 
 \begin{playground}
-There is some flexibility in the conversion from character strings into \code{numeric} and \code{logical} values. Use the examples below plus your own variations to get an idea of what strings are acceptable and correctly converted and which as not. Do also pay attention at the conversion between \code{numeric} and \code{logical} values.
+There is some flexibility in the conversion from character strings into \code{numeric} and \code{logical} values. Use the examples below plus your own variations to get an idea of what strings are acceptable and correctly converted and which are not. Do also pay attention at the conversion between \code{numeric} and \code{logical} values.
 
 <<convert-PG1, eval=eval_playground>>=
 as.character(3.0e10)
@@ -834,7 +829,7 @@ format(x[2], digits = 3, nsmall = 1)
 format(x, digits = 3, scientific = TRUE)
 @
 
-Function \Rfunction{sprintf()} is similar to \Clang's function of the same name. The user interface is rather unusual, but very powerful, once one learns the syntax. All the formatting is specified using a \code{character} string as template. In this template placeholders for data and the formatting instructions are embedded using special codes. These codes start with a percent character. We use in the example below the use of some of these: \code{f} is used for \code{numeric} values to be formatted according to ``fixed point'', while \code{g} is used when we set the number of significant digits and \code{e} for exponential or \emph{scientific} notation.
+Function \Rfunction{sprintf()} is similar to \Clang's function of the same name. The user interface is rather unusual, but very powerful, once one learns the syntax. All the formatting is specified using a \code{character} string as template. In this template placeholders for data and the formatting instructions are embedded using special codes. These codes start with a percent character. We show in the example below the use of some of these: \code{f} is used for \code{numeric} values to be formatted according to ``fixed point'', while \code{g} is used when we set the number of significant digits and \code{e} for exponential or \emph{scientific} notation.
 <<convert-6>>=
 x = c(123.4567890, 1.0)
 sprintf("The numbers are: %4.2f and %.0f", x[1], x[2])
@@ -843,7 +838,7 @@ sprintf("The numbers are: %4.2e and %.0e", x[1], x[2])
 @
 
 \begin{playground}
-Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunction{sprintf()} is more flexible and powerful. Those with experience in the use of the \Clang language will already know about \Rfunction{sprintf()} and its use of templates for formatting output. Even if your are familiar with  \Clang, look up the help pages for both functions, and practice, by trying to create the same formatted output by means of the two functions. Do also play with these functions with other types of data like \code{integer} and \code{character}.
+Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunction{sprintf()} is more flexible and powerful. Those with experience in the use of the \Clang language will already know about \Rfunction{sprintf()} and its use of templates for formatting output. Even if you are familiar with  \Clang, look up the help pages for both functions, and practice, by trying to create the same formatted output by means of the two functions. Do also play with these functions with other types of data like \code{integer} and \code{character}.
 \end{playground}
 \index{type conversion|(}
 
@@ -1032,7 +1027,7 @@ matrix(1:15, ncol = 2)
 
 \end{playground}
 
-Subscripting of matrices and arrays is consistent with that used for vectors, we only need to supply, or leave a blank space, for each dimension. A matrix has two dimensions, so to access any element or group of elements, we use two indices. The only complication is that there are two possible orders in which, in principle, indexes could be supplied. In \Rlang, indexes for matrices are written ``row-first'', in simpler words the first index value selects rows, and the second one columns.
+Subscripting of matrices and arrays is consistent with that used for vectors, we only need to supply an indexing vector, or leave a blank space, for each dimension. A matrix has two dimensions, so to access any element or group of elements, we use two indices. The only complication is that there are two possible orders in which, in principle, indexes could be supplied. In \Rlang, indexes for matrices are written ``row-first'', in simpler words the first index value selects rows, and the second one columns.
 
 <<matrix-10>>=
 A <- matrix(1:20, ncol = 4)
@@ -1150,7 +1145,7 @@ levels(control.factor)
 It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.
 
 \begin{explainbox}
-When the pattern of levels is regular is it possible to use function \code{gl()} to \emph{generate levels} in a factor. Nowadays, it is more usual to read data into R from files in which the treatment codes are already available as character strings or numeric values, however, when we need to create a factor within R, \Rfunction{gl()} can save some typing.
+When the pattern of levels is regular it is possible to use function \code{gl()} to \emph{generate levels} in a factor. Nowadays, it is more usual to read data into R from files in which the treatment codes are already available as character strings or numeric values, however, when we need to create a factor within R, \Rfunction{gl()} can save some typing.
 
 <<factors-bx-01>>=
 gl(2, 5, labels = c("A", "B"))
@@ -1333,7 +1328,7 @@ Function \Rfunction{unlist()}, has two additional parameters, with default argum
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames|(}
 \index{worksheet@`worksheet'|see{data frame}}
-Data frames are a special type of list, in which each element is a vector or a factor of the same length. They are created with function \code{data.frame} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from list. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the full length required is reached.
+Data frames are a special type of list, in which each element is a vector or a factor of the same length. They are created with function \code{data.frame()} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from list. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the full length required is reached.
 
 <<data-frames-0>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -1406,14 +1401,18 @@ In contrast, indexing of \code{tibble}s---defined in package \pkgname{tibble}---
 
 
 <<data-frames-3>>=
-a.df[ , 1]   # first column, a.df[[1]] preferred
-a.df[ , "x"] # first column, a.df[["x"]] or a.df$x preferred
-a.df[1, ]    # first row
+# first column, a.df[[1]] preferred
+a.df[ , 1]
+# first column, a.df[["x"]] or a.df$x preferred
+a.df[ , "x"]
+# first row
+a.df[1, ]
+# first two rows of the third and fourth columns
 a.df[1:2, c(FALSE, FALSE, TRUE, TRUE, FALSE)]
-             # first two rows of the third and fourth columns
-a.df[a.df$z , ] # the rows for which z is true
-a.df[a.df$x > 3, -3] # the rows for which x > 3
-                 # keeping all columns except the third one
+# the rows for which z is true
+a.df[a.df$z , ]
+# the rows for which x > 3 keeping all columns except the third one
+a.df[a.df$x > 3, -3]
 @
 
 As earlier explained for vectors, indexing can be present both on the right-hand side and left-hand-side of an assignment.
@@ -1436,6 +1435,8 @@ We mentioned above that indexing by name can be done either with double square b
 <<index-partial-1>>=
 x.list <- list(abcd = 123, xyzw = 789)
 x.list[["abcd"]]
+a.var <- "abcd"
+x.list[[a.var]]
 x.list$abcd
 x.list$ab
 x.list$a
@@ -1537,7 +1538,7 @@ Once we have a data set available, the first step is usually to explore it, and 
 
 \section{Looking at data}
 \index{data!exploration at the R console|(}
-There are several functions in \Rlang that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \Rfunction{str()}, outputs is abbreviated but in a way that preserves the structure of the object.
+There are several functions in \Rlang that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \Rfunction{str()}, output is abbreviated but in a way that preserves the structure of the object.
 <<exploring-dfs-1>>=
 class(cars)
 nrow(cars)
@@ -1596,16 +1597,30 @@ length(x)
 @
 
 \begin{playground}
-  In contrast to other examples in this chapter, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting. Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
+  In contrast to other examples in this chapter, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
 \end{playground}
 
 \section{Plotting}
 \index{plots!base R graphics}
 The base \langname{R}'s generic function \code{plot()} can be used to plot different data. It is a generic function that has suitable methods for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe either the Trellis and Lattice approach to plotting \autocite{Sarkar2008}. We describe in detail the use of the grammar of graphics and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
 
+It is possible to pass two variables (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of \code{plot()}.
+
+<<plot-1>>=
+plot(cars$speed, cars$dist)
+@
+
+It is also possible, and usually more convenient, to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing additionally as argument to  parameter \code{data} the name of the data frame containing these variables.
 <<plot-2>>=
 plot(dist ~ speed, data = cars)
 @
+
+Within \Rlang there exist different specializations, or ``flavours'', of method \code{plot()} that are active depending on the class of the variables passed as arguments: passing two numerical variables results in a scatter plot as seen above. In contrast passing one factor and one numeric variable to \code{plot()} results in a different kind of plot being produced. To exemplify this we need to use a different data set, here \code{chickwts}. Use \code{help("chickwts")} to learn more about this data set included in \Rpgrm .
+
+<<plot-3>>=
+plot(weight ~ feed, data = chickwts)
+@
+
 \index{data!exploration at the R console|)}
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
