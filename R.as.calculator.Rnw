@@ -520,7 +520,7 @@ In those statements in the chunk below where at least one operand is \code{doubl
 
 We see next that the exponentiation operator \verb|^| forces the promotion of its arguments to \code{double}, resulting in no overflow. In contrast, as seen above, the multiplication operator \verb|*| operates on integers resulting in overflow.
 
-<<machine-eps-04>>=
+<<machine-eps-05>>=
 2147483600L * 2147483600L
 2147483600L^2L
 @
@@ -529,7 +529,7 @@ We see next that the exponentiation operator \verb|^| forces the promotion of it
 \begin{warningbox}
 In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to handle gracefully rounding errors. As the example shows, rounding errors may accumulate, and in practice \verb|.Machine$double.eps| is not always a good value to safely use in tests for ``zero'', a larger value may be needed. Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be done replacing tests like \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simple words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
 
-<<machine-eps-05>>=
+<<machine-eps-06>>=
 a == 0.0 # may not always work
 abs(a) < 1e-15 # is safer
 sin(pi) == 0.0 # angle in radians, not degrees!
@@ -1486,6 +1486,62 @@ Although in this last example we used numeric indexes to make it more interestin
 \end{warningbox}
 \index{data frames|)}
 
+\begin{explainbox}
+It is sometimes inconvenient to have to pre-pend the name of a \emph{container} such as a list or data frame to the name of each member variable being accessed. There are functions in \Rlang that allow us to change where \Rlang looks for the names of objects we include in a code statement. Here I describe the use of \code{attach()} and its matching \code{detach()}, and \code{with()} and \code{within()} to access members of a data frame. They can be used as well with lists and classes derived from \code{list}.
+  
+<<data-frames-cleanup,echo=FALSE,cache=FALSE>>=
+rm(a, b)
+@
+
+As we can see below, when using a rather long name for a data frame, entering a simple calculation can easily result in a long and difficult to read statement. (Method \code{head()} is used here to limit the displayed value to the first two rows---\code{head()} is described in section \ref{sec:calc:looking:at:data} on page \pageref{sec:calc:looking:at:data}.)
+
+<<data-frames-EB-10>>=
+my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df$c <- 
+  (my_data_frame.df$a + my_data_frame.df$b) / my_data_frame.df$a
+head(my_data_frame.df, 2)
+@
+
+Using \code{attach()} we can alter how \Rlang looks up names and consequently simplify the statement. With \code{detach()} we can restore the original state. It is important to remember that here we can only simplify the right hand side of the assignment, while the ``destination'' of the result of the computation needs still to be fully specified on the left-hand side of the assignment operator. We show above only one statement between \code{attach()} and \code{detach()} but multiple statements are also allowed. Furthermore, if variables with the same name as the columns exist, these will take precedence, something that can result in bugs or crashes depending on what variables are present in the \Rlang environment at run time.
+
+<<data-frames-EB-11>>=
+my_data_frame.df <- data.frame(a = 1:10, b = 3)
+attach(my_data_frame.df)
+my_data_frame.df$c <- (a + b) / a
+detach(my_data_frame.df)
+head(my_data_frame.df, 2)
+@
+
+In the case of \code{with()} only one, possibly compound, code statement is affected and this statement is passed as an argument. As before, we need to fully specify the left hand side of the assignment. The value returned is the one returned by the statement passed as argument, in the case of compound statements, the value returned by the last contained simple code statement. Consequently, if the intent is to modify the container, assignment to an individual member variable (column in this case) is required.
+
+<<data-frames-EB-12>>=
+my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df$c <- with(my_data_frame.df, (a + b) / a)
+head(my_data_frame.df, 2)
+@
+
+In the case of \code{within()} assignments in the argument to its second parameter affect the object returned, which is a copy of the container (in this case a whole data frame), which still needs to be saved trough assignment. Here the intention is to modify it, so we assign it back to the same name, but it could have been assigned to a different name so as not to overwrite the original data frame.
+
+<<data-frames-EB-13>>=
+my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df <- within(my_data_frame.df,  c <- (a + b) / a)
+head(my_data_frame.df, 2)
+@
+In the example above \code{within()} makes little difference compared to using \code{with()} with respect to the amount of typing or clarity, but with multiple member variables being operated upon, as shown below, \code{within()} has an advantage resulting in more concise and easier to understand code.
+
+<<data-frames-EB-14>>=
+my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df <- within(my_data_frame.df,
+                           {c <- (a + b) / a
+                            d <- a * b
+                            e <- a / b + 1}
+                           )
+head(my_data_frame.df, 2)
+@
+
+Use of \code{attach()} and \code{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \code{attach()} but before \code{detach()} are executed, as cleanup is not enforced. In contrast, \code{with()} and \code{within()} being self-contained guarantee that clean up takes place. Consequently, the usual recommendation is to give preference to the use of \code{with()} and \code{within()} over \code{attach()} and \code{detach()}. Use of these functions not only saves typing but also makes code more readable.
+\end{explainbox}
+
 \section{Attributes of R objects}\label{sec:calc:attributes}
 
 \Rlang objects can have attributes. Attributes are normally used to store ancillary data. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. Of the attributes defined in \Rlang the one that is expected to be set by users is \code{"comment"}. We use it for this first example as comments can be very useful to store metadata together with data in a given object.
@@ -1536,7 +1592,7 @@ data(cars)
 Once we have a data set available, the first step is usually to explore it, and we do this with \code{cars} in the next section.
 \index{data!loading data sets|)}
 
-\section{Looking at data}
+\section{Looking at data}\label{sec:calc:looking:at:data}
 \index{data!exploration at the R console|(}
 There are several functions in \Rlang that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \Rfunction{str()}, output is abbreviated but in a way that preserves the structure of the object.
 <<exploring-dfs-1>>=
@@ -1602,28 +1658,66 @@ length(x)
 
 \section{Plotting}
 \index{plots!base R graphics}
-The base \langname{R}'s generic function \code{plot()} can be used to plot different data. It is a generic function that has suitable methods for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe either the Trellis and Lattice approach to plotting \autocite{Sarkar2008}. We describe in detail the use of the grammar of graphics and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
+Base \langname{R}'s generic method \code{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{grammar of graphics} and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
 
 It is possible to pass two variables (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of \code{plot()}.
+
+<<plot-0, include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_narrow_square)
+@
 
 <<plot-1>>=
 plot(cars$speed, cars$dist)
 @
 
-It is also possible, and usually more convenient, to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing additionally as argument to  parameter \code{data} the name of the data frame containing these variables.
+It is also possible, and usually more convenient, to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing additionally as argument to  parameter \code{data} the name of the data frame containing these variables. The formula \code{dist ~ speed}, is read as \code{dist} explained by \code{speed}---i.e.\ \code{dist} is mapped to the $y$-axis as the dependent variable and \code{speed} to the $x$-axis as the independent variable.
 <<plot-2>>=
 plot(dist ~ speed, data = cars)
 @
 
-Within \Rlang there exist different specializations, or ``flavours'', of method \code{plot()} that are active depending on the class of the variables passed as arguments: passing two numerical variables results in a scatter plot as seen above. In contrast passing one factor and one numeric variable to \code{plot()} results in a different kind of plot being produced. To exemplify this we need to use a different data set, here \code{chickwts}. Use \code{help("chickwts")} to learn more about this data set included in \Rpgrm .
+Within \Rlang there exist different specializations, or ``flavours'', of method \code{plot()} that become active depending on the class of the variables passed as arguments: passing two numerical variables results in a scatter plot as seen above. In contrast passing one factor and one numeric variable to \code{plot()} results in a box-and-whiskers plot being produced. To exemplify this we need to use a different data set, here \code{chickwts} as \code{cars} does not contain any factors. Use \code{help("chickwts")} to learn more about this data set, also included in \Rpgrm .
 
 <<plot-3>>=
 plot(weight ~ feed, data = chickwts)
 @
 
+Method \code{plot()} and variants defined in \Rlang, when used for plotting return their graphical output to a \emph{graphical output device}. In \Rlang, graphical devices are very frequently not real physical devices like a printer, but virtual devices implemented fully in software that translate the plotting commands into a specific graphical file format. Several different graphical devices are available in \Rlang and they differ in the kind of output they produce: raster files (e.g.\ TIFF, PNG and JPEG formats), vector graphics files (e.g.\ SVG, EPS and PDF) or output to a physical device like a window in the screen of a computer. Additional devices are available through contributed \Rlang packages.
+
+Devices follow the paradigm of ON and OFF switches. Some devices producing a file as output, save this output only when the device is closed. When opening a device the user supplies additional information. For the PDF device that produces output in a vector-graphics format, width and height of the output are specified in \emph{inches}. A default file name is used unless we pass a \code{character} string as argument to parameter \code{file}.
+
+<<gr-devices-01>>=
+pdf(file = "output/my-file.pdf", width = 6, height = 5, onefile = TRUE)
+plot(dist ~ speed, data = cars)
+plot(weight ~ feed, data = chickwts)
+dev.off()
+@
+
+Raster devices return bitmaps and \code{width} and \code{height} are specified in \emph{pixels}.
+
+<<gr-devices-02>>=
+png(file = "output/my-file.png", width = 600, height = 500)
+plot(weight ~ feed, data = chickwts)
+dev.off()
+@
+
+When \Rlang is used interactively, a device to output the graphical output to a display device is open automatically. The name of the device may depend on the operating system used (e.g.\ MS-Windows or Linux) or the IDE---e.g.\ \RStudio defines its own graphic device for output to the "Plots" pane of its user interface.
+
+\begin{warningbox}
+This approach of direct output to a device, and addition of plot components as show below directly on the output device itself is not the only approach available. As we will see in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting} an alternative approach is to built a \emph{plot object} as a list of member components that is later rendered as a whole on a graphical device by calling \code{print()} once.
+
+<<gr-devices-03>>=
+png(file = "output/my-file.png", width = 600, height = 500)
+plot(dist ~ speed, data = cars)
+text(x = 10, y = 110, labels = "some texts to be added")
+dev.off()
+@
+\end{warningbox}
+
 \index{data!exploration at the R console|)}
+
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
 R_diag()
 other_diag()
 @
+
