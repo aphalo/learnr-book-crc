@@ -652,7 +652,7 @@ c(1, 5) %in% (1:10)^2
 \index{operators!set|)}
 \index{sets|)}
 
-\section{Character values}
+\section{Character values}\label{sec:calc:character}
 \index{character strings}\index{classes and modes!character@\texttt{character}|(}
 Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used for delimiting \code{character} constants.
 <<char-1>>=
@@ -990,6 +990,41 @@ b[2]
 From this experiment, we can learn that if indexes are not whole numbers, they are truncated to the next smaller integer. This example, also shows how one can tease out of \Rlang its rules through experimentation.
 
 \end{explainbox}
+
+A frequent operation on vectors is sorting them into an increasing or decreasing ordering. The most direct approach it to use \Rfunction{sort()}.
+
+<<vectors-10>>=
+my.vector <- c(10, 4, 22, 1, 4)
+sort(my.vector)
+sort(my.vector, decreasing = TRUE)
+@
+
+An indirect way of sorting a vector, possibly based on a different vector, is to generate with \Rfunction{order()} a vector of numerical indexes that can be used to achieve the ordering.
+
+<<vectors-11>>=
+order(my.vector)
+my.vector[order(my.vector)]
+another.vector <- c("ab", "aa", "c", "zy", "e")
+another.vector[order(my.vector)]
+@
+
+\begin{explainbox}
+A problem linked to sorting that we may face is counting how many copies of each value are present in a vector. We need to use two functions \Rfunction{sort()} and \Rfunction{rle()}. The second of these functions computes \emph{run length} as used in \emph{run length encoding} of which rle is an abbreviation. A \emph{run} is a series of consecutive identical values. As the objective is to count the number of copies of each value present, we need first to sort the vector.
+
+<<vectors-EB21>>=
+my.letters <- letters[c(1,5,10,3,1,4,21,1,10)]
+my.letters
+sort(my.letters)
+rle(sort(my.letters))
+@
+
+The second and third statements are only to demonstrate what is the effect of each step. The last statement used nested function calls to compute the number of copies of each value in the vector.
+\end{explainbox}
+
+<<vector-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
 \index{vectors!indexing|)}
 
 \section{Matrices and multidimensional arrays}
@@ -1107,6 +1142,11 @@ B %*% B
 @
 
 Other operators and functions for matrix algebra like cross-product (\Rfunction{crossprod()}), extracting or replacing the diagonal (\Rfunction{diag()}) are available in base R. Packages, including \pkgname{matrixStats}, provide additional functions and operators for matrices.
+
+<<matrix-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
 \index{matrices|)}\index{arrays|)}
 
 \section{Factors}
@@ -1203,6 +1243,10 @@ levels(my.factor3rev)
 in the last example, using the unary negation operator, which is vectorized, allows us to easily reverse the ordering of the levels, while still using the default function, \code{mean()}, to summarize the data.
 
 \end{explainbox}
+
+<<factors-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
 \index{factors|)}
 
 \section{Lists}\label{sec:calc:lists}
@@ -1323,6 +1367,10 @@ c.vec["A2"]
 \begin{playground}
 Function \Rfunction{unlist()}, has two additional parameters, with default argument values, which we did not modify in the example above. These are \code{recursive} and \code{use.names}, both of them expecting a \code{logical} value as argument. Modify the statement \code{c.vec <- unlist(c.list)}, by passing \code{FALSE} as argument to these two parameters, in turn, and in each case study the value returned and how it differs with respect to the one obtained above.
 \end{playground}
+
+<<lists-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
 \index{lists|)}
 
 \section{Data frames}\label{sec:R:data:frames}
@@ -1484,30 +1532,25 @@ a.df
 \begin{warningbox}
 Although in this last example we used numeric indexes to make it more interesting, in practice, especially in scripts or other code that will be reused, do use column or member names instead of positional indexes whenever possible. This makes code much more reliable, as changes elsewhere in the script could alter the order of columns and \emph{invalidate} numerical indexes. In addition, using meaningful names makes programmers' intentions easier to understand.
 \end{warningbox}
-\index{data frames|)}
 
 \begin{explainbox}
 It is sometimes inconvenient to have to pre-pend the name of a \emph{container} such as a list or data frame to the name of each member variable being accessed. There are functions in \Rlang that allow us to change where \Rlang looks for the names of objects we include in a code statement. Here I describe the use of \code{attach()} and its matching \code{detach()}, and \code{with()} and \code{within()} to access members of a data frame. They can be used as well with lists and classes derived from \code{list}.
-  
-<<data-frames-cleanup,echo=FALSE,cache=FALSE>>=
-rm(a, b)
-@
 
 As we can see below, when using a rather long name for a data frame, entering a simple calculation can easily result in a long and difficult to read statement. (Method \code{head()} is used here to limit the displayed value to the first two rows---\code{head()} is described in section \ref{sec:calc:looking:at:data} on page \pageref{sec:calc:looking:at:data}.)
 
 <<data-frames-EB-10>>=
-my_data_frame.df <- data.frame(a = 1:10, b = 3)
-my_data_frame.df$c <- 
-  (my_data_frame.df$a + my_data_frame.df$b) / my_data_frame.df$a
+my_data_frame.df <- data.frame(A = 1:10, B = 3)
+my_data_frame.df$C <-
+  (my_data_frame.df$A + my_data_frame.df$B) / my_data_frame.df$A
 head(my_data_frame.df, 2)
 @
 
 Using \code{attach()} we can alter how \Rlang looks up names and consequently simplify the statement. With \code{detach()} we can restore the original state. It is important to remember that here we can only simplify the right hand side of the assignment, while the ``destination'' of the result of the computation needs still to be fully specified on the left-hand side of the assignment operator. We show above only one statement between \code{attach()} and \code{detach()} but multiple statements are also allowed. Furthermore, if variables with the same name as the columns exist, these will take precedence, something that can result in bugs or crashes depending on what variables are present in the \Rlang environment at run time.
 
 <<data-frames-EB-11>>=
-my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df$C <- NULL
 attach(my_data_frame.df)
-my_data_frame.df$c <- (a + b) / a
+my_data_frame.df$C <- (A + B) / A
 detach(my_data_frame.df)
 head(my_data_frame.df, 2)
 @
@@ -1515,26 +1558,26 @@ head(my_data_frame.df, 2)
 In the case of \code{with()} only one, possibly compound, code statement is affected and this statement is passed as an argument. As before, we need to fully specify the left hand side of the assignment. The value returned is the one returned by the statement passed as argument, in the case of compound statements, the value returned by the last contained simple code statement. Consequently, if the intent is to modify the container, assignment to an individual member variable (column in this case) is required.
 
 <<data-frames-EB-12>>=
-my_data_frame.df <- data.frame(a = 1:10, b = 3)
-my_data_frame.df$c <- with(my_data_frame.df, (a + b) / a)
+my_data_frame.df$C <- NULL
+my_data_frame.df$C <- with(my_data_frame.df, (A + B) / A)
 head(my_data_frame.df, 2)
 @
 
 In the case of \code{within()} assignments in the argument to its second parameter affect the object returned, which is a copy of the container (in this case a whole data frame), which still needs to be saved trough assignment. Here the intention is to modify it, so we assign it back to the same name, but it could have been assigned to a different name so as not to overwrite the original data frame.
 
 <<data-frames-EB-13>>=
-my_data_frame.df <- data.frame(a = 1:10, b = 3)
-my_data_frame.df <- within(my_data_frame.df,  c <- (a + b) / a)
+my_data_frame.df$C <- NULL
+my_data_frame.df <- within(my_data_frame.df,  C <- (A + B) / A)
 head(my_data_frame.df, 2)
 @
 In the example above \code{within()} makes little difference compared to using \code{with()} with respect to the amount of typing or clarity, but with multiple member variables being operated upon, as shown below, \code{within()} has an advantage resulting in more concise and easier to understand code.
 
 <<data-frames-EB-14>>=
-my_data_frame.df <- data.frame(a = 1:10, b = 3)
+my_data_frame.df$C <- NULL
 my_data_frame.df <- within(my_data_frame.df,
-                           {c <- (a + b) / a
-                            d <- a * b
-                            e <- a / b + 1}
+                           {C <- (A + B) / A
+                            D <- A * B
+                            E <- A / B + 1}
                            )
 head(my_data_frame.df, 2)
 @
@@ -1542,7 +1585,18 @@ head(my_data_frame.df, 2)
 Use of \code{attach()} and \code{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \code{attach()} but before \code{detach()} are executed, as cleanup is not enforced. In contrast, \code{with()} and \code{within()} being self-contained guarantee that clean up takes place. Consequently, the usual recommendation is to give preference to the use of \code{with()} and \code{within()} over \code{attach()} and \code{detach()}. Use of these functions not only saves typing but also makes code more readable.
 \end{explainbox}
 
+\begin{advplayground}
+The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with there different haphazard sequences of values. Call these columns A, B and C. 1) Sort the rows of the data frame so that the values in A are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of A and B without adding a new column to the data frame or storing the sums in a vector. In other words do the sorting based on sums calculated ``on-the-fly''. Hint: The use of \code{order()} for sorting vectors is described on page \pageref{} and indexing of data frames rows has been described in the present section.
+\end{advplayground}
+
+\index{data frames|)}
+
+<<data-frames-cleanup,echo=FALSE,cache=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
 \section{Attributes of R objects}\label{sec:calc:attributes}
+\index{attributes|(}
 
 \Rlang objects can have attributes. Attributes are normally used to store ancillary data. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. Of the attributes defined in \Rlang the one that is expected to be set by users is \code{"comment"}. We use it for this first example as comments can be very useful to store metadata together with data in a given object.
 
@@ -1579,7 +1633,15 @@ attributes(a.factor)
 @
 \end{warningbox}
 
+<<attributes-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
+\index{attributes|)}
+
 \section{Loading data}
+
+\subsection{Data sets in R and packages}
 \index{data!loading data sets|(}
 To be able to present more meaningful examples, we need some data. Here we use \code{cars}, one of the many data sets included in base \Rpgrm. How to read or import ``foreign'' data is discussed in R's documentation in \emph{R Data Import/Export}, and in this book, in Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}. In general \Rfunction{data()} is used load R objects saved in a file format used by R. Text files con be read with functions \Rfunction{scan()}, \Rfunction{read.table()}, \Rfunction{read.csv()} and their variants. It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in R urls are accepted as arguments to the \code{file} or \code{path} argument of many functions (see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details and examples on how to import data from different ``foreign'' formats and sources).
 
@@ -1591,6 +1653,62 @@ data(cars)
 
 Once we have a data set available, the first step is usually to explore it, and we do this with \code{cars} in the next section.
 \index{data!loading data sets|)}
+
+\subsection{.Rda files}\label{sec:data:rda}
+
+Until now, at the end of a session, you have in many cases the current workspace containing the results of your work into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format. One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace. These files are portable across most \Rlang versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters---allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
+
+We create data frame object and then save it to a file.
+
+<<rda-01>>=
+my.df <- data.frame(x = 1:10, y = 10:1)
+my.df
+save(my.df, file = "my-df.rda")
+@
+
+We delete the data frame object and confirm that it is no longer present in the workspace.
+<<rda-02>>=
+rm(my.df)
+ls(pattern = "my.df")
+@
+
+We read the file we earlier saved to restore the object.
+<<rda-03>>=
+load(file = "my-df.rda")
+ls(pattern = "my.df")
+my.df
+@
+
+The default format used is binary and compressed, which results in smaller files.
+
+\begin{playground}
+In the example above, only one object was saved, but one can simply give the names of additional objects as arguments. Just try saving, more than one data frame to the same file. Then the data frames plus a few vectors. Then define a simple function and save it. After saving each file, clear the workspace and then load the objects you save from the file.
+\end{playground}
+
+Sometimes it is easier to supply the names of the objects to be saved as a vector of character strings through an argument to parameter \code{list}. One case is when wanting to save a group of objects based on their names. We can use \Rfunction{ls()} to list the names of objects matching a simple \code{pattern} or a complex regular expression. The example below does this in two steps saving the character vector first, and then using this saved object as argument to \code{save}'s \code{list} parameter.
+
+<<rda-04>>=
+objcts <- ls(pattern = "*.df")
+save(list = objcts, file = "my-df1.rda")
+@
+
+The intermediate step can be skipped.
+<<rda-05>>=
+save(list = ls(pattern = "*.df"), file = "my-df1.rda")
+@
+
+\begin{playground}
+Practice using different patterns with \Rfunction{ls()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
+\end{playground}
+
+As a coda, we show how to cleanup by deleting the two files we created. Function \code{unlink()} can also be used to delete folders.
+<<rda-06>>=
+unlink(c("my-df.rda", "my-df1.rda"))
+@
+
+\begin{infobox}
+The reading of \emph{foreign} data into \Rlang is discussed in chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}.
+\end{infobox}
 
 \section{Looking at data}\label{sec:calc:looking:at:data}
 \index{data!exploration at the R console|(}
@@ -1634,31 +1752,9 @@ sapply(cars, range)
 Obtain the summary of \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column. Hint: using \code{sum()} on a \code{logical} vector returns the count of \code{TRUE} values as \code{TRUE} is converted to numeric 1.
 \end{playground}
 
-\section{Statistical summaries}
-\index{functions!built-in|see@{functions, base-R}}
-\index{functions!base R}
-Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of frequently used data summaries. \qRfunction{mean()}\qRfunction{var()}\qRfunction{median()},\qRfunction{mad()}\qRfunction{sd()}\qRfunction{range()}\qRfunction{max()}\qRfunction{min()}\qRfunction{length()}
-
-<<stat-fun-1, eval=eval_playground>>=
-x <- 1:20
-mean(x)
-var(x)
-median(x)
-mad(x)
-sd(x)
-range(x)
-max(x)
-min(x)
-length(x)
-@
-
-\begin{playground}
-  In contrast to other examples in this chapter, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
-\end{playground}
-
 \section{Plotting}
 \index{plots!base R graphics}
-Base \langname{R}'s generic method \code{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citetitle{Murrell2011} \autocite{Murrell2011}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{grammar of graphics} and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
+Base \langname{R}'s generic method \code{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citebooktitle{Murrell2011} \autocite{Murrell2011}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{grammar of graphics} and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
 
 It is possible to pass two variables (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of \code{plot()}.
 
@@ -1712,6 +1808,10 @@ text(x = 10, y = 110, labels = "some texts to be added")
 dev.off()
 @
 \end{warningbox}
+
+<<calculator-chapter-cleanup, include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
 
 \index{data!exploration at the R console|)}
 

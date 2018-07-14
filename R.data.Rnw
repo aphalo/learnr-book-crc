@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'data-chunk')
 @
 
-\chapter{Storing and manipulating data with R}\label{chap:R:data}
+\chapter{Data: from import to report}\label{chap:R:data}
 
 \begin{VF}
 Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.
@@ -18,9 +18,11 @@ Essentially everything in S[R], for instance, a call to a function, is an S[R] o
 
 \section{Aims of this chapter}
 
-Base \Rlang and the recommended packages (installed by default) include many functions for importing and/or manipulating data. This is a complete set, that supports all the usually needed operations. However, many of these functions have not been designed to perform optimally on very large data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly with respect of performance. However, in some cases performance is constrained by the design of the \Rlang language itself. Contributed packages have also aimed at improving performance and/or providing and enhanced set of operations and syntax.
+Base \Rlang and the recommended packages (installed by default) include many functions for importing and/or manipulating data. This is a complete set, that supports all the usually needed operations. However, many of these functions have not been designed to perform optimally on very large data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly in performance. However, in some cases performance is constrained by the design of the \Rlang language itself. Contributed packages have aimed at improving performance and/or providing and enhanced set of operations and syntax.
 
-In this chapter you will learn how to import, manipulate and export data. You will learn about base \Rlang functions and those provided by contributed packages. Some of these packages implement operators that allow chaining operations into ``pipes'' reminiscent of those typical of Unix shells. I focus more on the available tools and how to use them than on their role in the analysis of data. The books \citetitle{Wickham2017} \autocite{Wickham2017} and \citetitle{Peng2016} \autocite{Peng2016} cover partly the same subjects from the perspective of data analysis.
+One set of packages under the name of \pkgname{tidyverse} provides not only new functions but also new operators that allow a new way of assembling statements or ``sentences'' by chaining them into \emph{pipes} reminiscent of those available in Unix shells.
+
+In this chapter you will learn how to import, manipulate and export data using the grammar of data as implemented in the `tidyverse' packages and how to use in this new approach base \Rlang functions and methods. As in previous chapters I will focus more on the available tools and how to use them than on their role in the analysis of data. The books \citebooktitle{Wickham2017} \autocite{Wickham2017} and \citebooktitle{Peng2016} \autocite{Peng2016} cover partly the same subjects from the perspective of data analysis and in more depth.
 
 \section{Packages used in this chapter}
 
@@ -74,90 +76,71 @@ if (!dir.exists(save.path)) {
 
 \section{Introduction}
 
-By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Several recently developed packages provide somehow different, and in my view easier, ways of working with data in \Rlang without compromising performance to a level that would matter outside the realm of `big data'. Some other recent packages emphasize computation speed, at some cost with respect to simplicity of use, and in particular intuitiveness. Of course, as with any user interface, much depends on one's own preferences and attitudes to data analysis. However, a package designed for maximum efficiency like \pkgname{data.table} requires of the user to have a good understanding of computers to be able to understand the compromises and the unusual behavior compared to the rest of \Rlang. As the present book is not aimed at users with a strong background in computer science, package \pkgname{data.table} will not described here. I base this chapter on what I mostly use myself for everyday data analysis and scripting, and exclude the complexities of high performance \Rlang programming and package development.
+By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Several recently developed packages provide somehow different, and in my view \emph{frequently} easier ways of working with data in \Rlang. Their design has aimed at making writing data analysis scripts easier, while the original design of \Rlang emphasized more interactive use by typing at the \Rlang console.
+
+Some other recent packages emphasize computation speed, at some cost with respect to simplicity of use, and in particular intuitiveness of their use. Of course, as with any user interface, much depends on one's own preferences and attitudes to data analysis. However, a package designed for maximum efficiency like \pkgname{data.table} requires of the user to have a good understanding of computers to be able to handle the unusual behavior compared to the rest of \Rlang. As the present book is not aimed at users with a strong background in computer science, package \pkgname{data.table} will not described here. I base this chapter on what I mostly use myself for everyday data analysis and scripting, and exclude the complexities of high performance \Rlang programming and package development.
 
 The chapter is divided into three sections, the first one deals with reading data saved by other programs or measuring instrumentation, stored locally or remotely in files or  databases. The second section will deal with transformations of the data that do not combine different observations, although they may combine different variables from a single observation event, select certain variables or observations from a larger set, or join, or combine, data from different sources. The third section will deal with operations that produce summaries or involve other operations on groups of observations.
 
+\section{The new words and grammar}
+
+The first obvious difference between scripts using the new and old grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is through temporary files.
+
+<<pipes-01,engine="bash">>=
+stdin | grep("abc") | more
+@
+
+So, how can \emph{pipes} exist within a single script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects instead of through OS files. As an abstraction there is no difference.
+
+What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a correctly working script is available still pipes provide a more concise way of stating operations and with familiarity with the paradigm easier to read scripts (for humans).
+
+The operators needed to build pipes of \Rlang functions are implemented in package \Rpckage{magrittr}. This implementation is used in the \Rpackage{tidyverse} packages and some operators re-exported.
+
+We start with a toy example first written using separate steps and normal \Rlang syntax
+<<pipes-02>>=
+data.in <- 1:10
+data.tmp <- sqrt(data.in)
+data.out <- sum(data.tmp)
+rm(data.tmp)
+@
+
+next using nested function calls still using normal \Rlang syntax
+
+<<pipes-03>>=
+data.out <- sum(sqrt(data.tmp))
+@
+
+written as a pipe using the chaining operator from package \Rpckage{magrittr}.
+<<pipes-03>>=
+data.in %>% sqrt() %>% sum() -> data.out
+@
+
+Although pipes are what make grammar of data scripts visually different, from the point of view of data analysis what makes pipes useful are the new classes, functions and methods defined in the different \Rpackage{tidyverse} packages. We will describe them following the usual flow of data through a data analysis pipe, starting with data input and output, and continuing in the next chapter with plotting.
+
 \section{Data input and output}\label{sec:data:io}
 
-Several recently released \Rlang packages have made it easier and faster to import data. This together with wider and faster internet access to data sources, has made it possible to efficiently work with relatively large data sets. The way \Rlang is implemented, keeping all data in memory (RAM), imposes limits to the size of data sets that can analysed with base \Rlang functions and the usual syntax. One option for processing big data sets is to use a 64 bit version of R on a computer running a 64 bit operating system on a computer with enough RAM to hold all the data. For data sets large enough not to fit in computer RAM, one can use different packages that allow selective reading of data from files, or by storing data in databases outside of \Rlang and using queries to load subsets of the data. We will start with the simplest case, files with the native formats used by \Rlang itself.
-
-\subsection{.Rda files}\label{sec:data:rda}
-
-Until now, at the end of a session, you have in many cases the current workspace containing the results of your work into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format. One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace. These files are portable across most \Rlang versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters---allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
-
-We create data frame object and then save it to a file.
-
-<<rda-01>>=
-my.df <- data.frame(x = 1:10, y = 10:1)
-my.df
-save(my.df, file = "my-df.rda")
-@
-
-We delete the data frame object and confirm that it is no longer present in the workspace.
-<<rda-02>>=
-rm(my.df)
-ls(pattern = "my.df")
-@
-
-We read the file we earlier saved to restore the object.
-<<rda-03>>=
-load(file = "my-df.rda")
-ls(pattern = "my.df")
-my.df
-@
-
-The default format used is binary and compressed, which results in smaller files.
-
-\begin{playground}
-In the example above, only one object was saved, but one can simply give the names of additional objects as arguments. Just try saving, more than one data frame to the same file. Then the data frames plus a few vectors. Then define a simple function and save it. After saving each file, clear the workspace and then load the objects you save from the file.
-\end{playground}
-
-Sometimes it is easier to supply the names of the objects to be saved as a vector of character strings through an argument to parameter \code{list}. One case is when wanting to save a group of objects based on their names. We can use \Rfunction{ls()} to list the names of objects matching a simple \code{pattern} or a complex regular expression. The example below does this in two steps saving the character vector first, and then using this saved object as argument to \code{save}'s \code{list} parameter.
-
-<<rda-04>>=
-objcts <- ls(pattern = "*.df")
-save(list = objcts, file = "my-df1.rda")
-@
-
-The intermediate step can be skipped.
-<<rda-05>>=
-save(list = ls(pattern = "*.df"), file = "my-df1.rda")
-@
-
-\begin{playground}
-Practice using different patterns with \Rfunction{ls()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
-\end{playground}
-
-As a coda, we show how to cleanup by deleting the two files we created. Function \code{unlink()} can also be used to delete folders.
-<<rda-06>>=
-unlink(c("my-df.rda", "my-df1.rda"))
-@
+Several recently released \Rlang packages have made it easier and faster to import data. This together with wider and faster internet access to data sources, has made it possible to efficiently work with relatively large data sets. The way \Rlang is implemented, keeping all data in memory (RAM), imposes limits to the size of data sets that can analysed with base \Rlang functions, classes of objects and syntax. One option for processing big data sets is to use a 64 bit version of R under a 64 bit operating system in a computer with enough RAM to hold all the data. For data sets large enough not to fit in computer RAM, one can use different packages that allow selective reading of data from files, or by storing data in databases outside of \Rlang and using queries to load subsets of the data. We will start with the simplest case, files with the native formats used by \Rlang itself.
 
 \subsection{File names and portability}\label{sec:files:filenames}
 
-When saving data to files from scripts or code that one expects to be run on a different operating system (OS), we need to be careful to chose files names valid under all OSs where the file could be used. This is specially important when developing R packages. Best avoid space characters as part of file names and the use of more than one dot. For widest portability, underscores should be avoided, while dashes are usually not a problem.
+When saving data to files from scripts or code that one expects to be run on a different operating system (OS), we need to be careful to chose files names valid under all OSs where the file could be used. This is specially important when developing R packages. Space characters should not be part of file names and at most one dot. For widest possible portability, underscores should be avoided, while dashes are usually not a problem.
 
-R provides some functions which help with portability, by hiding the idiosyncracies of the different OSs from R code. Different OSs use different characters in paths, for example, and consequently the algorithm needed to extract a file name from a file path, is OS specific. However, R's function \Rfunction{basename()} allows the inclusion of this operation in user's code portably.
+\Rlang provides functions which help with portability, by hiding the idiosyncracies of the different OSs from \Rlang code. In scripts these functions should be preferred over direct call to OS commands whenever possible. Different OSs allow different characters in paths and OS functions differ in their names and/or output format, consequently e.g. the algorithm needed to extract a file name from a file path, is OS specific. However, R's function \Rfunction{basename()} allows the inclusion of this operation in user's code portably.
 
-Under \pgrmname{MS-Windows} paths include backslash characters which are not ``normal'' characters in R, and many other languages, but rather ``escape'' characters. Within R forward slash can be used in their place,
+Under \pgrmname{MS-Windows} folder nesting in file paths is marked with backslash characters (\verb|\|) which are not ``normal'' characters in \Rlang, but rather ``escape'' characters (see section \ref{sec:calc:character} on page \pageref{sec:calc:character}). Within \Rlang forward slash (\verb|/|) can be used in their place in file paths, and should be preferred to escaping backslashes as \verb|\\|.
 
 <<filenames-01>>=
 basename("extdata/my-file.txt")
-@
-
-or backslash characters can be ``escaped'' by repeating them.
-<<filenames-02>>=
 basename("extdata\\my-file.txt")
 @
 
-The complementary function is \Rfunction{dirname()} which extracts the bare path to the containing disk folder, from a full file path.
+The complementary function is \Rfunction{dirname()} and extracts the bare path to the containing folder, from a full file path.
 <<filenames-03>>=
 dirname("extdata/my-file.txt")
 @
 
 \begin{warningbox}
-We here use in examples paths and filenames valid in MS-Windows. We have tried to avoid names incompatible with other operating systems, but special characters separating directories (= folders) in paths are different among operating systems. For example, if you use UNIX (e.g.\ Apple´s OS X) or a Linux distribution (such as Debian or Ubuntu) only forward slashes will be recognized as separators.
+In this book paths and filenames valid in MS-Windows but expected compatible with most mainstream OSs are used.
 \end{warningbox}
 
 Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the path to the current working directory and to set a directory as current, respectively.
@@ -166,7 +149,7 @@ Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the pat
 getwd()
 @
 
-Function \Rfunction{setwd()} returns the path of the previous working directory, allowing us to portably set the working directory to the previous one. Both relative paths, as in the example, or absolute paths are accepted as arguments.
+Function \Rfunction{setwd()} returns the path to the current working directory, allowing us to portably set the working directory to the previous one. Both relative paths (relative to the current working directory), as in the example, or absolute paths (given in full) are accepted as argument. In mainstream OSs \code{"."} indicates the current directory and \code{".."} the directory above the current one.
 <<filenames-06,eval=FALSE>>=
 # not run
 oldwd <- setwd("..")
@@ -181,15 +164,15 @@ setwd(oldwd)
 getwd()
 @
 
-We can also obtain a list of files and/or directories (= disk folders).
+We can also obtain lists of files and/or directories (= disk folders) portably across OSs.
 <<filenames-09>>=
-head(list.files("."))
-head(list.dirs("."))
-head(dir("."))
+head(list.files())
+head(list.dirs())
+head(dir())
 @
 
 \begin{playground}
-Above we passed \code{"."} as argument for parameter \code{path}. This is the same as the default. Convince yourself that this is indeed the default by calling the functions without an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
+The default argument for parameter \code{path} is the current working directory, under Windows, Unix and Linux indicated by  \code{"."}. Convince yourself that this is indeed the default by calling the functions with an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
 \end{playground}
 
 \begin{playground}
@@ -197,10 +180,10 @@ Combine the use of \Rfunction{basename()} with \Rfunction{list.files()} to obtai
 \end{playground}
 
 \begin{playground}
-Compare the behaviour of functions \code{dir} and \Rfunction{list.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
+Compare the behaviour of functions \Rfunction{dir} and \Rfunction{list.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
 \end{playground}
 
-Base R provides several functions for working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for the ``family'' of functions.
+Base \Rlang provides several functions for portably working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for this ``family'' of functions.
 
 <<filenames-08>>=
 if (!file.exists("xxx.txt")) {
@@ -232,7 +215,7 @@ Some of the things we need to be on the watch for are:
 
 If you encounter problems after import, such as failure of indexing of data frame columns by name, use function \code{names()} to get the names printed to the console as a character vector. This is useful because character vectors are always printed with each string delimited by quotation marks.
 
-To demonstrate some of these problems in the first statement belwo I create a data frame with name sanitation disabled. And in the second statement with sanitation enabled.
+To demonstrate some of these problems in the first statement below I create a data frame with name sanitation disabled. And in the second statement with sanitation enabled.
 <<file-io-txt-00a>>=
 data.frame(a = 1, "a " = 2, " a" = 3, check.names = FALSE)
 data.frame(a = 1, "a " = 2, " a" = 3)
@@ -244,14 +227,14 @@ An even more subtle case is when characters can be easily confused by the user r
 data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
 @
 
-Even in some cases the import may result in very odd looking values stored in R variables, when for example a CSV file saved with MS-Excel is silently encoded using 16 bits unicode format, but read as an 8-bit encoded file.
+In some cases the import may result in very odd looking values stored in \Rlang variables, for example when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit encoded file.
 
-The hardest part of all these problems is to diagnose the origin of the problem, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages.
+The hardest part of all these problems is to diagnose the origin of the problem, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required.
 \end{warningbox}
 
 \subsubsection[Base R and `utils']{Base R and \pkgname{utils}}
 
-Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of FORTRAN and COBOL, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
+Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL}, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base R functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
 
 In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV). Function \Rfunction{write.csv()} and \Rfunction{read.csv()} can be used to write and read these files using the conventions used in this example.
 \begin{verbatim}
@@ -265,30 +248,30 @@ When reading a CSV file, white space is ignored and fields recognized based on s
 23.4,45.6,78,ZXY
 \end{verbatim}
 
-With a fixed format for fields no delimiters are needed, but a description of the format is required. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in fixed format with fields can be read with base R function \Rfunction{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed widths.
+With a fixed format for fields no delimiters are needed, but a description of the format is required. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in \emph{fixed width format} can be read with base \Rlang function \Rfunction{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed known widths.
 \begin{verbatim}
  10245346ABC
 234456 78ZXY
 \end{verbatim}
 
-Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in FORTRAN, but not completely compatible with them. One particularity of FORTRAN \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or stacks of punch cards) smaller.
+Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in \langname{FORTRAN}, but not completely compatible with them. One particularity of \langname{FORTRAN} \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or stacks of punch cards!) smaller.
 
-R functions \Rfunction{write.table()} and \Rfunction{read.table()} default to separating fields with whitespace. Functions \Rfunction{write.csv()} and \Rfunction{read.csv()} have defaults for their arguments suitable for writing and reading CSV files in English-language locales. Functions \Rfunction{write.csv2()} and \Rfunction{read.csv2()} are similar have defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach as the user can pass the delimiters to used as arguments in the function call.
+\Rlang functions \Rfunction{write.table()} and \Rfunction{read.table()} default to separating fields with whitespace. Functions \Rfunction{write.csv()} and \Rfunction{read.csv()} have defaults for their arguments suitable for writing and reading CSV files in English-language locales. Functions \Rfunction{write.csv2()} and \Rfunction{read.csv2()} are similar but have defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach as the user can pass the delimiters to used as arguments to the function call.
 
-We give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \Rfunction{write()} functions take as argument data frames or objects that can be coerced into data frames. In contrast to \Rfunction{save()}, these functions can only write to files data that is in a tabular or matrix-like arrangement.
+We give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \Rfunction{write()} method takes as argument a data frame or an object that can be coerced into a data frame (with \code{as.data.frame()}. In contrast to \Rfunction{save()}, these functions can only write a single data frame per file.
 
 <<file-io-txt-01>>=
-my1.df <- data.frame(x = 1:5, y = 5:1 / 10)
+my.df <- data.frame(x = 1:5, y = 5:1 / 10, z = letters[1:5])
 @
 
-We write a CSV file suitable for an English language locale, and then display its contents. In most cases setting \code{row.names = FALSE} when writing a CSV file will help when it is read. Of course, if row names do contain important information, such as gene tags, you cannot skip writing the row names to the file unless you first copy these data into a column in the data frame. (Row names are stored separately as an attribute in \code{data.frame} objects.
+We write a CSV file suitable for an English language locale, and then display its contents. In most cases setting \code{row.names = FALSE} when writing a CSV file will help when it is read. Of course, if row names do contain important information, such as gene tags, you cannot skip writing the row names to the file unless you first copy these data into a column in the data frame. (Row names are stored separately as an attribute in \code{data.frame} objects, see section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes} for details.)
 <<file-io-txt-02>>=
 write.csv(my.df, file = "my-file1.csv", row.names = FALSE)
 file.show("my-file1.csv", pager = "console")
 @
 
 <<file-io-txt-02a, comment='', echo=FALSE>>=
-cat(readLines('my-file1.csv'), sep = '\n')
+cat(readLines("my-file1.csv"), sep = "\n")
 @
 
 If we had written the file using default settings, reading the file so as to recover the original objects, would have required overriding of the default argument for parameter \code{row.names}.
@@ -299,10 +282,11 @@ all.equal(my.df, my_read1.df, check.attributes = FALSE)
 @
 
 \begin{playground}
-Read the file with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look as a waste of time, the point of the exercise is for you to get familiar with R's behaviour in case of such a mistake. This will help you recognize similar errors when they happen accidentally.
+Read the file with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look as a waste of time, the point of the exercise is for you to get familiar with \Rlang behaviour in case of such a mistake. This will help you recognize similar errors when they happen accidentally.
 \end{playground}
 
 We write a CSV file suitable for a Spanish, Finnish or similar locale, and then display its contents. It can be seen, that the same data frame is saved using different delimiters.
+\label{chunck:my:file1}
 <<file-io-txt-03>>=
 write.csv2(my.df, file = "my-file2.csv", row.names = FALSE)
 file.show("my-file2.csv", pager = "console")
@@ -312,15 +296,8 @@ file.show("my-file2.csv", pager = "console")
 cat(readLines('my-file2.csv'), sep = '\n')
 @
 
-As with \Rfunction{read.csv()} had we written row names to the file, we would have needed to override the default behaviour.
-<<file-io-txt-03b>>=
-my_read2.df <- read.csv2(file = "my-file2.csv")
-my_read2.df
-all.equal(my.df, my_read2.df, check.attributes = FALSE)
-@
-
 \begin{playground}
-Read the file with function \Rfunction{read.csv()} instead of \Rfunction{read.csv2()}. This may look as an even more futile exercise than the previous one, but it isn't as the behaviour of R is different. Consider \emph{how} values are erroneously decoded in both exercises. If the \emph{structure} of the data frames read is not clear to you, do use function \Rfunction{str()} to look at them.
+Read the file with function \Rfunction{read.csv()} instead of \Rfunction{read.csv2()}. This may look as an even more futile exercise than the previous one, but it isn't as the behaviour of R is different. Consider \emph{how} values are erroneously decoded in both exercises. If the \emph{structure} of the data frames read is not clear to you, remember that you can use function \Rfunction{str()} to look at the structure of \Rlang objects.
 \end{playground}
 
 We write a file with the fields separated by white space with function \Rfunction{write.table()}.
@@ -344,7 +321,7 @@ all.equal(my.df, my_read3.df, check.attributes = FALSE)
 If you are still unclear about why the files were decoded in the way they were, now try to read them with \code{read.table()}. Do now the three examples make sense to you?
 \end{playground}
 
-Function \Rfunction{cat()} takes R objects and writes them after conversion to character strings to a file, inserting one or more characters as separators, by default a space. This separator can be set by an argument through \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\\n"}.
+Function \Rfunction{cat()} takes \Rlang objects and writes them after conversion to character strings to a file, inserting one or more characters as separators, by default a space. This separator can be set by an argument through parameter \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\\n"}.
 
 <<file-io-txt-05>>=
 my.lines <- c("abcd", "hello world", "123.45")
@@ -363,8 +340,18 @@ all.equal(my.lines, my_read.lines, check.attributes = FALSE)
 @
 
 \begin{warningbox}
-There are couple of things to take into account when reading data from text files using base R functions \Rfunction{read.table()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots).
+There are couple of things to remember when reading data from text files using base \Rlang functions \Rfunction{read.table()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots)
+
+Conversion into factors can be disabled on a column by column basis through parameter \code{as.is} or for the whole file read through \code{stringsAsFactors} as shown here.
+<<file-io-txt-Warn-01>>=
+read.table("my-file3.txt", stringsAsFactors = FALSE)
+@
+.
 \end{warningbox}
+
+\begin{playground}
+In reality  \Rfunction{read.csv()}, \code{read.csv2()} and \Rfunction{read.table()} are the same function with different default arguments to several of their parameters. Study the help page, and make by passing suitable arguments \Rfunction{read.csv()} behave as \Rfunction{read.table()}. Next open file \code{my-file1.csv} created on page \pageref{chunck:my:file1} in a text editor, such as the one in \RStudio and replace the field delimiters \code{,} by \code{;} in the whole file, save it  \code{my-file-mixed.csv} and then read it back using both \Rfunction{read.csv()} and \Rfunction{read.csv2()} passing in each case the argument needed for correct decoding of the file.
+\end{playground}
 
 \subsubsection[readr]{\pkgname{readr}}\label{sec:files:readr}
 
@@ -857,7 +844,7 @@ The minimum, mean and maximum values for each logging interval, need to be split
 One of the advantages of using databases is that subsets of cases and variables can be retrieved from databases, even remotely, making it possible to work both locally and remotely with huge data sets. One should remember that R natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work.
 
 \begin{infobox}
-The contents of this section is still missing, but will in any case be basic. I recommend the book \citetitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite, especially in the case of connecting to databases.
+The contents of this section is still missing, but will in any case be basic. I recommend the book \citebooktitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite, especially in the case of connecting to databases.
 \end{infobox}
 
 \section[Apply functions]{\emph{Apply} functions}\label{sec:data:apply}
@@ -1053,7 +1040,7 @@ Packages in \code{tidyverse}, define more user-friendly \emph{apply} functions, 
 
 To make the problem of manipulating data, tractable and consistent, the first step is to settle on a certain way of storing data. In R's data frames, variables are most frequently in columns and cases are in rows. This is a good start and also frequently used in other software. The first major inconsistency across programs, and to some extent among R packages, is how to store data for sequential or repeated measurements. Do the rows represent measuring events, or measured objects? In R, data from individual measuring events are in most cases stored as rows, and if those that correspond to the same object or individual encoded with an index variable. Furthermore, say in a time sequence, the times or dates are stored in an additional variable. R's approach is much more flexible in that it does not assume that observations on different individuals are synchronized. \citeauthor{Wickham2014a} \cite{Wickham2014a} has coined the name ``tidy data'' organized in this manner.
 
-Hadley Wickham, together with collaborators, has developed a set of R tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citetitle{Wickham2017} \autocite{Wickham2017}. The book \citetitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citetitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
+Hadley Wickham, together with collaborators, has developed a set of R tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citebooktitle{Wickham2017} \autocite{Wickham2017}. The book \citebooktitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citebooktitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
 
 \subsection{Better data frames}
 

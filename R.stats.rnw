@@ -15,13 +15,89 @@ The purpose of computing is insight, not numbers.
 
 \section{Aims of this chapter}
 
-In this chapter you will learn the approach used in \Rlang for fitting models and doing tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
+In this chapter you will learn the approach used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
 
-This chapter is designed to give the reader only a quick introduction to Statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{??} \autocite{??}. The book \citetitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
+This chapter is designed to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citebooktitle{Dalgaard2008} \autocite{Dalgaard2008}, \citebooktitle{Everitt2009} \autocite{Everitt2009} and \citebooktitle{??} \autocite{??}. The book \citebooktitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
 
 Along the chapter, I will show occasionally the equivalent of \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
 
 \emph{\textcolor[rgb]{1.00,0.50,0.25}{As a stop-gap we use examples from the help pages of several of the functions described.}}
+
+\section{Statistical summaries}
+\index{functions!built-in|see@{functions, base-R}}
+\index{functions!base R}
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of frequently used data summaries. \qRfunction{mean()}\qRfunction{var()}\qRfunction{median()},\qRfunction{mad()}\qRfunction{sd()}\qRfunction{range()}\qRfunction{max()}\qRfunction{min()}\qRfunction{length()}
+
+<<stat-fun-1, eval=eval_playground>>=
+x <- 1:20
+mean(x)
+var(x)
+median(x)
+mad(x)
+sd(x)
+range(x)
+max(x)
+min(x)
+length(x)
+@
+
+\begin{playground}
+  In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
+\end{playground}
+
+\section{Distributions}
+
+Density, distribution functions, quantile functions and random generation for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will display a page displaying all the distributions available in base Rlang. In what follows we use the Normal distribution for the examples, but with slight differences in there parameters the remaining functions follow the same naming pattern.
+
+\subsection{Distribution from parameters}
+
+<<distrib-01>>=
+plot(function(x) dnorm(x, mean = 1, sd = 0.5), -1, 3)
+@
+
+\subsection{Probabilities from parameters and quantile}
+
+<<distrib-02>>=
+pnorm(q = 4, mean = 0, sd = 1)
+pnorm(q = 4, mean = 0, sd = 1, lower.tail = FALSE)
+pnorm(q = 4, mean = 0, sd = 4, lower.tail = FALSE)
+pnorm(q = c(2, 4), mean = 0, sd = 1, lower.tail = FALSE)
+pnorm(q = 4, mean = 0, sd = c(1, 4), lower.tail = FALSE)
+@
+
+\subsection{Quantiles from parameters and probabilities}
+
+<<distrib-03>>=
+qnorm(p = 0.33, mean = 0, sd = 1)
+qnorm(p = 0.33, mean = 0, sd = 1, lower.tail = FALSE)
+@
+
+\subsection{Random draw from a distribution}
+
+rnorm(n = 10, mean = 10, sd = 2)
+<<distrib-04>>=
+rnorm(n = 10, mean = 10, sd = 2)
+@
+
+\begin{playground}
+Edit some of the examples above for different distributions, such at Students' t, F or uniform.
+\end{playground}
+
+\section{Random sampling}
+
+<<sampling-01>>=
+sample(x = LETTERS)
+sample(x = LETTERS, size = 12)
+sample(x = LETTERS, size = 12, replace = TRUE)
+@
+
+\begin{explainbox}
+It is impossible to generate truly random sequences of number by means of a deterministic process such as a mathematical computation. ``Random numbers'' as generated by \Rpgrm and other computer programs are \emph{pseudo random numbers}, long deterministic series of numbers that resemble random draws. Random number generation uses a \emph{seed} value that determines where in the series we start. The usual of automatically setting the value of the seed is to take the milliseconds or similar rapidly changing set of digits from the real time clock of the computer. However, in cases when we wish to repeat a calculation using the same series of ``random'' values, we can use \Rfunction{set.seed()} with an arbitrary integer as argument to reset the generator.
+\end{explainbox}
+
+\begin{advplayground}
+Execute the statement \code{rnorm(5)} by itself several times, paying attention to the values obtained. Repeat the exercise but now executing \code{setseed(98765); rnorm(5)} several times, paying attention to the values now obtained, then try again using a different argument in the call to \code{setseed()}.
+\end{advplayground}
 
 \section{Correlation}
 
@@ -112,7 +188,6 @@ plot(fm1, which = 2)
 In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors.
 <<models-1b>>=
 summary(fm1)
-coef(fm1)
 @
 
 Let's look at the summary, section by section. Under ``Call:'' we find, \verb|dist ~ 1 + speed| or the specification of the model fitted, plus the data used. Under ``Residuals:'' we find the extremes, quartiles and median of the residuals, or deviations between observations and the fitted line. Under ``Coefficients:'' we find the estimates of the model parameters and their variation plus corresponding $t$-tests. At the end of summary there is information on degrees of freedom and overall coefficient of determination ($R^2$).
@@ -173,6 +248,12 @@ Once you have run the code in the chunks above, you will be able see that these 
 
 \end{playground}
 
+\begin{advplayground}
+Additional methods provide access to different components of fitted models: \Rfunction{vcov()} returns the variance-covariance matrix, \Rfunction{coef()} and its alias \Rfunction{coefficients()} return the estimates for the fitted model coefficients, \Rfunction{fitted()} and its alias \Rfunction{fitted.values()} extract the fitted values, and \Rfunction{residuals()} the corresponding residuals (or deviations). The method \Rfunction{predict()} uses the fitted model to compute predictions and confidence bands based from new data for the independent variables.
+
+Task: familiarize yourself with these methods by reading the documentation and using them with the models fitted above or model fits to other data of your interest.
+\end{advplayground}
+
 \begin{explainbox}
 The objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them.
 
@@ -182,7 +263,7 @@ We rarely need to manually explore the structure of these objects, but it is rat
 str(fm1, max.level = 1) # not evaluated
 @
 
-We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. In fact, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
+We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
 
 <<models-EB2>>=
 str(anova(fm1))
@@ -194,11 +275,35 @@ str(summary(fm1))
 
 Once we know the nesting and the names of components we can simply extract them using indexing.
 
-<<models-EB>>=
+<<models-EB4>>=
 summary(fm1)$adj.r.squared
 @
 
+As an example we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
+
+The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with null hypothesis of slope = 1. The procedure is applicable to any constant value as null hypothesis for any of the fitted parameter estimates set \emph{a priori}. The examples use a two-sided test, in some cases, a single-sided test should be used (e.g.\ if its known a priori that deviation is possible only in one direction away from the hypothesis).
+
+To estimate the \emph{t}-value we need the estimate for a parameter and an estimate of the standard error for this estimate and its degrees of freedom.
+<<models-EB5>>=
+est.slope.value <- summary(fm1)$coef["speed", "Estimate"]
+est.slope.se <- summary(fm1)$coef["speed", "Std. Error"]
+degrees.of.freedom <- summary(fm1)$df[2]
+@
+
+The \emph{t}-test is based on the difference between the value of the null hypothesis and the estimate.
+
+<<models-EB6>>=
+hyp.null <- 1
+t.value <- (est.slope.value - hyp.null) / est.slope.se
+p.value <- dt(t.value, df = degrees.of.freedom)
+@
 \end{explainbox}
+
+\begin{advplayground}
+Check that the procedure above agrees with the output of \code{summary()} for \code{hyp.null <- 0}.
+
+Modify the example so as to test whether the intercept is significantly different from 5 feet.
+\end{advplayground}
 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 \index{analysis of variance}\index{linear models!analysis of variance}
@@ -226,7 +331,7 @@ plot(fm4, which = 3)
 anova(fm4)
 @
 
-In ANOVA we are normally mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract the estimates but usually the default contrasts and corresponding $P$-values are for hypotheses that have little or no interest.
+In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract the estimates but usually the default contrasts and corresponding $P$-values are for hypotheses that have little or no direct interest.
 
 \subsection{Analysis of covariance, ANCOVA}
 \index{analysis of covariance}\index{linear models!analysis of covariance}
@@ -700,7 +805,7 @@ In discrimination analysis the categories or groups to which objects belong are 
 
 \subsection{What next?}
 
-Other books are available with detailed descriptions of how to do various types of analyses in \Rlang, included thorough descriptions of the methods briefly presented in this chapter and many other methods not mentioned here. Good examples of books with broad scope that can serve as references for the application of various statistical methods are \citetitle{Everitt2009} \autocite{Everitt2011} and \citetitle{Crawley2012} \autocite{Crawley2012}, and the classic reference \citetitle{Venables2002} \autocite{Venables2002}. Many subject specific books are also available, and some suggestions given at the end of the book on page \pageref{chap:R:readings}.
+Other books are available with detailed descriptions of how to do various types of analyses in \Rlang, included thorough descriptions of the methods briefly presented in this chapter and many other methods not mentioned here. Good examples of books with broad scope that can serve as references for the application of various statistical methods are \citebooktitle{Everitt2009} \autocite{Everitt2011} and \citebooktitle{Crawley2012} \autocite{Crawley2012}, and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. Many subject specific books are also available, and some suggestions given at the end of the book on page \pageref{chap:R:readings}.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
