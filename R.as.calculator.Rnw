@@ -328,7 +328,7 @@ Study the variations of the previous example shown below, and explain why the tw
 
 \index{classes and modes!numeric@\texttt{numeric}|)}
 
-\section{Logical values and Boolean algebra}
+\section{Logical values and Boolean algebra}\label{sec:calc:boolean}
 \index{classes and modes!logical@\texttt{logical}|(}\index{logical operators}\index{logical values}\index{Boolean arithmetic}
 What in Mathematics are usually called Boolean values, are called \code{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). They are vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of `parts'). There are also logical operators that allow Boolean algebra. In the chunk below we operate on \code{logical} vectors of length one.
 
@@ -842,7 +842,7 @@ Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunctio
 \end{playground}
 \index{type conversion|(}
 
-\section{Vector manipulation}\label{sec:vectors}
+\section{Vector manipulation}\label{sec:vectors}\label{sec:calc:indexing}
 \index{vectors!indexing|(}
 If you have read earlier sections of this chapter, you already know how to create a vector. \Rlang's vectors are equivalent to what would be written in mathematical notation as $x_{1\ldots n} = a_1, a_2, \ldots, a_i, \ldots, a_n$, they are not the equivalent to the vectors, common in Physics, which are symbolized with an arrow as ``accent'', such as $\overrightarrow{\mathbf{F}}$.
 
@@ -976,7 +976,7 @@ a
 Do play with subscripts to your heart's content, really grasping how they work and how they can be used, will be very useful in anything you do in the future with \Rlang. Even the most contrived example above follows the same simple rules, just study it bit by bit.
 \end{playground}
 
-\begin{explainbox}
+\begin{explainbox}\label{box:vec:sort}
 In \Rlang indexing with positional indexes can be done with \code{integer} or \code{numeric} values. Numeric values can be ``floats'', but for indexing only integer values are meaningful. Consequently, \code{double} values need to be converted into \code{integer} values to be used as indexes. The conversion is done invisibly, but it does slow down computations slightly. When working on big data sets, explicitly using \code{integer} values can improve performance.
 
 <<vectors-9>>=
@@ -1082,7 +1082,28 @@ A[4:3, 2:1] <- A[3:4, 1:2]
 A
 @
 
-In R, arrays are similar to matrices, but can have more dimensions, which are specified with the \code{dim} argument to the \Rfunction{array()} constructor.
+\begin{explainbox}
+In \Rlang, a \code{matrix} can have a single row, a single column, a single element or no elements. However, in all cases a \code{matrix} will have \emph{dimensions} of length two defined and stored as an attribute.
+
+<<dimensions-box-01>>=
+my.vector <- 1:6
+dim(my.vector)
+@
+
+<<dimensions-box-02>>=
+one.col.matrix <- matrix(1:6, ncol = 1)
+dim(one.col.matrix)
+two.col.matrix <- matrix(1:6, ncol = 2)
+dim(two.col.matrix)
+one.elem.matrix <- matrix(1, ncol = 1)
+dim(one.elem.matrix)
+no.elem.matrix <- matrix(numeric(), ncol = 0)
+dim(no.elem.matrix)
+@
+
+\end{explainbox}
+
+Arrays are similar to matrices, but can have more than two dimensions, which are specified with the \code{dim} argument to the \Rfunction{array()} constructor.
 
 <<matrix-21>>=
 B <- array(1:27, dim = c(3, 3, 3))
@@ -1110,7 +1131,7 @@ In the chunk above, the length of the supplied vector is the product of the dime
 @
 
 Be aware that vectors and one-dimensional arrays are not the same thing, while two dimensional arrays are matrices.
-  \begin{enumerate}
+\begin{enumerate}
       \item Use the different constructors and query methods to explore this, and its consequences.
       \item Convert a matrix into a vector using \Rfunction{unlist()} and \Rfunction{as.vector()} and compare the returned values.
 \end{enumerate}
@@ -1149,7 +1170,7 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 
 \index{matrices|)}\index{arrays|)}
 
-\section{Factors}
+\section{Factors}\label{sec:calc:factors}
 \index{factors|(}
 \index{categorical variables|see{factors}}
 Factors are used to indicate categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \Rfunction{factor()} are unordered or categorical. \Rlang also defines ordered factors that can be created with function \Rfunction{ordered()}.
@@ -1243,6 +1264,32 @@ levels(my.factor3rev)
 in the last example, using the unary negation operator, which is vectorized, allows us to easily reverse the ordering of the levels, while still using the default function, \code{mean()}, to summarize the data.
 
 \end{explainbox}
+
+\begin{advplayground}\label{calc:ADVPG:order:sort}
+\textbf{Reordering factor values.}\index{factors!reorder values}\index{factors!arrange values} It is possible to arrange the values stored in a factor either alphabetically according to the labels of the levels or according to the order of the levels.
+
+<<factors-ADVPG-11, eval=eval_playground>>=
+# gl() keeps order of levels
+my.factor4 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
+my.factor4
+as.integer(my.factor4)
+# factor() orders levels alphabetically
+my.factor5 <- factor(rep(c("A", "F", "B", "Z"), rep(3,4)))
+my.factor5
+as.integer(my.factor5)
+@
+
+We see above that the integer values are equivalent to indexes into the vector or levels. Function \Rfunction{sort()} operates on the values' underlying integers and sorts according to the order of the levels while \Rfunction{order()} operates on the values' labels and returns a vector of indexes that arrange the values alphabetically.
+
+<<factors-ADVPG-12, eval=eval_playground>>=
+sort(my.factor4)
+my.factor4[order(my.factor4)]
+sort(my.factor5)
+my.factor4[order(my.factor5)]
+@
+
+Run the examples above and work out why the results differ for the two factors.
+\end{advplayground}
 
 <<factors-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
@@ -1493,6 +1540,8 @@ x.list$a
 Both in the case of lists and data frames, when using double square brackets, an exact match is required between the name in the object and the name used for indexing. In contrast, with \Roperator{\$} any unambiguous partial match will be accepted. For interactive use, partial matching is helpful in reducing typing. However, in scripts, and especially \Rlang code in packages it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g.\ when someone else revises the script, can lead to very difficult to diagnose errors. In addition, as \Roperator{\$} is implemented by first attempting a match to the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}. It is possible to set an \Rlang option so that partial matching triggers a warning, which can be very useful when debugging.
 \end{warningbox}
 
+\subsection{Operating within data frames}\label{sec:calc:df:with}
+
 When the names of data frames are long, complex conditions become awkward to write using indexing---i.e.\ subscripts. In such cases \Rfunction{subset()} is handy because evaluation is done in the `environment' of the data frame, i.e.\ the names of the columns are recognized if entered directly when writing the condition. Function  \Rfunction{subset()} ``filters'' rows, usually corresponding to observations or experimental units. The condition is computed for each row, and if it returns \code{TRUE} the row is included in the returned data frame, and excluded if \code{FALSE}.
 
 <<data-frames-4>>=
@@ -1585,8 +1634,30 @@ head(my_data_frame.df, 2)
 Use of \code{attach()} and \code{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \code{attach()} but before \code{detach()} are executed, as cleanup is not enforced. In contrast, \code{with()} and \code{within()} being self-contained guarantee that clean up takes place. Consequently, the usual recommendation is to give preference to the use of \code{with()} and \code{within()} over \code{attach()} and \code{detach()}. Use of these functions not only saves typing but also makes code more readable.
 \end{explainbox}
 
-\begin{advplayground}
-The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with there different haphazard sequences of values. Call these columns A, B and C. 1) Sort the rows of the data frame so that the values in A are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of A and B without adding a new column to the data frame or storing the sums in a vector. In other words do the sorting based on sums calculated ``on-the-fly''. Hint: The use of \code{order()} for sorting vectors is described on page \pageref{} and indexing of data frames rows has been described in the present section.
+\subsection{Re-arranging columns and rows}
+\index{data frames!ordering rows}\index{data frames!ordering columns}
+The most direct way of changing the order of columns and/or rows in data frames (and matrices and arrays) is to use subscripting as described above. Once we know the original position and target position we can use numerical indexes on both right hand side and left hand side of an assignment.
+
+<<data-frames-8>>=
+my_data_frame.df
+my_data_frame.df[ , 1:5] <- my_data_frame.df[ , 5:1]
+my_data_frame.df
+@
+
+<<data-frames-9>>=
+my_data_frame.df
+my_data_frame.df[c(1, 4, 10), ] <- my_data_frame.df[c(4, 10, 1), ]
+my_data_frame.df
+@
+
+Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector, we can use order to generate the indexes to use through subscripting. The argument to \Rfunction{order()} is usually a column of the data frame being arranged, but this is not required. Order can be applied to any vector of suitable length, including the result of applying a function to one or more columns. (The use of \code{order()} for sorting vectors is described on page \pageref{box:vec:sort}.)
+
+\begin{playground}\index{data frames!ordering rows}
+The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with there different haphazard sequences of values. Call these columns A, B and C. 1) Sort the rows of the data frame so that the values in A are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of A and B without adding a new column to the data frame or storing the sums in a vector. In other words do the sorting based on sums calculated ``on-the-fly''.
+\end{playground}
+
+\begin{advplayground}\index{data frames!ordering rows}
+Repeat the tasks in the playground immediately above but using factors instead of numeric vectors as columns in the data frame. Hint: Revisit the exercise on page \pageref{calc:ADVPG:order:sort} were the use of \Rfunction{order()} on factors is described.
 \end{advplayground}
 
 \index{data frames|)}

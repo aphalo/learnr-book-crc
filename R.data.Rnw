@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'data-chunk')
 @
 
-\chapter{Data: from import to report}\label{chap:R:data}
+\chapter{Grammar of Data}\label{chap:R:data}
 
 \begin{VF}
 Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.
@@ -86,7 +86,7 @@ The chapter is divided into three sections, the first one deals with reading dat
 
 The first obvious difference between scripts using the new and old grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is through temporary files.
 
-<<pipes-01,engine="bash">>=
+<<pipes-x01,engine="bash">>=
 stdin | grep("abc") | more
 @
 
@@ -94,10 +94,10 @@ So, how can \emph{pipes} exist within a single script? Within \Rlang data source
 
 What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a correctly working script is available still pipes provide a more concise way of stating operations and with familiarity with the paradigm easier to read scripts (for humans).
 
-The operators needed to build pipes of \Rlang functions are implemented in package \Rpckage{magrittr}. This implementation is used in the \Rpackage{tidyverse} packages and some operators re-exported.
+The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages and some operators re-exported.
 
 We start with a toy example first written using separate steps and normal \Rlang syntax
-<<pipes-02>>=
+<<pipes-x02>>=
 data.in <- 1:10
 data.tmp <- sqrt(data.in)
 data.out <- sum(data.tmp)
@@ -106,16 +106,16 @@ rm(data.tmp)
 
 next using nested function calls still using normal \Rlang syntax
 
-<<pipes-03>>=
-data.out <- sum(sqrt(data.tmp))
+<<pipes-x03>>=
+data.out <- sum(sqrt(data.in))
 @
 
-written as a pipe using the chaining operator from package \Rpckage{magrittr}.
-<<pipes-03>>=
+written as a pipe using the chaining operator from package \pkgname{magrittr}.
+<<pipes-x04>>=
 data.in %>% sqrt() %>% sum() -> data.out
 @
 
-Although pipes are what make grammar of data scripts visually different, from the point of view of data analysis what makes pipes useful are the new classes, functions and methods defined in the different \Rpackage{tidyverse} packages. We will describe them following the usual flow of data through a data analysis pipe, starting with data input and output, and continuing in the next chapter with plotting.
+Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes useful are the new classes, functions and methods defined in the different \pkgname{tidyverse} packages. We will describe them following the usual flow of data through a data analysis pipe, starting with data input and output, and continuing in the next chapter with plotting.
 
 \section{Data input and output}\label{sec:data:io}
 
@@ -846,193 +846,6 @@ One of the advantages of using databases is that subsets of cases and variables 
 \begin{infobox}
 The contents of this section is still missing, but will in any case be basic. I recommend the book \citebooktitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite, especially in the case of connecting to databases.
 \end{infobox}
-
-\section[Apply functions]{\emph{Apply} functions}\label{sec:data:apply}
-
-\emph{Apply} functions apply functions to elements in a collection of R objects. These collections can be vectors, lists, data frames, matrices of arrays. As long as the operations to be applied are \emph{independent---i.e.\ the results from one iteration are not used in another iteration, and each iteration refers only one member of the collection of objects---} these functions can replace \code{for}, \code{while} or \code{repeat} loops.
-
-\begin{explainbox}
-\textbf{When apply functions cannot replace traditional loop constructs?} We will give some typical examples. First case is the accumulation pattern, where we ``walk'' through a collection storing a partial result between iterations.
-
-<<not-apply-01>>=
-set.seed(123456)
-a.vector <- runif(20)
-total <- 0
-for (i in seq(along.with = a.vector)) {
-  total <- total + a.vector[i]
-  }
-total
-@
-
-Although the loop above cannot the replaced by a statement based on an \emph{apply} function, it can be replaced by the summation function \Rfunction{sum()} from base R.
-<<not-apply-02>>=
-set.seed(123456)
-a.vector <- runif(20)
-total <- sum(a.vector)
-total
-@
-
-Another frequent pattern are operations, at each iteration, on a subset composed by two or more consecutive elements of the collection. The simplest and probably most frequent calculation of this kind is the calculation of differences between successive members.
-<<not-apply-03>>=
-set.seed(123456)
-a.vector <- runif(20)
-b.vector <- numeric(length(a.vector) - 1)
-for (i in seq(along.with = b.vector)) {
-  b.vector[i] <- a.vector[i + 1] - a.vector[i]
-  }
-b.vector
-@
-
-In this case, we can use \code{diff()} instead of an explicit loop.
-<<not-apply-04>>=
-b.vector <- diff(a.vector)
-b.vector
-@
-
-Cumulation of values along a vector is another frequent operation for which R provides functions that can replace explicit \code{for} loops resulting in faster execution. They are \code{cummax()}, \code{cummin()}, \code{cumprod()} and \code{cumsum()}.
-
-\end{explainbox}
-
-\subsection{Base R's apply functions}
-
-Base R's \emph{apply} functions differ on the class of the returned value and on the class of the argument expected for their \code{X} parameter: \Rfunction{apply()} expects a \code{matrix} or \code{array} as argument, or an argument like a \code{data.frame} which can be converted to a matrix or array. \Rfunction{apply()} returns an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function. \Rfunction{lapply()} and \Rfunction{sapply()} expect a \code{vector} or \code{list} as argument passed through \code{X}. \Rfunction{lapply()} returns a \code{list} or an \code{array}; and \Rfunction{vapply()} always \emph{simplifies} its returned value into a vector, while \Rfunction{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply any R function that returns a value of the same or a different class as its argument. In the case of \Rfunction{apply()} and \Rfunction{lapply()} not even the length of the values returned for each member of the collection passed as argument, needs to be consistent. In summary, \Rfunction{apply()} is used to apply a function to the elements of an object that has \emph{dimensions} defined, and \Rfunction{lapply()} and \Rfunction{sapply()} to apply a function to the members of and object without dimensions, such as a vector.
-
-\begin{explainbox}
-Of course, a \code{matrix} can have a single row, a single column, or even a single element, but even in such cases, a \code{matrix} will have \emph{dimensions} defined and stored as an attribute.
-
-<<dimensions-box-01>>=
-my.vector <- 1:6
-dim(my.vector)
-@
-
-<<dimensions-box-02>>=
-one.col.matrix <- matrix(1:6, ncol = 1)
-dim(one.col.matrix)
-two.col.matrix <- matrix(1:6, ncol = 2)
-dim(two.col.matrix)
-one.elem.matrix <- matrix(1, ncol = 1)
-dim(one.elem.matrix)
-@
-
-\begin{playground}
-Print the matrices defined in the chucks above. Then, look up the help page for \Rfunction{array()} and write equivalent examples for arrays with three and higher dimensions.
-\end{playground}
-\end{explainbox}
-
-We first examplify the use of \Rfunction{lapply()} and \Rfunction{sapply()} given their simpler argument for \code{X}.
-<<apply-01>>=
-set.seed(123456)
-a.vector <- runif(10)
-my.fun <- function(x, k) {log(x) + k}
-z <- lapply(X = a.vector, FUN = my.fun, k = 5)
-class(z)
-dim(z)
-z
-z <- sapply(X = a.vector, FUN = my.fun, k = 5)
-class(z)
-dim(z)
-z
-z <- sapply(X = a.vector, FUN = my.fun, k = 5, simplify = FALSE)
-class(z)
-dim(z)
-z
-@
-
-Anonymous functions can be defined on the fly, resulting in the same returned value.
-<<apply-02>>=
-sapply(X = a.vector, FUN = function(x, k) {log(x) + k}, k = 5)
-@
-
-Of course, as discussed in Chapter \ref{chap:????}, when vectorization is possible, this results also in fastest execution and simplest code.
-<<apply-03>>=
-log(a.vector) + 5
-@
-
-Next we give examples of the use of \Rfunction{apply()}. The argument passed to \code{MARGIN} determines, the dimension along which the matrix or array passed to \code{X} will be split before passing it as argument to the function passed through \code{FUN}. In the example below we get either row- or column means. In these examples, \Rfunction{sum()} is passed a vector, for each row or each column of the matrix. As function \Rfunction{sum()} returns a single value independently of the length of its argument, instead of a matrix, the returned value is a vector. In other words, an array with one dimension less than that of its input.
-
-<<apply-04>>=
-set.seed(123456)
-a.mat <- matrix(runif(10), ncol = 2)
-row.means <- apply(X = a.mat, MARGIN = 1, FUN = mean, na.rm = TRUE)
-class(row.means)
-dim(row.means)
-row.means
-col.means <- apply(X = a.mat, MARGIN = 2, FUN = mean, na.rm = TRUE)
-class(col.means)
-dim(col.means)
-col.means
-@
-
-\begin{playground}
-Look up the help pages for \Rfunction{apply()} and \Rfunction{mean()} to study them until you understand how to pass additional arguments to any applied function. Can you guess why \code{apply} was designed to have parameter names fully in upper case, something very unusual for R functions?
-\end{playground}
-
-\begin{warningbox}
-If we apply a function that returns a value of the same length as its input, then the dimensions of the value returned by \Rfunction{apply()} are the same as those of its input. We use in the next examples a ``no-op'' function that returns its argument unchanged, so that input and output can be easily compared.
-
-<<apply-05>>=
-set.seed(123456)
-a.mat <- matrix(1:10, ncol = 2)
-no_op.fun <- function(x) {x}
-b.mat <- apply(X = a.mat, MARGIN = 2, FUN = no_op.fun)
-class(b.mat)
-dim(b.mat)
-b.mat
-t(b.mat)
-@
-
-In the chunk above we passed \code{MARGIN = 2}, but if we pass \code{MARGIN = 1}, we get an equivalent return value but transposed! We use in the next example a ``no-op'' function than simply returns its argument unchanged, so that input and output can be easily compared. To restore the original layout of the matrix we can transpose the result with function \Rfunction{t()}.
-
-<<apply-05a>>=
-b.mat <- apply(X = a.mat, MARGIN = 1, FUN = no_op.fun)
-class(b.mat)
-dim(b.mat)
-b.mat
-t(b.mat)
-@
-
-Of course, these two toy examples, are something that can, and should be always avoided, as vectorization allows us to directly apply the function to the whole matrix.
-
-<<apply-05b>>=
-b.mat <- no_op.fun(a.mat)
-@
-
-A more realistic example, but difficult to grasp without seeing the toy examples shown above, is when we apply a function that returns a value of a different length than its input, but longer than one. If this length is consistent, an array with matching dimensions is returned, but again with the original columns as rows. What happens is that by using \Rfunction{apply()} one dimension of the original matrix or array disappears, as we apply the function over it. Consequently, given how matrices are stored in R, when the column dimension disappears, the row dimension becomes the new column dimension. After this, the elements of the vectors returned by the applied function applied, are stored along rows. To restore the original rows to rows in the result matrix we can transpose the it with function \Rfunction{t()}.
-
-<<apply-06>>=
-set.seed(123456)
-a.mat <- matrix(runif(10), ncol = 2)
-mean_and_var <- function(x, na.rm = FALSE) {
-       c(mean(x, na.rm = na.rm),  var(x, na.rm = na.rm))
-    }
-c.mat <- apply(X = a.mat, MARGIN = 1, FUN = mean_and_var, na.rm = TRUE)
-class(c.mat)
-dim(c.mat)
-c.mat
-t(c.mat)
-@
-
-In this case, calling the user-defined function with the whole matrix as argument is not equivalent. Of course, a \code{for} loop stepping through the rows would be the job, but more slowly.
-
-\end{warningbox}
-
-Function \Rfunction{vapply()} is not as frequently used, but can be sometimes useful. Here is a possible way of obtaining means and variances across member vectors at each vector index position from a list of vectors. These could be called \emph{parallel} means and variances.
-
-<<apply-07>>=
-set.seed(123456)
-a.list <- lapply(rep(4, 5), runif)
-a.list
-mean_and_var <- function(x, na.rm = FALSE) {
-       c(mean(x, na.rm = na.rm),  var(x, na.rm = na.rm))
-    }
-values <- vapply(X = a.list,
-                 FUN = mean_and_var,
-                 FUN.VALUE = c(mean = 0, var = 0),
-                 na.rm = TRUE)
-class(values)
-dim(values)
-values
-@
 
 \section[Grammar of data manipulation]{The grammar of data manipulation of the \pkgname{tidyverse}}
 
