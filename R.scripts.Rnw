@@ -209,6 +209,7 @@ The grouping of the last two statements above is of no consequence by itself, bu
 Conditional execution allows handling different values, such as negative and non-negative values, differently in a script. It also allows switching ON and OFF parts of a script using a so-called \emph{flag} that can be manually set, preferable near the top of the script. Use of flags is specially important when switching between two ``modes'' affects multiple sections of code. I frequent use is enabling and disabling printing of output from multiple statements scattered in over long script. Below I start by giving simple examples demonstrating how \emph{if} and \emph{if-else} statements work. Only afterwards I provide examples closer to how these statements are profitably used in \Rlang scripts.
 
 \subsubsection{Non-vectorized}
+\qRfunction{if()}\qRfunction{if()\ldots else}%
 
 The \code{if} construct ``decides'' depending on a \code{logical} value whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}).
 
@@ -375,7 +376,7 @@ If you do not understand how the three vectors are built, or you cannot guess th
 \end{playground}
 
 \subsection{Iteration}
-\index{for@\code{for}}\index{iteration!for loop}
+\index{loop!for}\index{for loop}\index{iteration!for loop}\qRloop{for}
 We give the name \emph{iteration} to the process of repetitive execution of a program statement (simple or compound)---e.g.\ \emph{computed by iteration}. We use the same word, iteration, also to name each one of these repetitions of the execution of a statement--e.g.\ the second iteration.
 
 The section of computer code being executed multiple times, conforms a loop (a closed path). Most loops contain a condition that determines when execution will continue outside the loop. The most frequently used type of loop is a \code{for} loop. These loops work in \Rlang on lists or vectors of values to act upon.
@@ -455,7 +456,7 @@ print(c)
 With \code{a} of length 1 or longer, the statements are equivalent, but when \code{a} has length zero the two statements are no longer equivalent. Run the statements above, after un-commenting the second definition of \code{a} and try to understand \emph{why} they behave as they do.
 \end{advplayground}
 
-\code{while} loops\index{iteration!while loops} are quite frequently also useful. Instead of a list or vector, they take a logical argument, which is usually an expression, but which can also be a variable.
+\Rloop{while} loops\index{iteration!while loops} are quite frequently also useful. Instead of a list or vector, they take a logical argument, which is usually an expression, but which can also be a variable.
 
 In this example we use the result of the previous iteration in the current one. In this example you can also see, that it is allowed to put more than one statement in a single line, in which case the statements should be separated by a semicolon (;).
 
@@ -489,7 +490,7 @@ c
 2) Explain why \code{print(a)} has been moved before \code{while()}. Hint: experiment if necessary.
 \end{advplayground}
 
-The \code{repeat}\index{iteration!repeat loops} construct is seldom used, but adds flexibility as \Rfunction{break()}, which is used to \emph{break out of the loop} can be located in any place within the body of the loop. To achieve conditional end of iterations the \code{break()} function must be called from within the statement of an \code{if} or \code{else} condition.
+The \Rloop{repeat}\index{iteration!repeat loops} construct is seldom used, but adds flexibility as \Rfunction{break()}, which is used to \emph{break out of the loop} can be located in any place within the body of the loop. To achieve conditional end of iterations the \code{break()} function must be called from within the statement of an \code{if} or \code{else} condition.
 
 <<repeat-1>>=
 a <- 2
@@ -512,10 +513,10 @@ Please, explain why the examples above return the values they do. Use the approa
 \end{playground}
 
 \subsection{Explicit loops can be slow in \Rlang}\label{sec:loops:slow}
-\index{vectorization}\index{recycling of arguments}
+\index{vectorization}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
 If you have written programs in other languages, it would feel to you natural to use loops (for, repeat while, repeat until) for many of the things for which we have been using vectorization. When using the \Rlang language it is best to use vectorization whenever possible, because it keeps scripts shorter and easier to understand (at least for those with experience in \Rlang). However, there is another very important reason: execution speed. The reason behind this is that \Rlang is an interpreted language. In current versions of \Rpgrm it is possible to byte-compile functions and loops may be compiled on-the-fly, which relieves part of the burden of repeated interpretation. However, even byte-compiled loops are usually slower to execute than vectorized functions.
 
-Execution speed needs to be balanced against the effort invested in writing faster code. However, using vectorization and specific \Rlang functions requires little effort once we are familiar with them. The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. However, the returned time is in seconds and consequently the expression must take long enough to execute for the returned time to have useful resolution. See package \pkgname{microbenchmark} for tools for benchmarking code with better time resolution.
+Execution speed needs to be balanced against the effort invested in writing faster code. However, using vectorization and specific \Rlang functions requires little effort once we are familiar with them. The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. However, the returned time is in seconds and consequently the expression must take long enough to execute for the returned time to have useful resolution. See package \pkgname{microbenchmark} for tools for benchmarking code with better time resolution.\qRloop{for}
 
 <<loops-timing-01>>=
 system.time({a <- numeric()
@@ -570,9 +571,10 @@ b
 Execution time can be obtained with \Rfunction{system.time}. For a vector of ten million numbers, the \code{for} loop above takes 1.1~s and the equivalent \code{while} loop 2.0~s, the vectorized statement using indexing takes 0.2~s and function \code{diff()} takes 0.1~s. The \code{for} loop without pre-allocation of memory to \code{b} takes 3.6~s, and the equivalent while loop 4.7~s---i.e.\ the fastest execution time was more than 40 times faster than the slowest one. (Times for \Rpgrm 3.5.1 on a laptop with Winodws 10 x64.)
 
 \end{explainbox}
+\index{loops!faster alternatives|)}
 
 \subsection{Nesting of loops}\label{sec:nested:loops}
-\index{iteration!nesting of loops}\index{nested iteration loops}
+\index{iteration!nesting of loops}\index{nested iteration loops}\index{loops!nested}
 
 All the execution-flow control statements seen above can be nested. We will show an example with two \code{for} loops. We first need a matrix of data to work with:
 
@@ -637,9 +639,10 @@ rowSums(A)
 
 \section[Apply functions]{\emph{Apply} functions}\label{sec:data:apply}
 
-\emph{Apply} functions apply functions to elements in a collection of \Rlang objects. These collections can be vectors, lists, data frames, matrices or arrays. As long as the operations to be applied are \emph{independent---i.e.\ the results from one iteration are not used in another iteration, and each iteration refers to only one member of the collection of objects---} apply functions can replace \code{for}, \code{while} or \code{repeat} loops.
+\emph{Apply}\index{apply functions}\index{loops!faster alternatives)}
+ functions apply functions to elements in a collection of \Rlang objects. These collections can be vectors, lists, data frames, matrices or arrays. As long as the operations to be applied are \emph{independent---i.e.\ the results from one iteration are not used in another iteration, and each iteration refers to only one member of the collection of objects---} apply functions can replace \code{for}, \code{while} or \code{repeat} loops.
 
-Functions in the \emph{apply} family allow us to call an \Rlang function for each element of a vector, matrix or array without writing an explicit loop in our script.
+Functions in the \emph{apply} family allow us to call an \Rlang function for each element of a vector, matrix or array without writing an explicit loop in our script.\qRfunction{apply()}
 
 <<apply-00>>=
 x <- matrix(runif(100), ncol = 10)
@@ -661,7 +664,7 @@ apply(x, MARGIN = 1, FUN = mean, trim = 0.1)
 @
 
 \begin{playground}
-Look up the help pages for \Rfunction{apply()} and \Rfunction{mean()} and study them until you understand how additional arguments can be passed to the applied function. Can you guess why \code{apply} was designed to have parameter names fully in upper case, something very unusual for \Rlang code style?
+Look up the help pages for \Rfunction{apply()} and \code{mean()} and study them until you understand how additional arguments can be passed to the applied function. Can you guess why \Rfunction{apply()} was designed to have parameter names fully in upper case, something very unusual for \Rlang code style?
 \end{playground}
 
 The various base \Rlang \emph{apply} functions differ on the class of the returned value and on the class of the argument expected for their \code{X} parameter: \Rfunction{apply()} expects a \code{matrix} or \code{array} as argument, or an argument like a \code{data.frame} which can be converted to a matrix or array. \Rfunction{apply()} returns an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function. \Rfunction{lapply()} and \Rfunction{sapply()} expect a \code{vector} or \code{list} as argument passed through \code{X}. \Rfunction{lapply()} returns a \code{list} or an \code{array}; and \Rfunction{vapply()} always \emph{simplifies} its returned value into a vector, while \Rfunction{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply any \Rlang function that returns a value of the same or a different class as its argument. In the case of \Rfunction{apply()} and \Rfunction{lapply()} not even the length of the values returned for each member of the collection passed as argument, needs to be consistent. In summary, \Rfunction{apply()} is used to apply a function to the elements of an object that has \emph{dimensions} defined, and \Rfunction{lapply()} and \Rfunction{sapply()} to apply a function to the members of and object without dimensions, such as a vector.
@@ -706,7 +709,7 @@ log(a.vector) + 5
 In \Rlang the different dimensions such as rows and columns in a matrix over which it is summarized are called \emph{margins}. If the function is applied over rows, we say that we operate on the first margin, and if the function is applied over columns, over the second margin. Array can have more dimensions, and consequently more margins. In the case of arrays with more than two dimensions, it is possible and useful to apply functions over multiple margins at once.
 \end{warningbox}
 
-In the examples below we use function \Rfunction{apply()} which takes a matrix or array as argument for \code{X}. The argument passed to \code{MARGIN} determines, the dimension along which the matrix or array passed to \code{X} will be split before passing it as argument to the function passed through \code{FUN}. In the example below we get either row- or column means. In these examples, \Rfunction{sum()} is passed a vector, for each row or each column of the matrix. As function \Rfunction{sum()} returns a single value independently of the length of its argument, instead of a matrix, the returned value is a vector. More generaly, an array with fewer dimensions than the argument passed to \code{X}.
+In the examples below we use function \Rfunction{apply()} which takes a matrix or array as argument for \code{X}. The argument passed to \code{MARGIN} determines, the dimension along which the matrix or array passed to \code{X} will be split before passing it as argument to the function passed through \code{FUN}. In the example below we get either row- or column means. In these examples, \Rfunction{sum()} is passed a vector, for each row or each column of the matrix. As function \Rfunction{sum()} returns a single value independently of the length of its argument, instead of a matrix, the returned value is a vector. More generally, an array with fewer dimensions than the argument passed to \code{X}.
 
 <<apply-04>>=
 set.seed(123456)
@@ -771,7 +774,7 @@ mean_and_sd(a.mat)
 @
 \end{explainbox}
 
-Function \Rfunction{vapply()} is safer as the mode of returned values is enforced. Here is a possible way of obtaining means and variances across member vectors at each vector index position from a list of vectors. These could be called \emph{parallel} means and variances. The argument passed to \code{FUN.VALUE} provides a template for the type of the return value and its organization into rows and columns. Notice that the rows in the output are now named according to the names in \code{FUN.VALUE}.
+Function \Rfunction{vapply()} is safer as the mode of returned values is enforced. Here is a possible way of obtaining means and variances across member vectors at each vector index position from a list of vectors. These could be called \emph{parallel} means and variances. The argument passed to \code{FUN.VALUE} provides a template for the type of the return value and its organization into rows and columns. Notice that the rows in the output are now named according to the names in \code{FUN.VALUE}. (We use \code{lapply()} to create the object \code{a.list} containing artificial data.)
 
 <<apply-01c>>=
 mean_and_sd <- function(x, na.rm = FALSE) {
@@ -788,7 +791,7 @@ dim(values)
 values
 @
 
-In all examples above we have used ordinary functions. Operators in \Rlang are functions with two formal parameters, and which can be called using infix notation in expressions. By back-quoting their names they can be called using the same syntax as for ordinary functions, and consequently also passed to the \code{FUN} parameter of apply functions. A toy example, equivalent to the statement \code{a.vector + 5} follows for operator \code{+}.
+In all examples above we have used ordinary functions. Operators in \Rlang are functions with two formal parameters which can be called using infix notation in expressions---i.e. \code{a + b}. By back-quoting their names they can be called using the same syntax as for ordinary functions, and consequently also passed to the \code{FUN} parameter of apply functions. A toy example, equivalent to the vectorized operation \code{a.vector + 5} follows. We enclosed operator \code{+} in back ticks (\code{`}).
 
 <<apply-EB-01>>=
 set.seed(123456) # so that a.vector does not change
@@ -800,7 +803,7 @@ z
 @
 
 \begin{explainbox}
-\textbf{Apply functions and traditional loop constructs?} Apply functions can only sometimes replace explicit loops as they lack in flexibility, which is what allows them to be executed faster. We will give some typical examples where apply functions are not usable. First case is the accumulation pattern, where we ``walk'' through a collection storing a partial result between iterations.
+\textbf{Apply functions vs.\ loop constructs} Apply functions can only sometimes replace explicit loops as they lack in flexibility, which is what allows them to be executed faster. We will give some typical examples where apply functions are not usable. First case is the accumulation pattern, where we ``walk'' through a collection storing a partial result between iterations.
 
 <<not-apply-01>>=
 set.seed(123456)
@@ -857,7 +860,7 @@ assign(name.of.var, 9.99)
 b
 @
 
-The two toy examples above do not demonstrate why one may want to use \code{assign()}. Common situations where we may want to use character strings to store (future or existing) object names are 1) when we allow users to provide names for objects either interactively or as \code{character} data, 2) when in a loop we transverse a vector or list of object names, or 3) we construct at runtime object names from multiple character strings based on data or settings.
+The two toy examples above do not demonstrate why one may want to use \Rfunction{assign()}. Common situations where we may want to use character strings to store (future or existing) object names are 1) when we allow users to provide names for objects either interactively or as \code{character} data, 2) when in a loop we transverse a vector or list of object names, or 3) we construct at runtime object names from multiple character strings based on data or settings.
 
 Here the \code{character} values are the result of a computation.
 <<assignx-02>>=
@@ -885,7 +888,7 @@ str(obj_lst)
 @
 
 \begin{advplayground}
-Think of possible uses of functions \code{assign()}, \code{get()} and \code{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
+Think of possible uses of functions \Rfunction{assign()}, \Rfunction{get()} and \Rfunction{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
 \end{advplayground}
 
 \section{The multiple faces of loops}
