@@ -78,7 +78,24 @@ detach("package:graphics")
 
 Due to the large number of contributed \Rlang packages it can sometimes be difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built into base \Rlang. Base \Rlang plus the recommended packages (installed when \Rlang is installed) cover a lot of ground. To analyse data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate and or extend the functionality in base \Rlang with advantage. When one considers the use of novel or specialized types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to chose from within the available contributed packages. As we will see in later chapters sometimes groups or suites of packages are designed to work well together.
 
-\section{Functions}\label{sec:script:functions}
+\subsubsection{CRAN task views}
+
+\url{https://cran.r-project.org/web/views/}
+
+\subsubsection{Bioconductor workflows}
+
+\url{https://www.bioconductor.org/packages/release/BiocViews.html#___Workflow}
+
+\subsubsection{ROpenSci}
+
+\url{https://ropensci.org/packages/}
+
+\subsubsection{METACRAN, RDocumentation and other aggregators}
+
+\url{https://www.r-pkg.org/}
+\url{https://www.rdocumentation.org/}
+
+\section{Functions and operators}\label{sec:script:functions}
 \index{functions!defining new}
 
 \emph{Abstraction} can be defined as separating the fundamental properties from the accidental ones. Say obtaining the mean from a given vector of numbers, is an actual operation. There can be many such operations on different numeric vectors, each one a specific case. When we describe an algorithm for computing the mean from any numeric vector we have created the abstraction of \emph{mean}. In the same way each time we separate operations from specific data we create a new abstraction. In this sense functions are abstractions of operations or actions, they are like ``verbs'' describing actions separately from actors.
@@ -87,7 +104,7 @@ The main role of functions is that by providing an abstraction allowing us to av
 
 How do we in practice avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and then \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in most earlier examples in this book, what we will next tackle is how to define new functions.
 
-New functions are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as place-holders.
+New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as place-holders.
 
 <<fun-00>>=
 my.prod <- function(x, y){x * y}
@@ -104,7 +121,7 @@ my.change(a)
 a
 @
 
-In general, any result that needs to be made available outside the function must be returned by the function---or explicitly assigned to an object in the enclosing environment (i.e., using \Rfunction{<<-} or \Rfunction{assign()}) as a side-effect.
+In general, any result that needs to be made available outside the function must be returned by the function---or explicitly assigned to an object in the enclosing environment (i.e., using \Roperator{<<-} or \Rfunction{assign()}) as a side-effect.
 
 A function can only return a single object, so multiple results are produced they need to be ``grouped'' into a single object. In many cases lists are used to collect all the values to be returned into one object. For example, model fit functions like \code{lm()} discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM} return a complex list with heterogeneous named members.
 \end{warningbox}
@@ -129,6 +146,8 @@ print.x.5 <- function(x){x}
 print.x.4("test")
 @
 \end{playground}
+
+\subsection{Ordinary functions}
 
 After the toy examples above we will define a small but useful function: a function for calculating the standard error of the mean from a numeric vector.
 
@@ -198,11 +217,43 @@ SEM
 @
 
 Next we print the definition of \Rlang linear model fitting function \code{lm()}. (Use of \code{lm()} is described in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}.)
-<fun-4>>=
+<<fun-4>>=
 lm
 @
 
 As can be seen at the end of the listing this function written in the \Rlang language has been byte-compiled so that it executes faster.
+
+\subsection{Operators}
+
+Operators are functions that use a different syntax for being called. If their name is enclosed in back ticks they can be called as regular functions. Binary operators like \code{+} have two formal parameters, and unary operators like unary \code{-} have only one formal parameter.
+
+<<oper-01>>=
+1 / 2
+`/`(1 , 2)
+@
+
+\begin{explainbox}
+\textbf{Defining a new operator.} We will define a binary operator (taking two arguments) that subtracts from the numbers in a vector the mean of another vector. First we need a suitable name but we have less freedom as names of user defined operators must be enclosed in percent signs. We will use \code{\%-mean\%} and as with any \emph{special name} we need to enclose it in quotation marks for the assignment.
+
+<<oper-EB01>>=
+"%-mean%" <- function(e1, e2) {
+  e1 - mean(e2)
+}
+@
+
+We can then use our new operator in a example.
+
+<<oper-EB02>>=
+10:15 %-mean% 1:20
+@
+
+To print the definition we enclose its name of our operator in back ticks---i.e.\ we back quote the special name.
+
+<<oper-EB03>>=
+`%-mean%`
+@
+
+\end{explainbox}
 
 \section{Objects, classes and methods}\label{sec:script:objects:classes:methods}
 
