@@ -2988,7 +2988,7 @@ The second and third statements are only to demonstrate what is the effect of ea
 
 \index{vectors!indexing|)}
 
-\section{Matrices and multidimensional arrays}
+\section{Matrices and multidimensional arrays}\label{sec:matrix:array}
 \index{matrices|(}\index{arrays|(}\qRclass{matrix}\qRclass{array}
 
 Vectors have a single dimension, and, as we saw above we can query their length with method \Rfunction{length()}. Matrices have two dimensions, which can be queried with \Rfunction{dim()}, \Rfunction{ncol()} and \Rfunction{nrow()}. R's arrays can have any number of dimensions, even a single dimension, which can be queried with method \Rfunction{dim()}. As expected \Rfunction{is.vector()}, \Rfunction{is.matrix()} and \Rfunction{is.array()} can be used to query the class.
@@ -5183,1809 +5183,6 @@ This approach of direct output to a device, and addition of plot components as s
 % !Rnw root = appendix.main.Rnw
 
 
-\chapter{The R language: Statistics}\label{chap:R:functions}
-
-\begin{VF}
-The purpose of computing is insight, not numbers.
-
-\VA{Richard W. Hamming}{Numerical Methods for Scientists and Engineers, 1962}
-\end{VF}
-
-\section{Aims of this chapter}
-
-In this chapter you will learn the approach used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
-
-This chapter is designed to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citebooktitle{Dalgaard2008} \autocite{Dalgaard2008}, \citebooktitle{Everitt2009} \autocite{Everitt2009} and \citebooktitle{??} \autocite{??}. The book \citebooktitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
-
-Along the chapter, I will show occasionally the equivalent of \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
-
-\emph{\textcolor[rgb]{1.00,0.50,0.25}{As a stop-gap we use examples from the help pages of several of the functions described.}}
-
-\section{Statistical summaries}
-\index{functions!built-in|see@{functions, base-R}}
-\index{functions!base R}
-Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of frequently used data summaries. \qRfunction{mean()}\qRfunction{var()}\qRfunction{median()},\qRfunction{mad()}\qRfunction{sd()}\qRfunction{range()}\qRfunction{max()}\qRfunction{min()}\qRfunction{length()}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{x} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{20}
-\hlkwd{mean}\hlstd{(x)}
-\hlkwd{var}\hlstd{(x)}
-\hlkwd{median}\hlstd{(x)}
-\hlkwd{mad}\hlstd{(x)}
-\hlkwd{sd}\hlstd{(x)}
-\hlkwd{range}\hlstd{(x)}
-\hlkwd{max}\hlstd{(x)}
-\hlkwd{min}\hlstd{(x)}
-\hlkwd{length}\hlstd{(x)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-  In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
-\end{playground}
-
-\section{Distributions}
-
-Density, distribution functions, quantile functions and random generation for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will display a page displaying all the distributions available in base Rlang. In what follows we use the Normal distribution for the examples, but with slight differences in there parameters the remaining functions follow the same naming pattern.
-
-\subsection{Distribution from parameters}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{dnorm}\hlstd{(x,} \hlkwc{mean} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{0.5}\hlstd{),} \hlopt{-}\hlnum{1}\hlstd{,} \hlnum{3}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-distrib-01-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\subsection{Probabilities from parameters and quantile}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.9999683
-\end{verbatim}
-\begin{alltt}
-\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 3.167124e-05
-\end{verbatim}
-\begin{alltt}
-\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.1586553
-\end{verbatim}
-\begin{alltt}
-\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{4}\hlstd{),} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 2.275013e-02 3.167124e-05
-\end{verbatim}
-\begin{alltt}
-\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{4}\hlstd{),} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 3.167124e-05 1.586553e-01
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\subsection{Quantiles from parameters and probabilities}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.33}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] -0.4399132
-\end{verbatim}
-\begin{alltt}
-\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.33}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.4399132
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\subsection{Random draw from a distribution}
-
-rnorm(n = 10, mean = 10, sd = 2)
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{rnorm}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{10}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{10}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{2}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-##  [1] 11.972462 12.225438  8.243301 12.106372 11.880521 12.686131 12.227292
-##  [8] 10.155315  9.166276 10.873975
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-Edit some of the examples above for different distributions, such at Students' t, F or uniform.
-\end{playground}
-
-\section{Random sampling}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS)}
-\end{alltt}
-\begin{verbatim}
-##  [1] "T" "C" "P" "E" "G" "L" "R" "W" "S" "Z" "M" "N" "H" "X" "K" "Y" "A"
-## [18] "O" "J" "Q" "D" "F" "B" "I" "V" "U"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS,} \hlkwc{size} \hlstd{=} \hlnum{12}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-##  [1] "J" "A" "B" "L" "C" "D" "R" "U" "H" "W" "Q" "I"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS,} \hlkwc{size} \hlstd{=} \hlnum{12}\hlstd{,} \hlkwc{replace} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-##  [1] "L" "Z" "E" "E" "E" "V" "G" "M" "Y" "E" "X" "O"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{explainbox}
-It is impossible to generate truly random sequences of number by means of a deterministic process such as a mathematical computation. ``Random numbers'' as generated by \Rpgrm and other computer programs are \emph{pseudo random numbers}, long deterministic series of numbers that resemble random draws. Random number generation uses a \emph{seed} value that determines where in the series we start. The usual of automatically setting the value of the seed is to take the milliseconds or similar rapidly changing set of digits from the real time clock of the computer. However, in cases when we wish to repeat a calculation using the same series of ``random'' values, we can use \Rfunction{set.seed()} with an arbitrary integer as argument to reset the generator.
-\end{explainbox}
-
-\begin{advplayground}
-Execute the statement \code{rnorm(5)} by itself several times, paying attention to the values obtained. Repeat the exercise but now executing \code{setseed(98765); rnorm(5)} several times, paying attention to the values now obtained, then try again using a different argument in the call to \code{setseed()}.
-\end{advplayground}
-
-\section{Correlation}
-
-Both parametric and non-parametric robust methods for the estimation of the (linear) correlation between pairs of variables can be easily computed in \Rlang.
-
-\subsection{Pearson's $r$}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{cor}\hlstd{(cars)}
-\end{alltt}
-\begin{verbatim}
-##           speed      dist
-## speed 1.0000000 0.8068949
-## dist  0.8068949 1.0000000
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.8068949
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{cor.test}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist)}
-\end{alltt}
-\begin{verbatim}
-## 
-## 	Pearson's product-moment correlation
-## 
-## data:  cars$speed and cars$dist
-## t = 9.464, df = 48, p-value = 1.49e-12
-## alternative hypothesis: true correlation is not equal to 0
-## 95 percent confidence interval:
-##  0.6816422 0.8862036
-## sample estimates:
-##       cor 
-## 0.8068949
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \ref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{a} \hlkwb{<-} \hlkwd{cor}\hlstd{(cars)}
-\hlkwd{class}\hlstd{(a)}
-\hlkwd{attributes}\hlstd{(a)}
-\hlkwd{str}\hlstd{(a)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt of the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data directly from the object.
-\end{playground}
-
-\subsection{Kendall's $\tau$ and Spearman's $\rho$}
-
-We use the same functions as for Pearson's $r$ but explicitly request the use of one of these methods.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist,} \hlkwc{method} \hlstd{=} \hlstr{"kendall"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.6689901
-\end{verbatim}
-\begin{alltt}
-\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist,} \hlkwc{method} \hlstd{=} \hlstr{"spearman"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.8303568
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
-
-\begin{playground}
-Repeat the exercise in the playground immediately above, but now using non-default methods as argument to \Rfunction{cor()}. How does the information stored in the returned \code{matrix} differ depending on the method, and how can we extract information about the method used for calculation of the correlation from the returned object.
-\end{playground}
-
-\section{Fitting linear models}\label{sec:stat:LM}
-\index{models!linear|see{linear models}}
-\index{linear models|(}
-\index{LM|see{linear models}}
-
-In \Rlang, the models to be fitted are described by ``model formulas'' such \verb|y ~ x| which we read as $y$ is explained by $x$. Model `formulas' are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models.
-
-As most things in \Rlang model formulas can be stored in variables. In addition, contrary to the usual behaviour of other statistical software, the result of a model fit is returned as an object, containing the different components of the fit. Once the model has been fitted, different methods allow us to extract parts and/or further manipulate the result of fitting the model. Most of these methods have implementations for model fit objects for many different types of statistical models. Consequently what is described in this chapter using linear models as examples, also applies in many respects to the fit of classes of models not described here.
-
-The \Rlang function \Rfunction{lm()} is used next to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratio between two variances.
-
-\begin{warningbox}
-If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit Chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
-\end{warningbox}
-
-\subsection{Regression}
-\index{linear regression}\index{linear models!linear regression}
-In the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
-
-We first load and explore the data to which we will fit a linear model, data that is included in \Rpgrm. These data consist in stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
-\label{xmpl:fun:lm:fm1}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(cars)}
-\hlkwd{plot}\hlstd{(cars)}
-\hlkwd{is.factor}\hlstd{(cars}\hlopt{$}\hlstd{speed)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.numeric}\hlstd{(cars}\hlopt{$}\hlstd{speed)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-models-1z-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We then fit the simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).%
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm1} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlnum{1} \hlopt{+} \hlstd{speed,} \hlkwc{data}\hlstd{=cars)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably fulfilled? In \Rlang it is most common to use plots to this end. We show here only one of the four plots normally produced. This quantile vs.\ quantile plot allows to assess how much the residuals deviate from being normally distributed.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(fm1,} \hlkwc{which} \hlstd{=} \hlnum{2}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-models-1a-1} 
-
-}
-
-
-
-\end{knitrout}
-
-In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{summary}\hlstd{(fm1)}
-\end{alltt}
-\begin{verbatim}
-## 
-## Call:
-## lm(formula = dist ~ 1 + speed, data = cars)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -29.069  -9.525  -2.272   9.215  43.201 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) -17.5791     6.7584  -2.601   0.0123 *  
-## speed         3.9324     0.4155   9.464 1.49e-12 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 15.38 on 48 degrees of freedom
-## Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
-## F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Let's look at the summary, section by section. Under ``Call:'' we find, \verb|dist ~ 1 + speed| or the specification of the model fitted, plus the data used. Under ``Residuals:'' we find the extremes, quartiles and median of the residuals, or deviations between observations and the fitted line. Under ``Coefficients:'' we find the estimates of the model parameters and their variation plus corresponding $t$-tests. At the end of summary there is information on degrees of freedom and overall coefficient of determination ($R^2$).
-
-If we return to the model formulation, we can now replace $\alpha$ and $\beta$ by the estimates obtaining $y = -17.6 + 3.93 x$. Given the nature of the problem, we \emph{know based on first principles} that stopping distance must be zero when speed is zero. This suggests that we should not estimate the value of $\alpha$ but instead set $\alpha = 0$, or in other words fit the model $y = \beta \cdot x$.
-
-However, in \Rlang models the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e.\ a missing \code{+1} does not change the model. To `remove' the intercept from the earlier model we need to use \verb|dist ~ speed - 1|, resulting in the fitting of a straight line through the origin ($x = 0$, $y = 0$).
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm2} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlstd{speed} \hlopt{-} \hlnum{1}\hlstd{,} \hlkwc{data}\hlstd{=cars)}
-\hlkwd{summary}\hlstd{(fm2)}
-\end{alltt}
-\begin{verbatim}
-## 
-## Call:
-## lm(formula = dist ~ speed - 1, data = cars)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -26.183 -12.637  -5.455   4.590  50.181 
-## 
-## Coefficients:
-##       Estimate Std. Error t value Pr(>|t|)    
-## speed   2.9091     0.1414   20.58   <2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 16.26 on 49 degrees of freedom
-## Multiple R-squared:  0.8963,	Adjusted R-squared:  0.8942 
-## F-statistic: 423.5 on 1 and 49 DF,  p-value: < 2.2e-16
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Now there is no estimate for the intercept in the summary, only an estimate for the slope. The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(fm2,} \hlkwc{which} \hlstd{=} \hlnum{1}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-models-2a-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{playground}
-You will now fit a second degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm3} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlstd{speed} \hlopt{+} \hlkwd{I}\hlstd{(speed}\hlopt{^}\hlnum{2}\hlstd{),} \hlkwc{data} \hlstd{= cars)}
-\hlkwd{plot}\hlstd{(fm3,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
-\hlkwd{summary}\hlstd{(fm3)}
-\hlkwd{anova}\hlstd{(fm3)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-The ``same'' fit using an orthogonal polynomial. Higher degrees can be obtained by supplying as second argument to \Rfunction{poly()} a different positive integer value.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm3a} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlkwd{poly}\hlstd{(speed,} \hlnum{2}\hlstd{),} \hlkwc{data}\hlstd{=cars)}
-\hlkwd{summary}\hlstd{(fm3a)}
-\hlkwd{anova}\hlstd{(fm3a)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-We can also compare two model fits using \Rfunction{anova()}, to test whether one of models describes the data better than the other.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(fm2, fm1)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Or three or more models. But be careful, as the order of the arguments matters.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(fm2, fm1, fm3, fm3a)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better.\qRfunction{BIC()}\qRfunction{AIC()}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{BIC}\hlstd{(fm2, fm1, fm3, fm3a)}
-\hlkwd{AIC}\hlstd{(fm2, fm1, fm3, fm3a)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Once you have run the code in the chunks above, you will be able see that these three criteria not necessarily agree on which is the ``best'' model. Find in the output $p$-values from ANOVA, BIC and AIC values, for the different models and conclude on which model is favoured by each of the three criteria. In addition you will notice that the two different formulations of the quadratic polynomial are equivalent.
-
-\end{playground}
-
-\begin{advplayground}
-Additional methods provide access to different components of fitted models: \Rfunction{vcov()} returns the variance-covariance matrix, \Rfunction{coef()} and its alias \Rfunction{coefficients()} return the estimates for the fitted model coefficients, \Rfunction{fitted()} and its alias \Rfunction{fitted.values()} extract the fitted values, and \Rfunction{residuals()} the corresponding residuals (or deviations). The method \Rfunction{predict()} uses the fitted model to compute predictions and confidence bands based from new data for the independent variables.
-
-Task: familiarize yourself with these methods by reading the documentation and using them with the models fitted above or model fits to other data of your interest.
-\end{advplayground}
-
-\begin{explainbox}
-The objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them.
-
-We rarely need to manually explore the structure of these objects, but it is rather frequently good to have an idea of what is going on in the background. We can use \Rfunction{str()} to explore some of the fitted models.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{str}\hlstd{(fm1,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)} \hlcom{# not evaluated}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{str}\hlstd{(}\hlkwd{anova}\hlstd{(fm1))}
-\end{alltt}
-\begin{verbatim}
-## Classes 'anova' and 'data.frame':	2 obs. of  5 variables:
-##  $ Df     : int  1 48
-##  $ Sum Sq : num  21185 11354
-##  $ Mean Sq: num  21185 237
-##  $ F value: num  89.6 NA
-##  $ Pr(>F) : num  1.49e-12 NA
-##  - attr(*, "heading")= chr  "Analysis of Variance Table\n" "Response: dist"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{str}\hlstd{(}\hlkwd{summary}\hlstd{(fm1))}
-\end{alltt}
-\begin{verbatim}
-## List of 11
-##  $ call         : language lm(formula = dist ~ 1 + speed, data = cars)
-##  $ terms        :Classes 'terms', 'formula'  language dist ~ 1 + speed
-##   .. ..- attr(*, "variables")= language list(dist, speed)
-##   .. ..- attr(*, "factors")= int [1:2, 1] 0 1
-##   .. .. ..- attr(*, "dimnames")=List of 2
-##   .. .. .. ..$ : chr [1:2] "dist" "speed"
-##   .. .. .. ..$ : chr "speed"
-##   .. ..- attr(*, "term.labels")= chr "speed"
-##   .. ..- attr(*, "order")= int 1
-##   .. ..- attr(*, "intercept")= int 1
-##   .. ..- attr(*, "response")= int 1
-##   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
-##   .. ..- attr(*, "predvars")= language list(dist, speed)
-##   .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
-##   .. .. ..- attr(*, "names")= chr [1:2] "dist" "speed"
-##  $ residuals    : Named num [1:50] 3.85 11.85 -5.95 12.05 2.12 ...
-##   ..- attr(*, "names")= chr [1:50] "1" "2" "3" "4" ...
-##  $ coefficients : num [1:2, 1:4] -17.579 3.932 6.758 0.416 -2.601 ...
-##   ..- attr(*, "dimnames")=List of 2
-##   .. ..$ : chr [1:2] "(Intercept)" "speed"
-##   .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
-##  $ aliased      : Named logi [1:2] FALSE FALSE
-##   ..- attr(*, "names")= chr [1:2] "(Intercept)" "speed"
-##  $ sigma        : num 15.4
-##  $ df           : int [1:3] 2 48 2
-##  $ r.squared    : num 0.651
-##  $ adj.r.squared: num 0.644
-##  $ fstatistic   : Named num [1:3] 89.6 1 48
-##   ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
-##  $ cov.unscaled : num [1:2, 1:2] 0.19311 -0.01124 -0.01124 0.00073
-##   ..- attr(*, "dimnames")=List of 2
-##   .. ..$ : chr [1:2] "(Intercept)" "speed"
-##   .. ..$ : chr [1:2] "(Intercept)" "speed"
-##  - attr(*, "class")= chr "summary.lm"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Once we know the nesting and the names of components we can simply extract them using indexing.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{adj.r.squared}
-\end{alltt}
-\begin{verbatim}
-## [1] 0.6438102
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-As an example we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
-
-The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with null hypothesis of slope = 1. The procedure is applicable to any constant value as null hypothesis for any of the fitted parameter estimates set \emph{a priori}. The examples use a two-sided test, in some cases, a single-sided test should be used (e.g.\ if its known a priori that deviation is possible only in one direction away from the hypothesis).
-
-To estimate the \emph{t}-value we need the estimate for a parameter and an estimate of the standard error for this estimate and its degrees of freedom.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{est.slope.value} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{coef[}\hlstr{"speed"}\hlstd{,} \hlstr{"Estimate"}\hlstd{]}
-\hlstd{est.slope.se} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{coef[}\hlstr{"speed"}\hlstd{,} \hlstr{"Std. Error"}\hlstd{]}
-\hlstd{degrees.of.freedom} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{df[}\hlnum{2}\hlstd{]}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-The \emph{t}-test is based on the difference between the value of the null hypothesis and the estimate.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{hyp.null} \hlkwb{<-} \hlnum{1}
-\hlstd{t.value} \hlkwb{<-} \hlstd{(est.slope.value} \hlopt{-} \hlstd{hyp.null)} \hlopt{/} \hlstd{est.slope.se}
-\hlstd{p.value} \hlkwb{<-} \hlkwd{dt}\hlstd{(t.value,} \hlkwc{df} \hlstd{= degrees.of.freedom)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-\end{explainbox}
-
-\begin{advplayground}
-Check that the procedure above agrees with the output of \code{summary()} for \code{hyp.null <- 0}.
-
-Modify the example so as to test whether the intercept is significantly different from 5 feet.
-\end{advplayground}
-
-\subsection{Analysis of variance, ANOVA}\label{sec:anova}
-\index{analysis of variance}\index{linear models!analysis of variance}
-\index{ANOVA|see{analysis of variance}}
-We use as the \code{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
-\label{xmpl:fun:lm:fm4}
-
-The call is exactly the same as the one for linear regression, only the names of the variables and data frame are different. What determines that this is an ANOVA is that \code{spray}, the explanatory variable, is a \code{factor}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(InsectSprays)}
-\hlkwd{is.factor}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.numeric}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm4} \hlkwb{<-} \hlkwd{lm}\hlstd{(count} \hlopt{~} \hlstd{spray,} \hlkwc{data} \hlstd{= InsectSprays)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(fm4,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-model-6a-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(fm4)}
-\end{alltt}
-\begin{verbatim}
-## Analysis of Variance Table
-## 
-## Response: count
-##           Df Sum Sq Mean Sq F value    Pr(>F)    
-## spray      5 2668.8  533.77  34.702 < 2.2e-16 ***
-## Residuals 66 1015.2   15.38                      
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract the estimates but usually the default contrasts and corresponding $P$-values are for hypotheses that have little or no direct interest.
-
-\subsection{Analysis of covariance, ANCOVA}
-\index{analysis of covariance}\index{linear models!analysis of covariance}
-\index{ANCOVA|see{analysis of covariance}}
-
-When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
-
-As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite{}.
-
-\begin{playground}
-There are additional methods for extracting information from model fits. As objects containing the results of model fitting belong to different classes reflecting the type of model, methods with the same name can co-exist and be selected automatically. The output will not be necessarily the same, and some the parameters accepted will differ.\qRfunction{coef()}\qRfunction{resid()}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{class}\hlstd{(fm1)}
-\hlkwd{coef}\hlstd{(fm1)}
-\hlkwd{resid}\hlstd{(fm1)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Do explore these methods if you know enough about statistics to recognize them. In the case of prediction with \Rfunction{predict()} new data needs to be supplied as argument as in the case of linear models no default is provided for this parameter, which in other cases are the data used in the fit. Be aware that the name of the variable (= column) within the new data frame needs to match the name of the explanatory variable in the data to which the model was fit, in our case \code{speed}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.new.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{speed} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{10}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{predict}\hlstd{(fm1,} \hlkwc{newdata} \hlstd{= my.new.data)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{predict}\hlstd{(fm1,} \hlkwc{newdata} \hlstd{= my.new.data,} \hlkwc{interval} \hlstd{=} \hlstr{"confidence"}\hlstd{,} \hlkwc{level} \hlstd{=} \hlnum{0.9}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Some other components of the fitted model object can be extracted with the usual syntax for lists, once we discover the names of the components. As shown earlier, we can use \code{str()} or \code{names()} to this end.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{names}\hlstd{(fm1)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm1}\hlopt{$}\hlstd{df.residual}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-To see the whole structure of the fitted model object we can use \code{str()}, which reveals the nesting of members and all their \emph{attributes} (described in section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes}). In this case attributes contain very important information about the fit.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{str}\hlstd{(fm1,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{playground}
-\index{linear models|)}
-
-\section{Generalized linear models}\label{sec:stat:GLM}
-\index{generalized linear models|(}\index{models!generalized linear|see{generalized linear models}}
-\index{GLM|see{generalized linear models}}
-
-Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
-For the analysis of the \code{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
-
-For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal. In addition to the model formula we need can pass an argument through \code{family} giving the error distribution to be assumed---the default for \code{family} is \code{gaussian} or Normal distribution.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{fm10} \hlkwb{<-} \hlkwd{glm}\hlstd{(count} \hlopt{~} \hlstd{spray,} \hlkwc{data} \hlstd{= InsectSprays,} \hlkwc{family} \hlstd{= quasipoisson)}
-\hlkwd{anova}\hlstd{(fm10)}
-\end{alltt}
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: quasipoisson, link: log
-## 
-## Response: count
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##       Df Deviance Resid. Df Resid. Dev
-## NULL                     71     409.04
-## spray  5   310.71        66      98.33
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The print-out from the \Rfunction{anova()} method for GLM fits has some differences to that for LM fits. By default no significance test is computed, as a knowledgable choice is required depending on the characteristics of the model and data. We here use \code{"F"} as argument to request an $F$-test.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(fm10,} \hlkwc{test} \hlstd{=} \hlstr{"F"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## Analysis of Deviance Table
-## 
-## Model: quasipoisson, link: log
-## 
-## Response: count
-## 
-## Terms added sequentially (first to last)
-## 
-## 
-##       Df Deviance Resid. Df Resid. Dev      F    Pr(>F)    
-## NULL                     71     409.04                     
-## spray  5   310.71        66      98.33 41.216 < 2.2e-16 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Method \Rfunction{plot()} as for LM fits, produces diagnosis plots. We show as above the q-q-plot of residuals.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(fm10,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-model-11-1} 
-
-}
-
-
-
-\end{knitrout}
-\index{generalized linear models|)}
-
-\section{Non-linear regression}\label{sec:stat:NLS}
-\index{non-linear models|(}\index{models!non-linear|see{non-linear models}}
-
-Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non linear \emph{in the parameters} whose values is being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of any degree are linear models.
-
-In the case of \Rfunction{nls()} the specification of the model to be fitted differs from that used for linear models. We will use as example fitting the Michaelis-Menten equation describing reaction kinetics in biochemistry and chemistry. The mathematical formulation is given by:
-
-\begin{equation}\label{eq:michaelis:menten}
-v = \frac{\mathrm{d} [P]}{\mathrm{d} t} = \frac{V_{\mathrm{max}} [S]}{K_{\mathrm{M}} + [S]}
-\end{equation}
-
-\index{non-linear models|)}
-
-\section{Model formulas}
-  In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of \code{*} and explicitly define all individual main effects and interactions. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to use grouping to exclude some interactions.
-
-The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two explanatory variables in the model. In the second case \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does its argument.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlkwd{I}\hlstd{(x1} \hlopt{+} \hlstd{x2)}
-\hlstd{y} \hlopt{~} \hlkwd{log}\hlstd{(x1} \hlopt{+} \hlstd{x2)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\Rlang's formula syntax allows alternative ways for specifying interaction terms. They allow ``abbreviated'' ways of entering formulas, which for complex experimental designs saves typing and can improve clarity. As seen above operator \code{*} saves us from having to explicitly indicate all the interaction terms in a full factorial model.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2}\hlopt{:}\hlstd{x3}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Can be replaced by a concise equivalent.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{x2} \hlopt{*} \hlstd{x3}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-When the model to be specified does not include all possible interaction terms, we can combine the concise notation with parentheses.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{(x2} \hlopt{*} \hlstd{x3)}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-That the two model formulas above are equivalent, can be seen using \code{term()}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{(x2} \hlopt{*} \hlstd{x3))}
-\end{alltt}
-\begin{verbatim}
-## y ~ x1 + (x2 * x3)
-## attr(,"variables")
-## list(y, x1, x2, x3)
-## attr(,"factors")
-##    x1 x2 x3 x2:x3
-## y   0  0  0     0
-## x1  1  0  0     0
-## x2  0  1  0     1
-## x3  0  0  1     1
-## attr(,"term.labels")
-## [1] "x1"    "x2"    "x3"    "x2:x3"
-## attr(,"order")
-## [1] 1 1 1 2
-## attr(,"intercept")
-## [1] 1
-## attr(,"response")
-## [1] 1
-## attr(,".Environment")
-## <environment: R_GlobalEnv>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{(x2} \hlopt{+} \hlstd{x3)}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{(x2} \hlopt{+} \hlstd{x3))}
-\end{alltt}
-\begin{verbatim}
-## y ~ x1 * (x2 + x3)
-## attr(,"variables")
-## list(y, x1, x2, x3)
-## attr(,"factors")
-##    x1 x2 x3 x1:x2 x1:x3
-## y   0  0  0     0     0
-## x1  1  0  0     1     1
-## x2  0  1  0     1     0
-## x3  0  0  1     0     1
-## attr(,"term.labels")
-## [1] "x1"    "x2"    "x3"    "x1:x2" "x1:x3"
-## attr(,"order")
-## [1] 1 1 1 2 2
-## attr(,"intercept")
-## [1] 1
-## attr(,"response")
-## [1] 1
-## attr(,".Environment")
-## <environment: R_GlobalEnv>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The \code{\textasciicircum{}} operator can be used to limit the order of the interaction terms included in a formula.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## y ~ (x1 + x2 + x3)^2
-## attr(,"variables")
-## list(y, x1, x2, x3)
-## attr(,"factors")
-##    x1 x2 x3 x1:x2 x1:x3 x2:x3
-## y   0  0  0     0     0     0
-## x1  1  0  0     1     1     0
-## x2  0  1  0     1     0     1
-## x3  0  0  1     0     1     1
-## attr(,"term.labels")
-## [1] "x1"    "x2"    "x3"    "x1:x2" "x1:x3" "x2:x3"
-## attr(,"order")
-## [1] 1 1 1 2 2 2
-## attr(,"intercept")
-## [1] 1
-## attr(,"response")
-## [1] 1
-## attr(,".Environment")
-## <environment: R_GlobalEnv>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
- For operator \code{\textasciicircum{}} to behave as expected its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}
-\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{*} \hlstd{x2} \hlopt{*} \hlstd{x3)}\hlopt{^}\hlnum{2}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{playground}
-
-Operator \code{\%in\%} can also be used as a shortcut to including only some of all the possible interaction terms in a formula.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x1} \hlopt{%in%} \hlstd{x2}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x1} \hlopt{%in%} \hlstd{x2)}
-\end{alltt}
-\begin{verbatim}
-## y ~ x1 + x2 + x1 %in% x2
-## attr(,"variables")
-## list(y, x1, x2)
-## attr(,"factors")
-##    x1 x2 x1:x2
-## y   0  0     0
-## x1  1  0     1
-## x2  0  1     1
-## attr(,"term.labels")
-## [1] "x1"    "x2"    "x1:x2"
-## attr(,"order")
-## [1] 1 1 2
-## attr(,"intercept")
-## [1] 1
-## attr(,"response")
-## [1] 1
-## attr(,".Environment")
-## <environment: R_GlobalEnv>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-The following examples of the use of formulas in ANOVA, plus your own variations on the same theme will help understand the syntax of model formulas.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(npk)}
-\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{*} \hlstd{P} \hlopt{*} \hlstd{K,} \hlkwc{data} \hlstd{= npk))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{(N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K)}\hlopt{^}\hlnum{2}\hlstd{,} \hlkwc{data} \hlstd{= npk))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{+} \hlstd{P} \hlopt{%in%} \hlstd{N} \hlopt{+} \hlstd{K} \hlopt{%in%} \hlstd{N,} \hlkwc{data} \hlstd{= npk))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{+} \hlstd{N} \hlopt{%in%} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{%in%} \hlstd{P,} \hlkwc{data} \hlstd{= npk))}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{playground}
-
-Nesting of factors results in the computation of additional error terms, with different degrees of freedom. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base R formulas the nesting needs to be accounted by explicit definition of error terms by means of \code{Error()} within the formula. The numerical example below is just a demonstration of the consequences of using an invalid design. Of the two model formulas used, only one yields a valid data analysis!
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlkwd{Error}\hlstd{(x1} \hlopt{*} \hlstd{x2)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base R's model formula syntax to allow the description of nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These fall outside the scope of this book.
-
-\begin{warningbox}
-  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is the responsibility of the user to ensure that models are meaningful. The most common, and dangerous, mistake are missing simple interactions in factorial ANOVA.
-
-  Fitting models like those below to three-way ANOVA should be avoided. In both cases simpler terms are missing, while interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
-\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{*} \hlstd{C}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-  Models such as those below are interpretable, even though ``incomplete'' (not including all possible interactions).
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
-\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-  The full three-way factorial models includes all possible combinations of factors.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{*} \hlstd{C}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\end{warningbox}
-
-As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{"formula"}.
-
-<<mformulas-W11>=
-class(y ~ x)
-@
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{a} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x}
-\hlkwd{class}\hlstd{(a)}
-\end{alltt}
-\begin{verbatim}
-## [1] "formula"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{inherits}\hlstd{(a,} \hlstr{"formula"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{warningbox}
-No method \Rfunction{is.formula()} is part of the \Rlang language, but instead methods \Rfunction{is.formula()} and \Rfunction{is\_formula()} provided by packages \pkgname{plyr} and \pkgname{rlang}, respectively.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{plyr}\hlopt{::}\hlkwd{is.formula}\hlstd{(a)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlstd{rlang}\hlopt{::}\hlkwd{is_formula}\hlstd{(a)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-However, it would be unwise to add a dependency on either of these packages for such a trivial function. We could directly use \Rlang method \Rfunction{inherits()} as shown above.
-
-To see how these methods have been defined, we can print them, simply by not supplying the ``function-call'' parentheses.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{plyr}\hlopt{::}\hlstd{is.formula}
-\end{alltt}
-\begin{verbatim}
-## function (x) 
-## inherits(x, "formula")
-## <bytecode: 0x0000000013c45918>
-## <environment: namespace:plyr>
-\end{verbatim}
-\begin{alltt}
-\hlstd{rlang}\hlopt{::}\hlstd{is_formula}
-\end{alltt}
-\begin{verbatim}
-## function (x, scoped = NULL, lhs = NULL) 
-## {
-##     if (!is_formulaish(x, scoped = scoped, lhs = lhs)) {
-##         return(FALSE)
-##     }
-##     identical(node_car(x), tilde_sym)
-## }
-## <bytecode: 0x000000001878c800>
-## <environment: namespace:rlang>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-It can be seen that they call \Rfunction{inherits()} with \code{"formula"} as its second argument, demonstrating how trivial their definitions are. This servers as an example of how sometimes unnecessary dependencies on packages can creep into our own scripts and packages, as dependency one package does not only adds a dependency on the used package but also on the further packages it directly and indirectly depends on. If needed or desired one can very easily define a \Rfunction{is.formula()} method that adds no external dependencies.
-\end{warningbox}
-
-\begin{explainbox}
-\textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. Formulas as any other \Rlang objects can be saved in variables including lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a \code{for} loop that walks through a list of model formulas. Or we can write a function that accepts one or more formulas as arguments.
-
-The use of \code{for} \emph{loops} for iteration is described in section \ref{sec:script:flow:control} on page \pageref{sec:script:flow:control}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{y} \hlstd{= (}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{)} \hlopt{/} \hlnum{2} \hlopt{+} \hlkwd{rnorm}\hlstd{(}\hlnum{10}\hlstd{))}
-\hlstd{anovas} \hlkwb{<-} \hlkwd{list}\hlstd{()}
-\hlstd{formulas} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlkwc{a} \hlstd{= y} \hlopt{~} \hlstd{x} \hlopt{-} \hlnum{1}\hlstd{,} \hlkwc{b} \hlstd{= y} \hlopt{~} \hlstd{x,} \hlkwc{c} \hlstd{= y} \hlopt{~} \hlstd{x} \hlopt{+} \hlstd{x}\hlopt{^}\hlnum{2}\hlstd{)}
-\hlkwa{for} \hlstd{(formula} \hlkwa{in} \hlstd{formulas) \{}
- \hlstd{anovas} \hlkwb{<-} \hlkwd{c}\hlstd{(anovas,} \hlkwd{list}\hlstd{(}\hlkwd{lm}\hlstd{(formula,} \hlkwc{data} \hlstd{= my.data)))}
- \hlstd{\}}
-\hlkwd{str}\hlstd{(anovas,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## List of 3
-##  $ :List of 12
-##   ..- attr(*, "class")= chr "lm"
-##  $ :List of 12
-##   ..- attr(*, "class")= chr "lm"
-##  $ :List of 12
-##   ..- attr(*, "class")= chr "lm"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-As could be expected a conversion constructor is available with name \code{as.formula}. It becomes useful when formulas are input interactively by the user or read from text files. We can convert a character string into a formula.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.string} \hlkwb{<-} \hlstr{"y ~ x"}
-\hlkwd{lm}\hlstd{(}\hlkwd{as.formula}\hlstd{(my.string),} \hlkwc{data} \hlstd{= my.data)}
-\end{alltt}
-\begin{verbatim}
-## 
-## Call:
-## lm(formula = as.formula(my.string), data = my.data)
-## 
-## Coefficients:
-## (Intercept)            x  
-##     -0.2814       0.4594
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-As there are many functions available in base \Rlang and through packages for the manipulation of character strings, it is straightforward to build model formulas programmatically as strings. We can use functions like \code{paste()} to assemble a formula as text, and then use \code{as.formula()} to convert it to an object of class \code{formula}, usable for fitting a model.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.string} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"y"}\hlstd{,} \hlstr{"x"}\hlstd{,} \hlkwc{sep} \hlstd{=} \hlstr{"~"}\hlstd{)}
-\hlkwd{lm}\hlstd{(}\hlkwd{as.formula}\hlstd{(my.string),} \hlkwc{data} \hlstd{= my.data)}
-\end{alltt}
-\begin{verbatim}
-## 
-## Call:
-## lm(formula = as.formula(my.string), data = my.data)
-## 
-## Coefficients:
-## (Intercept)            x  
-##     -0.2814       0.4594
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-For the reverse operation of converting a formula into a string, we have available methods \code{as.character()} and \code{format()}. The first of these methods returns a character vector containing the components of the formula as individual strings, while \code{format()} returns a single character string with the formula formatted for printing.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{formatted.string} \hlkwb{<-} \hlkwd{format}\hlstd{(y} \hlopt{~} \hlstd{x)}
-\hlstd{formatted.string}
-\end{alltt}
-\begin{verbatim}
-## [1] "y ~ x"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{as.formula}\hlstd{(formatted.string)}
-\end{alltt}
-\begin{verbatim}
-## y ~ x
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-It is also possible to \emph{edit} formula objects with method \Rfunction{update()}. In the replacement formula, a dot can replace either the left hand side (lhs) or the right hand side (rhs) of the existing formula in the replacement formula. We can also remove terms as can be seen below. In some cases the dot corresponding to the lhs con be omitted, but including it makes the syntax clearer.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2}
-\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{.} \hlopt{+} \hlstd{x3)}
-\end{alltt}
-\begin{verbatim}
-## y ~ x1 + x2 + x3
-\end{verbatim}
-\begin{alltt}
-\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{.} \hlopt{-} \hlstd{x1)}
-\end{alltt}
-\begin{verbatim}
-## y ~ x2
-\end{verbatim}
-\begin{alltt}
-\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{x3)}
-\end{alltt}
-\begin{verbatim}
-## y ~ x3
-\end{verbatim}
-\begin{alltt}
-\hlkwd{update}\hlstd{(my.formula, z} \hlopt{~} \hlstd{.)}
-\end{alltt}
-\begin{verbatim}
-## z ~ x1 + x2
-\end{verbatim}
-\begin{alltt}
-\hlkwd{update}\hlstd{(my.formula, .} \hlopt{+} \hlstd{z} \hlopt{~} \hlstd{.)}
-\end{alltt}
-\begin{verbatim}
-## y + z ~ x1 + x2
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-R provides high level functions for model selection. Consequently many R users will rarely need to edit model formulas in their scripts. For example, step wise model selection is possible with \Rlang method \code{step()}.
-
-A matrix of dummy coefficients can be derived from a model formula, a type of contrast and the data for the explanatory variables.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{treats.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{A} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"yes"}\hlstd{,} \hlstr{"no"}\hlstd{),} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{4}\hlstd{)),}
-                        \hlkwc{B} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"white"}\hlstd{,} \hlstr{"black"}\hlstd{),} \hlnum{4}\hlstd{))}
-\hlstd{treats.df}
-\end{alltt}
-\begin{verbatim}
-##     A     B
-## 1 yes white
-## 2 yes black
-## 3 yes white
-## 4 yes black
-## 5  no white
-## 6  no black
-## 7  no white
-## 8  no black
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The default contrasts types currently in use.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{options}\hlstd{(}\hlstr{"contrasts"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## $contrasts
-##         unordered           ordered 
-## "contr.treatment"      "contr.poly"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-A model matrix for a model for a two-way factorial design with no interaction term.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{model.matrix}\hlstd{(}\hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B, treats.df)}
-\end{alltt}
-\begin{verbatim}
-##   (Intercept) Ayes Bwhite
-## 1           1    1      1
-## 2           1    1      0
-## 3           1    1      1
-## 4           1    1      0
-## 5           1    0      1
-## 6           1    0      0
-## 7           1    0      1
-## 8           1    0      0
-## attr(,"assign")
-## [1] 0 1 2
-## attr(,"contrasts")
-## attr(,"contrasts")$A
-## [1] "contr.treatment"
-## 
-## attr(,"contrasts")$B
-## [1] "contr.treatment"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-A model matrix for a model for a two-way factorial design with interaction term.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{model.matrix}\hlstd{(}\hlopt{~} \hlstd{A} \hlopt{*} \hlstd{B, treats.df)}
-\end{alltt}
-\begin{verbatim}
-##   (Intercept) Ayes Bwhite Ayes:Bwhite
-## 1           1    1      1           1
-## 2           1    1      0           0
-## 3           1    1      1           1
-## 4           1    1      0           0
-## 5           1    0      1           0
-## 6           1    0      0           0
-## 7           1    0      1           0
-## 8           1    0      0           0
-## attr(,"assign")
-## [1] 0 1 2 3
-## attr(,"contrasts")
-## attr(,"contrasts")$A
-## [1] "contr.treatment"
-## 
-## attr(,"contrasts")$B
-## [1] "contr.treatment"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\end{explainbox}
-
-\section{Time series}\label{sec:stat:time:series}
-
-Longitudinal data, when replicated is usually named repeated measurements, but when not replicated, is named time series.
-Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models.
-
-Time series data are data collected in such a way that there is only one observation, possibly of multiple variables, available at each time step. This brief section introduces only the most basic aspects of time-series analysis. In most cases time steps are of uniform duration and occur regularly. Given this properties, it is possible to take advantage of this for their storage. \Rlang not only provides methods for the analysis and manipulation of this type data, but also a specialized class for their storage, \code{ts}. A regular time series does not store the time value at each observation: only a combination of two of start time, step size and end time needs to be stored.
-
-We start by creating a time series from a numeric vector. By now, you surely guessed that you need to use a constructor called \Rfunction{ts()} or a conversion constructor called \Rfunction{as.ts()} and that you can look up the arguments they accept by reading the corresponding help pages.
-
-For example for a time series of monthly values we could use.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.ts} \hlkwb{<-} \hlkwd{ts}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{start} \hlstd{=} \hlnum{2018}\hlstd{,} \hlkwc{deltat} \hlstd{=} \hlnum{1}\hlopt{/}\hlnum{12}\hlstd{)}
-\hlkwd{class}\hlstd{(my.ts)}
-\end{alltt}
-\begin{verbatim}
-## [1] "ts"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{str}\hlstd{(my.ts)}
-\end{alltt}
-\begin{verbatim}
-##  Time-Series [1:10] from 2018 to 2019: 1 2 3 4 5 6 7 8 9 10
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-We next use a data set included in R.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{class}\hlstd{(austres)}
-\end{alltt}
-\begin{verbatim}
-## [1] "ts"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.ts}\hlstd{(austres)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-
-
-This time series of the number of Australian residents is dominated by the increasing trend.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(austres)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-02-1} 
-
-}
-
-
-
-\end{knitrout}
-
-A different example, in this case meteorological data, shows an important cyclic component. The annual cycle of mean air temperatures is clearly seen in the plot.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(nottem)}
-\hlkwd{is.ts}\hlstd{(nottem)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(nottem)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-03-1} 
-
-}
-
-
-
-\end{knitrout}
-
-In the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use loess for the decomposition, a method for which the acronym STL is used. LOESS is a local-regression-based smoothing method.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{nottem.celcius} \hlkwb{<-} \hlstd{(nottem} \hlopt{-} \hlnum{32}\hlstd{)} \hlopt{*} \hlnum{5}\hlopt{/}\hlnum{9}
-\hlkwd{plot}\hlstd{(}\hlkwd{decompose}\hlstd{(nottem.celcius))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-04-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(}\hlkwd{stl}\hlstd{(nottem.celcius,} \hlkwc{s.window} \hlstd{=} \hlnum{6}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-05-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\section{Multivariate statistics}\label{sec:stat:MV}
-
-\subsection{Multivariate analysis of variance}
-
-Multivariate methods take into account several response variables simultaneously, as part of a single analysis. In practice it is usual to use contributed packages for multivariate data analysis in \Rlang, except for simple cases. We will look first at \emph{multivariate} ANOVA or MANOVA. In the same way as \Rfunction{aov()} is a wrapper that uses internally \Rfunction{lm()}, \Rfunction{manova()} is a wrapper that uses internally \Rfunction{aov()}.
-
-Multivariate model formulas in some cases use the same syntax as univariate ones, but contain more than one response variable on their left hand side (lhs).
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{y1} \hlopt{+} \hlstd{y2} \hlopt{+} \hlstd{y3} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{x2}
-\end{alltt}
-\begin{verbatim}
-## y1 + y2 + y3 ~ x1 * x2
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-In other cases, a special syntax is used. In the case of function \Rfunction{manova()} we use function \code{cbind()} (column bind) to assemble the lhs of the formula.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(iris)}
-\hlstd{m.fit} \hlkwb{<-} \hlkwd{manova}\hlstd{(}\hlkwd{cbind}\hlstd{(Petal.Length, Petal.Width)} \hlopt{~}  \hlstd{Species,} \hlkwc{data} \hlstd{= iris)}
-\hlkwd{anova}\hlstd{(m.fit)}
-\end{alltt}
-\begin{verbatim}
-## Analysis of Variance Table
-## 
-##              Df  Pillai approx F num Df den Df    Pr(>F)    
-## (Intercept)   1 0.98786   5939.2      2    146 < 2.2e-16 ***
-## Species       2 1.04645     80.7      4    294 < 2.2e-16 ***
-## Residuals   147                                             
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-\end{verbatim}
-\begin{alltt}
-\hlkwd{summary}\hlstd{(m.fit)}
-\end{alltt}
-\begin{verbatim}
-##            Df Pillai approx F num Df den Df    Pr(>F)    
-## Species     2 1.0465   80.661      4    294 < 2.2e-16 ***
-## Residuals 147                                            
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\subsection{Principal components analysis}\label{sec:stat:PCA}
-
-Principal components analysis is used to simplify a data set by combing variables with similar behaviour into ``principal components''. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base \Rlang's function \Rfunction{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{pc} \hlkwb{<-} \hlkwd{prcomp}\hlstd{(iris[}\hlkwd{c}\hlstd{(}\hlstr{"Sepal.Length"}\hlstd{,} \hlstr{"Sepal.Width"}\hlstd{,}
-                    \hlstr{"Petal.Length"}\hlstd{,} \hlstr{"Petal.Width"}\hlstd{)],}
-             \hlkwc{center} \hlstd{=} \hlnum{TRUE}\hlstd{,}
-             \hlkwc{scale.} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{pc}
-\end{alltt}
-\begin{verbatim}
-## Standard deviations (1, .., p=4):
-## [1] 1.7083611 0.9560494 0.3830886 0.1439265
-## 
-## Rotation (n x k) = (4 x 4):
-##                     PC1         PC2        PC3        PC4
-## Sepal.Length  0.5210659 -0.37741762  0.7195664  0.2612863
-## Sepal.Width  -0.2693474 -0.92329566 -0.2443818 -0.1235096
-## Petal.Length  0.5804131 -0.02449161 -0.1421264 -0.8014492
-## Petal.Width   0.5648565 -0.06694199 -0.6342727  0.5235971
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{summary}\hlstd{(pc)}
-\end{alltt}
-\begin{verbatim}
-## Importance of components:
-##                           PC1    PC2     PC3     PC4
-## Standard deviation     1.7084 0.9560 0.38309 0.14393
-## Proportion of Variance 0.7296 0.2285 0.03669 0.00518
-## Cumulative Proportion  0.7296 0.9581 0.99482 1.00000
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Method \code{plot()}
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{plot}\hlstd{(pc)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-pca-04-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{explainbox}
-As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components. Further computations and/or formatting can be applied.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{str}\hlstd{(pc)}
-\end{alltt}
-\begin{verbatim}
-## List of 5
-##  $ sdev    : num [1:4] 1.708 0.956 0.383 0.144
-##  $ rotation: num [1:4, 1:4] 0.521 -0.269 0.58 0.565 -0.377 ...
-##   ..- attr(*, "dimnames")=List of 2
-##   .. ..$ : chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
-##   .. ..$ : chr [1:4] "PC1" "PC2" "PC3" "PC4"
-##  $ center  : Named num [1:4] 5.84 3.06 3.76 1.2
-##   ..- attr(*, "names")= chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
-##  $ scale   : Named num [1:4] 0.828 0.436 1.765 0.762
-##   ..- attr(*, "names")= chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
-##  $ x       : num [1:150, 1:4] -2.26 -2.07 -2.36 -2.29 -2.38 ...
-##   ..- attr(*, "dimnames")=List of 2
-##   .. ..$ : NULL
-##   .. ..$ : chr [1:4] "PC1" "PC2" "PC3" "PC4"
-##  - attr(*, "class")= chr "prcomp"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\end{explainbox}
-
-
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{biplot}\hlstd{(pc)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-pca-05-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgname{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:performance}, package \pkgname{ggfortify} described in section \ref{sec:plot:ggfortify} on page \pageref{sec:plot:ggfortify} and package \pkgname{ggbiplot} described in section \ref{sec:plot:ggbiplot} on page \pageref{sec:plot:ggbiplot}.
-
-\begin{playground}
-For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
-\end{playground}
-
-\subsection{Multidimensional scaling}\label{sec:stat:MDS}
-
-In multidimensional scaling we start with a matrix of distances among observations that will need to be calculated from the raw data. We use for the example distances between geographic locations in Europe.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{loc} \hlkwb{<-} \hlkwd{cmdscale}\hlstd{(eurodist)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-We can see that the returned object \code{loc} is a \code{matrix}, with names for one of the dimensions.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{class}\hlstd{(loc)}
-\end{alltt}
-\begin{verbatim}
-## [1] "matrix"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{head}\hlstd{(loc)}
-\end{alltt}
-\begin{verbatim}
-##                 [,1]      [,2]
-## Athens    2290.27468 1798.8029
-## Barcelona -825.38279  546.8115
-## Brussels    59.18334 -367.0814
-## Calais     -82.84597 -429.9147
-## Cherbourg -352.49943 -290.9084
-## Cologne    293.68963 -405.3119
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Two make the code easier to read two vectors are first extracted from the matrix and named \code{x} and \code{y}.
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{x} \hlkwb{<-} \hlstd{loc[,} \hlnum{1}\hlstd{]}
-\hlstd{y} \hlkwb{<-} \hlopt{-}\hlstd{loc[,} \hlnum{2}\hlstd{]} \hlcom{# reflect so North is at the top}
-\hlcom{## note asp = 1, to ensure Euclidean distances are represented correctly}
-\hlkwd{plot}\hlstd{(x, y,} \hlkwc{type} \hlstd{=} \hlstr{"n"}\hlstd{,} \hlkwc{xlab} \hlstd{=} \hlstr{""}\hlstd{,} \hlkwc{ylab} \hlstd{=} \hlstr{""}\hlstd{,} \hlkwc{asp} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{axes} \hlstd{=} \hlnum{FALSE}\hlstd{,}
-     \hlkwc{main} \hlstd{=} \hlstr{"cmdscale(eurodist)"}\hlstd{)}
-\hlkwd{text}\hlstd{(x, y,} \hlkwd{rownames}\hlstd{(loc),} \hlkwc{cex} \hlstd{=} \hlnum{0.6}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.76\textwidth]{figure/pos-mds-03-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\subsection{Clustering}\label{sec:stat:cluster}
-
-In clustering analysis the aim is to group observations into discrete groups with maximal internal homogeneity and maximum group to group differences. Examples of functions in \Rlang and \Rfunction{hclust()} and \Rfunction{kmeans()}.
-
-\subsection{Discrimination analysis}\label{sec:stat:DA}
-
-In discrimination analysis the categories or groups to which objects belong are known \emph{a priori}. The aim is to fit/bild a classifier to will allow us to assign future observations to the different non-overlapping groups.
-
-\subsection{What next?}
-
-Other books are available with detailed descriptions of how to do various types of analyses in \Rlang, included thorough descriptions of the methods briefly presented in this chapter and many other methods not mentioned here. Good examples of books with broad scope that can serve as references for the application of various statistical methods are \citebooktitle{Everitt2009} \autocite{Everitt2011} and \citebooktitle{Crawley2012} \autocite{Crawley2012}, and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. Many subject specific books are also available, and some suggestions given at the end of the book on page \pageref{chap:R:readings}.
-
-
-
-
-% !Rnw root = appendix.main.Rnw
-
-
 
 \chapter{The R language: ``paragraphs'' and ``essays''}\label{chap:R:scripts}
 \index{scripts}
@@ -7747,7 +5944,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.28    0.02    0.30
+##    0.24    0.09    0.33
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -7941,8 +6138,8 @@ Functions in the \emph{apply} family allow us to call an \Rlang function for eac
 \hlkwd{apply}\hlstd{(x,} \hlkwc{MARGIN} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{FUN} \hlstd{= mean)}
 \end{alltt}
 \begin{verbatim}
-##  [1] 0.4239126 0.5582435 0.5790411 0.5044487 0.3718749 0.5245723 0.5663112
-##  [8] 0.6697098 0.5757438 0.5033027
+##  [1] 0.5577374 0.4713297 0.4642693 0.5334466 0.4167815 0.4719893 0.5819838
+##  [8] 0.4453231 0.5961881 0.5813014
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -7967,8 +6164,8 @@ One or more additional named arguments can be passed to the function to be appli
 \hlkwd{apply}\hlstd{(x,} \hlkwc{MARGIN} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{FUN} \hlstd{= mean,} \hlkwc{trim} \hlstd{=} \hlnum{0.1}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##  [1] 0.4064664 0.5603555 0.5807270 0.5041000 0.3530847 0.5314891 0.5695072
-##  [8] 0.7117506 0.5859308 0.4988743
+##  [1] 0.5723277 0.4509575 0.4498622 0.5377634 0.4029361 0.4579982 0.6037123
+##  [8] 0.4518362 0.6251263 0.6150317
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8650,6 +6847,1991 @@ In the next chapter we will learn how to define new functions and classes---i.e.
 % !Rnw root = appendix.main.Rnw
 
 
+\chapter{The R language: Statistics}\label{chap:R:functions}
+
+\begin{VF}
+The purpose of computing is insight, not numbers.
+
+\VA{Richard W. Hamming}{Numerical Methods for Scientists and Engineers, 1962}
+\end{VF}
+
+\section{Aims of this chapter}
+
+In this chapter you will learn the approach used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
+
+This chapter is designed to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citebooktitle{Dalgaard2008} \autocite{Dalgaard2008}, \citebooktitle{Everitt2009} \autocite{Everitt2009} and \citebooktitle{??} \autocite{??}. The book \citebooktitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
+
+Along the chapter, I will show occasionally the equivalent of \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
+
+\emph{\textcolor[rgb]{1.00,0.50,0.25}{As a stop-gap we use examples from the help pages of several of the functions described.}}
+
+\section{Statistical summaries}
+\index{functions!built-in|see@{functions, base-R}}
+\index{functions!base R}
+Being R's main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of the frequently used data summaries mean or average (\Rfunction{mean()}), variance (\Rfunction{var()}), standard deviation (\Rfunction{sd()}), median (\Rfunction{median()}), mean absolute deviation (\Rfunction{mad()}), mode (\Rfunction{mode()}), maximum (\Rfunction{max()}), minimum (\Rfunction{min()}), range (\Rfunction{range()}), quantiles (\Rfunction{quantile()}), length (\Rfunction{length()}), and all-encompassing summaries (\Rfunction{summary()}). All these methods accept numeric vectors and matrices as argument. Some of them also have definitions for other, more complex objects such as data frames in the case of \Rfunction{summary()}. (The \Rlang language does not define a function for calculation of the standard error of the mean. Please, see section \ref{sec:functions:sem} on page \pageref{sec:functions:sem} for instructions on how to define your own.)
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{x} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{20}
+\hlkwd{mean}\hlstd{(x)}
+\hlkwd{var}\hlstd{(x)}
+\hlkwd{sd}\hlstd{(x)}
+\hlkwd{median}\hlstd{(x)}
+\hlkwd{mad}\hlstd{(x)}
+\hlkwd{mode}\hlstd{(x)}
+\hlkwd{max}\hlstd{(x)}
+\hlkwd{min}\hlstd{(x)}
+\hlkwd{range}\hlstd{(x)}
+\hlkwd{quantile}\hlstd{(x)}
+\hlkwd{length}\hlstd{(x)}
+\hlkwd{summary}\hlstd{(x)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+  In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
+\end{playground}
+
+By default if the argument contains \code{NAs} these functions return \code{NA}, The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown. However, an additional parameter called \code{na.omit} allows us to override this default behaviour by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{x} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{20}\hlstd{,} \hlnum{NA}\hlstd{)}
+\hlkwd{mean}\hlstd{(x)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlkwd{mean}\hlstd{(x,} \hlkwc{na.omit} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Distributions}
+
+Density, distribution functions, quantile functions and generation of pseudo-random values for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will open a help page describing all the distributions available in base \Rlang. In what follows we use the Normal distribution for the examples, but with slight differences in their parameters the functions for other theoretical distributions follow a consistent naming pattern. For each distribution the different functions contain the same ``root'' in their names: \code{norm} for the normal distribution, \code{unif} for the uniform distribution, and so on. The ``head'' of the name indicates the type of values returned: ``d'' for distribution, ``q'' for quantile, ``r'' (pseudo-)random numbers, and ``p'' for probabilities.
+
+\subsection{Distribution from parameters}
+
+Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} controlling location and \emph(standard deviation) (or its square, the \emph{variance}) controlling the spread around the centre of the distribution.
+
+To obtain a single point from the distribution curve we pass a vector of length one as argument for \code{x}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{dnorm}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1.5}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{0.5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.4839414
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+To obtain multiple values we can pass a longer vector as argument. As perusing a long vector of numbers is difficult, we plot the result of the computation. We plot both lines and points (\code{type = "b"}) to illustrate that in this cases 50 generated points can give the illusion of a continuous curve.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.x} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{3}\hlstd{,} \hlkwc{length.out} \hlstd{=} \hlnum{50}\hlstd{)}
+
+\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{= my.x,}
+                      \hlkwc{y} \hlstd{=} \hlkwd{dnorm}\hlstd{(}\hlkwc{x} \hlstd{= my.x,} \hlkwc{mean} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{0.5}\hlstd{))}
+\hlkwd{plot}\hlstd{(y}\hlopt{~}\hlstd{x,} \hlkwc{data} \hlstd{= my.data,} \hlkwc{type} \hlstd{=} \hlstr{"b"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-distrib-01a-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{explainbox}
+As described in chapter \ref{chap:R:functions} starting on page \pageref{chap:R:functions}, it is possible to define functions. An alternative way of obtaining the same plot as above is shown below using an anonymous (without name) function. (A function like the one used here that only changes the interface to an existing function is usually called a \emph{wrapper}. In this case we use it to pass arguments to \code{dnorm()}).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{z}\hlstd{)} \hlkwd{dnorm}\hlstd{(z,} \hlkwc{mean} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{0.5}\hlstd{),}
+     \hlkwc{from} \hlstd{=} \hlopt{-}\hlnum{1}\hlstd{,} \hlkwc{to} \hlstd{=} \hlnum{3}\hlstd{,} \hlkwc{n} \hlstd{=} \hlnum{50}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-distrib-EB01-1} 
+
+}
+
+
+
+\end{knitrout}
+\end{explainbox}
+
+\subsection{Probabilities from parameters and quantile}\label{sec:prob:quant}
+
+If we have a calculated quantile we can look up the corresponding $P$-value from the Normal distribution. The mean and standard deviation would in such a case be also computed from the same observations under the null hypothesis. In the example below we use invented values for all parameters including \code{q}, the quantile.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.9999683
+\end{verbatim}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3.167124e-05
+\end{verbatim}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.1586553
+\end{verbatim}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{2}\hlstd{,} \hlnum{4}\hlstd{),} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 2.275013e-02 3.167124e-05
+\end{verbatim}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{4}\hlstd{),} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3.167124e-05 1.586553e-01
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{explainbox}
+  In tests of significance empirical $z$-values and $t$-values are computed by subtracting the mean from the raw quantile and then dividing by the standard deviation, and consequently the corresponding $P$-values need to be looked up using \code{mean = 0} and \code{sd = 1} when calling \Rfunction{pnorm()} or \Rfunction{pt()} respectively. These arguments are the defaults.
+\end{explainbox}
+
+\subsection{Quantiles from parameters and probabilities}\label{sec:quant:prob}
+
+The reverse computation from that in the previous section is to obtain the quantile corresponding to a known $P$-value. These quantiles are equivalent to the values in the tables earlier used to assess significance.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.01}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] -2.326348
+\end{verbatim}
+\begin{alltt}
+\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.05}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] -1.644854
+\end{verbatim}
+\begin{alltt}
+\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.05}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.644854
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{warningbox}
+Quantile functions like \Rfunction{qnorm()} and probability functions like \Rfunction{pnorm()} always do computations based on a single tail of the distribution, even though it is possible to specify which tail we are interested in. If we are interested in obtaining simultaneous quantiles for both tails, we need to do this manually. If we are aiming at quantiles for $P = 0.05$, we need to find the quantile for each tail based on $P / 2 = 0.025$.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.025}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] -1.959964
+\end{verbatim}
+\begin{alltt}
+\hlkwd{qnorm}\hlstd{(}\hlkwc{p} \hlstd{=} \hlnum{0.025}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lower.tail} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.959964
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We see above than in the case of a symmetric distribution like the Normal, the quantiles in the two tails differ only in sign. This is not the case for asymmetric distributions.
+
+When calculating a $P$-value from a quantile in a test of significance, we need to first decide whether a two sided or single sided test is relevant, and in the case of a single sided test, which tail is of interest. For a double sided test we need to multiply the returned value by 2.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{pnorm}\hlstd{(}\hlkwc{q} \hlstd{=} \hlnum{4}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{1}\hlstd{)} \hlopt{*} \hlnum{2}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.999937
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{warningbox}
+
+\subsection{Random draws from a distribution}\label{sec:stat:random}
+
+True random sequences can only be generated by physical processes. All so-called ``random'' sequences of numbers generated by computation are really deterministic although they share some properties with true random sequences (e.g.\ in relation to autocorrelation). It possible to compute not only pseudo-random draws from a uniform distribution but also from the Normal, $t$, $F$ and other distributions. Parameter \code{n} indicates the number of values to be drawn or its equivalent the length of the vector returned.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rnorm}\hlstd{(}\hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] -0.8248801  0.1201213 -0.4787266 -0.7134216  1.1264443
+\end{verbatim}
+\begin{alltt}
+\hlkwd{rnorm}\hlstd{(}\hlkwc{n} \hlstd{=} \hlnum{10}\hlstd{,} \hlkwc{mean} \hlstd{=} \hlnum{10}\hlstd{,} \hlkwc{sd} \hlstd{=} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##  [1] 12.394190  9.697729  9.212345 11.624844 12.194317 10.257707 10.082981
+##  [8] 10.268540 10.792963  7.772915
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+Edit the examples in sections \ref{sec:prob:quant}, \ref{sec:quant:prob} and \ref{sec:stat:random} to do computations based on different distributions, such at Students' t, F or uniform.
+\end{playground}
+
+\begin{explainbox}
+It is impossible to generate truly random sequences of number by means of a deterministic process such as a mathematical computation. ``Random numbers'' as generated by \Rpgrm and other computer programs are \emph{pseudo random numbers}, long deterministic series of numbers that resemble random draws. Random number generation uses a \emph{seed} value that determines where in the series we start. The usual way of automatically setting the value of the seed is to take the milliseconds or similar rapidly changing set of digits from the real time clock of the computer. However, in cases when we wish to repeat a calculation using the same series of pseudo-random values, we can use \Rfunction{set.seed()} with an arbitrary integer as argument to reset the generator to the same point into the underlying (deterministic) sequence.
+\end{explainbox}
+
+\begin{advplayground}
+Execute the statement \code{rnorm(5)} by itself several times, paying attention to the values obtained. Repeat the exercise but now executing \code{set.seed(98765); rnorm(5)} several times, paying attention to the values now obtained, then try again using a different argument in the call to \code{set.seed()}.
+\end{advplayground}
+
+\section{Random sampling}
+
+In addition to drawing values from a theoretical distribution, we can draw values from an existing set or collection of values. We call this operation (pseudo-)random sampling. The draws can be done either with replacement or without replacement. In the second case all draws are taken from the whole set of values, making it possible for a given value to be drawn more than once. In the default case of not using replacement, subsequent draws are taken from the values remaining after removing the values chosen in earlier draws.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS)}
+\end{alltt}
+\begin{verbatim}
+##  [1] "D" "A" "W" "S" "K" "P" "G" "Y" "E" "L" "J" "O" "R" "Z" "B" "Q" "N"
+## [18] "T" "U" "I" "F" "X" "M" "H" "V" "C"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS,} \hlkwc{size} \hlstd{=} \hlnum{12}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##  [1] "D" "N" "G" "B" "P" "Y" "Q" "O" "M" "V" "X" "L"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sample}\hlstd{(}\hlkwc{x} \hlstd{= LETTERS,} \hlkwc{size} \hlstd{=} \hlnum{12}\hlstd{,} \hlkwc{replace} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##  [1] "U" "U" "M" "O" "U" "X" "C" "S" "K" "W" "T" "L"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In practice, pseudo-random sampling is useful when we need to select subsets of observations. One such case is  assigning treatments to experimental units in an experiment or selecting persons to interview in a survey. Another use is in bootstrapping to estimate variation in parameter estimates using empirical distributions.
+
+\section{Correlation}
+
+Both parametric (Pearson's) and non-parametric robust (Spearman's and Kendall's) methods for the estimation of the (linear) correlation between pairs of variables are available in base \Rlang. The different methods are selected by passing arguments to a single function. While Pearson's method is based on the actual values of the observations, non-parametric methods are based on the ordering or rank of the observations, and consequently less affected by observations with extreme values.
+
+We first load and explore the data to which we will fit a linear model, data that is included in \Rpgrm. These data consist in stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(cars)}
+\hlkwd{plot}\hlstd{(cars)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-cor-00-1} 
+
+}
+
+
+
+\end{knitrout}
+\label{chunk:plot:cars}
+
+\subsection{Pearson's $r$}
+
+Function \Rfunction{cor()} can be called with two vectors of the same lengths as arguments. In the case of the parametric Pearson's method we do not need to provide further arguments as this method is the default one.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.8068949
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+It is also possible to pass a data frame (or a matrix) as the only argument. When the data frame (or matrix) contains only two columns the returned value is equivalent to that of passing the two columns individually as vectors.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{cor}\hlstd{(cars)}
+\end{alltt}
+\begin{verbatim}
+##           speed      dist
+## speed 1.0000000 0.8068949
+## dist  0.8068949 1.0000000
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+When the data frame or matrix contains more than two numeric vectors, the returned value is a matrix of estimates of pairwise correlations between columns. We here use \Rfunction{rnorm()} described above to create a long vector of pseudo-random values drawn from the Normal distribution and \Rfunction{matrix()} to convert it into a matrix with three columns (see page \pageref{sec:matrix:array} for details about \Rlang matrices).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.mat} \hlkwb{<-} \hlkwd{matrix}\hlstd{(}\hlkwd{rnorm}\hlstd{(}\hlnum{54}\hlstd{),} \hlkwc{ncol} \hlstd{=} \hlnum{3}\hlstd{,}
+                 \hlkwc{dimnames} \hlstd{=} \hlkwd{list}\hlstd{(}\hlkwc{rows} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{18}\hlstd{,} \hlkwc{cols} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{)))}
+\hlkwd{cor}\hlstd{(my.mat)}
+\end{alltt}
+\begin{verbatim}
+##           A           B           C
+## A 1.0000000  0.29596210  0.15109362
+## B 0.2959621  1.00000000 -0.04955885
+## C 0.1510936 -0.04955885  1.00000000
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+Modify the code in the chunk immediately above constructing a matrix with six columns and then computing the correlations.
+\end{playground}
+
+While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient, \Rfunction{cor.test()} also computes $t$-value, $P$-value, and confidence interval for the estimate.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{cor.test}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist)}
+\end{alltt}
+\begin{verbatim}
+## 
+## 	Pearson's product-moment correlation
+## 
+## data:  cars$speed and cars$dist
+## t = 9.464, df = 48, p-value = 1.49e-12
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.6816422 0.8862036
+## sample estimates:
+##       cor 
+## 0.8068949
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+As described below for model fitting and $t$-test, \Rfunction{cor,test()} also accepts a \code{formula} plus \code{data} as arguments.
+
+\begin{playground}
+Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \ref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlkwd{cor}\hlstd{(cars)}
+\hlkwd{class}\hlstd{(a)}
+\hlkwd{attributes}\hlstd{(a)}
+\hlkwd{str}\hlstd{(a)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt of the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data directly from the object when the base \Rlang or packages do not provide predefined extractor methods.
+\end{playground}
+
+\subsection{Kendall's $\tau$ and Spearman's $\rho$}
+
+We use the same functions as for Pearson's $r$ but explicitly request the use of one of these methods by passing and argument.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist,} \hlkwc{method} \hlstd{=} \hlstr{"kendall"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.6689901
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cor}\hlstd{(}\hlkwc{x} \hlstd{= cars}\hlopt{$}\hlstd{speed,} \hlkwc{y} \hlstd{= cars}\hlopt{$}\hlstd{dist,} \hlkwc{method} \hlstd{=} \hlstr{"spearman"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.8303568
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
+
+\begin{playground}
+Repeat the exercise in the playground immediately above, but now using non-parametric methods. How does the information stored in the returned \code{matrix} differ depending on the method, and how can we extract information about the method used for calculation of the correlation from the returned object.
+\end{playground}
+
+\section{Fitting linear models}\label{sec:stat:LM}
+\index{models!linear|see{linear models}}
+\index{linear models|(}
+\index{LM|see{linear models}}
+
+In \Rlang, the models to be fitted are described by ``model formulas'' such as \verb|y ~ x| which we read as $y$ is explained by $x$. Model `formulas' are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models.
+
+As most things in \Rlang model formulas can be stored in variables. In addition, contrary to the usual behaviour of other statistical software, the result of a model fit is returned as an object, containing the different components of the fit. Once the model has been fitted, different methods allow us to extract parts and/or further manipulate the results obtained by fitting a model. Most of these methods have implementations for model fit objects for many different types of statistical models. Consequently what is described in this chapter using linear models as examples, also applies in many respects to the fit of classes of models not described here.
+
+The \Rlang function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
+
+\begin{warningbox}
+If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit Chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
+\end{warningbox}
+
+\subsection{Regression}
+\index{linear regression}\index{linear models!linear regression}
+In the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
+
+In the next example we continue using the stopping distance for cars data set included in \Rpgrm. Please see the plot on page \pageref{chunk:plot:cars}.
+\label{xmpl:fun:lm:fm1}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(cars)}
+\hlkwd{is.factor}\hlstd{(cars}\hlopt{$}\hlstd{speed)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.numeric}\hlstd{(cars}\hlopt{$}\hlstd{speed)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We then fit the simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm1} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlnum{1} \hlopt{+} \hlstd{speed,} \hlkwc{data}\hlstd{=cars)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably close to being fulfilled? In \Rlang it is most common to use plots to this end. We show here only one of the four plots normally produced. This quantile vs.\ quantile plot allows to assess how much the residuals deviate from being normally distributed.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(fm1,} \hlkwc{which} \hlstd{=} \hlnum{2}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-models-1a-1} 
+
+}
+
+
+
+\end{knitrout}
+
+In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. Remember that as is the case for most \Rlang functions the value returned by \Rfunction{summary()} is printed when we call this method at the \Rlang prompt.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(fm1)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = dist ~ 1 + speed, data = cars)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -29.069  -9.525  -2.272   9.215  43.201 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -17.5791     6.7584  -2.601   0.0123 *  
+## speed         3.9324     0.4155   9.464 1.49e-12 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 15.38 on 48 degrees of freedom
+## Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438 
+## F-statistic: 89.57 on 1 and 48 DF,  p-value: 1.49e-12
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Let's look at the print-out of the summary, section by section. Under ``Call:'' we find, \verb|dist ~ 1 + speed| or the specification of the model fitted, plus the data used. Under ``Residuals:'' we find the extremes, quartiles and median of the residuals, or deviations between observations and the fitted line. Under ``Coefficients:'' we find the estimates of the model parameters and their variation plus corresponding $t$-tests. At the end of summary there is information on degrees of freedom and overall coefficient of determination ($R^2$).
+
+If we return to the model formulation, we can now replace $\alpha$ and $\beta$ by the estimates obtaining $y = -17.6 + 3.93 x$. Given the nature of the problem, we \emph{know based on first principles} that stopping distance must be zero when speed is zero. This suggests that we should not estimate the value of $\alpha$ but instead set $\alpha = 0$, or in other words fit the model $y = \beta \cdot x$.
+
+However, in \Rlang models the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e.\ a missing \code{+ 1} does not change the model. To `remove' the intercept from the earlier model we need to use \verb|dist ~ speed - 1|, resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm2} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlstd{speed} \hlopt{-} \hlnum{1}\hlstd{,} \hlkwc{data}\hlstd{=cars)}
+\hlkwd{summary}\hlstd{(fm2)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = dist ~ speed - 1, data = cars)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -26.183 -12.637  -5.455   4.590  50.181 
+## 
+## Coefficients:
+##       Estimate Std. Error t value Pr(>|t|)    
+## speed   2.9091     0.1414   20.58   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 16.26 on 49 degrees of freedom
+## Multiple R-squared:  0.8963,	Adjusted R-squared:  0.8942 
+## F-statistic: 423.5 on 1 and 49 DF,  p-value: < 2.2e-16
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Now there is no estimate for the intercept in the summary, only an estimate for the slope. The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(fm2,} \hlkwc{which} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-models-2a-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{playground}
+You will now fit a second degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm3} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlstd{speed} \hlopt{+} \hlkwd{I}\hlstd{(speed}\hlopt{^}\hlnum{2}\hlstd{),} \hlkwc{data} \hlstd{= cars)}
+\hlkwd{plot}\hlstd{(fm3,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
+\hlkwd{summary}\hlstd{(fm3)}
+\hlkwd{anova}\hlstd{(fm3)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+The ``same'' fit using an orthogonal polynomial can be specified using function \Rfunction{poly()}. Polynomials of different degrees can be obtained by supplying as second argument to \Rfunction{poly()} the corresponding positive integer value. In this case the different terms of the polynomial are bulked together in the summary.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm3a} \hlkwb{<-} \hlkwd{lm}\hlstd{(dist} \hlopt{~} \hlkwd{poly}\hlstd{(speed,} \hlnum{2}\hlstd{),} \hlkwc{data}\hlstd{=cars)}
+\hlkwd{summary}\hlstd{(fm3a)}
+\hlkwd{anova}\hlstd{(fm3a)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We can also compare two model fits using \Rfunction{anova()}, to test whether one of models describes the data better than the other. Is important in this case to take into consideration the nature of the difference between the model formulas, most importantly if they can be interpreted as nested---i.e. interpreted as a base model vs. the same model with additional terms.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(fm2, fm1)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Three or more models can also be compared in a single call to \Rfunction{anova}. However, be careful, as the order of the arguments matters.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(fm2,fm3, fm3a)}
+\hlkwd{anova}\hlstd{(fm2, fm3a, fm3)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for BIC and AIC are also returned by \Rfunction{anova()} \qRfunction{BIC()}\qRfunction{AIC()}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{BIC}\hlstd{(fm2, fm1, fm3, fm3a)}
+\hlkwd{AIC}\hlstd{(fm2, fm1, fm3, fm3a)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Once you have run the code in the chunks above, you will be able see that these three criteria do not necessarily agree on which is the ``best'' model. Find in the output $p$-value, BIC and AIC estimates, for the different models and conclude which model is favoured by each of the three criteria. In addition you will notice that the two different formulations of the quadratic polynomial are equivalent.
+
+\end{playground}
+
+Additional methods provide access to different components of fitted models: \Rfunction{vcov()} returns the variance-covariance matrix, \Rfunction{coef()} and its alias \Rfunction{coefficients()} return the estimates for the fitted model coefficients, \Rfunction{fitted()} and its alias \Rfunction{fitted.values()} extract the fitted values, and \Rfunction{residuals()} the corresponding residuals (or deviations). The method \Rfunction{predict()} uses the fitted model to compute predictions and confidence bands based from new data for the independent variables. In contrast to \Rfunction{fitted()}, \Rfunction{predict()} can take ``new data'' as input, allowing predictions at values of the independent variables not present in the original data. In the case of linear- and some other models \Rfunction{predict()} can also return values for confidence bands around the fitted lime.
+
+\begin{advplayground}
+Task: familiarize yourself with these methods by reading the documentation and using them with the models fitted above or model fits to other data of your interest.
+\end{advplayground}
+
+\begin{explainbox}
+The objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them.
+
+We rarely need to manually explore the structure of these objects, but it is rather frequently good to have an idea of what is going on in the background. We can use \Rfunction{str()} to explore some of the fitted models.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(fm1,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)} \hlcom{# not evaluated}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(}\hlkwd{anova}\hlstd{(fm1))}
+\end{alltt}
+\begin{verbatim}
+## Classes 'anova' and 'data.frame':	2 obs. of  5 variables:
+##  $ Df     : int  1 48
+##  $ Sum Sq : num  21185 11354
+##  $ Mean Sq: num  21185 237
+##  $ F value: num  89.6 NA
+##  $ Pr(>F) : num  1.49e-12 NA
+##  - attr(*, "heading")= chr  "Analysis of Variance Table\n" "Response: dist"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(}\hlkwd{summary}\hlstd{(fm1))}
+\end{alltt}
+\begin{verbatim}
+## List of 11
+##  $ call         : language lm(formula = dist ~ 1 + speed, data = cars)
+##  $ terms        :Classes 'terms', 'formula'  language dist ~ 1 + speed
+##   .. ..- attr(*, "variables")= language list(dist, speed)
+##   .. ..- attr(*, "factors")= int [1:2, 1] 0 1
+##   .. .. ..- attr(*, "dimnames")=List of 2
+##   .. .. .. ..$ : chr [1:2] "dist" "speed"
+##   .. .. .. ..$ : chr "speed"
+##   .. ..- attr(*, "term.labels")= chr "speed"
+##   .. ..- attr(*, "order")= int 1
+##   .. ..- attr(*, "intercept")= int 1
+##   .. ..- attr(*, "response")= int 1
+##   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+##   .. ..- attr(*, "predvars")= language list(dist, speed)
+##   .. ..- attr(*, "dataClasses")= Named chr [1:2] "numeric" "numeric"
+##   .. .. ..- attr(*, "names")= chr [1:2] "dist" "speed"
+##  $ residuals    : Named num [1:50] 3.85 11.85 -5.95 12.05 2.12 ...
+##   ..- attr(*, "names")= chr [1:50] "1" "2" "3" "4" ...
+##  $ coefficients : num [1:2, 1:4] -17.579 3.932 6.758 0.416 -2.601 ...
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##   .. ..$ : chr [1:4] "Estimate" "Std. Error" "t value" "Pr(>|t|)"
+##  $ aliased      : Named logi [1:2] FALSE FALSE
+##   ..- attr(*, "names")= chr [1:2] "(Intercept)" "speed"
+##  $ sigma        : num 15.4
+##  $ df           : int [1:3] 2 48 2
+##  $ r.squared    : num 0.651
+##  $ adj.r.squared: num 0.644
+##  $ fstatistic   : Named num [1:3] 89.6 1 48
+##   ..- attr(*, "names")= chr [1:3] "value" "numdf" "dendf"
+##  $ cov.unscaled : num [1:2, 1:2] 0.19311 -0.01124 -0.01124 0.00073
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##   .. ..$ : chr [1:2] "(Intercept)" "speed"
+##  - attr(*, "class")= chr "summary.lm"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Once we learn the nesting and the names of components we can simply extract them using the usual \Rlang rules for indexing.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{adj.r.squared}
+\end{alltt}
+\begin{verbatim}
+## [1] 0.6438102
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+As an example we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
+
+The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with null hypothesis of slope = 1. The procedure is applicable to any constant value as null hypothesis for any of the fitted parameter estimates for hypotheses set \emph{a priori}. The examples use a two-sided test, in some cases, a single-sided test should be used (e.g.\ if its known a priori that deviation is because of physical reasons possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
+
+To estimate the \emph{t}-value we need an estimate for the parameter and an estimate of the standard error for this estimate and its degrees of freedom.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{est.slope.value} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{coef[}\hlstr{"speed"}\hlstd{,} \hlstr{"Estimate"}\hlstd{]}
+\hlstd{est.slope.se} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{coef[}\hlstr{"speed"}\hlstd{,} \hlstr{"Std. Error"}\hlstd{]}
+\hlstd{degrees.of.freedom} \hlkwb{<-} \hlkwd{summary}\hlstd{(fm1)}\hlopt{$}\hlstd{df[}\hlnum{2}\hlstd{]}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+The \emph{t}-test is based on the difference between the value of the null hypothesis and the estimate.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{hyp.null} \hlkwb{<-} \hlnum{1}
+\hlstd{t.value} \hlkwb{<-} \hlstd{(est.slope.value} \hlopt{-} \hlstd{hyp.null)} \hlopt{/} \hlstd{est.slope.se}
+\hlstd{p.value} \hlkwb{<-} \hlkwd{dt}\hlstd{(t.value,} \hlkwc{df} \hlstd{= degrees.of.freedom)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{explainbox}
+
+\begin{advplayground}
+Check that the procedure above agrees with the output of \code{summary()} when we set \code{hyp.null <- 0} instead of \code{hyp.null <- 1}.
+
+Modify the example so as to test whether the intercept is significantly larger than 5 feet, a one sided test.
+\end{advplayground}
+
+\subsection{Analysis of variance, ANOVA}\label{sec:anova}
+\index{analysis of variance}\index{linear models!analysis of variance}
+\index{ANOVA|see{analysis of variance}}
+We use as the \code{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
+\label{xmpl:fun:lm:fm4}
+
+The call is exactly the same as the one for linear regression, only the names of the variables and data frame are different. What determines that this is an ANOVA is that \code{spray}, the explanatory variable, is a \code{factor}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(InsectSprays)}
+\hlkwd{is.numeric}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.factor}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{levels}\hlstd{(InsectSprays}\hlopt{$}\hlstd{spray)}
+\end{alltt}
+\begin{verbatim}
+## [1] "A" "B" "C" "D" "E" "F"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We fit the model in exactly the same way as for linear regression, the difference is that we use a factor as explanatory variable. By using a factor instead of a numeric vector, a different model matrix is built from an equivalent formula.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm4} \hlkwb{<-} \hlkwd{lm}\hlstd{(count} \hlopt{~} \hlstd{spray,} \hlkwc{data} \hlstd{= InsectSprays)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Diagnostic plots are obtained in the same way as for linear regression.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(fm4,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-model-6a-1} 
+
+}
+
+
+
+\end{knitrout}
+
+In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract the estimates but in many cases the default contrasts and corresponding $P$-values are for hypotheses that have little or no direct interest in the case of an analysis of variance.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(fm4)}
+\end{alltt}
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+## Response: count
+##           Df Sum Sq Mean Sq F value    Pr(>F)    
+## spray      5 2668.8  533.77  34.702 < 2.2e-16 ***
+## Residuals 66 1015.2   15.38                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Analysis of covariance, ANCOVA}
+\index{analysis of covariance}\index{linear models!analysis of covariance}
+\index{ANCOVA|see{analysis of covariance}}
+
+When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
+
+As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite{}.
+
+\begin{playground}
+There are additional methods for extracting information from model fits. As objects containing the results of model fitting belong to different classes reflecting the type of model, methods with the same name can co-exist and be selected automatically. The output will not be necessarily the same, and some the parameters accepted will differ.\qRfunction{coef()}\qRfunction{resid()}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{class}\hlstd{(fm1)}
+\hlkwd{coef}\hlstd{(fm1)}
+\hlkwd{resid}\hlstd{(fm1)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Do explore these methods if you know enough about statistics to recognize them. In the case of prediction with \Rfunction{predict()} new data needs to be supplied as argument as in the case of linear models no default is provided for this parameter, which in other cases are the data used in the fit. Be aware that the name of the variable (= column) within the new data frame needs to match the name of the explanatory variable in the data to which the model was fit, in our case \code{speed}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.new.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{speed} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{10}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{predict}\hlstd{(fm1,} \hlkwc{newdata} \hlstd{= my.new.data)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{predict}\hlstd{(fm1,} \hlkwc{newdata} \hlstd{= my.new.data,} \hlkwc{interval} \hlstd{=} \hlstr{"confidence"}\hlstd{,} \hlkwc{level} \hlstd{=} \hlnum{0.9}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Some other components of the fitted model object can be extracted with the usual syntax for lists, once we discover the names of the components. As shown earlier, we can use \code{str()} or \code{names()} to this end.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{names}\hlstd{(fm1)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm1}\hlopt{$}\hlstd{df.residual}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+To see the whole structure of the fitted model object we can use \code{str()}, which reveals the nesting of members and all their \emph{attributes} (described in section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes}). In this case attributes contain very important information about the fit.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(fm1,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{playground}
+\index{linear models|)}
+
+\section{Generalized linear models}\label{sec:stat:GLM}
+\index{generalized linear models|(}\index{models!generalized linear|see{generalized linear models}}
+\index{GLM|see{generalized linear models}}
+
+Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
+For the analysis of the \code{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
+
+For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal. In addition to the model formula we need can pass an argument through \code{family} giving the error distribution to be assumed---the default for \code{family} is \code{gaussian} or Normal distribution.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{fm10} \hlkwb{<-} \hlkwd{glm}\hlstd{(count} \hlopt{~} \hlstd{spray,} \hlkwc{data} \hlstd{= InsectSprays,} \hlkwc{family} \hlstd{= quasipoisson)}
+\hlkwd{anova}\hlstd{(fm10)}
+\end{alltt}
+\begin{verbatim}
+## Analysis of Deviance Table
+## 
+## Model: quasipoisson, link: log
+## 
+## Response: count
+## 
+## Terms added sequentially (first to last)
+## 
+## 
+##       Df Deviance Resid. Df Resid. Dev
+## NULL                     71     409.04
+## spray  5   310.71        66      98.33
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The print-out from the \Rfunction{anova()} method for GLM fits has some differences to that for LM fits. By default no significance test is computed, as a knowledgable choice is required depending on the characteristics of the model and data. We here use \code{"F"} as argument to request an $F$-test.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(fm10,} \hlkwc{test} \hlstd{=} \hlstr{"F"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## Analysis of Deviance Table
+## 
+## Model: quasipoisson, link: log
+## 
+## Response: count
+## 
+## Terms added sequentially (first to last)
+## 
+## 
+##       Df Deviance Resid. Df Resid. Dev      F    Pr(>F)    
+## NULL                     71     409.04                     
+## spray  5   310.71        66      98.33 41.216 < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Method \Rfunction{plot()} as for LM fits, produces diagnosis plots. We show as above the q-q-plot of residuals.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(fm10,} \hlkwc{which} \hlstd{=} \hlnum{3}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-model-11-1} 
+
+}
+
+
+
+\end{knitrout}
+\index{generalized linear models|)}
+
+\section{Non-linear regression}\label{sec:stat:NLS}
+\index{non-linear models|(}\index{models!non-linear|see{non-linear models}}
+
+Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non linear \emph{in the parameters} whose values are being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of any degree are linear models. In contrast the Michaelis-Menten equation used in chemistry and the  Gompertz equation used to describe growth are non-linear model in their parameters.
+
+While analytical algorithms exist for finding estimates for the parameters of linear models, in the case of non-linear models the estimates are obtained by approximation. For analytical solutions estimates can always be obtained, except in infrequent pathological cases where reliance on floating point numbers with limited resolution introduces rounding errors that ``break'' mathematical algorithms that are valid for Real numbers. For approximations obtained through iteration, cases when the algorithm fails to \emph{converge} onto an answer are relatively common. Iterative algorithms attempt to improve an initial guess, a guess frequently supplied by the user. In each iteration the estimate obtained in the previous iteration is used as starting value, and this process is repeated one time after another. The expectation is that after a finite number of iterations the algorithm will converge into a solution that ``cannot'' be improved further. In real life we stop iteration when the improvement in the fit is smaller than a certain threshold, or when no convergence has been achieved after a certain maximum number of iterations. In the first case, we obtain usable estimates, in the second case, we do not obtain usable estimates and need to look for different ways of obtaining them. When convergence fails, the first thing to do is to try different starting values and if this also fails, switch to a different computational algorithm. These steps usually help, but not always. 
+
+For some functions analytical algorithms exist for ``guessing'' suitable starting values for the iterative procedure. \Rlang provides a mechanism for packaging the function to be fitted together with the function generating the starting estimate values for the parameters to be fitted with \Rfunction{nls()}. These functions go by the name of \emph{self-starting functions} and relieve the user from the burden of guessing and supplying suitable starting values. New self-starting functions can also be defined by users.
+
+In the case of \Rfunction{nls()} the specification of the model to be fitted differs from that used for linear models. We will use as example fitting the Michaelis-Menten equation describing reaction kinetics in biochemistry and chemistry. The mathematical formulation is given by:
+
+\begin{equation}\label{eq:michaelis:menten}
+v = \frac{\mathrm{d} [P]}{\mathrm{d} t} = \frac{V_{\mathrm{max}} [S]}{K_{\mathrm{M}} + [S]}
+\end{equation}
+
+\index{non-linear models|)}
+
+\section{Model formulas}
+  In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of \code{*} and explicitly define all individual main effects and interactions. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to use grouping to exclude some interactions.
+
+The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two explanatory variables in the model. In the second case \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does its argument.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlkwd{I}\hlstd{(x1} \hlopt{+} \hlstd{x2)}
+\hlstd{y} \hlopt{~} \hlkwd{log}\hlstd{(x1} \hlopt{+} \hlstd{x2)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\Rlang's formula syntax allows alternative ways for specifying interaction terms. They allow ``abbreviated'' ways of entering formulas, which for complex experimental designs saves typing and can improve clarity. As seen above operator \code{*} saves us from having to explicitly indicate all the interaction terms in a full factorial model.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2}\hlopt{:}\hlstd{x3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Can be replaced by a concise equivalent.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{x2} \hlopt{*} \hlstd{x3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+When the model to be specified does not include all possible interaction terms, we can combine the concise notation with parentheses.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{(x2} \hlopt{*} \hlstd{x3)}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+That the two model formulas above are equivalent, can be seen using \code{term()}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{(x2} \hlopt{*} \hlstd{x3))}
+\end{alltt}
+\begin{verbatim}
+## y ~ x1 + (x2 * x3)
+## attr(,"variables")
+## list(y, x1, x2, x3)
+## attr(,"factors")
+##    x1 x2 x3 x2:x3
+## y   0  0  0     0
+## x1  1  0  0     0
+## x2  0  1  0     1
+## x3  0  0  1     1
+## attr(,"term.labels")
+## [1] "x1"    "x2"    "x3"    "x2:x3"
+## attr(,"order")
+## [1] 1 1 1 2
+## attr(,"intercept")
+## [1] 1
+## attr(,"response")
+## [1] 1
+## attr(,".Environment")
+## <environment: R_GlobalEnv>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{(x2} \hlopt{+} \hlstd{x3)}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{(x2} \hlopt{+} \hlstd{x3))}
+\end{alltt}
+\begin{verbatim}
+## y ~ x1 * (x2 + x3)
+## attr(,"variables")
+## list(y, x1, x2, x3)
+## attr(,"factors")
+##    x1 x2 x3 x1:x2 x1:x3
+## y   0  0  0     0     0
+## x1  1  0  0     1     1
+## x2  0  1  0     1     0
+## x3  0  0  1     0     1
+## attr(,"term.labels")
+## [1] "x1"    "x2"    "x3"    "x1:x2" "x1:x3"
+## attr(,"order")
+## [1] 1 1 1 2 2
+## attr(,"intercept")
+## [1] 1
+## attr(,"response")
+## [1] 1
+## attr(,".Environment")
+## <environment: R_GlobalEnv>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The \code{\textasciicircum{}} operator can be used to limit the order of the interaction terms included in a formula.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x2} \hlopt{+} \hlstd{x1}\hlopt{:}\hlstd{x3} \hlopt{+} \hlstd{x2}\hlopt{:}\hlstd{x3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## y ~ (x1 + x2 + x3)^2
+## attr(,"variables")
+## list(y, x1, x2, x3)
+## attr(,"factors")
+##    x1 x2 x3 x1:x2 x1:x3 x2:x3
+## y   0  0  0     0     0     0
+## x1  1  0  0     1     1     0
+## x2  0  1  0     1     0     1
+## x3  0  0  1     0     1     1
+## attr(,"term.labels")
+## [1] "x1"    "x2"    "x3"    "x1:x2" "x1:x3" "x2:x3"
+## attr(,"order")
+## [1] 1 1 1 2 2 2
+## attr(,"intercept")
+## [1] 1
+## attr(,"response")
+## [1] 1
+## attr(,".Environment")
+## <environment: R_GlobalEnv>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+ For operator \code{\textasciicircum{}} to behave as expected its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x3)}\hlopt{^}\hlnum{2}
+\hlstd{y} \hlopt{~} \hlstd{(x1} \hlopt{*} \hlstd{x2} \hlopt{*} \hlstd{x3)}\hlopt{^}\hlnum{2}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{playground}
+
+Operator \code{\%in\%} can also be used as a shortcut to including only some of all the possible interaction terms in a formula.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x1} \hlopt{%in%} \hlstd{x2}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{terms}\hlstd{(y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlstd{x1} \hlopt{%in%} \hlstd{x2)}
+\end{alltt}
+\begin{verbatim}
+## y ~ x1 + x2 + x1 %in% x2
+## attr(,"variables")
+## list(y, x1, x2)
+## attr(,"factors")
+##    x1 x2 x1:x2
+## y   0  0     0
+## x1  1  0     1
+## x2  0  1     1
+## attr(,"term.labels")
+## [1] "x1"    "x2"    "x1:x2"
+## attr(,"order")
+## [1] 1 1 2
+## attr(,"intercept")
+## [1] 1
+## attr(,"response")
+## [1] 1
+## attr(,".Environment")
+## <environment: R_GlobalEnv>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+The following examples of the use of formulas in ANOVA, plus your own variations on the same theme will help understand the syntax of model formulas.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(npk)}
+\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{*} \hlstd{P} \hlopt{*} \hlstd{K,} \hlkwc{data} \hlstd{= npk))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{(N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K)}\hlopt{^}\hlnum{2}\hlstd{,} \hlkwc{data} \hlstd{= npk))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{+} \hlstd{P} \hlopt{%in%} \hlstd{N} \hlopt{+} \hlstd{K} \hlopt{%in%} \hlstd{N,} \hlkwc{data} \hlstd{= npk))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{anova}\hlstd{(}\hlkwd{lm}\hlstd{(yield} \hlopt{~} \hlstd{N} \hlopt{+} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{+} \hlstd{N} \hlopt{%in%} \hlstd{P} \hlopt{+} \hlstd{K} \hlopt{%in%} \hlstd{P,} \hlkwc{data} \hlstd{= npk))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{playground}
+
+Nesting of factors results in the computation of additional error terms, with different degrees of freedom. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base R formulas the nesting needs to be accounted by explicit definition of error terms by means of \code{Error()} within the formula. The numerical example below is just a demonstration of the consequences of using an invalid design. Of the two model formulas used, only one yields a valid data analysis!
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2} \hlopt{+} \hlkwd{Error}\hlstd{(x1} \hlopt{*} \hlstd{x2)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base R's model formula syntax to allow the description of nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These fall outside the scope of this book.
+
+\begin{warningbox}
+  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is the responsibility of the user to ensure that models are meaningful. The most common, and dangerous, mistake are missing simple interactions in factorial ANOVA.
+
+  Fitting models like those below to three-way ANOVA should be avoided. In both cases simpler terms are missing, while interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
+\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{*} \hlstd{C}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+  Models such as those below are interpretable, even though ``incomplete'' (not including all possible interactions).
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
+\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+  The full three-way factorial models includes all possible combinations of factors.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y} \hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B} \hlopt{+} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{B} \hlopt{*} \hlstd{C} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{+} \hlstd{A} \hlopt{*} \hlstd{B} \hlopt{*} \hlstd{C}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{warningbox}
+
+As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{"formula"}.
+
+<<mformulas-W11>=
+class(y ~ x)
+@
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x}
+\hlkwd{class}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] "formula"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{inherits}\hlstd{(a,} \hlstr{"formula"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{warningbox}
+No method \Rfunction{is.formula()} is part of the \Rlang language, but instead methods \Rfunction{is.formula()} and \Rfunction{is\_formula()} provided by packages \pkgname{plyr} and \pkgname{rlang}, respectively.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{plyr}\hlopt{::}\hlkwd{is.formula}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlstd{rlang}\hlopt{::}\hlkwd{is_formula}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+However, it would be unwise to add a dependency on either of these packages for such a trivial function. We could directly use \Rlang method \Rfunction{inherits()} as shown above.
+
+To see how these methods have been defined, we can print them, simply by not supplying the ``function-call'' parentheses.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{plyr}\hlopt{::}\hlstd{is.formula}
+\end{alltt}
+\begin{verbatim}
+## function (x) 
+## inherits(x, "formula")
+## <bytecode: 0x0000000019b42758>
+## <environment: namespace:plyr>
+\end{verbatim}
+\begin{alltt}
+\hlstd{rlang}\hlopt{::}\hlstd{is_formula}
+\end{alltt}
+\begin{verbatim}
+## function (x, scoped = NULL, lhs = NULL) 
+## {
+##     if (!is_formulaish(x, scoped = scoped, lhs = lhs)) {
+##         return(FALSE)
+##     }
+##     identical(node_car(x), tilde_sym)
+## }
+## <bytecode: 0x0000000018b2d2f0>
+## <environment: namespace:rlang>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+It can be seen that they call \Rfunction{inherits()} with \code{"formula"} as its second argument, demonstrating how trivial their definitions are. This servers as an example of how sometimes unnecessary dependencies on packages can creep into our own scripts and packages, as dependency one package does not only adds a dependency on the used package but also on the further packages it directly and indirectly depends on. If needed or desired one can very easily define a \Rfunction{is.formula()} method that adds no external dependencies.
+\end{warningbox}
+
+\begin{explainbox}
+\textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. Formulas as any other \Rlang objects can be saved in variables including lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a \code{for} loop that walks through a list of model formulas. Or we can write a function that accepts one or more formulas as arguments.
+
+The use of \code{for} \emph{loops} for iteration is described in section \ref{sec:script:flow:control} on page \pageref{sec:script:flow:control}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{y} \hlstd{= (}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{)} \hlopt{/} \hlnum{2} \hlopt{+} \hlkwd{rnorm}\hlstd{(}\hlnum{10}\hlstd{))}
+\hlstd{anovas} \hlkwb{<-} \hlkwd{list}\hlstd{()}
+\hlstd{formulas} \hlkwb{<-} \hlkwd{list}\hlstd{(}\hlkwc{a} \hlstd{= y} \hlopt{~} \hlstd{x} \hlopt{-} \hlnum{1}\hlstd{,} \hlkwc{b} \hlstd{= y} \hlopt{~} \hlstd{x,} \hlkwc{c} \hlstd{= y} \hlopt{~} \hlstd{x} \hlopt{+} \hlstd{x}\hlopt{^}\hlnum{2}\hlstd{)}
+\hlkwa{for} \hlstd{(formula} \hlkwa{in} \hlstd{formulas) \{}
+ \hlstd{anovas} \hlkwb{<-} \hlkwd{c}\hlstd{(anovas,} \hlkwd{list}\hlstd{(}\hlkwd{lm}\hlstd{(formula,} \hlkwc{data} \hlstd{= my.data)))}
+ \hlstd{\}}
+\hlkwd{str}\hlstd{(anovas,} \hlkwc{max.level} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## List of 3
+##  $ :List of 12
+##   ..- attr(*, "class")= chr "lm"
+##  $ :List of 12
+##   ..- attr(*, "class")= chr "lm"
+##  $ :List of 12
+##   ..- attr(*, "class")= chr "lm"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+As could be expected a conversion constructor is available with name \code{as.formula}. It becomes useful when formulas are input interactively by the user or read from text files. We can convert a character string into a formula.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.string} \hlkwb{<-} \hlstr{"y ~ x"}
+\hlkwd{lm}\hlstd{(}\hlkwd{as.formula}\hlstd{(my.string),} \hlkwc{data} \hlstd{= my.data)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = as.formula(my.string), data = my.data)
+## 
+## Coefficients:
+## (Intercept)            x  
+##     -1.0905       0.6649
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+As there are many functions available in base \Rlang and through packages for the manipulation of character strings, it is straightforward to build model formulas programmatically as strings. We can use functions like \code{paste()} to assemble a formula as text, and then use \code{as.formula()} to convert it to an object of class \code{formula}, usable for fitting a model.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.string} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"y"}\hlstd{,} \hlstr{"x"}\hlstd{,} \hlkwc{sep} \hlstd{=} \hlstr{"~"}\hlstd{)}
+\hlkwd{lm}\hlstd{(}\hlkwd{as.formula}\hlstd{(my.string),} \hlkwc{data} \hlstd{= my.data)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = as.formula(my.string), data = my.data)
+## 
+## Coefficients:
+## (Intercept)            x  
+##     -1.0905       0.6649
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+For the reverse operation of converting a formula into a string, we have available methods \code{as.character()} and \code{format()}. The first of these methods returns a character vector containing the components of the formula as individual strings, while \code{format()} returns a single character string with the formula formatted for printing.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{formatted.string} \hlkwb{<-} \hlkwd{format}\hlstd{(y} \hlopt{~} \hlstd{x)}
+\hlstd{formatted.string}
+\end{alltt}
+\begin{verbatim}
+## [1] "y ~ x"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{as.formula}\hlstd{(formatted.string)}
+\end{alltt}
+\begin{verbatim}
+## y ~ x
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+It is also possible to \emph{edit} formula objects with method \Rfunction{update()}. In the replacement formula, a dot can replace either the left hand side (lhs) or the right hand side (rhs) of the existing formula in the replacement formula. We can also remove terms as can be seen below. In some cases the dot corresponding to the lhs con be omitted, but including it makes the syntax clearer.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.formula} \hlkwb{<-} \hlstd{y} \hlopt{~} \hlstd{x1} \hlopt{+} \hlstd{x2}
+\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{.} \hlopt{+} \hlstd{x3)}
+\end{alltt}
+\begin{verbatim}
+## y ~ x1 + x2 + x3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{.} \hlopt{-} \hlstd{x1)}
+\end{alltt}
+\begin{verbatim}
+## y ~ x2
+\end{verbatim}
+\begin{alltt}
+\hlkwd{update}\hlstd{(my.formula, .} \hlopt{~} \hlstd{x3)}
+\end{alltt}
+\begin{verbatim}
+## y ~ x3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{update}\hlstd{(my.formula, z} \hlopt{~} \hlstd{.)}
+\end{alltt}
+\begin{verbatim}
+## z ~ x1 + x2
+\end{verbatim}
+\begin{alltt}
+\hlkwd{update}\hlstd{(my.formula, .} \hlopt{+} \hlstd{z} \hlopt{~} \hlstd{.)}
+\end{alltt}
+\begin{verbatim}
+## y + z ~ x1 + x2
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+R provides high level functions for model selection. Consequently many R users will rarely need to edit model formulas in their scripts. For example, step wise model selection is possible with \Rlang method \code{step()}.
+
+A matrix of dummy coefficients can be derived from a model formula, a type of contrast and the data for the explanatory variables.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{treats.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{A} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"yes"}\hlstd{,} \hlstr{"no"}\hlstd{),} \hlkwd{c}\hlstd{(}\hlnum{4}\hlstd{,} \hlnum{4}\hlstd{)),}
+                        \hlkwc{B} \hlstd{=} \hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"white"}\hlstd{,} \hlstr{"black"}\hlstd{),} \hlnum{4}\hlstd{))}
+\hlstd{treats.df}
+\end{alltt}
+\begin{verbatim}
+##     A     B
+## 1 yes white
+## 2 yes black
+## 3 yes white
+## 4 yes black
+## 5  no white
+## 6  no black
+## 7  no white
+## 8  no black
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The default contrasts types currently in use.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{options}\hlstd{(}\hlstr{"contrasts"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## $contrasts
+##         unordered           ordered 
+## "contr.treatment"      "contr.poly"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+A model matrix for a model for a two-way factorial design with no interaction term.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{model.matrix}\hlstd{(}\hlopt{~} \hlstd{A} \hlopt{+} \hlstd{B, treats.df)}
+\end{alltt}
+\begin{verbatim}
+##   (Intercept) Ayes Bwhite
+## 1           1    1      1
+## 2           1    1      0
+## 3           1    1      1
+## 4           1    1      0
+## 5           1    0      1
+## 6           1    0      0
+## 7           1    0      1
+## 8           1    0      0
+## attr(,"assign")
+## [1] 0 1 2
+## attr(,"contrasts")
+## attr(,"contrasts")$A
+## [1] "contr.treatment"
+## 
+## attr(,"contrasts")$B
+## [1] "contr.treatment"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+A model matrix for a model for a two-way factorial design with interaction term.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{model.matrix}\hlstd{(}\hlopt{~} \hlstd{A} \hlopt{*} \hlstd{B, treats.df)}
+\end{alltt}
+\begin{verbatim}
+##   (Intercept) Ayes Bwhite Ayes:Bwhite
+## 1           1    1      1           1
+## 2           1    1      0           0
+## 3           1    1      1           1
+## 4           1    1      0           0
+## 5           1    0      1           0
+## 6           1    0      0           0
+## 7           1    0      1           0
+## 8           1    0      0           0
+## attr(,"assign")
+## [1] 0 1 2 3
+## attr(,"contrasts")
+## attr(,"contrasts")$A
+## [1] "contr.treatment"
+## 
+## attr(,"contrasts")$B
+## [1] "contr.treatment"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{explainbox}
+
+\section{Time series}\label{sec:stat:time:series}
+
+Longitudinal data, when replicated is usually named repeated measurements, but when not replicated, is named time series.
+Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models.
+
+Time series data are data collected in such a way that there is only one observation, possibly of multiple variables, available at each time step. This brief section introduces only the most basic aspects of time-series analysis. In most cases time steps are of uniform duration and occur regularly. Given this properties, it is possible to take advantage of this for their storage. \Rlang not only provides methods for the analysis and manipulation of this type data, but also a specialized class for their storage, \code{ts}. A regular time series does not store the time value at each observation: only a combination of two of start time, step size and end time needs to be stored.
+
+We start by creating a time series from a numeric vector. By now, you surely guessed that you need to use a constructor called \Rfunction{ts()} or a conversion constructor called \Rfunction{as.ts()} and that you can look up the arguments they accept by reading the corresponding help pages.
+
+For example for a time series of monthly values we could use.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.ts} \hlkwb{<-} \hlkwd{ts}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{start} \hlstd{=} \hlnum{2018}\hlstd{,} \hlkwc{deltat} \hlstd{=} \hlnum{1}\hlopt{/}\hlnum{12}\hlstd{)}
+\hlkwd{class}\hlstd{(my.ts)}
+\end{alltt}
+\begin{verbatim}
+## [1] "ts"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{str}\hlstd{(my.ts)}
+\end{alltt}
+\begin{verbatim}
+##  Time-Series [1:10] from 2018 to 2019: 1 2 3 4 5 6 7 8 9 10
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We next use a data set included in R.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{class}\hlstd{(austres)}
+\end{alltt}
+\begin{verbatim}
+## [1] "ts"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.ts}\hlstd{(austres)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+
+This time series of the number of Australian residents is dominated by the increasing trend.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(austres)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-02-1} 
+
+}
+
+
+
+\end{knitrout}
+
+A different example, in this case meteorological data, shows an important cyclic component. The annual cycle of mean air temperatures is clearly seen in the plot.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(nottem)}
+\hlkwd{is.ts}\hlstd{(nottem)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(nottem)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-03-1} 
+
+}
+
+
+
+\end{knitrout}
+
+In the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use loess for the decomposition, a method for which the acronym STL is used. LOESS is a local-regression-based smoothing method.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{nottem.celcius} \hlkwb{<-} \hlstd{(nottem} \hlopt{-} \hlnum{32}\hlstd{)} \hlopt{*} \hlnum{5}\hlopt{/}\hlnum{9}
+\hlkwd{plot}\hlstd{(}\hlkwd{decompose}\hlstd{(nottem.celcius))}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-04-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(}\hlkwd{stl}\hlstd{(nottem.celcius,} \hlkwc{s.window} \hlstd{=} \hlnum{6}\hlstd{))}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-ts-05-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\section{Multivariate statistics}\label{sec:stat:MV}
+
+\subsection{Multivariate analysis of variance}
+
+Multivariate methods take into account several response variables simultaneously, as part of a single analysis. In practice it is usual to use contributed packages for multivariate data analysis in \Rlang, except for simple cases. We will look first at \emph{multivariate} ANOVA or MANOVA. In the same way as \Rfunction{aov()} is a wrapper that uses internally \Rfunction{lm()}, \Rfunction{manova()} is a wrapper that uses internally \Rfunction{aov()}.
+
+Multivariate model formulas in some cases use the same syntax as univariate ones, but contain more than one response variable on their left hand side (lhs).
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{y1} \hlopt{+} \hlstd{y2} \hlopt{+} \hlstd{y3} \hlopt{~} \hlstd{x1} \hlopt{*} \hlstd{x2}
+\end{alltt}
+\begin{verbatim}
+## y1 + y2 + y3 ~ x1 * x2
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In other cases, a special syntax is used. In the case of function \Rfunction{manova()} we use function \code{cbind()} (column bind) to assemble the lhs of the formula.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(iris)}
+\hlstd{m.fit} \hlkwb{<-} \hlkwd{manova}\hlstd{(}\hlkwd{cbind}\hlstd{(Petal.Length, Petal.Width)} \hlopt{~}  \hlstd{Species,} \hlkwc{data} \hlstd{= iris)}
+\hlkwd{anova}\hlstd{(m.fit)}
+\end{alltt}
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+##              Df  Pillai approx F num Df den Df    Pr(>F)    
+## (Intercept)   1 0.98786   5939.2      2    146 < 2.2e-16 ***
+## Species       2 1.04645     80.7      4    294 < 2.2e-16 ***
+## Residuals   147                                             
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(m.fit)}
+\end{alltt}
+\begin{verbatim}
+##            Df Pillai approx F num Df den Df    Pr(>F)    
+## Species     2 1.0465   80.661      4    294 < 2.2e-16 ***
+## Residuals 147                                            
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\subsection{Principal components analysis}\label{sec:stat:PCA}
+
+Principal components analysis is used to simplify a data set by combing variables with similar behaviour into ``principal components''. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base \Rlang's function \Rfunction{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{pc} \hlkwb{<-} \hlkwd{prcomp}\hlstd{(iris[}\hlkwd{c}\hlstd{(}\hlstr{"Sepal.Length"}\hlstd{,} \hlstr{"Sepal.Width"}\hlstd{,}
+                    \hlstr{"Petal.Length"}\hlstd{,} \hlstr{"Petal.Width"}\hlstd{)],}
+             \hlkwc{center} \hlstd{=} \hlnum{TRUE}\hlstd{,}
+             \hlkwc{scale.} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{pc}
+\end{alltt}
+\begin{verbatim}
+## Standard deviations (1, .., p=4):
+## [1] 1.7083611 0.9560494 0.3830886 0.1439265
+## 
+## Rotation (n x k) = (4 x 4):
+##                     PC1         PC2        PC3        PC4
+## Sepal.Length  0.5210659 -0.37741762  0.7195664  0.2612863
+## Sepal.Width  -0.2693474 -0.92329566 -0.2443818 -0.1235096
+## Petal.Length  0.5804131 -0.02449161 -0.1421264 -0.8014492
+## Petal.Width   0.5648565 -0.06694199 -0.6342727  0.5235971
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(pc)}
+\end{alltt}
+\begin{verbatim}
+## Importance of components:
+##                           PC1    PC2     PC3     PC4
+## Standard deviation     1.7084 0.9560 0.38309 0.14393
+## Proportion of Variance 0.7296 0.2285 0.03669 0.00518
+## Cumulative Proportion  0.7296 0.9581 0.99482 1.00000
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Method \code{plot()}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(pc)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-pca-04-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\begin{explainbox}
+As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components. Further computations and/or formatting can be applied.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{str}\hlstd{(pc)}
+\end{alltt}
+\begin{verbatim}
+## List of 5
+##  $ sdev    : num [1:4] 1.708 0.956 0.383 0.144
+##  $ rotation: num [1:4, 1:4] 0.521 -0.269 0.58 0.565 -0.377 ...
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
+##   .. ..$ : chr [1:4] "PC1" "PC2" "PC3" "PC4"
+##  $ center  : Named num [1:4] 5.84 3.06 3.76 1.2
+##   ..- attr(*, "names")= chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
+##  $ scale   : Named num [1:4] 0.828 0.436 1.765 0.762
+##   ..- attr(*, "names")= chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
+##  $ x       : num [1:150, 1:4] -2.26 -2.07 -2.36 -2.29 -2.38 ...
+##   ..- attr(*, "dimnames")=List of 2
+##   .. ..$ : NULL
+##   .. ..$ : chr [1:4] "PC1" "PC2" "PC3" "PC4"
+##  - attr(*, "class")= chr "prcomp"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{explainbox}
+
+
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{biplot}\hlstd{(pc)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-pca-05-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgname{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:performance}, package \pkgname{ggfortify} described in section \ref{sec:plot:ggfortify} on page \pageref{sec:plot:ggfortify} and package \pkgname{ggbiplot} described in section \ref{sec:plot:ggbiplot} on page \pageref{sec:plot:ggbiplot}.
+
+\begin{playground}
+For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
+\end{playground}
+
+\subsection{Multidimensional scaling}\label{sec:stat:MDS}
+
+In multidimensional scaling we start with a matrix of distances among observations that will need to be calculated from the raw data. We use for the example distances between geographic locations in Europe.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{loc} \hlkwb{<-} \hlkwd{cmdscale}\hlstd{(eurodist)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We can see that the returned object \code{loc} is a \code{matrix}, with names for one of the dimensions.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{class}\hlstd{(loc)}
+\end{alltt}
+\begin{verbatim}
+## [1] "matrix"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{head}\hlstd{(loc)}
+\end{alltt}
+\begin{verbatim}
+##                 [,1]      [,2]
+## Athens    2290.27468 1798.8029
+## Barcelona -825.38279  546.8115
+## Brussels    59.18334 -367.0814
+## Calais     -82.84597 -429.9147
+## Cherbourg -352.49943 -290.9084
+## Cologne    293.68963 -405.3119
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Two make the code easier to read two vectors are first extracted from the matrix and named \code{x} and \code{y}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{x} \hlkwb{<-} \hlstd{loc[,} \hlnum{1}\hlstd{]}
+\hlstd{y} \hlkwb{<-} \hlopt{-}\hlstd{loc[,} \hlnum{2}\hlstd{]} \hlcom{# reflect so North is at the top}
+\hlcom{## note asp = 1, to ensure Euclidean distances are represented correctly}
+\hlkwd{plot}\hlstd{(x, y,} \hlkwc{type} \hlstd{=} \hlstr{"n"}\hlstd{,} \hlkwc{xlab} \hlstd{=} \hlstr{""}\hlstd{,} \hlkwc{ylab} \hlstd{=} \hlstr{""}\hlstd{,} \hlkwc{asp} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{axes} \hlstd{=} \hlnum{FALSE}\hlstd{,}
+     \hlkwc{main} \hlstd{=} \hlstr{"cmdscale(eurodist)"}\hlstd{)}
+\hlkwd{text}\hlstd{(x, y,} \hlkwd{rownames}\hlstd{(loc),} \hlkwc{cex} \hlstd{=} \hlnum{0.6}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.76\textwidth]{figure/pos-mds-03-1} 
+
+}
+
+
+
+\end{knitrout}
+
+\subsection{Clustering}\label{sec:stat:cluster}
+
+In clustering analysis the aim is to group observations into discrete groups with maximal internal homogeneity and maximum group to group differences. Examples of functions in \Rlang and \Rfunction{hclust()} and \Rfunction{kmeans()}.
+
+\subsection{Discrimination analysis}\label{sec:stat:DA}
+
+In discrimination analysis the categories or groups to which objects belong are known \emph{a priori}. The aim is to fit/bild a classifier to will allow us to assign future observations to the different non-overlapping groups.
+
+\subsection{What next?}
+
+Other books are available with detailed descriptions of how to do various types of analyses in \Rlang, included thorough descriptions of the methods briefly presented in this chapter and many other methods not mentioned here. Good examples of books with broad scope that can serve as references for the application of various statistical methods are \citebooktitle{Everitt2009} \autocite{Everitt2011} and \citebooktitle{Crawley2012} \autocite{Crawley2012}, and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. Many subject specific books are also available, and some suggestions given at the end of the book on page \pageref{chap:R:readings}.
+
+
+
+
+% !Rnw root = appendix.main.Rnw
+
+
 \chapter{The R language: adding new ``words''}\label{chap:R:functions}
 
 \begin{VF}
@@ -9020,7 +9202,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ## function(x, na.rm = FALSE){
 ##   sqrt(var(x, na.rm = na.rm) / length(na.omit(x)))
 ## }
-## <bytecode: 0x0000000018a1f6d8>
+## <bytecode: 0x0000000019ff6e88>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9098,7 +9280,7 @@ Next we print the definition of \Rlang linear model fitting function \code{lm()}
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x00000000176b6508>
+## <bytecode: 0x0000000018703350>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -9197,7 +9379,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x00000000198568d0>
+## <bytecode: 0x0000000019d95aa8>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -9475,9 +9657,9 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [1] svglite_1.2.1 stringr_1.3.1 knitr_1.20   
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] compiler_3.5.1  plyr_1.8.4      magrittr_1.5    graphics_3.5.1 
-##  [5] Rcpp_0.12.17    gdtools_0.1.7   stringi_1.2.3   highr_0.7      
-##  [9] rlang_0.2.1     evaluate_0.10.1
+##  [1] compiler_3.5.1 plyr_1.8.4     magrittr_1.5   graphics_3.5.1
+##  [5] Rcpp_0.12.18   gdtools_0.1.7  stringi_1.2.4  highr_0.7     
+##  [9] rlang_0.2.2    evaluate_0.11
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
