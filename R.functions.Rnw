@@ -5,7 +5,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 @
 
-\chapter{The R language: adding new ``words''}\label{chap:R:functions}
+\chapter{The R language: creating new ``words''}\label{chap:R:functions}
 
 \begin{VF}
 Computer Science is a science of abstraction---creating the right model for a problem and devising the appropriate mechanizable techniques to solve it.
@@ -17,7 +17,7 @@ Computer Science is a science of abstraction---creating the right model for a pr
 
 \section{Aims of this chapter}
 
-In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. In the first part of the chapter I will focus on using existing packages and how they expand the functionality of \Rlang. In the second part you will learn how to define new functions and classes by yourself. We will not consider the important, but more advanced question of packaging functions and classes into new packages. The development of packages is thoroughly described in the book \citebooktitle{Wickham2015} \autocite{Wickham2015}.
+In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. In the first part of the chapter I will focus on using existing packages and how they expand the functionality of \Rlang. In the second part you will learn how to define new functions and classes by yourself. We will not consider the important, but more advanced question of packaging functions and classes into new packages. The development of packages is thoroughly described in the book \citebooktitle{Wickham2015} \autocite{Wickham2015} and in depth description of \Rlang from the programming perspective is given in the book \citebooktitle{Wickham2014} \autocite{Wickham2014}. The book \citebooktitle{Chambers2016} \autocite{Chambers2016} covers both subjects.
 
 \section{Packages}\label{sec:script:packages}
 
@@ -32,14 +32,14 @@ library(graphics)
 
 Currently there are many thousands of packages available. The most reliable source of packages is CRAN, as only packages that pass strict tests and are actively maintained are retained. In some cases you may need or want to install less stable code, and this is also possible. With package \pkgname{devtools} it is even possible to install packages directly from Github, Bitbucket and a few other repositories. These later installations are always installations from source (see below).
 
-\Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require additional software to be available. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in installers (you will need \pgrmname{RTools}, and \pgrmname{\hologo{MiKTeX}}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
+\Rpgrm packages can be installed either from source, or from already built `binaries'. Installing from sources, depending on the package, may require additional software to be available. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in installers (you will need \pgrmname{RTools}, and \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}). However, for this reason it is the norm to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
 
 The development of packages is beyond the scope of the current book, and very well explained in the book \citebooktitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes. Packages use a relatively rigid structure of folders for storing the different types of files, and there is a built-in help system, that one needs to use, so that the package documentation gets linked to the \Rlang help system when the package is loaded. In addition to \Rlang code, packages can call functions and routines written in \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, etc.\ but some kind of `glue' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. At least for \langname{C++}, the \pkgname{Rcpp} \langname{R} package makes the ``gluing'' extremely easy. See Chapter \ref{chap:R:performance} starting on page \pageref{chap:R:performance} for more information on performance-related and other limitations of \pgrmname{R} and how to solve possible bottlenecks.
 
 One good way of learning how \Rlang works, is by experimenting with it, and whenever using a certain function looking at its help, to check what are all the available options. How much documentation is included with packages varies a lot, but many packages include comprehensive user guides or examples as \emph{vignettes} in addition to the help pages for individual functions or data sets. It is not unusual to decide which package to use from a set of alternatives based on the available documentation. In the case of some packages adding many new capabilities, packages may be documented in depth in a whole book. Well known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
 
 \begin{warningbox}
-\textbf{Naming conflicts} When two objects with the same name are present in the search path used by \Rlang to match names to stored objects, conflicts can occur. Not all names belong to the same namespace, and consequently, in many situations different object with identical names can coexist in the \Rlang environment. It is important that you realize than in such cases all these objects remain within reach of our code, but that the one nearest to the top of the search path will be returned when a ``bare'' name is used. The name of the namespace can be prepended to that of the object separated by double colons (\code{::}). In recent versions of R, every package is required to use a namespace to isolate the names used, and even names used in base R are in their own name space. This greatly facilitates the resolution of naming conflicts once they are identified.
+\textbf{Naming conflicts} When two objects with the same name are present in the search path used by \Rlang to match names to stored objects, conflicts can occur. Not all names belong to the same namespace, and consequently, in many situations different object with identical names can coexist in the \Rlang environment. It is important that you realize than in such cases all these objects remain within reach of our code, but that the one nearest to the top of the search path will be returned when a ``bare'' name is used. The name of the namespace can be prepended to that of the object separated by double colons (\Rscoping{::}). In recent versions of \Rlang, every package is required to use a namespace to isolate the names used, and even names used in base \Rlang are in their own name space. This greatly facilitates the resolution of naming conflicts once they are identified.
 
 <<namespaces-00>>=
 mean(1:5)
@@ -67,7 +67,7 @@ When using packages naming conflicts can rather easily occur among packages. On 
 In production code it is best to use the namespace plus name notation for names not defined within the script itself. In many cases, using the double colon notation makes the code of a script easier to read, although at the cost of some verbosity.
 \end{warningbox}
 
-Only objects exported by a package are visible outside its own namespace and only if imported. Loading a package makes the exported objects available, but to access to them still needs prepending the names with the namespace. Attaching a package adds the objects exported by the package to the search paths so that they can be accessed without prepending the name of the namespace. As mentioned above, in case of naming conflicts hiding some objects we may need to use the namespace based notation for accessing the hidden objects. Most packages do not export all the functions and objects defined in their code, some are kept internal, in most cases because they may change or be removed in future versions. Package namespaces can be detached and also unloaded with function \Rfunction{detach()} using a slightly different notation for the argument to that we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}.
+Only objects exported by a package are visible outside its own namespace and only if imported. Loading a package makes the exported objects available, but to access to them still needs prepending the names with the namespace. Attaching a package adds the objects exported by the package to the search paths so that they can be accessed without prepending the name of the namespace. As mentioned above, in case of naming conflicts hiding some objects we may need to use the namespace based notation for accessing the hidden objects. Most packages do not export all the functions and objects defined in their code, some are kept internal, in most cases because they may change or be removed in future versions. Package namespaces can be detached and also unloaded with function \Rscoping{detach()} using a slightly different notation for the argument to that we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}.
 
 The statement below is an error unless package `graphics' is in the \Rlang search list.
 <<namespaces-03>>=
@@ -95,16 +95,47 @@ Due to the large number of contributed \Rlang packages it can sometimes be diffi
 \url{https://www.r-pkg.org/}
 \url{https://www.rdocumentation.org/}
 
+\section{Scope of names}
+\index{names and scoping}\index{scoping rules}\index{namespaces}
+
+The visibility of names is determined by the \emph{scoping rules} of a language. The clearest, but not only situation when scoping rules matter is when objects with the same name coexist. In such a situation one will be accessible by its unqualified name and the other hidden but possibly accessible by qualifying the name with its name space.
+
+As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of language. For example \code{pi} is part of the \Rlang tanking the value of the mathematical constant $\Pi$. If we use the same name for one of our variables, the original definition becomes hidden.
+
+<<scope-01>>=
+pi
+pi <- "apple pie"
+pi
+rm(pi)
+pi
+exists("pi")
+@
+
+This is different than when we assign a new value to a variable we have earlier created. The difference is that in this second case we are doing both assignments in the same scope, and consequently the second assignment overwrites rather than hides the existing one.\qRscoping{exists()}
+
+<<scope-02>>=
+my.pie <- "raspberry pie"
+my.pie
+my.pie <- "apple pie"
+my.pie
+rm(my.pie)
+exists("my.pie")
+@
+
+An additional important thing to remember is that \Rlang packages define all objects within a \emph{namespace} with the same name as the package itself. This means that when we reuse a name defined in a package its definition in the package does not get overwritten, but instead, only hidden and still accessible using the name \emph{qualified} by prepending the name of the package followed by two colons.
+
+If two packages define objects with the same name then which one is visible depends on the order the packages are attached. To avoid confusion in such cases in scripts is best to always use the qualified names for both definitions.
+
 \section{Functions and operators}\label{sec:script:functions}
-\index{functions!defining new}
+\index{functions!defining new}\index{operators!defining new}
 
 \emph{Abstraction} can be defined as separating the fundamental properties from the accidental ones. Say obtaining the mean from a given vector of numbers, is an actual operation. There can be many such operations on different numeric vectors, each one a specific case. When we describe an algorithm for computing the mean from any numeric vector we have created the abstraction of \emph{mean}. In the same way each time we separate operations from specific data we create a new abstraction. In this sense functions are abstractions of operations or actions, they are like ``verbs'' describing actions separately from actors.
 
-The main role of functions is that by providing an abstraction allowing us to avoid repeating blocks of code (groups of statements) applying the same operations on different data. The reasons to avoid repetition of similar code statement are that 1) if the algorithm or implementation needs to be revised---e.g.\ to fix a bug or error---, it is best to make edits in a single place; 2) sooner or later pieces of repeated code can become different leading to inconsistencies and hard to track bugs; 3) abstraction and division of a problem into smaller chunks, greatly helps with keeping the code understandable to humans; 2) repetition makes the script file longer, and this makes debugging, commenting, etc. more tedious, and error prone.
+The main role of functions is that by providing an abstraction allowing us to avoid repeating blocks of code (groups of statements) applying the same operations on different data. The reasons to avoid repetition of similar code statement are that 1) if the algorithm or implementation needs to be revised---e.g.\ to fix a bug or error---, it is best to make edits in a single place; 2) sooner or later pieces of repeated code can become different leading to inconsistencies and hard to track bugs; 3) abstraction and division of a problem into smaller chunks, greatly helps with keeping the code understandable to humans; 2) textual repetition makes the script file longer, and this makes debugging, commenting, etc. more tedious, and error prone.
 
-How do we in practice avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and then \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in most earlier examples in this book, what we will next tackle is how to define new functions.
+How do we in practice avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and later we \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book, what we will next tackle is how to define new functions of our own.
 
-New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as place-holders.
+New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as place-holders for actual values to be supplied as arguments when calling the function.
 
 <<fun-00>>=
 my.prod <- function(x, y){x * y}
@@ -127,8 +158,8 @@ A function can only return a single object, so multiple results are produced the
 \end{warningbox}
 
 \begin{playground}
-When function \Rfunction{return()} is called within a function, flow of execution within the function stops and the argument passed
-to \Rfunction{return()} is the value returned by the function call. In contrast, if function \Rfunction{return()} is not explicitly
+When function \Rcontrol{return()} is called within a function, flow of execution within the function stops and the argument passed
+to \Rcontrol{return()} is the value returned by the function call. In contrast, if function \Rcontrol{return()} is not explicitly
 called, the value returned by the function call is that returned by the last statement \emph{executed} within the body of the function---i.e.\
 the returned value is not necessarily that returned by the last statement according to its position in the body of the function.
 
@@ -147,12 +178,24 @@ print.x.4("test")
 @
 \end{playground}
 
+\begin{advplayground}
+Test the behaviour of functions \code{print.x.1()} and \code{print.x.5()}, as defined above, both at the command prompt, and in a script. The behaviour of one of these functions will be different when the script is sourced than at the command prompt. Explain why.
+\end{advplayground}
+
+Functions have their own scope. Any names created by normal assignment within the body of a function are visible only within the body of the function and disappear when the function returns from the call. In normal use, functions in \Rlang do not affect their environment through side effects. They receive input through arguments and return a value as the result of the call. This value can be either printed or assigned as we have seen when using functions earlier.
+
 \subsection{Ordinary functions}
+\index{functions!defining new}
 
-After the toy examples above we will define a small but useful function: a function for calculating the standard error of the mean from a numeric vector.
+After the toy examples above we will define a small but useful function: a function for calculating the standard error of the mean from a numeric vector. The standard error is given by $S_{\hat{x}} = \sqrt{S^2 / n}$. We can translate this into the definition of an \Rlang function called \code{SEM}.
 
-<<fun-1NN>>=
+<<fun-03>>=
 SEM <- function(x){sqrt(var(x) / length(x))}
+@
+
+We can test our function.
+
+<<fun-04>>=
 a <- c(1, 2, 3, -5)
 a.na <- c(a, NA)
 SEM(x = a)
@@ -162,74 +205,80 @@ SEM(a.na)
 
 For example in \code{SEM(a)} we are calling function \Rfunction{SEM()} with \code{a} as argument.
 
-The function we defined above may sometimes give a wrong answer because NAs will be counted by \code{length()}, so we need to remove NAs before calling \code{length()}.
+The function we defined above will give always the correct answer because \code{NA} values in the input will always result in an \code{NA} being returned. The problem is that unlike \Rlang own functions like \code{var()} there is no option to omit \code{NA} values in the function we defined.
 
-<<fun-1-safe>>=
+This could be implemented by adding a second parameter \code{na.omit} to the definition of our function and passing its argument to the call to \Rfunction{var()} within the body of \code{SEM()}. However, to avoid returning wrong values we need to make sure \code{NA} values are removed also before counting the number of observations with \code{length()}.
+
+A readable way of implementing this in code is to define the function as follows.
+
+<<fun-05>>=
+better_SEM <- function(x, na.omit = FALSE) {
+ if (na.omit) {
+   x <- na.omit(x)
+ }
+ sqrt(var(x)/length(x))
+}
+@
+
+<<fun-06>>=
 simple_SEM <- function(x) {
  sqrt(var(x, na.rm=TRUE)/length(na.omit(x)))
 }
 a <- c(1, 2, 3, -5)
 a.na <- c(a, NA)
-simple_SEM(x=a)
-simple_SEM(a)
-simple_SEM(a.na)
+better_SEM(x = a)
+better_SEM(x = a.na)
+better_SEM(x = a.na, na.omit = TRUE)
 @
 
-\Rlang does not have a function for standard error, so the function above would be generally useful. If we would like to make this function both safe, and consistent with other similar \Rlang functions, one could define it as follows, allowing the user to provide a second argument which is passed as an argument to \Rfunction{var()}:
+\Rlang does not provide a function for standard error, so the function above is generally useful. Its user interface is consistent with that of functionally similar existing functions. We have added a new word to the \Rlang vocabulary available to us.
 
-<<fun-2>>=
-SEM <- function(x, na.rm = FALSE){
-  sqrt(var(x, na.rm = na.rm) / length(na.omit(x)))
-}
-SEM(a)
-SEM(a.na)
-SEM(a.na, TRUE)
-SEM(x = a.na, na.rm = TRUE)
-SEM(TRUE, a.na)
-SEM(na.rm = TRUE, x = a.na)
-@
+In the definition of \code{better\_SEM()} we set a default argument for parameter \code{na.omit} which is used unless the user explicitly passes an argument to this parameter.
 
-In this example you can see that functions can have more than one parameter, and that parameters can have default values to be used if no
-argument is explicitly supplied. In addition if names of the parameters are supplied arguments can be passed in any order.
-If parameter names are not supplied arguments are matched to parameters based on their position. Once one parameter name is given, all
-later arguments need also to be explicitly named.
+%In addition if names of the parameters are supplied arguments can be passed in any order. If parameter names are not supplied arguments are matched to parameters based on their position. Once one parameter name is given, all later arguments need also to be explicitly named.
 
 %We can assign to a variable defined `outside' a function with operator \code{<<-} but the usual recommendation is to avoid its use. This type of effects of calling a function are frequently called `side-effects'.
-
-\begin{advplayground}
-Test the behaviour of functions \code{print.x.1()} and \code{print.x.5()}, as defined on page \pageref{chunck:print:funs}, at the command prompt, and in a script, by writing a script.
-The behaviour of one of these functions will be different when the script is source than at the command prompt. Explain why.
-\end{advplayground}
 
 \begin{playground}
 Define your own function to calculate the mean in a similar way as \Rfunction{SEM()} was defined above. Hint: function \Rfunction{sum()} could be of help.
 \end{playground}
 
-\begin{playground}
-Create some additional vectors containing \code{NA}s or not. Use them to test functions \Rfunction{simple\_SEM()} and \Rfunction{SEM()} defined above, and then explain why \code{SEM()} returns always the correct value, even though ``\code{na.omit(x)}'' is non-conditionally (always) applied to \code{x} before calculating its length.
-\end{playground}
-
-Functions can enclose much more complex and larger compound statements as their body than those in the examples above. Within an expression a function name followed by parentheses is interpreted as a call to the function. The name of a function instead gives access to its definition.
+Functions can have much more complex and larger compound statements as their body than those in the examples above. Within an expression a function name followed by parentheses is interpreted as a call to the function. The bare name of a function instead gives access to its definition.
 
 We first print (implicitly) the definition of our function from earlier in this section.
-<<fun-3>>=
-SEM
+<<fun-07>>=
+better_SEM
 @
 
 Next we print the definition of \Rlang linear model fitting function \code{lm()}. (Use of \code{lm()} is described in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}.)
-<<fun-4>>=
+<<fun-08>>=
 lm
 @
 
-As can be seen at the end of the listing this function written in the \Rlang language has been byte-compiled so that it executes faster.
+As can be seen at the end of the listing this function written in the \Rlang language has been byte-compiled so that it executes faster. Functions part of the \Rlang language that are not coded using the \Rlang language are called primitives and their full definition cannot be accessed through their name.
+
+<<fun-09>>=
+list
+@
 
 \subsection{Operators}
+\index{operators!defining new}
 
-Operators are functions that use a different syntax for being called. If their name is enclosed in back ticks they can be called as regular functions. Binary operators like \code{+} have two formal parameters, and unary operators like unary \code{-} have only one formal parameter.
+Operators are functions that use a different syntax for being called. If their name is enclosed in back ticks they can be called as ordinary functions. Binary operators like \code{+} have two formal parameters, and unary operators like unary \code{-} have only one formal parameter. The parameters of operators are named.
 
 <<oper-01>>=
 1 / 2
 `/`(1 , 2)
+`/`(e1 = 1 , e2 = 2)
+`/`(e2 = 2, e1 = 1)
+@
+
+An important consequence of the possibility of calling operators using ordinary syntax is that operators can be used as arguments to apply functions in the same way as ordinary functions. When passing then as arguments we just need to enclose their names in back ticks (see section \ref{sec:data:apply} about apply functions on page \pageref{sec:data:apply}).
+
+The name by itself and enclosed in back ticks allows us to access the definition of an operator.
+
+<<oper-02>>=
+`/`
 @
 
 \begin{explainbox}
@@ -247,7 +296,7 @@ We can then use our new operator in a example.
 10:15 %-mean% 1:20
 @
 
-To print the definition we enclose its name of our operator in back ticks---i.e.\ we back quote the special name.
+To print the definition we enclose the name of our new operator in back ticks---i.e.\ we \emph{back quote} the special name.
 
 <<oper-EB03>>=
 `%-mean%`
@@ -255,9 +304,12 @@ To print the definition we enclose its name of our operator in back ticks---i.e.
 
 \end{explainbox}
 
-\section{Objects, classes and methods}\label{sec:script:objects:classes:methods}
+\section{Objects, classes and methods}\label{sec:script:objects:classes:methods}\label{sec:methods}
+\index{objects}\index{classes}\index{methods}\index{object-oriented programming}
+\index{S3 class system}\index{classes!S3 class system}\index{methods!S3 class system}
+New classes are normally defined within packages rather than in user scripts. To be really useful implementing a new class involves not only defining a class but also a set of specialized functions or \emph{methods} that implement operations on objects belonging to the new class. Nevertheless an understanding of how classes work is important even if only very occasionally a user will define a new method for an existing class within a script.
 
-Classes are abstractions, but abstractions describing the shared properties of ``types'' or groups of similar objects. In this sense classes are abstractions of ``actors'', they are like ``nouns'' in natural language. What we obtain with classes is the possibility of defining multiple versions of functions (or \emph{methods}) sharing the same name but tailored to operate on objects of a given class.
+Classes are abstractions, but abstractions describing the shared properties of ``types'' or groups of similar objects. In this sense classes are abstractions of ``actors'', they are like ``nouns'' in natural language. What we obtain with classes is the possibility of defining multiple versions of functions (or \emph{methods}) sharing the same name but tailored to operate on objects belonging to different classes. We have already been using methods with multiple \emph{specializations} throughout the book, for example \code{plot()} and \code{summary()}.
 
 We start with a quotation form \citebooktitle{Burns1998} \autocite[][, page 13]{Burns1998}.
 \begin{quotation}
@@ -283,7 +335,7 @@ We can find out which methods are available in the current search path using \Rf
 methods(mean)
 @
 
-The most basic approach to creation of an object of a new S3 class, is to pre-pend the current class attribute of the object (a character vector) with the name for a new class. This would normally take place within a constructor and the new class if defined within a package would need to be registered.
+S3 class information is stored as a character vector in an attribute named \code{"class"}. The most basic approach to creation of an object of a new S3 class, is to add the new class name to the class attribute of the object. As the implied class hierarchy is given by the order of the members of the character vector, the name of the new class must be added at the head of the vector. Even though this step can be done as shown here, in practice this step would normally take place within a \emph{constructor} function and the new class if defined within a package would need to be registered. We show here this bare-bones example to demonstrate how S3 classes are implemented in \Rlang.
 
 <<explain-object-classes-01>>=
 a <- 123
@@ -306,9 +358,10 @@ print(a)
 print(as.numeric(a))
 @
 
-The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather fragile in that most of the responsibility about consistency and correctness of the design---e.g.\ not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc.-- is not checked by the R interpreter.
+\begin{explainbox}
+ The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather fragile in that most of the responsibility about consistency and correctness of the design---e.g.\ not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc. is not checked by the \Rlang interpreter.
 
-Defining a new S3 generic is also quite simple. A generic method and a default method need to be created.
+Defining a new S3 generic\index{generic method!S3 class system} is also quite simple. A generic method and a default method need to be created.
 
 <<explain-object-classes-04>>=
 my_print <- function (x, ...) {
@@ -345,12 +398,15 @@ b <- my_print(cars)
 nrow(b) == nrow(x) # was the whole data frame returned?
 @
 
-\begin{playground}
-1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
-2) How would you modify the code of your \code{my\_print.matrix()} so that also the columns to print can be selected?
-\end{playground}
+%\begin{playground}
+%1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
+%2) How would you modify the code of your \code{my\_print.matrix()} so that also the columns to print can be selected?
+%\end{playground}
+%
+\end{explainbox}
 
-An\index{objects}\index{classes}\index{methods} in-depth discussion of object oriented programming in \Rlang is outside the scope of this book. Several books describe in detail the different class systems available and how to take best advantage of them when developing packages extending \Rlang. For the non-programmer user, a basic understanding can be useful, even if he or she do not intend to create new classes. This basic knowledge is what we intend to convey in this section. For an in-depth treatment of the subject please consult the recently published book \citebooktitle{Wickham2014} \autocite{Wickham2014}.
+
+An\index{objects!further reading}\index{classes!further reading}\index{methods!further reading} in-depth discussion of object oriented programming in \Rlang is outside the scope of this book. Several books describe in detail the different class systems available and how to take best advantage of them when developing packages extending \Rlang. For the non-programmer user, a basic understanding can be useful, even if he or she do not intend to create new classes. This basic knowledge is what we intend to convey in this section. For an in-depth treatment of the subject please consult the books \citebooktitle{Wickham2014} \autocite{Wickham2014} and \citebooktitle{Chambers2016} \autocite{Chambers2016}.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()

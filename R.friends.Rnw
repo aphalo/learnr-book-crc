@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'friends-chunk')
 @
 
-\chapter{If and when R needs help}\label{chap:R:performance}
+\chapter{If and when \Rlang needs help}\label{chap:R:performance}
 
 \begin{VF}
 Improving the efficiency of your S functions can be well worth some effort.\ \ldots But remember that large efficiency gains can be made by using a better algorithm, not just by coding the same algorithm better.
@@ -18,7 +18,7 @@ Improving the efficiency of your S functions can be well worth some effort.\ \ld
 
 \section{Aims of this chapter}
 
-In this final chapter I highlight what in my opinion are limitations and advantages of using \langname{R} as a scripting and programming language for data analysis, briefly describing alternative approaches that can help overcome performance bottle necks in R code. A few books cover this subject from different perspectives, including \citebooktitle{Wickham2015} \autocite{Wickham2015}, \citebooktitle{Wickham2014} \autocite{Wickham2014}, \citebooktitle{Matloff2011} \autocite{Matloff2011}, \citebooktitle{Chambers2016} \autocite{Chambers2016} from a practical programming perspective, and, \citebooktitle{Burns1998} \autocite{Burns1998} and \citebooktitle{Burns2011} \autocite{Burns2011} from a more conceptual and language design oriented perspective.
+In this final chapter I highlight what in my opinion are limitations and advantages of using \langname{R} as a scripting and programming language for data analysis, briefly describing alternative approaches that can help overcome performance bottle necks in \Rlang code. A few books cover this subject from different perspectives, including \citebooktitle{Wickham2015} \autocite{Wickham2015}, \citebooktitle{Wickham2014} \autocite{Wickham2014}, \citebooktitle{Matloff2011} \autocite{Matloff2011}, \citebooktitle{Chambers2016} \autocite{Chambers2016} from a practical programming perspective, and, \citebooktitle{Burns1998} \autocite{Burns1998} and \citebooktitle{Burns2011} \autocite{Burns2011} from a more conceptual and language design oriented perspective.
 
 \section{Packages used in this chapter}
 
@@ -44,7 +44,7 @@ library(ggplot2)
 
 An interpreter adds flexibility and makes interactive use possible, but results in slower execution compared to compiled executables. Nowadays, byte compiling is part of the \pgrmname{R} program, and used by default in some situations or under user control. Just-in-time (JIT) compiling is a relatively new feature in \pgrmname{R}, and consists in compiling on-the-fly code that is repeatedly evaluated within a single run of a script.
 
-Functions or subroutines that have been compiled to machine code can be called from within \pgrmname{R}, but currently not written in the \langname{R} language itself, as no native compiler exists for the R language. It is common to call from within \pgrmname{R} code, compiled functions or use whole libraries coded in languages such a \langname{C}, \langname{C++} and \langname{FORTRAN} when maximum execution speed is needed. The calls are normally done from within an \pgrmname{R} package, so that they appear to the user not different any other R function. Functions and libraries written in other interpreted and/or byte-compiled languages like \langname{Java} and \langname{Python} can also be called from \pgrmname{R}.
+Functions or subroutines that have been compiled to machine code can be called from within \pgrmname{R}, but currently not written in the \langname{R} language itself, as no native compiler exists for the \Rlang language. It is common to call from within \pgrmname{R} code, compiled functions or use whole libraries coded in languages such a \langname{C}, \langname{C++} and \langname{FORTRAN} when maximum execution speed is needed. The calls are normally done from within an \pgrmname{R} package, so that they appear to the user not different any other \Rlang function. Functions and libraries written in other interpreted and/or byte-compiled languages like \langname{Java} and \langname{Python} can also be called from \pgrmname{R}.
 
 In addition, \pgrmname{R} exposes a programming interface (API) and many \pgrmname{R} functions can be called from within programs or scripts written in other languages such a \langname{Python} and \langname{Java}, also database systems and work sheets. This flexibility is one of the reasons behind \pgrmname{R}'s popularity.
 \end{explainbox}
@@ -52,20 +52,20 @@ In addition, \pgrmname{R} exposes a programming interface (API) and many \pgrmna
 
 \section{R's limitations and strengths}
 
-\subsection{Introduction to R code optimization}
+\subsection{Introduction to \Rlang code optimization}
 
-Some\index{performance}\index{code!optimization} constructs like \code{for} and \code{while} loops execute slowly in \langname{R}, as they are interpreted. Byte compiling and Just-In-Time (JIT) compiling of loops (enabled by default in R >= 3.4.0) should decreases this burden. However, base R as well some packages define several \emph{apply} functions. Being compiled functions, written in \langname{C} or \langname{C++}, using apply functions instead of explicit loops \emph{can} provide an improvement in performance while keeping user's code fully written in R. Even more effective is using vectors for indexing in operations so as to eliminate iteration loops. Pre-allocating memory, rather than growing a vector or array at each iteration can help. One little known problem is related to consistency tests when `growing' data frames. If we add one by one variables to a large data frame the overhead is in many cases huge. This can be easily reduced in many cases by assembling the object as a list, and once assembled converting it into a data frame. These common cases are used as examples in this chapter.
+Some\index{performance}\index{code!optimization} constructs like \code{for} and \code{while} loops execute slowly in \langname{R}, as they are interpreted. Byte compiling and Just-In-Time (JIT) compiling of loops (enabled by default in R >= 3.4.0) should decreases this burden. However, base \Rlang as well some packages define several \emph{apply} functions. Being compiled functions, written in \langname{C} or \langname{C++}, using apply functions instead of explicit loops \emph{can} provide an improvement in performance while keeping user's code fully written in R. Even more effective is using vectors for indexing in operations so as to eliminate iteration loops. Pre-allocating memory, rather than growing a vector or array at each iteration can help. One little known problem is related to consistency tests when `growing' data frames. If we add one by one variables to a large data frame the overhead is in many cases huge. This can be easily reduced in many cases by assembling the object as a list, and once assembled converting it into a data frame. These common cases are used as examples in this chapter.
 
 You may ask, how can I know, where in the code is the performance bottleneck\index{code!performance}. During the early years of R, this was quite a difficult task. Nowadays, good code profiling\index{code!profiling} and code benchmarking\index{code!benchmarking} tools are available. With interactive profiling now also implemented in the \RStudio IDE. Profiling consists in measuring how much of the total runtime is spent in different functions, or even lines of code. Benchmarking consists in timing the execution of alternative versions of some piece of code, to decide which one should preferred.
 
 There are some rules of style\index{code!writing style}, and common sense, that should be always applied, to develop good quality program code. However, as in some cases, high performance comes at the cost of a more complex program or algorithm, optimizations should be applied only to the sections of the code that are limiting overall performance. Usually even when the requirement of high performance is known in advance, it is best to start with a simple implementation of a simple algorithm. Get this first solution working reliably, and use this as a reference both for performance and accuracy of returned results while attempting performance optimization.
 
-The book \citebooktitle{Matloff2011} \autocite{Matloff2011} is very good at presenting the use of R language and how to profit from its peculiar features to write concise and efficient code.
-Studying the book \citebooktitle{Wickham2014advanced} \autocite{Wickham2014advanced} will give you a deep understanding of the R language, its limitations and good and bad approaches to its use. If you aim at writing R packages, then \citebooktitle{Wickham2015} \autocite{Wickham2015} will guide you on how to write your own packages, using modern tools. Finally, any piece of software, benefits from thorough and consistent testing, and R packages and scripts are no exception. Building a set of test cases simplifies enormously code maintenance, as they help detect unintended changes in program behaviour \autocite{Wickham2015,Cotton2016}.
+The book \citebooktitle{Matloff2011} \autocite{Matloff2011} is very good at presenting the use of \Rlang language and how to profit from its peculiar features to write concise and efficient code.
+Studying the book \citebooktitle{Wickham2014advanced} \autocite{Wickham2014advanced} will give you a deep understanding of the \Rlang language, its limitations and good and bad approaches to its use. If you aim at writing \Rlang packages, then \citebooktitle{Wickham2015} \autocite{Wickham2015} will guide you on how to write your own packages, using modern tools. Finally, any piece of software, benefits from thorough and consistent testing, and \Rlang packages and scripts are no exception. Building a set of test cases simplifies enormously code maintenance, as they help detect unintended changes in program behaviour \autocite{Wickham2015,Cotton2016}.
 
 \section{Measuring and improving performance}\label{sec:performance:tuning}
 
-In this section we present simple ``toy'' examples of how execution speed of R code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of R's built-in compiler to improve performance of R code.
+In this section we present simple ``toy'' examples of how execution speed of \Rlang code can be improved. These examples demonstrate the use of benchmarking and profiling tools and of \Rlang built-in compiler to improve performance of \Rlang code.
 
 \subsection{Benchmarking}
 \index{code benchmarking|(}
@@ -298,10 +298,10 @@ Profiling tools such as those provided by package \pkgname{proftools} can be use
 
 \index{code profiling|)}
 
-\subsection{Compiling R functions}
+\subsection{Compiling \Rlang functions}
 \index{R compiler|(}
 
-Although the current version of R uses by default the compiler quite frequently, we will demonstrate its manual use.
+Although the current version of \Rlang uses by default the compiler quite frequently, we will demonstrate its manual use.
 We can see if a function is compiled, by printing it and looking if it contains a pointer to byte code.
 
 To test what speed-up compiling can achieve for this small function we switch-off default compiling momentarily with function \code{enaleJIT()}---JIT is an abbreviation for Just In Time compiler. Possible values of \code{levels} range from 0 to 3. Zero disables the compiler, while 1, 2 and 3 indicate use of the compiler by default in an increasing number of situations.
@@ -337,21 +337,21 @@ For this small function compilation yields only a small reduction in execution t
 
 \subsection{Using the best tool for each job}
 
-Frequently, optimizing \langname{R} code for performance can yield more than an order of magnitude decrease in runtime. In many cases this is enough, and the most cost-effective solution. There are both packages and functions in base R, that if properly used can make a huge difference in performance. In addition, efforts in recent years to optimize the overall performance of R itself have been successful. Some of the packages with enhanced performance have been described in earlier chapters, as they are easy enough to use and have also an easy to learn user interfaces. Other packages like \pkgname{data.table} although achieving very fast execution, incur the cost of using a user interface and having a behaviour alien to the ``normal way of working'' with R.
+Frequently, optimizing \langname{R} code for performance can yield more than an order of magnitude decrease in runtime. In many cases this is enough, and the most cost-effective solution. There are both packages and functions in base R, that if properly used can make a huge difference in performance. In addition, efforts in recent years to optimize the overall performance of \Rlang itself have been successful. Some of the packages with enhanced performance have been described in earlier chapters, as they are easy enough to use and have also an easy to learn user interfaces. Other packages like \pkgname{data.table} although achieving very fast execution, incur the cost of using a user interface and having a behaviour alien to the ``normal way of working'' with R.
 
-Sometimes, the best available tools for a certain job have not been implemented in R but are available in other languages. Alternatively, the algorithms or the size of the data are such that performance is poor when implemented in the R language, and can improved using a different language.
+Sometimes, the best available tools for a certain job have not been implemented in \Rlang but are available in other languages. Alternatively, the algorithms or the size of the data are such that performance is poor when implemented in the \Rlang language, and can improved using a different language.
 
-One extremely important feature leading to the success of \langname{R} is extensibility\index{R!extensibility}. Not only by writing packages in R itself, but by allowing the development of packages containing functions written in other computer languages. The beauty of the package loading mechanism, is that even if \pgrmname{R} itself is written in \langname{C}, and compiled into an executable, packages containing interpreted \langname{R} code, and also compiled \langname{C}, \langname{C++}, \langname{FORTRAN}, or other languages, or calling libraries written in \langname{Java}, \langname{Python}, etc.\ can be loaded and unloaded at runtime.
+One extremely important feature leading to the success of \langname{R} is extensibility\index{R!extensibility}. Not only by writing packages in \Rlang itself, but by allowing the development of packages containing functions written in other computer languages. The beauty of the package loading mechanism, is that even if \pgrmname{R} itself is written in \langname{C}, and compiled into an executable, packages containing interpreted \langname{R} code, and also compiled \langname{C}, \langname{C++}, \langname{FORTRAN}, or other languages, or calling libraries written in \langname{Java}, \langname{Python}, etc.\ can be loaded and unloaded at runtime.
 
-Most common reasons for using other programming languages, are the availability of libraries written in \langname{FORTRAN}, \langname{C} and \langname{C++} that are well tested and optimized for performance. This is frequently the case for numerical calculations and time-consuming data manipulations like image analysis. In such cases the R code in packages is just a wrapper (or ``glue'') to allow the functions in the library to be called from R.
+Most common reasons for using other programming languages, are the availability of libraries written in \langname{FORTRAN}, \langname{C} and \langname{C++} that are well tested and optimized for performance. This is frequently the case for numerical calculations and time-consuming data manipulations like image analysis. In such cases the \Rlang code in packages is just a wrapper (or ``glue'') to allow the functions in the library to be called from R.
 
-In other cases we may diagnose a performance bottleneck, and decide to write a few functions within a package otherwise written in R, in a compiled language like \langname{C++}. In such cases is a good idea to use bench marking to compare implementations, as the use of a different language does not necessarily provide a worthwhile performance enhancement. The reason behind this is that different languages do not always store data in computer memory in the same format. Differences among languages can add overhead to function calls across them, specially when they execute very quickly when called from R and/or when large amounts of data need to be shuffled back and forth between R and functions written in other languages. The R program itself is written in the \langname{C} language.
+In other cases we may diagnose a performance bottleneck, and decide to write a few functions within a package otherwise written in R, in a compiled language like \langname{C++}. In such cases is a good idea to use bench marking to compare implementations, as the use of a different language does not necessarily provide a worthwhile performance enhancement. The reason behind this is that different languages do not always store data in computer memory in the same format. Differences among languages can add overhead to function calls across them, specially when they execute very quickly when called from \Rlang and/or when large amounts of data need to be shuffled back and forth between \Rlang and functions written in other languages. The \Rlang program itself is written in the \langname{C} language.
 
 \subsection{C++}
 
-Nowadays, thanks to package \pkgname{Rcpp}, using \langname{C++} code mixed with R language, is fairly simple \autocite{Eddelbuettel2013}. This package does not only provide R code, but a \langname{C++} header file with macro definitions that reduces the writing of the necessary ``glue'' code to the use of a simple macro in the \langname{C++} code. Although, this mechanism is most frequently used as a component packages, it is also possible to define a function written in \langname{C++} at the R console, or in a simple user's script. Of course for these to work all the tools needed to build R packages from source are needed, including a suitable compiler and linker.
+Nowadays, thanks to package \pkgname{Rcpp}, using \langname{C++} code mixed with \Rlang language, is fairly simple \autocite{Eddelbuettel2013}. This package does not only provide \Rlang code, but a \langname{C++} header file with macro definitions that reduces the writing of the necessary ``glue'' code to the use of a simple macro in the \langname{C++} code. Although, this mechanism is most frequently used as a component packages, it is also possible to define a function written in \langname{C++} at the \Rlang console, or in a simple user's script. Of course for these to work all the tools needed to build \Rlang packages from source are needed, including a suitable compiler and linker.
 
-An example taken from the \pkgname{Rcpp} documentation follows. This is an example of how one would define a function during an interactive session at the R console, or in a simple script. When writing a package, one would write a separate source file for the function, include the \code{rcpp.h} header and use the \langname{C++} macros to build the R code side. Using \langname{C++} inline requires package \pkgname{inline} to be loaded in addition to \pkgname{Rcpp}.
+An example taken from the \pkgname{Rcpp} documentation follows. This is an example of how one would define a function during an interactive session at the \Rlang console, or in a simple script. When writing a package, one would write a separate source file for the function, include the \code{rcpp.h} header and use the \langname{C++} macros to build the \Rlang code side. Using \langname{C++} inline requires package \pkgname{inline} to be loaded in addition to \pkgname{Rcpp}.
 
 First we save the source code for the function written in \langname{C++}, taking advantage of types and templates defined in the \code{Rccp.h} header file.
 
@@ -369,7 +369,7 @@ src <- '
 '
 @
 
-The second step is to compile and load the function, in a way that it can be called from R code and indistinguishable from a function defined in R itself.
+The second step is to compile and load the function, in a way that it can be called from \Rlang code and indistinguishable from a function defined in \Rlang itself.
 
 <<rcpp-02>>=
 # need to check maximum number of dll in Windows!
@@ -377,21 +377,21 @@ The second step is to compile and load the function, in a way that it can be cal
 fun <- cxxfunction(signature(a = "numeric", b = "numeric"), src, plugin = "Rcpp")
 @
 
-We can now use it as any other R function.
+We can now use it as any other \Rlang function.
 
 <<rcpp-03>>=
 fun(1:3, 1:4)
 @
 
-As we will see below, this is not the case when calling Java and Python functions, cases where although the integration is relatively tight, special syntax is used when calling the ``foreign'' functions and/or methods. The advantage of Rcpp in this respect is very significant, as we can define functions that have exactly the same argument signature, use the same syntax and behave in the same way, using either the R or \langname{C++} language. This means that at any point during development of a package a function defined in R can be replaced by an equivalent function defined in \langname{C++}, or vice versa, with absolutely no impact on user's code, except possibly for faster execution of the \langname{C++} version.
+As we will see below, this is not the case when calling Java and Python functions, cases where although the integration is relatively tight, special syntax is used when calling the ``foreign'' functions and/or methods. The advantage of Rcpp in this respect is very significant, as we can define functions that have exactly the same argument signature, use the same syntax and behave in the same way, using either the \Rlang or \langname{C++} language. This means that at any point during development of a package a function defined in \Rlang can be replaced by an equivalent function defined in \langname{C++}, or vice versa, with absolutely no impact on user's code, except possibly for faster execution of the \langname{C++} version.
 
 \subsection{FORTRAN and C}
 
-In the case of \langname{FORTRAN} and \langname{C}, the process is less automated as the R code needed to call the compiled functions needs to be explicitly written (See \emph{Writing R Extensions} in the R documentation, for up-to-date details). Once written, the building and installation of the package is automatic. This is the way how many existing libraries are called from within R and R packages.
+In the case of \langname{FORTRAN} and \langname{C}, the process is less automated as the \Rlang code needed to call the compiled functions needs to be explicitly written (See \emph{Writing R Extensions} in the \Rlang documentation, for up-to-date details). Once written, the building and installation of the package is automatic. This is the way how many existing libraries are called from within \Rlang and \Rlang packages.
 
 \subsection{Python}
 
-Package \pkgname{rPython} allows calling \langname{Python} functions and methods from R code. Currently this package is not available under MS-Windows.
+Package \pkgname{rPython} allows calling \langname{Python} functions and methods from \Rlang code. Currently this package is not available under MS-Windows.
 
 Example taken from the package description (not run).
 
@@ -403,11 +403,11 @@ python.exec( "def concat(a,b): return a+b" )
 python.call( "concat", a, b)
 @
 
-It is also possible to call R functions from \langname{Python}. However, this is outside the scope of this book.
+It is also possible to call \Rlang functions from \langname{Python}. However, this is outside the scope of this book.
 
 \subsection{Java}
 
-Although native \langname{Java} compilers exist, most frequently Java programs are compiled into intermediate byte code and this is interpreted, and usually the interpreter includes a JIT compiler. For calling \langname{Java} functions or accessing Java objects from R code, the solution is to use package \pkgname{rJava}. One important point to remember is that the \langname{Java} SE Development Kit (JDK) must be installed for this package to work. The usually installed \langname{Java} runtime environment (JRE) is not enough.
+Although native \langname{Java} compilers exist, most frequently Java programs are compiled into intermediate byte code and this is interpreted, and usually the interpreter includes a JIT compiler. For calling \langname{Java} functions or accessing Java objects from \Rlang code, the solution is to use package \pkgname{rJava}. One important point to remember is that the \langname{Java} SE Development Kit (JDK) must be installed for this package to work. The usually installed \langname{Java} runtime environment (JRE) is not enough.
 
 We need first to start the Java Virtual Machine (the byte-code interpreter).
 
@@ -430,7 +430,7 @@ class(a)
 str(a)
 @
 
-Then we use base R's function \Rfunction{lapply()} to apply a user-defined R function to the elements of the Java array, obtaining as returned value an R array.
+Then we use base \Rlang function \Rfunction{lapply()} to apply a user-defined \Rlang function to the elements of the Java array, obtaining as returned value an \Rlang array.
 
 <<rjava-03>>=
 b <- sapply(a,
@@ -447,32 +447,32 @@ str(b)
 
 Although more cumbersome than in the case of \pkgname{Rcpp} one can manually write wrapper code to hide the special syntax and object types from users.
 
-It is also possible to call R functions from within a \langname{Java} program. This is outside the scope of this book.
+It is also possible to call \Rlang functions from within a \langname{Java} program. This is outside the scope of this book.
 
 \subsection{sh, bash}
 
-The\index{command shell}\pgrmname{sh}\pgrmname{bash} operating system shell can be accessed from within R and the output from programs and shell scripts returned to the R session. This is useful, for example for pre-processing raw data files with tools like \langname{AWK} or \langname{Perl} scripts. The problem with this approach is that when it is used, the R script cannot run portably across operating systems, or in the absence of the tools or sh or bash scripts. Except for code that will never be reused (i.e.\ it is used once and discarded) it is preferable to use R's built-in commands whenever possible, or if shell scripts are used, to make the shell script the master script from within which the R scripts are called, rather than the other way around. The reason for this is mainly making clear the developer's intention: that the code as a whole will be run in a given operating system using a certain set of tools, rather hiding shell calls inside the R script. In other words, keep the least portable bits in full view.
+The\index{command shell}\pgrmname{sh}\pgrmname{bash} operating system shell can be accessed from within \Rlang and the output from programs and shell scripts returned to the \Rlang session. This is useful, for example for pre-processing raw data files with tools like \langname{AWK} or \langname{Perl} scripts. The problem with this approach is that when it is used, the \Rlang script cannot run portably across operating systems, or in the absence of the tools or sh or bash scripts. Except for code that will never be reused (i.e.\ it is used once and discarded) it is preferable to use \Rlang  built-in commands whenever possible, or if shell scripts are used, to make the shell script the master script from within which the \Rlang scripts are called, rather than the other way around. The reason for this is mainly making clear the developer's intention: that the code as a whole will be run in a given operating system using a certain set of tools, rather hiding shell calls inside the \Rlang script. In other words, keep the least portable bits in full view.
 
 \section{Web pages, and interactive interfaces}
 
-There is a lot that could be written on using R to create web pages, interactive widgets and gadgets for both local and remote user interaction. This is an area currently under intense development. One example is the \pkgname{Shiny} package and Shiny server \url{https://shiny.rstudio.com/}. This package allows the creation of interactive displays to be viewed through any web browser.
+There is a lot that could be written on using \Rlang to create web pages, interactive widgets and gadgets for both local and remote user interaction. This is an area currently under intense development. One example is the \pkgname{Shiny} package and Shiny server \url{https://shiny.rstudio.com/}. This package allows the creation of interactive displays to be viewed through any web browser.
 
 \sloppy
-There are other packages for generating both static and interactive graphics in formats suitable for on-line display, as well as package \pkgname{knitr} \url{https://yihui.name/knitr/} used for writing the present book, which when using R Markdown for markup (with package \pkgname{rmarkdown} \url{http://rmarkdown.rstudio.com} or \pkgname{Bookdown} \url{https://bookdown.org/} can output self-contained HTML files in addition to RTF and PDF formats.
+There are other packages for generating both static and interactive graphics in formats suitable for on-line display, as well as package \pkgname{knitr} \url{https://yihui.name/knitr/} used for writing the present book, which when using \Rlang Markdown for markup (with package \pkgname{rmarkdown} \url{http://rmarkdown.rstudio.com} or \pkgname{Bookdown} \url{https://bookdown.org/} can output self-contained HTML files in addition to RTF and PDF formats.
 
 \section{A final thought on package writing}
 
-Some R packages provide some fundamentally new capabilities, but many packages provide new user interfaces to functionality that already exists in base R or contributed packages. In many cases the improved usability provided by a well thought and consistent user interface can make packages that are to a large extent wrappers on existing functions and methods still worthwhile developing.
+Some \Rlang packages provide some fundamentally new capabilities, but many packages provide new user interfaces to functionality that already exists in base \Rlang or contributed packages. In many cases the improved usability provided by a well thought and consistent user interface can make packages that are to a large extent wrappers on existing functions and methods still worthwhile developing.
 
-If you attempt to improve or extend existing functionality, do study existing code. R itself and all packages archived in CRAN are open-source and published under licences that allow re-use and modification as long you acknowledge all authors and abide to the requirement of releasing your version under the same or similar licences as the original code.
+If you attempt to improve or extend existing functionality, do study existing code. \Rlang itself and all packages archived in CRAN are open-source and published under licences that allow re-use and modification as long you acknowledge all authors and abide to the requirement of releasing your version under the same or similar licences as the original code.
 
-If you study the code of package \pkgname{ggpmisc}, you will quickly realize that for writing many of the methods and functions I have used code from package \pkgname{ggplot2} as a template, building upon it with new code that calls functions defined in base R and very frequently also in other packages. Of course, other packages may do the opposite: to respect the user interface of existing functions but provide improved performance.
+If you study the code of package \pkgname{ggpmisc}, you will quickly realize that for writing many of the methods and functions I have used code from package \pkgname{ggplot2} as a template, building upon it with new code that calls functions defined in base \Rlang and very frequently also in other packages. Of course, other packages may do the opposite: to respect the user interface of existing functions but provide improved performance.
 
 Some of the packages in the \pkgname{tidyverse} developed by Hadley Wickham and collaborators evolved so that early versions focused on an improved user interaction (improved grammars) and only later performance was honed until it became as good or better than that of the earlier alternatives. The development of \pkgname{data.table} seems to have started by focusing on performance, and much of the unusual user interface reflects this. The packages in the \pkgname{tidyverse} are becoming very popular, while \pkgname{data.table} remains a specialized tool for cases where performance is extremely important.
 
 When developing \Rlang packages, including a good coverage of test cases as part of the package itself simplifies code maintenance enormously, helps in maintaining consistency of behaviour across versions, and reveals in good time problems triggered by updates to \Rpgrm or packages depended upon.
 
-So, my recommendation is to spend time designing and testing the user interface first. Go through design and test cycles, until you are sure the interface is user friendly, consistent and complete. Be consistent not only within your own code, but with R itself and/or popular packages. Avoid name clashes except when the functions or methods you develop are intended to directly replace those they make inaccessible. Be very careful with new names for methods, functions and operators, make sure they fully describe their function. If equivalent methods exist in \Rlang or in the packages your own code expands upon, if possible define method specializations of the existing methods for the new classes you define. Try to create as few new \emph{words} for the user to learn. However, keep the future in mind, making the user interface flexible and expandable. Even if you will be the only user, having a good interface will make it easier for you to remember how to use your own package.
+So, my recommendation is to spend time designing and testing the user interface first. Go through design and test cycles, until you are sure the interface is user friendly, consistent and complete. Be consistent not only within your own code, but with \Rlang itself and/or popular packages. Avoid name clashes except when the functions or methods you develop are intended to directly replace those they make inaccessible. Be very careful with new names for methods, functions and operators, make sure they fully describe their function. If equivalent methods exist in \Rlang or in the packages your own code expands upon, if possible define method specializations of the existing methods for the new classes you define. Try to create as few new \emph{words} for the user to learn. However, keep the future in mind, making the user interface flexible and expandable. Even if you will be the only user, having a good interface will make it easier for you to remember how to use your own package.
 
 <<>>=
 try(detach(package:ggplot2))
