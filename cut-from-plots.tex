@@ -1,0 +1,142 @@
+\begin{warningbox}
+The aesthetics and data given as \code{ggplot()}'s arguments become the defaults for all the geoms, but geoms also accept aesthetics and data as arguments, which when supplied locally override the whole-plot defaults. In the example below, we override the default colour of the points.
+\end{warningbox}
+
+If we \emph{set} the \code{color} aesthetic to a constant value, \code{"red"}, all points are plotted in red.
+
+<<scatter-05>>=
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, color = factor(cyl))) +
+  geom_point(color = "red")
+@
+
+\begin{playground}
+Does the code chunk below produces exactly the same plot as that above this box? Consider how the two mappings differ, and make sure that you understand the reasons behind the difference or lack of difference in output by trying different variations of these examples
+<<scatter-06,eval=eval_playground>>=
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg)) +
+  geom_point(color = "red")
+@
+\end{playground}
+
+As with any R function it is possible to pass arguments by position to \code{aes} when
+mapping variables to \emph{aesthetics} but this
+makes the code more difficult to read and less tolerant to possible changes to the
+definitions of functions. It is not
+recommended to use this terse style in scripts or package coding. However, it can
+be used by experienced users at the command prompt usually without problems.
+
+Mapping passing arguments by \emph{name} to \code{aes}.
+
+<<>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg)) +
+  geom_point()
+@
+
+\begin{playground}
+If we swap the order of the arguments do we still obtain the same plot?
+<<scatter-07,eval=eval_playground>>=
+ggplot(data = mtcars, aes(y = mpg, x = disp)) +
+  geom_point()
+@
+\end{playground}
+
+Mapping passing arguments by \emph{position} to \code{aes}.
+
+<<scatter-08>>=
+ggplot(mtcars, aes(disp, mpg)) +
+  geom_point()
+@
+
+\begin{playground}
+If we swap the order of the arguments do we obtain a different plot?
+<<scatter-09,eval=eval_playground>>=
+ggplot(mtcars, aes(mpg, disp)) +
+  geom_point()
+@
+\end{playground}
+
+
+\section{Bar}
+\index{plots!bar plot|(}
+Next we show an example of a bar plot, in which the columns represent counts, as a transition to the next section where we will describe how to plots summaries calculated on-the-fly within the ggplot code.
+
+In this bar plot, each bar shows the number of observations in each \code{class} of car in the data set. We use a data set included in \ggplot for this example based on the package documentation.
+<<>>=
+ggplot(mpg, aes(class)) + geom_bar()
+@
+
+We can easily get stacked bars of counts, grouped by the number of cylinders of the engine.
+
+<<>>=
+ggplot(mpg, aes(class, fill = factor(cyl))) +
+   geom_bar()
+@
+
+We can as above plot side by side bars, which shows a different aspect of the data.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+   geom_bar()
+@
+
+The default palette used for \code{fill} is rather ugly, so we also show the same plot with another scale for fill. In addition with \code{color = "black"} we make the borders of the bars black.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black") +
+  scale_fill_brewer() +
+  theme_bw()
+@
+
+\begin{explainbox}
+The order of stacking\index{plots!stacked bar plot} in \ggplot is consistent and depends on the order of the levels in the corresponding factor by default. The different approaches to reordering factor levels are described in section \ref{sec:data:levels:order} on page \pageref{sec:data:levels:order}. It must be noted, however, that aesthetics can be mapped not only to factors, but also to character variables which are converted on the fly into factors. When a character variable is converted into a factor, by default the levels are ordered alphabetically. As a rule of thumb, if all figures that will be produced from the same data frame require or allow the same ordering, it is best to reorder the levels of the factor in the data frame. If only a single figure requires a special ordering of levels, then the approach shown below is preferable.
+
+If it is not desired to modify the data, the reordering of the stacking can be done in the ggplot. The simplest case, shown next, is to reverse the stacking order, however, this does not reverse the order in the key. This approach is useful when the behaviour of earlier versions of \ggplot needs to the restored.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black", position = position_stack(reverse = TRUE))
+@
+
+An arbitrary reordering can be achieved by setting \code{breaks} in a discrete scale. A simple example follows. See section \ref{sec:plot:scales} on page \pageref{sec:plot:scales} for additional information on \emph{scales}. In the case when \code{position} is set to \code{"dodge"}, the ordering will be reflected in the order of the different side-by-side bars within the groups mapped to the $x$ aesthetic.
+
+<<>>=
+ggplot(mpg, aes(x = factor(cyl), fill = class)) +
+  geom_bar(color = "black") +
+  scale_fill_discrete(breaks = c("2seater", "compact",  "subcompact",
+                                 "midsize",  "suv",  "minivan", "pickup"))
+@
+
+The approaches discussed in this box apply to all \emph{geometries} that allow stacking of groups---i.e.\ \gggeom{geom\_area()}, and \gggeom{geom\_line()}, in addition to \gggeom{geom\_col()} and \gggeom{geom\_bar()}, and in relation to the mapping of factor levels to aesthetics values, to all discrete scales.
+\end{explainbox}
+
+\index{plots!bar plot|)}
+
+\section{Function}
+
+\begin{explainbox}
+In some cases we may want to tweak some aspects of the plot to better match the properties of the mathematical function. Here we use a predefined function for which the default $x$-axis breaks (tick positions) are not the best. We first show how the plot looks using defaults.
+
+<<function-plot-04, eval=eval_plots_all>>=
+ggplot(data.frame(x=c(0, 2 * pi)), aes(x=x)) +
+  stat_function(fun=sin)
+@
+
+Next we change the $x$-axis scale to better match the sine function and the use of radians as angular units.
+
+<<function-plot-05, eval=eval_plots_all>>=
+ggplot(data.frame(x = c(0, 2 * pi)), aes(x = x)) +
+  stat_function(fun = sin) +
+  scale_x_continuous(
+    breaks = c(0, 0.5, 1, 1.5, 2) * pi,
+    labels = c("0", expression(0.5~pi), expression(pi),
+             expression(1.5~pi), expression(2~pi))) +
+  labs(y = "sin(x)")
+@
+
+There are three things in the above code that you need to understand: the use of the \Rlang built-in numeric constant \code{pi}, the use of argument `recycling' to avoid having to type \code{pi} many times, and the use of \Rlang \emph{expressions} to construct suitable tick labels for the $x$ axis. Do also consider why \code{pi} is interpreted differently within \code{expression} than within the numeric statements.
+
+The use of \code{expression} is explained in detail in section \ref{sec:plot:plotmath}, an the use of \code{scales} in section \ref{sec:plot:scales}.
+
+\end{explainbox}
