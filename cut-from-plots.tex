@@ -140,3 +140,111 @@ There are three things in the above code that you need to understand: the use of
 The use of \code{expression} is explained in detail in section \ref{sec:plot:plotmath}, an the use of \code{scales} in section \ref{sec:plot:scales}.
 
 \end{explainbox}
+
+To online site?
+
+\begin{explainbox}
+Sometimes we would like to include in the title or as an annotation in the plot, the name of the argument passed to \Rfunction{ggplot()}'s \code{data} parameter. To obtain the name of an object as a character string, the usual R ``slang'' is \code{deparse(substitute(x))} where \code{x} is the object (see section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath} for further details).
+
+<<axis-labels-06, eval=eval_plots_all>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  ggtitle(paste("Data:", deparse(substitute(Orange))))
+@
+
+The example above rarely is of much use, as we have anyway to pass the object itself twice, and consequently there is no advantage in effort compare to typing \code{"Data: Orange"} as argument to \Rfunction{ggtitle()}. A more general way to solve this problem is to write a wrapper function.
+
+<<axis-labels-07, eval=eval_plots_all>>=
+ggwrapper <- function(data, ...) {
+  ggplot(data, ...) +
+    ggtitle(paste("Object: ", substitute(data)))
+}
+
+ggwrapper(data = Orange,
+          mapping = aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0)
+@
+
+This is a bare-bones example, as it does not retain user control over the formatting of the title. The ellipsis (\code{...}) is a catch-all parameter that we use to pass all other arguments to \Rfunction{ggplot()}. Because of the way our wrapper function is defined using ellipsis, we need to always pass \code{mapping} and other arguments that are to be ``forwarded'' to \Rfunction{ggplot()} by name.
+
+Using this function in a loop over a list or vector, will produce output that is not as useful as you may expect. In many cases, the best, although more complex solution is to add case-specific code to the loop itself to generate suitable titles automatically.
+
+We create a suitable set of data frames, build a list with name \code{my.dfs} containing them.
+
+<<axis-labels-08>>=
+df1 <- data.frame(x = 1:10, y = (1:10)^2)
+df2 <- data.frame(x = 10:1, y = (10:1)^2.5)
+my.dfs <- list(first.df = df1, second.df = df2)
+@
+
+If we print the output produced by the wrapper function when called in a loop we get always the same title, so this approach is not useful.
+
+<<axis-labels-09>>=
+for (df in my.dfs) {
+  print(
+    ggwrapper(data = df,
+              mapping = aes(x = x, y = y)) +
+      geom_line()
+  )
+}
+@
+
+\begin{warningbox}
+ Automatic printing of objects is disabled within functions and iteration loops, making it necessary to use \Rfunction{print()} explicitly in these cases (see loops above). This `inconsistency' in behaviour is frequently surprising to unexperienced R users, so keep in mind that if some chunk of R code unexpectedly fails to produce visible output, the most frequent reason is that \Rfunction{print()} needs to be included in the code to make the `missing' result visible. Except for base R plotting functions, the norm in R is that printing, either implicitly or explicitly is needed for output to be visible to the user.
+\end{warningbox}
+
+As we have given names to the list members, we can use these and enclose the loop in a function. This is a very inflexible approach, and on top the plots are only printed, and the \Rclass{ggplot} objects get discarded once printed.
+
+<<axis-labels-10>>=
+plot.dfs <- function(x, ...) {
+list.name <- deparse(substitute(x))
+member.names <- names(x)
+if (is.null(member.names)) {
+  member.names <- as.character(seq_along(x))
+}
+
+  for (i in seq_along(x)) {
+    print(
+      ggplot(data = x[[i]], aes(x = x, y = y)) +
+        geom_line() +
+        ggtitle(paste("Object: ", list.name,
+                      '[["', member.names[i], '"]]', sep = ""))
+    )
+  }
+
+}
+@
+
+<<axis-labels-11>>=
+plot.dfs(my.dfs)
+@
+
+\begin{playground}
+Study the output from the two loops, and analyse why the titles differ. This will help not only understand this problem, but the implications of formulating \code{for} loops in these three syntactically correct ways.
+\end{playground}
+
+As it should be obvious by now, is that as an object ``moves'' through the function-call stack its visible name changes. Consequently when we nest functions or use loops it becomes difficult to retrieve the name under which the object was saved by the user. After these experiments, is should be clear that saving the titles ``in'' the data frames would be the most elegant approach. It is possible to save additional data in R objects using attributes. R itself uses attributes to keep track of objects' properties like the names of members in a list, or the class of objects.
+
+When one has control over the objects, one can add the desired title as an attribute to the data frame, and then retrieve and use this when plotting. One should be careful, however, as some functions and operators may fail to copy user attributes to their output.
+
+\begin{playground}
+
+As an advanced exercise I suggest implementing this attribute-based solution by tagging the data frames using a function defined as shown below or by directly using \Rfunction{attr()}. You will also need modify the code to use the new attribute when building the \Rclass{ggplot} object.
+
+<<axis-labels-12,eval=eval_playground>>=
+add.title.attr <- function(x, my.title) {
+  attr(x, "title") <- my.title
+  x
+}
+@
+
+What advantages and disadvantages does this approach have? Can it be used in a loop?
+
+\end{playground}
+
+\end{explainbox}

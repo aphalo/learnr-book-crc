@@ -1288,235 +1288,42 @@ ggplot(my.data, aes(group, y)) +
 @
 
 \index{plots!violin plot|)}
-
-
 \index{plots!statistics|)}
 
-\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
-\index{plots!labels|(}
-\index{plots!title|(}
-\index{plots!subtitle|(}
-\index{plots!caption|(}
-I describe this in the same section, and immediately after the section on plotting text labels, as they are added to plots using similar approaches. Be aware that the default justification of plot titles has changed in \ggplot version 2.2.0 from centered to left justified. At the same time, support for subtitles and captions was added.
-
-The most flexible approach is to use \Rfunction{labs()} as it allows the user to set the text or expressions to be used for these different elements.
-
-<<axis-labels-01>>=
-ggplot(data = Orange,
-       aes(x = age, y = circumference, color = Tree)) +
-  geom_line() +
-  geom_point() +
-  expand_limits(y = 0) +
-  labs(title = "Growth of orange trees",
-       subtitle = "Starting from 1968-12-31",
-       caption = "see Draper, N. R. and Smith, H. (1998)",
-       x = "Time (d)",
-       y = "Stem circumference (mm)",
-       color = "Tree\nnumber")
-@
-
-There are in addition to \code{labs()} convenience functions for setting the axis labels, \Rfunction{xlab()} and \Rfunction{ylab()}.
-
-<<axis-labels-02>>=
-ggplot(data = Orange,
-       aes(x = age, y = circumference, color = Tree)) +
-  geom_line() +
-  geom_point() +
-  expand_limits(y = 0) +
-  xlab("Time (d)") +
-  ylab("Stem circumference (mm)")
-@
-
-An additional convenience function, \Rfunction{ggtitle()} can be used to add a title and optionally a subtitle.
-
-<<axis-labels-03>>=
-ggplot(data = Orange,
-       aes(x = age, y = circumference, color = Tree)) +
-  geom_line() +
-  geom_point() +
-  expand_limits(y = 0) +
-  ggtitle("Growth of orange trees",
-          subtitle = "Starting from 1968-12-31")
-@
-
-\begin{playground}
-Make an empty plot (\code{ggplot()}) and add to it as title an expression producing $y = b_0 + b_1 x + b_2 x^2$. (Hint: have a look at the examples for the use of expressions as labels in section \ref{sec:plot:text} on page \pageref{sec:plot:text} and the \code{plotmath} demo in R.)
-\end{playground}
-
-Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them. (In \ggplot 2.2.1 \code{update\_labels} fails for \emph{aesthetic} \code{color} but works as expected with \code{colour}. Issue raised in Github on 2016-01-21.)
-
-<<axis-labels-04>>=
-p <-
-    ggplot(data = mtcars,
-           aes(x = disp, y = hp, colour = factor(cyl),
-               shape = factor(cyl))) +
-      geom_point() +
-      labs(x = "Engine displacement)",
-           y = "Gross horsepower",
-           color = "Number of\ncylinders",
-           shape = "Number of\ncylinders")
-p
-@
-
-<<axis-labels-05>>=
-update_labels(p, list(x = "Cilindrada",
-                      y = "Potencia bruta (caballos de fuerza)",
-                      colour = "no. de\ncilindros",
-                      shape = "no. de\ncilindros"))
-@
-
-\begin{warningbox}
-When setting or updating labels using either \Rfunction{labs()} or \Rfunction{update\_labels()} be aware that even though \code{color} and \code{colour} are synonyms for the same \emph{aesthetics}, the `name' used in the call to \Rfunction{aes()} must match the  `name' used when setting or updating the labels.
-\end{warningbox}
-
-\begin{playground}
-Modify the code used in the code chunk above to update labels, so that \code{colour} is used instead of \code{color}. How does the figure change?
-\end{playground}
-
-The labels used in keys and axis tick-labels for factor levels can be changed through the different \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
-
-\begin{explainbox}
-Sometimes we would like to include in the title or as an annotation in the plot, the name of the argument passed to \Rfunction{ggplot()}'s \code{data} parameter. To obtain the name of an object as a character string, the usual R ``slang'' is \code{deparse(substitute(x))} where \code{x} is the object (see section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath} for further details).
-
-<<axis-labels-06>>=
-ggplot(data = Orange,
-       aes(x = age, y = circumference, color = Tree)) +
-  geom_line() +
-  geom_point() +
-  expand_limits(y = 0) +
-  ggtitle(paste("Data:", deparse(substitute(Orange))))
-@
-
-The example above rarely is of much use, as we have anyway to pass the object itself twice, and consequently there is no advantage in effort compare to typing \code{"Data: Orange"} as argument to \Rfunction{ggtitle()}. A more general way to solve this problem is to write a wrapper function.
-
-<<axis-labels-07>>=
-ggwrapper <- function(data, ...) {
-  ggplot(data, ...) +
-    ggtitle(paste("Object: ", substitute(data)))
-}
-
-ggwrapper(data = Orange,
-          mapping = aes(x = age, y = circumference, color = Tree)) +
-  geom_line() +
-  geom_point() +
-  expand_limits(y = 0)
-@
-
-This is a bare-bones example, as it does not retain user control over the formatting of the title. The ellipsis (\code{...}) is a catch-all parameter that we use to pass all other arguments to \Rfunction{ggplot()}. Because of the way our wrapper function is defined using ellipsis, we need to always pass \code{mapping} and other arguments that are to be ``forwarded'' to \Rfunction{ggplot()} by name.
-
-Using this function in a loop over a list or vector, will produce output is not as useful as you may expect. In many cases, the best, although more complex solution is to add case-specific code the loop itself to generate suitable titles automatically.
-
-We create a suitable set of data frames, build a list with name \code{my.dfs} containing them.
-
-<<axis-labels-08>>=
-df1 <- data.frame(x = 1:10, y = (1:10)^2)
-df2 <- data.frame(x = 10:1, y = (10:1)^2.5)
-my.dfs <- list(first.df = df1, second.df = df2)
-@
-
-If we print the output produced by the wrapper function when called in a loop but we get always the same title, so this approach is not useful.
-
-<<axis-labels-09>>=
-for (df in my.dfs) {
-  print(
-    ggwrapper(data = df,
-              mapping = aes(x = x, y = y)) +
-      geom_line()
-  )
-}
-@
-
-\begin{warningbox}
- Automatic printing of objects is disabled within functions and iteration loops, making it necessary to use \Rfunction{print()} explicitly in these cases (see loops above). This `inconsistency' in behaviour is frequently surprising to unexperienced R users, so keep in mind that if some chunk of R code unexpectedly fails to produce visible output, the most frequent reason is that \Rfunction{print()} needs to be included in the code to make the `missing' result visible. Except for base R plotting functions, the norm in R is that printing, either implicitly or explicitly is needed for output to be visible to the user.
-\end{warningbox}
-
-As we have given names to the list members, we can use these and enclose the loop in a function. This is a very inflexible approach, and on top the plots are only printed, and the \Rclass{ggplot} objects get discarded once printed.
-
-<<axis-labels-10>>=
-plot.dfs <- function(x, ...) {
-list.name <- deparse(substitute(x))
-member.names <- names(x)
-if (is.null(member.names)) {
-  member.names <- as.character(seq_along(x))
-}
-
-  for (i in seq_along(x)) {
-    print(
-      ggplot(data = x[[i]], aes(x = x, y = y)) +
-        geom_line() +
-        ggtitle(paste("Object: ", list.name,
-                      '[["', member.names[i], '"]]', sep = ""))
-    )
-  }
-
-}
-@
-
-<<axis-labels-11>>=
-plot.dfs(my.dfs)
-@
-
-\begin{playground}
-Study the output from the two loops, and analyse why the titles differ. This will help not only understand this problem, but the implications of formulating \code{for} loops in these three syntactically correct ways.
-\end{playground}
-
-As it should be obvious by now, is that as an object ``moves'' through the function-call stack its visible name changes. Consequently when we nest functions or use loops it becomes difficult to retrieve the name under which the object was saved by the user. After these experiments, is should be clear that saving the titles ``in'' the data frames would be the most elegant approach. It is possible to save additional data in R objects using attributes. R itself uses attributes to keep track of objects' properties like the names of members in a list, or the class of objects.
-
-When one has control over the objects, one can add the desired title as an attribute to the data frame, and then retrieve and use this when plotting. One should be careful, however, as some functions and operators may fail to copy user attributes to their output.
-
-\begin{playground}
-
-As an advanced exercise I suggest implementing this attribute-based solution by tagging the data frames using a function defined as shown below or by directly using \Rfunction{attr()}. You will also need modify the code to use the new attribute when building the \Rclass{ggplot} object.
-
-<<axis-labels-12,eval=eval_playground>>=
-add.title.attr <- function(x, my.title) {
-  attr(x, "title") <- my.title
-  x
-}
-@
-
-What advantages and disadvantages does this approach have? Can it be used in a loop?
-
-\end{playground}
-
-\end{explainbox}
-
-\index{plots!caption|)}
-\index{plots!subtitle|)}
-\index{plots!title|)}
-\index{plots!labels|)}
-
-
-
-
-\section{Using facets}
+\section{Facets}
 \index{plots!facets|(}
 \index{plots!panels|see{plots, facets}}
-Sets of coordinated plots are a very useful tool for visualizing data. These became popular through the \code{trellis} graphs in \langname{S}, and the \pkgname{lattice} package in R. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets along a single `axis' but wrapped into several rows. These are produced by adding \Rfunction{facet\_grid()} or \Rfunction{facet\_wrap()} to a ggplot, respectively. In the examples below we use \gggeom{geom\_point()} but faceting can be used with any \Rclass{ggplot} object (even with maps, spectra and ternary plots produced by functions in packages \ggmap, \ggspectra and \ggtern.
+Facets are a special kind of plots containing multiple panels in which the panels share some properties.
+These sets of coordinated panels are a useful tool for visualizing complex data. These plots became popular through the \code{trellis} graphs in \langname{S}, and the \pkgname{lattice} package in \Rlang. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets along a single `axis' but wrapped into several rows. These are produced by adding \Rfunction{facet\_grid()} or \Rfunction{facet\_wrap()} to a ggplot, respectively. In the examples below we use \gggeom{geom\_point()} but faceting can be used with any \Rclass{ggplot} object.
 
 \begin{warningbox}
-  The code underlying faceting has been rewritten in \ggplot version 2.2.0. All the examples given here are backwards compatible with versions 2.1.0 and possibly 2.0.0. The new functionality is related to the writing of extensions or controlled through themes, and will be discussed in other sections.
+  The code underlying faceting has been rewritten in \ggplot version 2.2.0. All the examples given here are backwards compatible with versions 2.1.0. The new functionality is related to the writing of extensions or controlled through themes.
 \end{warningbox}
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 @
 
-<<>>=
+We create a single-panel plot that we will use through this section to demonstrate how the same plot changes as we add facets using different options. Only some plots are shown and you will need to run the code for the remaining examples to see the output.
+
+<<facets-00>>=
 p <- ggplot(data = mtcars, aes(mpg, wt)) + geom_point()
-# With one variable
+p
+@
+
+<<facets-01>>=
 p + facet_grid(. ~ cyl)
 @
 
-<<>>=
+<<facets-02, eval=eval_plots_all>>=
 p + facet_grid(cyl ~ .)
 @
 
-<<>>=
+<<facets-03, eval=eval_plots_all>>=
 p + facet_grid(. ~ cyl, scales = "free")
 @
 
-<<>>=
+<<facets-04, eval=eval_plots_all>>=
 p + facet_grid(. ~ cyl, scales = "free", space = "free")
 @
 
@@ -1524,11 +1331,11 @@ p + facet_grid(. ~ cyl, scales = "free", space = "free")
 opts_chunk$set(opts_fig_wide_square)
 @
 
-<<>>=
+<<facets-05>>=
 p + facet_grid(vs ~ am)
 @
 
-<<>>=
+<<facets-06>>=
 p + facet_grid(vs ~ am, margins = TRUE)
 @
 
@@ -1536,11 +1343,11 @@ p + facet_grid(vs ~ am, margins = TRUE)
 opts_chunk$set(opts_fig_wide)
 @
 
-<<>>=
+<<facets-07, eval=eval_plots_all>>=
 p + facet_grid(. ~ vs + am)
 @
 
-<<>>=
+<<facets-08, eval=eval_plots_all>>=
 p + facet_grid(. ~ vs + am, labeller = label_both)
 @
 
@@ -1548,7 +1355,7 @@ p + facet_grid(. ~ vs + am, labeller = label_both)
 opts_chunk$set(opts_fig_very_wide)
 @
 
-<<>>=
+<<facets-09, eval=eval_plots_all>>=
 p + facet_grid(. ~ vs + am, margins = TRUE)
 @
 
@@ -1556,11 +1363,11 @@ p + facet_grid(. ~ vs + am, margins = TRUE)
 opts_chunk$set(opts_fig_wide)
 @
 
-<<>>=
+<<facets-10>>=
 p + facet_grid(cyl ~ vs, labeller = label_both)
 @
 
-<<>>=
+<<facets-11, eval=eval_plots_all>>=
 mtcars$cyl12 <- factor(mtcars$cyl,
                        labels = c("alpha", "beta", "sqrt(x, y)"))
 p1 <- ggplot(data = mtcars, aes(mpg, wt)) +
@@ -1570,23 +1377,18 @@ p1 <- ggplot(data = mtcars, aes(mpg, wt)) +
 
 Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a special syntax that allows us to use an expression where replacement based on the facet (panel) data takes place. See section \ref{sec:plot:plotmath} for an example of the use of \code{bquote()}, the R function on which this labeller is built upon.
 
-<<>>=
+<<facets-12>>=
 p + facet_grid(. ~ vs, labeller = label_bquote(alpha ^ .(vs)))
 @
 
+\begin{infobox}
 \sloppy
 In versions of \ggplot before 2.0.0, \code{labeller} was not implemented for \Rfunction{facet\_wrap()}, it was only available for \Rfunction{facet\_grid()}.
+\end{infobox}
 
-<<>>=
-p + facet_wrap(~ vs, labeller = label_bquote(alpha ^ .(vs)))
-@
+A minimal example of a wrapped facet. In this case the number of levels is small, when they are more the row of plots will be wrapped into two or more continuation rows. When using \Rfunction{facet\_wrap()} there is only one dimension, so no `.' is needed before or after the tilde.
 
-A minimal example of a wrapped facet. In this case the number of levels is
-small, when they are more the row of plots will be wrapped into two or more
-continuation rows. When using \Rfunction{facet\_wrap()} there is only one dimension, so no `.'
- is needed before or after the tilde.
-
-<<>>=
+<<facets-13>>=
 p + facet_wrap(~ cyl)
 @
 
@@ -1596,7 +1398,7 @@ An example showing that even though faceting with \code{facet\_wrap()} is along 
 opts_chunk$set(opts_fig_wide_square)
 @
 
-<<>>=
+<<facets-15, eval=eval_plots_all>>=
 p + facet_wrap(~ vs + am, ncol=2)
 @
 
@@ -1613,15 +1415,90 @@ p + facet_wrap(~ vs + am, ncol=2)
 %@
 \index{plots!facets|)}
 
+\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
+\index{plots!labels|(}
+\index{plots!title|(}
+\index{plots!subtitle|(}
+\index{plots!caption|(}
+Axis and key labels are given by the \code{name} of scales (see section \ref{sec:plot:scales}). Titles, subtitles and captions are added with function \Rfunction{ggtitle()} (see section \ref{sec:plot:title}).
+Function \Rfunction{labs()} is a convenience function that saves typing when we use the default scales except for their names---the default name of a scale is the name of the variable or expression mapped to the corresponding \emph{aesthetic}. It accepts arguments named according to the names of the \emph{aesthetics}. In addition it accepts named arguments \code{title}, \code{subtitle} and \code{caption}. Al these can be character strings or \Rlang expressions (see section \ref{sec:plot:plotmath}). 
+
+<<axis-labels-01>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  labs(title = "Growth of orange trees",
+       subtitle = "Starting from 1968-12-31",
+       caption = "see Draper, N. R. and Smith, H. (1998)",
+       x = "Time (d)",
+       y = "Stem circumference (mm)",
+       color = "Tree\nnumber")
+@
+
+There are in addition to \code{labs()} convenience functions for setting the axis labels, \Rfunction{xlab()} and \Rfunction{ylab()}. The code below can replace the call to \code{labs()} above.
+
+<<axis-labels-02, eval=eval_plots_all, echo=6:10>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, color = Tree)) +
+  geom_line() +
+  geom_point() +
+  expand_limits(y = 0) +
+  xlab("Time (d)") +
+  ylab("Stem circumference (mm)") +
+  ggtitle("Growth of orange trees",
+          subtitle = "Starting from 1968-12-31",
+          caption = "see Draper, N. R. and Smith, H. (1998)")
+@
+
+\begin{playground}
+Make an empty plot (\code{ggplot()}) and add to it as title an expression producing $y = b_0 + b_1 x + b_2 x^2$. (Hint: have a look at the examples for the use of expressions in \code{plotmath} demo in \Rlang by typing \code{demo(plotmath)} at the \Rlang console.
+\end{playground}
+
+Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them.
+
+<<axis-labels-04, eval=eval_plots_all>>=
+p <-
+    ggplot(data = mtcars,
+           aes(x = disp, y = hp, colour = factor(cyl),
+               shape = factor(cyl))) +
+      geom_point() +
+      labs(x = "Engine displacement)",
+           y = "Gross horsepower",
+           colour = "Number of\ncylinders",
+           shape = "Number of\ncylinders")
+p
+@
+
+<<axis-labels-05, eval=eval_plots_all>>=
+update_labels(p, list(x = "Cilindrada",
+                      y = "Potencia bruta (caballos de fuerza)",
+                      colour = "no. de\ncilindros",
+                      shape = "no. de\ncilindros"))
+@
+
+\begin{warningbox}
+Check!!
+When setting or updating labels using either \Rfunction{labs()} or \Rfunction{update\_labels()} be aware that even though \code{color} and \code{colour} are synonyms for the same \emph{aesthetics}, the `name' used in the call to \Rfunction{aes()} must match the  `name' used when setting or updating the labels.
+\end{warningbox}
+
+The labels used in keys and axis tick-labels for factor levels can be changed through the different \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
+
+\index{plots!caption|)}
+\index{plots!subtitle|)}
+\index{plots!title|)}
+\index{plots!labels|)}
+
 \section{Scales}\label{sec:plot:scales}
 \index{plots!scales|(}
 
-Scales map data onto aesthetics. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted geometrical object, such as \code{color}, \code{size}, position (\code{x, y, z}), \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most elemental mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \ggscale{scale\_x\_continuous()}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the $x$-axis will be based on the logarithm of the original data. A continuous data variable can, if we think it useful for describing our data, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
+Scales map data onto \emph{aesthetics}. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted geometrical object, such as position (\code{x, y, z}), \code{size}, \code{colour}, \code{fill}, \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most direct mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \ggscale{scale\_x\_continuous()}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the $x$-axis will be based on the logarithm of the original data. A continuous data variable can, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
 
-Discrete scales work in a similar way. We can use \ggscale{scale\_colour\_identity()} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from the default palette, unless we chose a different palette, or even use \ggscale{scale\_colour\_manual()} to assign whatever colour we want to each level to be mapped. The same is true for other discrete scales like symbol \code{shape} and \code{linetype}. Remember that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes such observation invisible.
+Discrete scales work in a similar way. We can use \ggscale{scale\_colour\_identity()} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from a palette or we can use \ggscale{scale\_colour\_manual()} to assign whatever colour we want to each level to be mapped. The same is true for other discrete manual scales like those for  \code{shape} and \code{linetype}. Remember that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes the mapped values invisible. The reverse, mapping \code{NA} values in the data to a specific colour or fill is also possible.
 
 \sloppy
-Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot 2.0.0 and later re-exports many functions from package \code{scales}. Some simple examples follow.
+Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot (2.0.0 and later) re-export several functions from package \code{scales}. Some simple examples follow.
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_medium)
@@ -1629,7 +1506,7 @@ opts_chunk$set(opts_fig_medium)
 
 We generate new fake data.
 
-<<>>=
+<<scales-01>>=
 fake2.data <-
   data.frame(y = c(rnorm(20, mean = 20, sd = 5),
                    rnorm(20, mean = 40, sd = 10)),
@@ -1637,15 +1514,15 @@ fake2.data <-
              z = rnorm(40, mean = 12, sd = 6))
 @
 
-\subsection{Continuous scales for $x$ and $y$}
+\subsection{Continuous scales}\label{sec:plot:scales:continuous}
 
-\subsubsection{Limits}\label{sec:plot:scales:limits}
+\subsubsection{Limits}
 
 To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale. Setting hard limits in \emph{scales} excludes all observations outside these boundaries not only from appearing on the plotting area, but also from any calculations done by \emph{statisitcs} (See section \ref{sec:plot:coord:limits} on page \pageref{sec:plot:coord:limits} on the use of limits to \emph{coordinates} to limit only the boundaries of the plotting area without excluding observations from the input to \emph{statistics}).
 
 We can set both limits, minimum and maximum.
 
-<<>>=
+<<scales-10>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, 100)
 @
 
@@ -1667,7 +1544,7 @@ We can expand the limits, to set a default minimum range, that will grow when ne
 ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
 @
 
-In addition to with these convenience functions for x and y aesthetics, limits can be set to constant values and/or the automatic expansion set through a call to most of \emph{scale} functions.
+In addition to with these convenience functions for \code{x} and \code{y} aesthetics, limits can be set to constant values and/or the automatic expansion set through a call to most \emph{scale} functions.
 
 We here set the upper limit to be expanded by adding a value of 10\% of the range of the scale.
 
