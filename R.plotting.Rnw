@@ -1328,7 +1328,7 @@ p + facet_grid(. ~ cyl, scales = "free", space = "free")
 @
 
 <<echo=FALSE>>=
-opts_chunk$set(opts_fig_wide_square)
+opts_chunk$set(opts_fig_narrow_square)
 @
 
 <<facets-05>>=
@@ -1378,7 +1378,7 @@ p1 <- ggplot(data = mtcars, aes(mpg, wt)) +
 Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a special syntax that allows us to use an expression where replacement based on the facet (panel) data takes place. See section \ref{sec:plot:plotmath} for an example of the use of \code{bquote()}, the R function on which this labeller is built upon.
 
 <<facets-12>>=
-p + facet_grid(. ~ vs, labeller = label_bquote(alpha ^ .(vs)))
+p + facet_grid(. ~ vs, labeller = label_bquote(cols = alpha ^ .(vs)))
 @
 
 \begin{infobox}
@@ -1402,6 +1402,9 @@ opts_chunk$set(opts_fig_wide_square)
 p + facet_wrap(~ vs + am, ncol=2)
 @
 
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
 %In versions of \ggplot before 2.0.0, \code{labeller} was not implemented for
 %\code{facet\_wrap()}, it was only available for \code{facet\_grid()}. In the current
 %version it is implemented for both.
@@ -1415,13 +1418,26 @@ p + facet_wrap(~ vs + am, ncol=2)
 %@
 \index{plots!facets|)}
 
-\section{Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
+\section{Scales}\label{sec:plot:scales}
+\index{plots!scales|(}
+
+Scales map data onto \emph{aesthetics}. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted geometrical object, such as position (\code{x, y, z}), \code{size}, \code{colour}, \code{fill}, \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most direct mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \ggscale{scale\_x\_continuous()}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the $x$-axis will be based on the logarithm of the original data. A continuous data variable can, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
+
+Discrete scales work in a similar way. We can use \ggscale{scale\_colour\_identity()} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from a palette or we can use \ggscale{scale\_colour\_manual()} to assign whatever colour we want to each level to be mapped. The same is true for other discrete manual scales like those for  \code{shape} and \code{linetype}. Remember that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes the mapped values invisible. The reverse, mapping \code{NA} values in the data to a specific colour or fill is also possible.
+
+
+
+\sloppy
+Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot (2.0.0 and later) re-export several functions from package \code{scales}. Some simple examples follow.
+
+\begin{infobox}
+\paragraph*{Convenience functions: Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
 \index{plots!labels|(}
 \index{plots!title|(}
 \index{plots!subtitle|(}
 \index{plots!caption|(}
 Axis and key labels are given by the \code{name} of scales (see section \ref{sec:plot:scales}). Titles, subtitles and captions are added with function \Rfunction{ggtitle()} (see section \ref{sec:plot:title}).
-Function \Rfunction{labs()} is a convenience function that saves typing when we use the default scales except for their names---the default name of a scale is the name of the variable or expression mapped to the corresponding \emph{aesthetic}. It accepts arguments named according to the names of the \emph{aesthetics}. In addition it accepts named arguments \code{title}, \code{subtitle} and \code{caption}. Al these can be character strings or \Rlang expressions (see section \ref{sec:plot:plotmath}). 
+Function \Rfunction{labs()} is a convenience function that saves typing when we use the default scales except for their names---the default name of a scale is the name of the variable or expression mapped to the corresponding \emph{aesthetic}. It accepts arguments named according to the names of the \emph{aesthetics}. In addition it accepts named arguments \code{title}, \code{subtitle} and \code{caption}. Al these can be character strings or \Rlang expressions (see section \ref{sec:plot:plotmath}).
 
 <<axis-labels-01>>=
 ggplot(data = Orange,
@@ -1489,16 +1505,8 @@ The labels used in keys and axis tick-labels for factor levels can be changed th
 \index{plots!subtitle|)}
 \index{plots!title|)}
 \index{plots!labels|)}
+\end{infobox}
 
-\section{Scales}\label{sec:plot:scales}
-\index{plots!scales|(}
-
-Scales map data onto \emph{aesthetics}. There are different types of scales depending on the characteristics of the data being mapped: scales can be continuous or discrete. And of course, there are scales for different attributes of the plotted geometrical object, such as position (\code{x, y, z}), \code{size}, \code{colour}, \code{fill}, \code{alpha} or transparency, \code{angle}, justification, etc. This means that many properties of, for example, the symbols used in a plot can be either set by a constant, or mapped to data. The most direct mapping is \code{identity}, which means that the data is taken at its face value. In a numerical scale, say \ggscale{scale\_x\_continuous()}, this means that for example a `5' in the data is plotted at a position in the plot corresponding to the value `5' along the x-axis. A simple mapping could be a log10 transformation, that we can easily achieve with the pre-defined \code{scale\_x\_log10} in which case the position on the $x$-axis will be based on the logarithm of the original data. A continuous data variable can, be mapped to continuous scale either using an identity mapping or transformation, which for example could be useful if we want to map the value of a variable to the area of the symbol rather than its diameter.
-
-Discrete scales work in a similar way. We can use \ggscale{scale\_colour\_identity()} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from a palette or we can use \ggscale{scale\_colour\_manual()} to assign whatever colour we want to each level to be mapped. The same is true for other discrete manual scales like those for  \code{shape} and \code{linetype}. Remember that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes the mapped values invisible. The reverse, mapping \code{NA} values in the data to a specific colour or fill is also possible.
-
-\sloppy
-Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot (2.0.0 and later) re-export several functions from package \code{scales}. Some simple examples follow.
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_medium)
@@ -1518,31 +1526,21 @@ fake2.data <-
 
 \subsubsection{Limits}
 
-To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale. Setting hard limits in \emph{scales} excludes all observations outside these boundaries not only from appearing on the plotting area, but also from any calculations done by \emph{statisitcs} (See section \ref{sec:plot:coord:limits} on page \pageref{sec:plot:coord:limits} on the use of limits to \emph{coordinates} to limit only the boundaries of the plotting area without excluding observations from the input to \emph{statistics}).
+\begin{infobox}
+\paragraph*{Convenience functions: Scale limits} To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale. Setting hard limits in \emph{scales} excludes all observations outside these boundaries not only from appearing on the plotting area, but also from any calculations done by \emph{statisitcs} (See section \ref{sec:plot:coord:limits} on page \pageref{sec:plot:coord:limits} on the use of limits to \emph{coordinates} to limit only the boundaries of the plotting area without excluding observations from the input to \emph{statistics}).
 
-We can set both limits, minimum and maximum.
+We can set both limits, minimum and maximum using \Rfunction{xlim()} or \Rfunction{ylim()} which accept two numeric values setting the high and low limit respectively. As elsewhere in \ggplot passing \code{NA} as argument for a limit keeps the existing limit.
 
 <<scales-10>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, 100)
 @
 
-We can set both limits, minimum and maximum, reversing the direction of the axis scale.
-
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(100, 0)
-@
-
-We can set one limit and leave the other one free.
-
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, NA)
-@
-
-We can expand the limits, to set a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in data frame \code{fake2.data}.
+We can use \Rfunction{expand\_limits()} to expand the limits of a scale, setting a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in \code{data}. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each. In the next example we expand the limits to include the origin.
 
 <<>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
 @
+\end{infobox}
 
 In addition to with these convenience functions for \code{x} and \code{y} aesthetics, limits can be set to constant values and/or the automatic expansion set through a call to most \emph{scale} functions.
 
