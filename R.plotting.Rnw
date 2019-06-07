@@ -37,7 +37,7 @@ The commonality between science and art is in trying to see profoundly---to deve
 
 Three main plotting systems are available to \Rlang users: base \Rlang, package \pkgname{lattice} \autocite{Sarkar2008} and package \pkgname{ggplot2} \autocite{Wickham2016}, being the last one the most recent and currently most popular system available in \Rlang for plotting data. Even two different sets of graphics primitives are available in \Rlang, that in base \Rlang and a newer one in the \pkgname{grid} package \autocite{Murrell2011}.
 
-In this chapter you will learn the concepts of the grammar of graphics, on which package \pkgname{ggplot2} is based. You will as well learn how to do many of the data plots that can be produced with package \pkgname{ggplot2}. We will focus only on the grammar of graphics, as it is currently the most used plotting approach in \Rlang. As a consequence of this popularity and its flexibility, many extensions to \pkgname{ggplot2} have been developed and deposited in public repositories. Several of these packages will be described in Chapter \ref{chap:R:more:ggplotting} starting on page \pageref{chap:R:more:ggplotting} and in Chapter \ref{chap:R:maps} starting on page \pageref{chap:R:maps}. As previous chapters, this chapter is intended to be read in whole.
+In this chapter you will learn the concepts of the grammar of graphics, on which package \pkgname{ggplot2} is based. You will as well learn how to do many of the data plots that can be produced with package \pkgname{ggplot2}. We will focus only on the grammar of graphics, as it is currently the most used plotting approach in \Rlang. As a consequence of this popularity and its flexibility, many extensions to \pkgname{ggplot2} have been developed and deposited in public repositories. As previous chapters, this chapter is intended to be read in whole.
 
 This chapter focuses mainly on how to construct different types of graphical data displays using the grammar of graphics. We also discuss how to alter the ``graphical design'' of the plots produced, but in less depth, mostly leaving for the reader to try by herself/himself the different combinations of types of plots and themes and color palettes described. The book \citebooktitle{Burchell2016} \autocite{Burchell2016} has a strong focus on the control of how plots look, and can be a good source of worked out examples. For a cook book with a broader scope and detailed explanations consult \citebooktitle{Chang2013} \autocite{Chang2013}. The contents of the current chapter to some extent overlap with that of Chang's book, but using a different approach for presentation. Deeper explanations of technical aspects are available in the book \citebooktitle{Murrell2011} \autocite{Murrell2011}. Finally, the book \citebooktitle{Wickham2016} \autocite{Wickham2016} written by the developers of package \pkgname{ggplot2} is the main reference, and describes the grammar of graphics in more detail than we have space here for. In particular, the hands-on approach followed here makes this chapter a good complement to \citebooktitle{Wickham2016}.
 
@@ -60,6 +60,7 @@ library(learnrbook)
 library(scales)
 library(ggplot2)
 library(ggrepel)
+library(gginnards)
 library(ggpmisc)
 library(ggbeeswarm)
 library(ggforce)
@@ -82,13 +83,13 @@ eval_plots_all <- FALSE
 
 Being \Rlang extensible, in addition to the built-in plotting functions, there are several alternatives provided by packages. Of the general purpose ones, the most extensively used are \pkgname{Lattice} \autocite{Sarkar2008} and \ggplot \autocite{Wickham2016}. There are additional packages that add extra functionality to these packages, many of them available through CRAN.
 
-In the examples in this chapter we describe the of use package \ggplot. We start with an introduction to the `grammar of graphics' and \ggplot. There is ample literature on the use of \ggplot, including the very good reference documentation at \url{http://docs.ggplot2.org/}. The book titled \citebooktitle{Wickham2016} \autocite{Wickham2016} is the authoritative reference, as it is authored by the developers of \ggplot. The book `R Graphics Cookbook' \autocite{Chang2013} is very useful as a reference as it contains many worked out examples. Some of the literature available at this time is for older versions of \ggplot but we here describe version 3.1.0, and highlight the most important incompatibilities that need to be taken into account when using versions of \ggplot earlier than 3.0.0. Consistent with the title of this book, we focus on the Grammar of Graphics, and describe it as a language. We use examples to demonstrate the features of the language and how they can be used.
+In the examples in this chapter we describe the of use package \ggplot. We start with an introduction to the `grammar of graphics' and \ggplot. There is ample literature on the use of \ggplot, including the very good reference documentation at \url{http://docs.ggplot2.org/}. The book titled \citebooktitle{Wickham2016} \autocite{Wickham2016} is the authoritative reference, as it is authored by the developers of \ggplot. The book `R Graphics Cookbook' \autocite{Chang2013} is very useful as a reference as it contains many worked out examples. Some of the literature available at this time is for older versions of \ggplot but we here describe version 3.1.0. Consistent with the title of this book, we focus on the Grammar of Graphics, and describe it as a language. We use examples to demonstrate the features of the language and how they can be used.
 
 \section{Grammar}
 
-What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of the package). What is meant by grammar in this case is that plots are assembled piece by piece from different `nouns' and `verbs' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantic-based and to a large extent how the plot looks when is printed, displayed or exported to a bitmap or vector-graphics file is controlled by themes.
+What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of the package). What is meant by grammar in this case is that plots are assembled piece by piece using different `nouns' and `verbs' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantic-based and to a large extent how the plot looks when is printed, displayed or exported to a bitmap or vector-graphics file is controlled by themes.
 
-We can think of plotting as representing the observations or data in a graphical language. We use the properties of graphical objects to represent different aspects of our data. An observation can consist in multiple values recorded. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist in height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ direction. The observations could be represented on the plot by dots and/or joined by lines.
+We can think of plotting as representing the observations or data in a graphical language. We use the properties of graphical objects to represent different aspects of our data. An observation can consist in multiple values recorded. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist in height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ direction. The observations could be represented on the plot by points and/or joined by lines.
 
 The grammar of graphics allows us to design plots by combining various elements in ways that are nearly orthogonal. In other words, the majority of the possible combinations of ``words'' yield valid plots as long as we assemble them respecting the rules of the grammar. This flexibility makes \ggplot extremely powerful as we can build plots and even types of plots which were not even considered while designing the \ggplot package.
 
@@ -132,8 +133,7 @@ We have described above the components of the grammar of graphics: aesthetics (\
 
 When we do not explicitly add these elements, default elements will be used, in some cases defaults that result in empty plots.
 
-As the workings and use of the grammar are easier to show by example than to explain with words, we will show how to build plots of increasing complexity.
-We start with the simplest possible plot, an empty plot. We use function \code{ggplot()} to create the skeleton for a plot.
+As the workings and use of the grammar are easier to show by example than to explain with words, we will show how to build plots of increasing complexity. We start with the simplest possible plot, an empty plot. We use function \code{ggplot()} to create the skeleton for a plot.
 
 <<ggplot-basics-01>>=
 ggplot()
@@ -145,7 +145,7 @@ The plot above is of little use, without any data, so we next pass a data frame 
 ggplot(data = mtcars)
 @
 
-Once the data are available, we need to \emph{map} the quantities in the data onto graphical features in the plot, or \emph{aesthetics}. When plotting in two dimensions, we need to map variables in the data to at least the $x$ and $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now matches the range (plus a margin) of the mapped variables. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations.
+Once the data are available, we need to \emph{map} the quantities in the data onto graphical features in the plot, or \emph{aesthetics}. When plotting in two dimensions, we need to map variables in the data to at least the $x$ and $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now match the ranges (plus a margin) of the mapped variables. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations.
 
 <<ggplot-basics-03>>=
 ggplot(data = mtcars,
@@ -160,7 +160,31 @@ ggplot(data = mtcars,
   geom_point()
 @
 
-Although \emph{aesthetics} can be mapped to variables in the data, they can also be set to a constant, within a layer.
+\begin{warningbox}
+  In the examples above the plots were printed automatically, which is the default at the R console. However, as any other R objects ggplots can be given a name, stored,
+<<ggplot-basics-04-wb1>>=
+p <- ggplot(data = mtcars,
+            aes(x = disp, y = mpg)) +
+       geom_point()
+@
+
+and printed at a later time.
+<<ggplot-basics-04-wb2, eval=FALSE>>=
+print(p)
+@
+\end{warningbox}
+
+\begin{advplayground}
+  Above we have seen how to build a plot, layer by layer, using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
+<<ggplot-basics-04-exb1, eval=eval_playground>>=
+summary(p)
+@
+We can also obtain view into the structure by means of \code{str()}.
+
+Load package \pkgname{gginnards} and use methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()} to explore ggplot objects with different numbers of layers or mappings. You will see that the plot elements that we added to the plot are stored as members of a list with nested lists conforming a tree-like structure.
+\end{advplayground}
+
+Although \emph{aesthetics} can be mapped to variables in the data, they can also be set to a constant value, within a layer.
 
 <<ggplot-basics-04a>>=
 ggplot(data = mtcars,
@@ -177,7 +201,7 @@ ggplot(data = mtcars,
   stat_smooth(geom = "line", method = "lm")
 @
 
-We haven't added yet some of the elements of the grammar described above: \emph{scales}, \emph{coordinates} and \emph{themes}. The plot can anyway be rendered because these elements have defaults which are used when we do not set them explicitly. We next will see examples in which they are explicitly set. We start with a scale using a logarithmic transformation. This works like plotting by hand using graph paper with rulings spaced according to a logarithmic scale. Tick marks, continue being expressed in the original units, but statistics are applied to the transformed data. In other words, a transformed scale affects the values before they are passed to \emph{statistics}, and the linear regression will be fitted to \code{log10()} transformed $y$ values and the original $x$ values.
+We haven't added yet some of the elements of the grammar described above: \emph{scales}, \emph{coordinates} and \emph{themes}. The plots were anyway rendered because these elements have defaults which are used when we do not set them explicitly. We next will see examples in which they are explicitly set. We start with a scale using a logarithmic transformation. This works like plotting by hand using graph paper with rulings spaced according to a logarithmic scale. Tick marks, continue being expressed in the original units, but statistics are applied to the transformed data. In other words, a transformed scale affects the values before they are passed to \emph{statistics}, and the linear regression will be fitted to \code{log10()} transformed $y$ values and the original $x$ values.
 
 <<ggplot-basics-06>>=
 ggplot(data = mtcars,
@@ -187,9 +211,9 @@ ggplot(data = mtcars,
   scale_y_log10()
 @
 
-The range limits of a scale can be set manually, instead of automatically as above. Scales limits function as a window into the data, observations outside the scale limits are discarded. When using \code{stats} the computations are only applied to observations that fall within the limits. These limits indirectly also alter the plotting area.
+The range limits of a scale can be set manually, instead of automatically as by default. Scales limits function as \emph{a window into the data}: observations outside the scale limits are not mapped---these observations are not included in the graphical representation. Furthermore, when using \code{stats} the computations are only applied to observations that fall within the limits. These limits \emph{indirectly} also affect the plotting area when the plotting area is automatically set based on the range of the (within limits) data---even the range of values mapped to other aesthetics is likely to change when the data are subset.
 
-In contrast to \emph{statistics}, \emph{coordinates} function as a window into the plotting area, and do not affect which observations are used by \code{stats}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but with manually set $y$ limits.
+In contrast to \emph{statistics}, \emph{coordinates} function as a \emph{zoomed view} into the plotting area, and do not affect which observations are used by \code{stats}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but we manually set $y$ limits.
 
 <<ggplot-basics-07>>=
 ggplot(data = mtcars,
@@ -199,7 +223,7 @@ ggplot(data = mtcars,
   coord_cartesian(ylim = c(15, 25))
 @
 
-Next example uses a coordinate system transformation. When the transformation is applied to the coordinate system, it affects only the plotting. The transformation is applied to the values returned by any \emph{statistics}. The straight line fitted is plotted on the transformed coordinates as a curve, because the fit was done to the untransformed data and the predicted values computed using this model and fitted parameters estimates.
+The next example uses a coordinate system transformation. When the transformation is applied to the coordinate system, it affects only the plotting---it sits between the geom and the rendering of the plot. The transformation is applied to the values returned by any \emph{statistics}. The straight line fitted is plotted on the transformed coordinates as a curve, because the model was fit to the untransformed data, this fitted model automatically used to obtain the predicted values needed to plot the line and the transformation applied to them before rendering the plot. We have here described only cartesian coordinate systems while other coordinate systems are described in sections \ref{sec:plot:sf} and \ref{sec:plot:circular} on pages \pageref{sec:plot:sf} and \pageref{sec:plot:circular}, respectively.
 
 <<ggplot-basics-08>>=
 ggplot(data = mtcars,
@@ -209,7 +233,7 @@ ggplot(data = mtcars,
   coord_trans(y = "log10")
 @
 
-Themes affect the rendering of plots at the time of printing. A complete theme can override the default gray theme. The plot is the same, the observations are represented in the same way, the limits of the axes is the same and the text is the same. On the other hand how these elements are rendered is drastically different.
+Themes affect the rendering of plots at the time of printing---they can be thought as style sheets defining the graphic design. A complete theme can override the default gray theme. The plot is the same, the observations are represented in the same way, the limits of the axes are the same and all text is the same. On the other hand how these elements are rendered by different themes can be drastically different.
 
 <<ggplot-basics-09>>=
 ggplot(data = mtcars,
@@ -218,43 +242,42 @@ ggplot(data = mtcars,
   theme_classic()
 @
 
-We can also override the base font size. This affects the size of all text elements, as their size is defined relative to the base size. Here we add the same theme as used in the previous examples, but with a different base point size for text.
+We can also override the base font size and font family. This affects the size of all text elements, as their size is defined relative to the base size. Here we add the same theme as used in the previous examples, but with a different base point size for text.
 
 <<ggplot-basics-10>>=
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
-  theme_classic(20)
+  theme_classic(20, base_family = "serif")
 @
 
-The details of how to set axis labels, tick positions and tick labels will be discussed in depth in section \ref{sec:plot:scales}. Meanwhile, we will use function \code{labs()} which is a convenience function allowing to easily replace the \code{name} of scales and to set plot titles. For setting the names of the scales (used for labels) here we use \code{x} and \code{y}, the names of the \emph{aesthetics} to which we have mapped the two variables in \code{data}, \code{disp} and \code{mpg}.
+The details of how to set axis labels, tick positions and tick labels will be discussed in depth in section \ref{sec:plot:scales}. Meanwhile, we will use function \code{labs()} which is a convenience function allowing to easily set the title and subtitle of a plot and to replace the default \code{name} of scales---this default is the name of the mapped variable, as we saw in the examples above and is used for labels. When setting the \code{name} of scales with \code{labs()}, we use as parameters the names of aesthetics and pass as argument a character string, or an R expression. Here we use \code{x} and \code{y}, the names of two \emph{aesthetics} to which we have mapped two variables in \code{data}, \code{disp} and \code{mpg}.
 
 <<ggplot-basics-11>>=
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
   labs(x = "Engine displacement (cubic inches)",
-       y = "Fuel use efficiency (miles per gallon)",
+       y = "Fuel use efficiency\n(miles per gallon)",
        title = "Motor Trend Car Road Tests",
        subtitle = "Source: 1974 Motor Trend US magazine")
 @
 
 \begin{infobox}
-As elsewhere in \Rlang, when a value is expected, either a value stored in a variable or an statement returning a suitable value can be passed as an argument to be mapped to an \emph{aesthetic}. In other words, the values to be plotted do not need to be stored in the data frame passed as argument to formal parameter \code{data} as a variable, they can also be computed from these variables. Here we plot miles-per-gallon, \code{mpg} on the engine displacement per cylinder by dividing \code{disp} by \code{cyl} within the call to \code{aes()}.
+As elsewhere in \Rlang, when a value is expected, either a value stored in a variable or an statement returning a suitable value can be passed as an argument to be mapped to an \emph{aesthetic}. In other words, the values to be plotted do not need to be stored in the data frame passed as argument to parameter \code{data} as a variable, they can also be computed from these variables. Here we plot miles-per-gallon, \code{mpg} on the engine displacement per cylinder by dividing \code{disp} by \code{cyl} within the call to \code{aes()}.
 
 <<ggplot-basics-info-01>>=
 ggplot(data = mtcars, aes(x = disp / cyl, y = mpg)) +
   geom_point()
 @
+
 \end{infobox}
 
-Each of the elements of the grammar exemplified above have several different members, and many of the individual \emph{geometries} and \emph{statistics} accept arguments that can be used to modify their behaviour. There are also more \emph{aesthetics} than those shown above. Multiple data objects as well as multiple mappings can coexist within a single ggplot object.
-Individual elements in a theme can be also modified and new complete themes created. We will describe them in the remaining sections of this chapter, but first we will see what are the consequences of \code{"gg"} objects being regular \Rlang objects, and of graphical rendering being a separate step from the creation of the plot object.
+Each of the elements of the grammar exemplified above has several different members, and many of the individual \emph{geometries} and \emph{statistics} accept arguments that can be used to modify their behaviour. There are also more \emph{aesthetics} than those shown above. Multiple data objects as well as multiple mappings can coexist within a single ggplot object. Packages and user code can define new \emph{geometries}, \emph{statistics} and even \emph{aesthetics}. Individual elements in a theme can be also modified and new complete themes created, re-used and shared. We will describe in the remaining sections of this chapter how to use the grammar of graphics to construct other types of graphical presentations including more complex plots than those in the examples above. We will start by seeing what are the consequences of \code{"gg"} objects being regular \Rlang objects and of graphical rendering being a separate step from the creation of the plot object.
 
 \subsection{Plots as \Rlang objects}
 
-We can manipulate ggplot objects as other \Rlang objects, and also operate on them using the operators and methods defined for the \code{"gg"} class they belong to.
-In the previous section the returned value was automatically printed when the statements were executed. Here we save the returned value, the ggplot, into a variable.
+We can manipulate ggplot objects and their components in the same way as other \Rlang objects. We can operate on them using the operators and methods defined for the \code{"gg"} class they belong to. As shown above we start by saving a ggplot into a variable.
 
 <<ggplot-objects-00>>=
 p <- ggplot(data = mtcars,
@@ -262,13 +285,8 @@ p <- ggplot(data = mtcars,
   geom_point()
 @
 
-We can print the object, with an explicit or an implicit call to method \code{print()}.
-<<ggplot-objects-01>>=
-print(p)
-@
-
 \begin{warningbox}
-  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self contained. Most importantly a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean session, or another computer, and rendered as long as package \ggplot and its dependencies are available.
+  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self contained. Most importantly a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean session, or another computer, and rendered as long as package \ggplot and its dependencies are available. Another consequence of a copy of the data being stored in the plot object, is that editing the data used to create a \code{"gg"} object after its creation does \emph{not} affect rendered plots unless we recreate the "gg" object.
 
   With \code{str()} we can explore the structure of any \Rlang object, including those of class \code{"gg"}. We use \code{max.level = 1} to reduce the length of output, but to see deeper into the nested list you can increase the value passed as argument to \code{max.level} or simply accept its default.
 
@@ -277,7 +295,7 @@ str(p, max.level = 1)
 @
 \end{warningbox}
 
-When we used in the previous section operator \code{+} to assemble the plots we were operating on \Rlang objects. In the same way we can operate saved objects.
+When we used in the previous section operator \code{+} to assemble the plots we were operating on \Rlang objects. In the same way we can operate on saved objects.
 
 <<ggplot-objects-02>>=
 p +
@@ -306,7 +324,7 @@ p +
 \section{Geometries}\label{sec:plot:geometries}
 \index{plots!geometries|(}
 
-Different geometries support different \emph{aesthetics}. While \gggeom{geom\_point()} supports \code{shape}, and \gggeom{geom\_line()} supports \code{linetype}, both support \code{x}, \code{y}, \code{colour} and \code{size}. In this section we will describe the different \code{geometries} available in package \ggplot and some examples for packages that extend \ggplot. The graphic output from most code examples will not be shown, with the expectation that readers will run them to see the plots.
+Different geometries support different \emph{aesthetics}. While \gggeom{geom\_point()} supports \code{shape}, and \gggeom{geom\_line()} supports \code{linetype}, both support \code{x}, \code{y}, \code{colour} and \code{size}. In this section we will describe the different \code{geometries} available in package \ggplot and some examples from packages that extend \ggplot. The graphic output from most code examples will not be shown, with the expectation that readers will run them to see the plots.
 
 Mainly for historical reasons, \emph{geometries} accept a \emph{statistic} as argument, in the same way as \emph{statistics} accept a \emph{geometry} as argument. In this section we will only describe \emph{geometries} which have as default \emph{statistic} \code{stat\_identity} which passes values directly as mapped. The \emph{geometries} that have other \emph{statistics} as default are described in section \ref{sec:plot:stat:summaries} together with the corresponding \emph{statistics}.
 
@@ -344,7 +362,7 @@ ggplot(data = mtcars,
 Try a different mapping: \code{disp} $\rightarrow$ \code{color}, \code{cyl} $\rightarrow$ \code{x}. Continue by using \code{help(mtcars)} and/or \code{names(mtcars)} to see what variables are available, and then try the combinations that trigger your curiosity.
 \end{playground}
 
-The mapping between data values and aesthetic values is controlled by scales. Different colour scales, and even palettes within a given scale, provide different mappings that can be used to the default scale.
+The mapping between data values and aesthetic values is controlled by scales. Different colour scales, and even palettes within a given scale, provide different mappings between data values and rendered colours.
 
 <<scatter-03, eval=eval_plots_all>>=
 ggplot(data = mtcars,
@@ -500,27 +518,39 @@ ggplot(data = Orange,
   geom_step()
 @
 
-While \gggeom{geom\_line()} draws a line joining observations, \gggeom{geom\_area()} supports filling the area bellow the drawn line drawn based on the \code{x} and \code{y}, respecting the \code{fill} \emph{aesthetic}. In contrast \gggeom{geom\_ribbon} draws two lines based on the \code{x}, \code{ymin} and \code{ymax} \emph{aesthetics}, with the space between the lines filled according to the \code{fill} \emph{aesthetic}. Finally, \gggeom{geom\_polygom} is similar to \gggeom{geom\_path()} but connects the extreme observations draw a closed polygon that supports \code{fill}.
+While \gggeom{geom\_line()} draws a line joining observations, \gggeom{geom\_area()} supports filling the area bellow the drawn line drawn based on the \code{x} and \code{y}, respecting the \code{fill} \emph{aesthetic}. In contrast \gggeom{geom\_ribbon} draws two lines based on the \code{x}, \code{ymin} and \code{ymax} \emph{aesthetics}, with the space between the lines filled according to the \code{fill} \emph{aesthetic}. Finally, \gggeom{geom\_polygom} is similar to \gggeom{geom\_path()} but connects the extreme observations forming a closed polygon that supports \code{fill}.
 
-Much of what was described above for \gggeom{geom\_point} can be adapted to line, ribbon, area and other geoms described in this section. In some cases, in may be useful to stack the different areas. In the next, contrived, example, we stack the growth of the different trees by using \code{position = "stacked"} instead of the default \code{position = "identity"}
+Much of what was described above for \gggeom{geom\_point} can be adapted to \gggeom{geom\_line}, \gggeom{geom\_ribbon}, area and other geoms described in this section. In some cases, it is useful to stack the areas---e.g.\ when the values represent parts of a bigger whole. In the next, contrived, example, we stack the growth of the different trees by using \code{position = "stack"} instead of the default \code{position = "identity"}. We save the plot for reuse.
 
-<<area-plot-01l>>=
+<<area-plot-01>>=
 ggplot(data = Orange,
        aes(x = age, y = circumference, fill = Tree)) +
   geom_area(position = "stack")
 @
 
-Finally three \emph{geometries} for drawing lines across the whole plotting area: \gggeom{geom\_hline}, \gggeom{geom\_vline} and \gggeom{geom\_abline}. The first two of the geometries draw horizontal and vertical lines, respectively, while the third one draws straight lines according to the \emph{aesthetics} \code{slope} and \code{intercept} determining the position.
+Finally three \emph{geometries} for drawing lines across the whole plotting area: \gggeom{geom\_hline}, \gggeom{geom\_vline} and \gggeom{geom\_abline}. The first two of the geometries draw horizontal and vertical lines, respectively, while the third one draws straight lines according to the \emph{aesthetics} \code{slope} and \code{intercept} determining the position. The lines drawn with the three geoms extend to the edge of the plotting area.
 
+\gggeom{geom\_hline} and \gggeom{geom\_vline} require a single aesthetic, \code{yintercept} and \code{xintercept}, respectively. Differently to other geoms, the data for these aesthetics can be also passed as constant numeric vectors. The reason for this is that these geoms are most frequently used to annotate plots rather than plotting observations. Let's assume that we want to highlight an event at the age of 1000 days.
+
+<<area-plot-02>>=
+ggplot(data = Orange,
+       aes(x = age, y = circumference, fill = Tree)) +
+  geom_area(position = "stack") +
+  geom_vline(xintercept = 1000, colour = "gray75") +
+  geom_vline(xintercept = 1000, linetype = "dotted")
+@
+
+\begin{playground}
+  change the order of the three layers in the example above. How did the figure change? What order is best? Would the same order be the best for a scatter plot? and would it be necessary to add two \code{geom\_vline()} layers?
+\end{playground}
 \index{plots!line plot|)}
 
 \subsection{Column}\label{sec:plot:col}
 \index{plots!column plot|(}
 
-\Rlang users not familiar yet with \ggplot are frequently surprised by the default behaviour of \gggeom{geom\_bar()} as it uses \ggstat{stat\_count()} to compute the value plotted, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). The default can be changed, but \gggeom{geom\_col()} is equivalent to \gggeom{geom\_bar()} used with \code{"identity"} as argument to parameter \code{stat}. The \emph{statistic} \ggstat{stat\_identity()} just echoes its input. In previous sections, as when plotting points and lines, this statistic was used by default. Starting from \ggplot ver. 2.2.1, a new \emph{geometry} is available, \gggeom{geom\_col()} which is the same as \gggeom{geom\_bar()} but with \ggstat{stat\_identity()} as default.
+\Rlang users not familiar yet with \ggplot are frequently surprised by the default behaviour of \gggeom{geom\_bar()} as it uses \ggstat{stat\_count()} to produce a histogram, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). \gggeom{geom\_col()} is identical to \gggeom{geom\_bar()} but with \code{"identity"} as default statistic. The \emph{statistic} \ggstat{stat\_identity()} just echoes its input and is the default for the geometries described above. Starting from \ggplot ver. 2.2.1,  \gggeom{geom\_col()} can be used to create \emph{column plots} where each bar represents an observation or case in the data.
 
-To create a figure in which the columns represent each a single value in \code{data} we will use \gggeom{geom\_col()}, after creating some artificial data. We will reuse the same data in variations of the figure.
-
+We create artificial data that we will reuse in multiple variations of the figure.
 <<col-plot-01>>=
 set.seed(654321)
 my.col.data <- data.frame(treatment = factor(rep(c("A", "B", "C"), 2)),
@@ -528,7 +558,7 @@ my.col.data <- data.frame(treatment = factor(rep(c("A", "B", "C"), 2)),
                           measurement = rnorm(6) + c(5.5, 5, 7))
 @
 
-First we plot data for females only, using defaults for all \emph{aesthetics}.
+First we plot data for females only, using defaults for all \emph{aesthetics} except $x$ and $y$ which we explicitly map to variables.
 
 <<col-plot-02>>=
 ggplot(subset(my.col.data, group == "female"),
@@ -553,31 +583,19 @@ ggplot(my.col.data, aes(x = treatment, y = measurement, fill = group)) +
 @
 
 \begin{playground}
-Change the argument to \code{position}, or let the default be active, until you understand its effect on the figure.
+Change the argument to \code{position}, or let the default be active, until you understand its effect on the figure. What is the difference between \emph{positions} \code{"identity"}, \code{"dodge"} and \code{"stack"}?
 \end{playground}
 
 \begin{playground}
 Use constants as arguments for \emph{aesthetics} or map variable \code{treatment} to one or more of the \emph{aesthetics} used by \gggeom{geom\_col()}, such as \code{colour}, \code{fill}, \code{linetype}, \code{size}, \code{alpha} and \code{width}.
 \end{playground}
 
-\begin{warningbox}
-If you are using version 2.1.0 or earlier of \ggplot, you will need to create the plots using \gggeom{geom\_bar()} instead of \gggeom{geom\_col()}. The code for the first figure in this section would need to be edited as below---this code also gives the desired plot with later versions of \ggplot.
-
-<<col-plot-warn-01, eval=eval_plots_all>>=
-ggplot(subset(my.col.data, group == "female"),
-       aes(x = treatment, y = measurement)) +
-   geom_bar(stat = "identity")
-@
-
-All other examples making use of \gggeom{geom\_col()}  need to be similarly modified for versions of \ggplot lacking \gggeom{geom\_col()}.
-\end{warningbox}
-
 \index{plots!column plot|)}
 
 \subsection{Tiles}\label{sec:tileplot}
 \index{plots!tile plot|(}
 We can draw square or rectangular tiles with \gggeom{geom\_tile()} producing tile plots or simple heat maps.
-For the special case of heat maps with marginal cluster tress see section \ref{sec:plot:heatmap} on page \pageref{sec:plot:heatmap}.
+For the special case of heat maps with marginal cluster trees see section \ref{sec:plot:heatmap} on page \pageref{sec:plot:heatmap}.
 
 We here generate 100 random draws from the $F$ distribution with degrees of freedom $\nu_1 = 5, \nu_2 = 20$.
 
@@ -587,6 +605,8 @@ randomf.df <- data.frame(z = rf(100, df1 = 5, df2 = 20),
                          x = rep(letters[1:10], 10),
                          y = LETTERS[rep(1:10, rep(10, 10))])
 @
+
+\gggeom{geom\_tile()} requires aesthetics $x$ and $y$, with no defaults, and \code{width} and \code{height} with defaults that make all tiles of equal size filling the plotting area.
 
 <<tile-plot-02>>=
 ggplot(randomf.df, aes(x, y, fill = z)) +
@@ -612,18 +632,26 @@ ggplot(randomf.df, aes(x, y, fill = z)) +
   scale_fill_gradient(low = "grey15", high = "grey85", na.value = "red")
 @
 
-In contrast to \gggeom{geom\_tile()} that draws tiles based on the position of the centre and the \code{height} and \code{width} of the tiles, \gggeom{geom\_rect()} draws rectangular tiles based on the position of the corners, \code{xmin}, \code{xmax}, \code{ymin} and \code{ymax}.
+In contrast to \gggeom{geom\_tile()}, \gggeom{geom\_rect()} draws rectangular tiles based on the position of the corners, mapped to aesthetics \code{xmin}, \code{xmax}, \code{ymin} and \code{ymax}.
 
 \index{plots!tile plot|)}
 
-\subsection{Shape file}
+\subsection{Simple features (sf)}\label{sec:plot:sf}
 
-\ggplot version 3.0.0 or later support the plotting of shape data similarly as in geographic information systems (GIS) through \gggeom{geom\_sf()}. This allows displaying data on maps and for example using different fill values for different regions.
+\ggplot version 3.0.0 or later supports the plotting of shape data similarly as in geographic information systems (GIS) through \gggeom{geom\_sf()} and its companions, \gggeom{geom\_sf\_text()}, \gggeom{geom\_sf\_label()}, and \ggstat{stat\_sf()}. This makes it possible to display data on maps for example using different fill values for different regions. Special \emph{coordinate} \code{coord\_sf()} can be used to select different projections for maps. The \emph{aesthetic} used is called \code{geometry} and contrary to all the other aesthetics we have seen until now, the values to be mapped are of class \code{sfc} containing \emph{simple features} data with multiple components. Manipulation of simple features data is supported by package \pkgname{sf}. This subject exceeds the scope of this book, so a single and very simple example follows.
+
+<<sf_plot-01>>=
+nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+ggplot(nc) +
+  geom_sf(aes(fill = AREA))
+@
 
 \subsection{Text}\label{sec:plot:text}
 \index{plots!text in|(}
 \index{plots!maths in|(}
-We can use \gggeom{geom\_text()} or \gggeom{geom\_label()} to add text labels to observations. For \gggeom{geom\_text()} and \gggeom{geom\_label()}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label positioning the centre of the text at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Values smaller than 0.5 shift the label left or down, and values larger than 0.5, right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, still using units based on the length or height of the text string. In the case of \gggeom{geom\_label()} the text is enclosed in a box, which obeys the \code{fill} \emph{aesthetic} and takes additional parameters (described starting at page \pageref{start:plot:label}) allowing control on the shape and size of the box. However, it does not support rotation with \code{angle}.
+We can use \gggeom{geom\_text()} or \gggeom{geom\_label()} to add text labels to observations. For \gggeom{geom\_text()} and \gggeom{geom\_label()}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label positioning the centre of the text at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Values smaller than 0.5 shift the label left or down, and values larger than 0.5, right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, still using units based on the length or height of the text string. Recent versions of \pkgname{ggplot2} add justification using character constants for alignment: \code{"left"}, \code{"middle"}, \code{"right"}, \code{"bottom"}, \code{"center"} and \code{"top"}, and two special alignments, \code{"inward"} and \code{"outward"} that automatically vary based on the position in the plotting area.
+
+In the case of \gggeom{geom\_label()} the text is enclosed in a box, which obeys the \code{fill} \emph{aesthetic} and takes additional parameters (described starting at page \pageref{start:plot:label}) allowing control on the shape and size of the box. However, it does not support rotation with the \code{angle} aesthetic.
 
 <<text-plot-01>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg,
@@ -649,17 +677,11 @@ ggplot(my.data, aes(x, y, label = label)) +
 @
 
 \begin{playground}
-Modify the examples above to use \gggeom{geom\_label()} instead of \gggeom{geom\_text()} using in addition the \code{fill} aesthetic.
+Modify the example above to use \gggeom{geom\_label()} instead of \gggeom{geom\_text()} using in addition the \code{fill} aesthetic.
 \end{playground}
 
 In the next example we select a different font family, using the same characters in the Roman alphabet.
-We start by checking which fonts families \Rlang recognizes on our system for the PDF output device we use to render the figures in this book.
-
-<<text-plot-03>>=
-names(pdfFonts())
-@
-
-A sans-serif font, either \code{"Helvetica"} or \code{"Arial"} is the default, but we can change the default through parameter \code{family}. Some of the family names are \emph{generic} like \code{serif}, \code{sans} (sans-serif) and \code{mono} (mono-spaced), and others refer to actual font names. Some related fonts (e.g.\ from different designers or foundries) may also use variations of the same name. Base R does not support the use of system fonts in graphics output devices. However, add-on packages allow their use. The simplest to use is package \pkgname{showtext} described in \ref{sec:plot:fonts} on page \pageref{sec:plot:fonts}.
+Base R does not support the use of system fonts in graphics output devices. However, add-on packages allow their use. Of these the simplest to use is package \pkgname{showtext}. The names \code{"sans"} (the default), \code{"serif"} and \code{"mono"} are recognized by all graphics devices on all operating systems. Other fonts like the 35 ``PDF'' fonts are recognised by the \code{pdf()} device and their names can be queried with \code{names(pdfFonts())}.
 
 <<text-plot-04, eval=eval_plots_all>>=
 ggplot(my.data, aes(x, y, label = label)) +
@@ -668,7 +690,7 @@ ggplot(my.data, aes(x, y, label = label)) +
 @
 
 \begin{playground}
-In the examples above the character strings were all on the same length, containing a single character. Redo the plots above with longer character strings of various lengths mapped to the \code{label} \emph{aesthetic}. Do also play with justification of these labels.
+In the examples above the character strings were all of the same length, containing a single character. Redo the plots above with longer character strings of various lengths mapped to the \code{label} \emph{aesthetic}. Do also play with justification of these labels.
 \end{playground}
 
 Plotting expressions (mathematical expressions) involves mapping to the \code{label} aesthetic character strings that can be parsed as expressions, and setting \code{parse = TRUE}. We here build the character strings using \Rfunction{paste()} but, of course, they could have also been entered one by one.
@@ -683,12 +705,13 @@ my.data$label
 <<text-plot-06>>=
 ggplot(my.data, aes(x, y, label = label)) +
   geom_text(hjust = -0.2, parse = TRUE, size = 6) +
-  geom_point()
+  geom_point() +
+  expand_limits(x = 5.2)
 @
 
-Plotting maths and other alphabets using \Rlang expressions is discussed in section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath}.
+Text and labels do not automatically expand the plotting area past there anchoring coordinates. In the example above we need to use \code{expand\_limits()} to ensure that the text is not clipped at the edge of the plotting area. Plotting maths and other alphabets using \Rlang expressions is discussed in section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath}.
 
-In the examples above we plotted text and expressions present in the data frame passed as argument for \code{data}. It is also possible to build suitable labels on-the-fly within \code{aes} when setting the mapping for \code{label}. Here we use \gggeom{geom\_text()} and expressions for the example, but the same two approaches can be use to ``build'' character strings to be used directly without parsing.
+In the examples above we plotted text and expressions present in the data frame passed as argument for \code{data}. It is also possible, and usually preferable, to build suitable labels on-the-fly within \code{aes} when setting the mapping for \code{label}. Here we use \gggeom{geom\_text()} and with strings parsed on-the-fly into expressions but character strings built in this way can also be used without parsing.
 
 <<text-plot-07, eval=eval_plots_all>>=
 my.data <-
@@ -702,7 +725,7 @@ ggplot(my.data, aes(x,
 @
 
 \begin{playground}
-What are the advantages and disadvantages of each approach in relation to easy with which a script in which several figures using the same ``labels'' are produced, in relation to consistency across figures? In contrast, which approach would you prefer if different figures in the same script used different variations of labels constructed from the same variables in the data?
+What are the advantages and disadvantages of each approach in relation to making several figures using the same ``labels'' in relation to consistency across figures? Which approach would you prefer if different figures in the same script used different variations of labels derived from the same variables in the data?
 \end{playground}
 
 As \gggeom{geom\_label()} obeys the same parameters as \gggeom{geom\_text()} except for \code{angle} we describe below only the additional parameters compared to \gggeom{geom\_text()}.\label{start:plot:label}
@@ -710,29 +733,31 @@ As \gggeom{geom\_label()} obeys the same parameters as \gggeom{geom\_text()} exc
 <<label-plot-01>>=
 my.data <-
   data.frame(x = 1:5, y = rep(2, 5),
-             label = letters[1:5])
+             label = c("one", "two", "three", "four", "five"))
 ggplot(my.data, aes(x, y, label = label)) +
   geom_label(hjust = -0.2) +
-  geom_point()
+  geom_point() +
+  expand_limits(x = 5.6)
 @
 
 We may want to alter the default width of the border line or the color used to \code{fill} the rectangle, or to change the ``roundness'' of the corners. To suppress the border line use \code{label.size = 0}. Corner roundness is controlled by parameter \code{label.r} and the size of the margin around the text with \code{label.padding}.
 
-<<label-plot-02, eval=eval_plots_all>>=
+<<label-plot-02>>=
 ggplot(my.data, aes(x, y, label = label)) +
   geom_label(hjust = -0.2, parse = TRUE, size = 6,
              label.size = 0L,
              label.r = unit(0, "lines"),
              label.padding = unit(0.15, "lines"),
              fill = "yellow", alpha = 0.5) +
-  geom_point()
+  geom_point() +
+  expand_limits(x = 5.6)
 @
 
 \begin{playground}
 Play with the arguments to the different parameters and with the \emph{aesthetics} to get an idea of what can be done with them. For example, use thicker border lines and increase the padding so that a visually well balanced margin is retained. You may also try mapping the \code{fill} and \code{color} \emph{aesthetics} to factors in the data.
 \end{playground}
 
-Repulsive versions of \gggeom{geom\_text} and \gggeom{geom\_label}, \gggeom{geom\_text\_repel} and \gggeom{geom\_label\_repel},  are available in package \pkgname{ggrepel}. These \emph{geometries} avoid overlaps by automatically repositioning the text or labels. Please, read the package documentation for details of how to control the repulsion strength and direction, and the properties of the segments linking the labels to the position of their data coordinates.
+If the parameter \code{check\_overlap} of \gggeom{geom\_text()} is set to \code{TRUE}, text overlap will be avoided by suppressing the text that would otherwise overlap other text.  \emph{Repulsive} versions of \gggeom{geom\_text} and \gggeom{geom\_label}, \gggeom{geom\_text\_repel} and \gggeom{geom\_label\_repel},  are available in package \pkgname{ggrepel}. These \emph{geometries} avoid overlaps by automatically repositioning the text or labels. Please, read the package documentation for details of how to control the repulsion strength and direction, and the properties of the segments linking the labels to the position of their data coordinates. Nearly all aesthetics supported by \code{geom\_text()} and \code{geom\_label()} are supported by the repulsive versions. However, given that a segment connects the label or text to its anchor point, several properties of these segments can also be controlled with aesthetics or arguments.
 
 <<repel-plot-01>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg,
@@ -742,12 +767,16 @@ ggplot(data = mtcars, aes(x = disp, y = mpg,
   scale_size() +
   geom_point(alpha = 1/3) +
   geom_text_repel(colour = "black", size = 3,
-                  min.segment.length = 0.1, point.padding = 0.2)
+                  min.segment.length = 0.2, point.padding = 0.1)
 @
 
-The plotting of tables by mapping a list of data frames to the \code{label} \emph{aesthetic} is possible with \gggeom{geom\_table} from package \pkgname{ggpmisc}. Positioning, justification and angle work as for \gggeom{geom\_text} and are applied to the whole table. Only \code{tibble} objects from \pkgname{tibble} can contain as variables lists of data frames, so this \emph{geometry} requires the use of \code{tibble} objects for data. The table is created as a 'grid' \code{grob} and added as usual to the \code{ggplot} object.
+\section{Plot insets}\label{sec:plot:insets}
 
-We first generate a \code{tibble} of summaries from the data and embed it in a \code{tibble}. We use the functions from the tidyverse described in Chapter \ref{chap:R:data}.
+The support for insets in \pkgname{ggplot2} is confined to \code{annotation\_custom()} which was designed to be used for static annotations expected to be the same in each panel of a plot (The use of annotations is described in section \ref{sec:plot:annotate}). Package \pkgname{ggpmisc} provides geoms that mimic \code{geom\_text()} in relation to the \emph{aesthetics} used, but that similarly to \code{geom\_sf()} expect that the column in \code{data} mapped to the \code{label} aesthetics are lists of objects containing multiple pieces of information, rather than atomic vectors. Similarly to \code{geom\_sf()} these geoms do not inherit the plot's default mappings to aesthetics. Three geometries are currently available: \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()}.
+
+The plotting of tables by mapping a list of data frames to the \code{label} \emph{aesthetic} is done with \gggeom{geom\_table}. Positioning, justification and angle work as for \gggeom{geom\_text} and are applied to the whole table. Only \code{tibble} objects (see documentation of package \pkgname{tibble}) can contain as variables lists of data frames, so this \emph{geometry} requires the use of \code{tibble} objects pass the data. The table(s) are created as 'grid' \code{grob} objects, collected in a tree and added to the \code{ggplot} object as a new layer.
+
+We first generate a \code{tibble} containing summaries from the data, formatted as character strings, wrap this tibble in a list and store this list as column in another \code{tibble}. To accomplish this we use functions from the tidyverse described in Chapter \ref{chap:R:data}.
 
 <<table-plot-01>>=
 mtcars %>%
@@ -755,7 +784,7 @@ mtcars %>%
   summarize("mean wt" = format(mean(wt), digits = 2),
             "mean disp" = format(mean(disp), digits = 0),
             "mean mpg" = format(mean(mpg), digits = 0)) -> my.table
-table.tb <- tibble(x = 500, y = 35, tab = list(my.table))
+table.tb <- tibble(x = 500, y = 35, table.inset = list(my.table))
 @
 
 <<table-plot-02>>=
@@ -765,52 +794,125 @@ ggplot(data = mtcars, aes(x = disp, y = mpg,
                           label = cyl)) +
   scale_size() +
   geom_point() +
-  geom_text(colour = "black", size = 3) +
   geom_table(data = table.tb,
-             aes(x = x, y = y, label = tab),
+             aes(x = x, y = y, label = table.inset),
              colour = "black", size = 3, hjust = 1, vjust = 1)
 @
 
-The \code{color} and \code{size} aesthetics control the text within each table as a whole.
-It is also possible to rotate the table using \code{angle}. As with text labels, justification is interpreted in relation to table-text orientation. We set the \code{x = 0} in \code{data.tb} and then use \code{vjust = 1} to position the top of the
-table at this coordinate value.
+The \code{color} and \code{size} aesthetics control the text in the table(s) as a whole.
+It is also possible to rotate the table(s) using \code{angle}. As with text labels, justification is interpreted in relation to table-text orientation. We set the \code{y = 0} in \code{data.tb} and then use \code{vjust = 1} to position the top of the table at this coordinate value.
 
 <<table-plot-03, eval=eval_plots_all>>=
-ggplot(data = mtcars, aes(x = disp, y = mpg,
-                          colour = factor(cyl),
-                          size = wt,
-                          label = cyl)) +
-  scale_size() +
+ggplot(data = mtcars, aes(x = disp, y = mpg, colour = factor(cyl))) +
   geom_point() +
-  geom_text(colour = "black", size = 3) +
   geom_table(data = table.tb,
-             aes(x = x, y = y, label = tab),
-             colour = "black", size = 3,
+             aes(x = x, y = y, label = table.inset),
+             colour = "blue", size = 3,
              hjust = 1, vjust = 0, angle = 90)
 @
 
-Parsed text, using plotmath syntax is supported in the table, with fallback to plain text in case of parsing errors, on a cell by cell basis.
-We end this section with a simple example, which even if not very useful demonstrates that \gggeom{geom\_table()} behaves like a ``normal'' ggplot geometry and that a table can be the only
-data layer in a ggplot if desired. The addition of multiple tables with a single call to \gggeom{geom\_table()} by passing a \code{tibble} with multiple rows as argument is also possible.
+Parsed text, using R's \emph{plotmath} syntax is supported in the table, with fallback to plain text in case of parsing errors, on a cell by cell basis. We end this section with a simple example, which even if not very useful demonstrates that \gggeom{geom\_table()} behaves like a ``normal'' ggplot \emph{geometry} and that a table can be the only layer in a ggplot if desired. The addition of multiple tables with a single call to \gggeom{geom\_table()} by passing a \code{tibble} with multiple rows as argument for \code{data} is also possible.
 
 <<table-plot-04, eval=eval_plots_all>>=
 tb.pm <- tibble('x^0' = 1,
                 'x^1' = 1:5,
                 'x^2' = (1:5)^2,
                 'x^3' = (1:5)^3)
-data.tb <- tibble(x = 1, y = 1, tb = list(tb.pm))
-ggplot(data.tb, aes(x, y, label = tb)) +
+data.tb <- tibble(x = 1, y = 1, table.inset = list(tb.pm))
+ggplot(data.tb, aes(x, y, label = table.inset)) +
   geom_table(size = 7, parse = TRUE) +
   theme_void()
 @
 
 \begin{explainbox}
-  This \emph{geometry} uses internally functions from package \pkgname{gridExtra} to build a graphical object for the table. The use of table themes was not yet supported by this geometry at the time of writing.
+  The \emph{geometry} \gggeom{geom\_table()} uses internally functions from package \pkgname{gridExtra} to build a graphical object for the table. The use of table themes was not yet supported by this geometry at the time of writing.
 \end{explainbox}
 
+Geometry \gggeom{geom\_plot()} works very similarly to \code{geom\_table()} but instead of expecting a list data frames or tibbles to be mapped to the \code{label} aesthetics, it expects a list of ggplot objects. This allows adding as inset to a ggplot another ggplot. In the times when plots were hand drafted with India ink on paper, the use of inset plots was more frequent than nowadays. Inset plots can be very useful for zooming-in into parts of a main plot were observations are crowded and for displaying summaries based on the data shown in the main plot. The inset plots are nested in viewports which control the dimensions of the inset plot, and aesthetics \code{vp.height} and \code{vp.width} control their sizes---with defaults of 1/3 of the height and width of the plotting area of the main plot. Themes can be applied separately to the main and inset plots.
+
+In the first example of inset plots we include one of the summaries shown above as an inset table. We first create a tibble containing the plot to be inset.
+
+<<plot-plot-01>>=
+mtcars %>%
+  group_by(cyl) %>%
+  summarize(mean.mpg = mean(mpg)) %>%
+  ggplot(aes(factor(cyl), mean.mpg, fill = factor(cyl))) +
+  scale_fill_discrete(guide = FALSE) +
+  labs(y = NULL) +
+    geom_col() +
+    theme_bw(8) -> my.plot
+plot.tb <- tibble(x = 500, y = 35, plot.inset = list(my.plot))
+@
+
+<<plot-plot-02>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          colour = factor(cyl))) +
+  geom_point() +
+  geom_plot(data = plot.tb,
+            aes(x = x, y = y, label = plot.inset),
+            vp.width = 1/2,
+            hjust = "inward", vjust = "inward")
+@
+
+In the second example of inset plots we 1) use manually set limits to the coordinates to zoom into a region of the main plot, 2) adjust the \emph{theme} of the inset, 3) remove axis labels as they are the same as in the main plot, 4) add this zoomed version of the same plot as an inset and 5) highlight the zoomed-in region in the main plot. This fairly complex example shows how a new extension to \pkgname{ggplot2} can integrate well into the grammar of graphics paradigm. In this example, only to show an alternative approach, instead of colleting all the data into a data frame, we map constant values directly to the various aesthetics.
+
+<<plot-plot-03>>=
+p.main <- ggplot(data = mtcars, aes(x = disp, y = mpg, colour = factor(cyl))) +
+  geom_point()
+p.inset <- p.main +
+  coord_cartesian(xlim = c(270, 330), ylim = c(14, 19)) +
+  labs(x = NULL, y = NULL, subtitle = "Detail of highlighted region") +
+  scale_colour_discrete(guide = FALSE) +
+  theme_bw(8) + theme(aspect.ratio = 1)
+p.main +
+  geom_plot(x = 480, y = 34, label = list(p.inset), vp.height = 1/2,
+            hjust = "inward", vjust = "inward") +
+  annotate(geom = "rect", fill = NA, colour = "black",
+           xmin = 270, xmax = 330, ymin = 14, ymax = 19,
+           linetype = "dotted")
+@
+
+Geometry \gggeom{geom\_grob()} works very similarly to \code{geom\_table()} and \code{geom\_plot()} but expects a list of \pkgname{grid} graphical objects, called \code{grob} for short. This adds generality at the expense of very frequently having to separately create the grobs either from scratch using \pkgname{grid} or by converting other types of objects into grobs. This geometry is as flexible as \gggeom{annotation\_custom()} with respect to the objects to add to the plot, but behaves as a true ggplot \emph{geometry}. We will show a single example which adds two bitmaps to the plot. The bitmaps are read from PNG files, converted into grobs and added to the plot as a new layer. These bitmaps have a transparent background and consequently the grid of the plotting area shows through.
+
+<<plot-grob-01>>=
+file1.name <-
+  system.file("extdata", "Isoquercitin.png",
+              package = "ggpmisc", mustWork = TRUE)
+Isoquercitin <- magick::image_read(file1.name)
+
+file2.name <-
+  system.file("extdata", "Robinin.png",
+              package = "ggpmisc", mustWork = TRUE)
+Robinin <- magick::image_read(file2.name)
+
+grob.tb <- tibble(x = c(0, 100), y = c(10, 20), height = 1/4, width = c(1/2),
+                  grobs = list(grid::rasterGrob(image = Isoquercitin),
+                               grid::rasterGrob(image = Robinin)))
+
+ggplot() +
+geom_grob(data = grob.tb,
+          aes(x = x, y = y, label = grobs,
+              vp.height = height, vp.width = width),
+          hjust = "inward", vjust = "inward")
+@
+
 \begin{warningbox}
-You\index{plots!fonts} should be aware that \Rlang and \ggplot support the use of UNICODE\index{UNICODE}, such as UTF8\index{UTF8} character encodings in strings. If your editor or IDE supports their use, then you can type Greek letters and simple maths symbols directly, and they may show correctly in labels if a suitable font is loaded and an extended encoding like UTF8 in use by the operating system. Even if UTF8 is in use, text is not fully portable unless the same font is available\index{portability}, as even if the character positions are standardized for many languages, most UNICODE fonts support at most a small number of languages. In principle one can use this mechanism to have labels both using other alphabets and languages like Chinese with their numerous symbols mixed in the same figure. Furthermore, the support for fonts and consequently character sets in \Rlang is output-device dependent. The font encoding used by \Rlang by default depends on the default locale settings of the operating system, which can also lead to garbage printed to the console or wrong characters being plotted running the same code on a different computer from the one where a script was edited. Not all is lost, though, as \Rlang can be coerced to use system fonts and Google fonts with functions provided by packages \pkgname{showtext} and \pkgname{extrafont}. Encoding-related problems, specially in MS-Windows, are common.
+You\index{plots!fonts} should be aware that \Rlang and \ggplot support the use of UNICODE\index{UNICODE}, such as UTF8\index{UTF8} character encodings in strings. If your editor or IDE supports their use, then you can type Greek letters and simple maths symbols directly, and they \emph{may} show correctly in labels if a suitable font is loaded and an extended encoding like UTF8 in use by the operating system. Even if UTF8 is in use, text is not fully portable unless the same font is available\index{portability}, as even if the character positions are standardized for many languages, most UNICODE fonts support at most a small number of languages. In principle one can use this mechanism to have labels both using other alphabets and languages like Chinese with their numerous symbols mixed in the same figure. Furthermore, the support for fonts and consequently character sets in \Rlang is output-device dependent. The font encoding used by \Rlang by default depends on the default locale settings of the operating system, which can also lead to garbage printed to the console or wrong characters being plotted running the same code on a different computer from the one where a script was edited. Not all is lost, though, as \Rlang can be coerced to use system fonts and Google fonts with functions provided by packages \pkgname{showtext} and \pkgname{extrafont}. Encoding-related problems, specially in MS-Windows, are common.
 \end{warningbox}
+
+\begin{explainbox}
+Grid graphics provides the low level functions that both \pkgname{ggplot2} and \pkgname{lattice} use under the hood, support different types of units for expressing the coordinates of positions within the plotting area. All examples outside this text box use \code{"native"} data coordinates, however coordinates can be also given in physical units like \code{"mm"}. More useful when working with scalable plots is to use "npc" normalized parent coordinates, which are expressed as numbers in the range 0 to 1, relative to the dimensions of the sides of the current viewport, with origin at the lower left corner.
+
+Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} data coordinates, and trickery seems to be needed to get around this limitation. A rather general solution is provided by package \pkgname{ggpmisc} through \emph{aesthetics} \code{npcx} and \code{npcy} and geometries that support them. At the time of writing, \gggeom{geom\_text\_npc()}, \gggeom{geom\_label\_npc()}, \gggeom{geom\_table\_npc()}, \gggeom{geom\_plot\_npc()} and \gggeom{geom\_grob\_npc()}. These \emph{geometries} are useful for annotating plots and adding insets at positions relative to the plotting area that remain always consistent across different plots, or across panels when using facets with free axis limits. Being geometries they provide great freedom in the elements added to different panels and their positions.
+
+<<plot-npc-eb-01, eval=FALSE>>=
+ggplot(data = mtcars, aes(x = disp, y = mpg,
+                          colour = factor(cyl))) +
+  geom_point() +
+  annotate(geom = "text_npc",
+           npcx = 0.5, npcy = 0.9, label = "a label")
+@
+\end{explainbox}
 
 \index{plots!text in|)}
 \index{plots!maths in|)}
@@ -1275,16 +1377,11 @@ ggplot(my.data, aes(group, y, fill = group)) +
 
 As with other \emph{geometries} their appearance obeys both the usual \emph{aesthetics} such as colour, and others specific to these type of visual representation.
 
-Other types of displays related to violin plots are beeswarm plots and sina plots, using categorical scatter plots can be produced with \emph{geometries} defined in packages \pkgname{ggbeeswarm} and \pkgname{ggforce}, respectively. Minimal examples are shown here. See the documentation of the packages for details about the many options in their use.
+Other types of displays related to violin plots are beeswarm plots and sina plots, using categorical scatter plots can be produced with \emph{geometries} defined in packages \pkgname{ggbeeswarm} and \pkgname{ggforce}, respectively. A minimal example is shown here. See the documentation of the packages for details about the many options in their use.
 
 <<ggbeeswarm-plot-01>>=
 ggplot(my.data, aes(group, y)) +
   geom_quasirandom()
-@
-
-<<sina-plot-01>>=
-ggplot(my.data, aes(group, y)) +
-  geom_sina()
 @
 
 \index{plots!violin plot|)}
@@ -1425,19 +1522,20 @@ Scales map data onto \emph{aesthetics}. There are different types of scales depe
 
 Discrete scales work in a similar way. We can use \ggscale{scale\_colour\_identity()} and have in our data a variable with values that are valid colour names like "red" or "blue". However we can also map the \code{colour} aesthetic to a factor with levels like "control", and "treatment", an these levels will be mapped to colours from a palette or we can use \ggscale{scale\_colour\_manual()} to assign whatever colour we want to each level to be mapped. The same is true for other discrete manual scales like those for  \code{shape} and \code{linetype}. Remember that for example for colour, and `numbers' there are both discrete and continuous scales available. Mapping colour or fill to \code{NA} makes the mapped values invisible. The reverse, mapping \code{NA} values in the data to a specific colour or fill is also possible.
 
+%
+%
+%\sloppy
+%Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot (2.0.0 and later) re-export several functions from package \code{scales}. Some simple examples follow.
 
-
-\sloppy
-Advanced scale manipulation requires package \code{scales} to be loaded, although \ggplot (2.0.0 and later) re-export several functions from package \code{scales}. Some simple examples follow.
-
-\begin{infobox}
-\paragraph*{Convenience functions: Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
+%\begin{infobox}
+\subsection{Convenience functions: Axis- and key labels, titles, subtitles and captions}\label{sec:plot:titles}\label{sec:plot:labs}
 \index{plots!labels|(}
 \index{plots!title|(}
 \index{plots!subtitle|(}
 \index{plots!caption|(}
-Axis and key labels are given by the \code{name} of scales (see section \ref{sec:plot:scales}). Titles, subtitles and captions are added with function \Rfunction{ggtitle()} (see section \ref{sec:plot:title}).
-Function \Rfunction{labs()} is a convenience function that saves typing when we use the default scales except for their names---the default name of a scale is the name of the variable or expression mapped to the corresponding \emph{aesthetic}. It accepts arguments named according to the names of the \emph{aesthetics}. In addition it accepts named arguments \code{title}, \code{subtitle} and \code{caption}. Al these can be character strings or \Rlang expressions (see section \ref{sec:plot:plotmath}).
+We start by describing convenience functions that are very frequently used as they help in keeping the code concise. These can be used both with continuous and discrete scales.
+Axis and key labels are given by the \code{name} of scales (see section \ref{sec:plot:scales}). Titles and subtitle can be added with function \Rfunction{ggtitle()} (see section \ref{sec:plot:title}).
+Function \Rfunction{labs()} is a convenience function usueful when we use the default scales but we want to manually set axis labels or key titles---the default name of a scale is the name of the variable or expression mapped to the corresponding \emph{aesthetic}. \Rfunction{labs()} accepts arguments named according to the names of the \emph{aesthetics}. In addition it accepts named arguments \code{title}, \code{subtitle}, \code{caption} and \code{tag}. All these can be character strings or \Rlang expressions (see section \ref{sec:plot:plotmath}).
 
 <<axis-labels-01>>=
 ggplot(data = Orange,
@@ -1448,12 +1546,13 @@ ggplot(data = Orange,
   labs(title = "Growth of orange trees",
        subtitle = "Starting from 1968-12-31",
        caption = "see Draper, N. R. and Smith, H. (1998)",
+       tag = "A",
        x = "Time (d)",
-       y = "Stem circumference (mm)",
+       y = "Circumference (mm)",
        color = "Tree\nnumber")
 @
 
-There are in addition to \code{labs()} convenience functions for setting the axis labels, \Rfunction{xlab()} and \Rfunction{ylab()}. The code below can replace the call to \code{labs()} above.
+There are in addition to \code{labs()} convenience functions for setting the axis labels, \Rfunction{xlab()} and \Rfunction{ylab()}. The code below can replace in part the call to \code{labs()} above.
 
 <<axis-labels-02, eval=eval_plots_all, echo=6:10>>=
 ggplot(data = Orange,
@@ -1462,51 +1561,29 @@ ggplot(data = Orange,
   geom_point() +
   expand_limits(y = 0) +
   xlab("Time (d)") +
-  ylab("Stem circumference (mm)") +
+  ylab("Circumference (mm)") +
   ggtitle("Growth of orange trees",
-          subtitle = "Starting from 1968-12-31",
-          caption = "see Draper, N. R. and Smith, H. (1998)")
+          subtitle = "Starting from 1968-12-31")
 @
 
 \begin{playground}
 Make an empty plot (\code{ggplot()}) and add to it as title an expression producing $y = b_0 + b_1 x + b_2 x^2$. (Hint: have a look at the examples for the use of expressions in \code{plotmath} demo in \Rlang by typing \code{demo(plotmath)} at the \Rlang console.
 \end{playground}
 
-Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them.
-
-<<axis-labels-04, eval=eval_plots_all>>=
-p <-
-    ggplot(data = mtcars,
-           aes(x = disp, y = hp, colour = factor(cyl),
-               shape = factor(cyl))) +
-      geom_point() +
-      labs(x = "Engine displacement)",
-           y = "Gross horsepower",
-           colour = "Number of\ncylinders",
-           shape = "Number of\ncylinders")
-p
-@
-
-<<axis-labels-05, eval=eval_plots_all>>=
-update_labels(p, list(x = "Cilindrada",
-                      y = "Potencia bruta (caballos de fuerza)",
-                      colour = "no. de\ncilindros",
-                      shape = "no. de\ncilindros"))
-@
-
-\begin{warningbox}
-Check!!
-When setting or updating labels using either \Rfunction{labs()} or \Rfunction{update\_labels()} be aware that even though \code{color} and \code{colour} are synonyms for the same \emph{aesthetics}, the `name' used in the call to \Rfunction{aes()} must match the  `name' used when setting or updating the labels.
-\end{warningbox}
-
-The labels used in keys and axis tick-labels for factor levels can be changed through the different \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
-
+%\begin{warningbox}
+%Check!!
+%When setting or updating labels using either \Rfunction{labs()} or \Rfunction{update\_labels()} be aware that even though \code{color} and \code{colour} are synonyms for the same \emph{aesthetics}, the `name' used in the call to \Rfunction{aes()} must match the  `name' used when setting or updating the labels.
+%\end{warningbox}
+%
+%The labels used in keys and axis tick-labels for factor levels can be changed through the different \emph{scales} as described in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}.
+%
 \index{plots!caption|)}
 \index{plots!subtitle|)}
 \index{plots!title|)}
 \index{plots!labels|)}
-\end{infobox}
 
+\subsection{Convenience functions: Scale limits} To\index{plots!scales!limits} change the limits of any scale we can use \Rfunction{lims()}, using the name of the aesthetic as argument name and a suitable vector of values as argument. Most frequently we need to change the limits only of the scales for $x$ and/or $y$ aesthetics. Functions \Rfunction{ylim()} and \Rfunction{xlim()} makes this easy. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} is identical except for the scale it affects.
+For continuous scales we can set both limits using \Rfunction{xlim()} or \Rfunction{ylim()} which in this case accept two numeric values setting the low and high limit respectively. The order of the two values determines the direction of the scale. As elsewhere in \ggplot passing \code{NA} as argument for a limit keeps the existing limit.
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_medium)
@@ -1522,48 +1599,20 @@ fake2.data <-
              z = rnorm(40, mean = 12, sd = 6))
 @
 
-\subsection{Continuous scales}\label{sec:plot:scales:continuous}
-
-\subsubsection{Limits}
-
-\begin{infobox}
-\paragraph*{Convenience functions: Scale limits} To\index{plots!scales!continuous!limits} change the limits of the $y$-scale, \Rfunction{ylim()} is a convenience function used for modification of the \code{lims} (limits) of the scale used by the $y$ aesthetic. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} can be used equivalently for the $x$ scale. Setting hard limits in \emph{scales} excludes all observations outside these boundaries not only from appearing on the plotting area, but also from any calculations done by \emph{statisitcs} (See section \ref{sec:plot:coord:limits} on page \pageref{sec:plot:coord:limits} on the use of limits to \emph{coordinates} to limit only the boundaries of the plotting area without excluding observations from the input to \emph{statistics}).
-
-We can set both limits, minimum and maximum using \Rfunction{xlim()} or \Rfunction{ylim()} which accept two numeric values setting the high and low limit respectively. As elsewhere in \ggplot passing \code{NA} as argument for a limit keeps the existing limit.
-
 <<scales-10>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() + ylim(0, 100)
 @
 
-We can use \Rfunction{expand\_limits()} to expand the limits of a scale, setting a default minimum range, that will grow when needed to accommodate all observations in the data set. Of course here \code{x} and \code{y} refer to the \emph{aesthetics} and not to names of variables in \code{data}. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each. In the next example we expand the limits to include the origin.
+\subsection{Continuous scales}\label{sec:plot:scales:continuous}
 
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
-@
-\end{infobox}
+We start by listing the most frequently used arguments to the continuous scale functions: \code{name}, \code{breaks}, \code{minor\_breaks}, \code{labels}, \code{limits}, \code{expand}, \code{na.value}, \code{trans}, \code{guide}, and \code{position}. The value of \code{name} is used for axis labels or key title, it defaults to the mapped variable or expression. The arguments to \code{breaks} and \code{minor\_breaks} override the default locations of major and minor ticks and grid lines, setting them to \code{NULL} suppresses the ticks. By default the tick labels are generated from the value of \code{breaks} but an argument to \code{labels} of the same length as \code{breaks} replaces these defaults. The values of \code{limits} determine both the range of values in the data included and the plotting area as described above---by default the off-range observations are replaced by \code{NA} but it is also possible to ``squish'' these observations towards the edge of the plotting area. The argument to \code{expand} determines the size of the margins or padding added to the area delimited by \code{lims} to set the limits of the plotting area. The value passed to \code{na.value} is used as replacement for \code{NA} valued observations---most useful for \code{color} and \code{fill} aesthetics. The transformation object passed as argument to \code{trans} determines the transformation used---the transformation affects the rendering, but breaks and tick label remain expressed in the original data units. The argument to \code{guide} determines the type of key or removes the default key. Finally, \code{position} controls in the axis is located on the \code{"right"}, \code{"left"}, \code{"top"} or \code{"bottom"} of the plot. Depending on the scale in question not all these parameters are used.
 
-In addition to with these convenience functions for \code{x} and \code{y} aesthetics, limits can be set to constant values and/or the automatic expansion set through a call to most \emph{scale} functions.
+\subsubsection{Limits}
 
-We here set the upper limit to be expanded by adding a value of 10\% of the range of the scale.
+Limits are relevant to all types of scales, but we here exemplify them using the $x$ and $y$ aesthetics.
 
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() +
-  scale_y_continuous(expand = expand_scale(add = c(0, 0.1)))
-@
-
-Here we instead use a multiplier to a similar effect as above.
-
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() +
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1)))
-@
-
-Here we set hard limits, which will exclude observations from both the plot and from any calculations of summaries or smoothers.
-
-<<>>=
-ggplot(fake2.data, aes(z, y)) + geom_point() +
-  scale_y_continuous(limits = c(0, 50))
-@
+In addition to the \code{lims()}, \code{xlim()} and \code{ylim()} convenience functions, limits can be set to constant values.
+In the next example we set hard limits, which will exclude observations from both the plot and from any calculations of summaries or smoothers.
 
 <<>>=
 ggplot(fake2.data, aes(z, y)) + geom_point() +
@@ -1577,8 +1626,35 @@ ggplot(fake2.data, aes(z, y)) + geom_point() +
   scale_y_continuous(limits = c(50, NA))
 @
 
-In the case of scales, we cannot reverse their direction through the use of limits. We need instead to use a transformation as described in the next section.
+\begin{warningbox}
+  In the example above we demonstrate on purpose how some observations were removed. In general setting hard limits should be avoided, even though a warning is issued, as it is easy to unwillingly subset the data being plotted.
+\end{warningbox}
 
+Function \Rfunction{expand\_limits()} makes it possible to safely expand the dynamically computed default limits of a scale but does without restrict them---the plot will grow when needed to accommodate. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each, matching how the limits of the $x$ and $y$ continuous scales are defined. In the next example we expand the limits to include the origin.
+
+<<>>=
+ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
+@
+
+We here set the upper limit of the plotting area to be expanded by adding padding to the top and removing the padding from the bottom of the plotting area.
+<<>>=
+ggplot(fake2.data,
+  aes(fill = group, colour = group, x = y)) +
+  stat_density(alpha = 0.3) +
+  scale_y_continuous(expand = expand_scale(add = c(0, 0.02)))
+@
+
+Here we instead use a multiplier to a similar effect as above.
+<<>>=
+ggplot(fake2.data,
+  aes(fill = group, colour = group, x = y)) +
+  stat_density(alpha = 0.3) +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1)))
+@
+
+In the case of scales, we cannot reverse their direction through the setting of limits. We need instead to use a transformation as described in the next section.
+
+%%% to be moved
 We can also use \code{limits} with discrete scales, listing all or some of the levels of a factor that are to be included in the scale. This works even if the levels are defined in the factor but not present in a given data set, such as after subsetting.
 
 \begin{playground}
@@ -1944,7 +2020,7 @@ ggplot(fake2.data, aes(z, y)) + geom_point() +
 
 \section{Adding annotations}
 \index{plots!annotations}
-Annotations use the data coordinates of the plot, but do not `inherit' data or aesthetics from the \Rclass{ggplot} object. They are added to a ggplot with \Rfunction{annotate()}. Annotations frequently make use \code{"text"} or \code{"label"} \emph{geometries} with character strings as data, possibly to be parsed as expressions. However, other \emph{geometries} can also be very useful. We start with a simple example with text.
+Annotations use the data coordinates of the plot, but do not `inherit' the default data or mapped aesthetics from the enclosing \Rclass{ggplot} object. They are added to a ggplot with \Rfunction{annotate()}. Annotations frequently make use \code{"text"} or \code{"label"} \emph{geometries} with character strings as data, possibly to be parsed as expressions. However, other \emph{geometries} can also be very useful. We show a simple example using \code{"text"}.
 
 <<annotate-01>>=
 ggplot(fake2.data, aes(z, y)) +
@@ -1960,24 +2036,21 @@ ggplot(fake2.data, aes(z, y)) +
 Play with the values of the arguments to \Rfunction{annotate()} to vary the position, size, color, font family, font face, rotation angle and justification of the annotation.
 \end{playground}
 
-We can add lines to mark the origin more precisely and effectively. With \ggplot 2.2.1 we cannot use \Rfunction{annotate()} with \code{geom = "vline"} or \code{geom = "hline"}, but we can achieve the same effect by directly adding layers with the \emph{geometries}, \gggeom{geom\_vline()} and/or  \gggeom{geom\_hline()}, to the plot.
+\index{plots!insets as annotations|(}
 
-<<annotate-02>>=
-ggplot(fake2.data, aes(z, y)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = "blue") +
-  geom_vline(xintercept = 0, color = "blue")
+It is relatively common to use inset tables, plots, bitmaps or vector plots as annotations. As \Rfunction{annotation\_custom()} accepts a Grob (\pkgname{grid} graphical object) as argument, it can be used to add any graphical object (\code{grob}) to a ggplot. To convert a ggplot object into a Grob we use \Rfunction{ggplotGrob()}. In this example the inset is a zoomed in window into the main plot.
+
+<<inset-01>>=
+p +
+  annotation_custom(ggplotGrob(p + coord_cartesian(xlim = c(12.5, 17.5),
+                                                   ylim = c(3.17, 4.17))),
+                    xmin = 25.5, xmax = 34.5, ymin = 2.5, ymax = 5.5)
 @
 
-\begin{playground}
-Play with the values of the arguments to  \Rfunction{annotate} to vary the position and attributes of the lines. The vertical and horizontal line geometries have the same properties as other lines: linetype, color, size, etc.
-\end{playground}
+This approach has the limitation that if used together with faceting, the inset will be the same for each main panel. See section \ref{sec:plot:insets} on page \pageref{sec:plot:insets} for geometries that can be used to add insets.
+\index{plots!insets as annotations|)}
 
-\begin{playground}
-Modify the examples above to use the \code{line} \emph{geometry} for the annotations. Explore the help page for \gggeom{geom\_line()} and add arrows as annotations to the plot.
-\end{playground}
-
-In this third example, in addition to adding expressions as annotations, we also pass expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data, but using the same coordinates and units as for plotting the data.
+In the next example, in addition to adding expressions as annotations, we also pass expressions as tick labels through the scale. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data, but using the same coordinates and units as for plotting the data.
 
 <<annotate-03>>=
 ggplot(data.frame(x = c(0, 2 * pi)), aes(x = x)) +
@@ -2003,41 +2076,14 @@ ggplot(data.frame(x = c(0, 2 * pi)), aes(x = x)) +
 Modify the plot above to show the cosine instead of the sine function, replacing \code{sin} with \code{cos}. This is easy, but the catch is that you will need to relocate the annotations.
 \end{playground}
 
-\section{Coordinates and circular plots}
+\begin{infobox}
+We cannot use \Rfunction{annotate()} with \code{geom = "vline"} or \code{geom = "hline"} as we can use \code{geom = "line"} or \code{geom = "segment"}. Instead \gggeom{geom\_vline()} and/or  \gggeom{geom\_hline()} can be used directly passing constant arguments to them. See section \ref{sec:plot:vhline} on page \pageref{sec:plot:vhline}.
+\end{infobox}
+
+\section{Coordinates and circular plots}\label{sec:plot:circular}
 \index{plots!circular|(}
 
 In this section I include pie charts and wind-rose plots. Here we add a new "word" to the grammar of graphics, \textit{coordinates}, such as \ggcoordinate{coord\_polar()} in the next examples\index{coordinates!polar}\index{plots!coordinates!polar}. The default coordinate system for $x$ and $y$ \textit{aesthetics} is cartesian.
-
-\subsection{Coordinate limits}\label{sec:plot:coord:limits}
-\index{plots!coordinates!cartesian}
-\index{plots!coordinates!setting limits}
-
-The limits of set using \emph{scales}, such as \code{scale\_x\_continuous()} or \code{scale\_y\_continuous()}, and the convenience functions \code{xlim()} and \code{ylim()}, set boundaries to the data used by both \emph{geometries} and \emph{statistics} (See section \ref{sec:plot:scales:limits} on page \pageref{sec:plot:scales:limits}). When plotting individual observations this does not come as a surprise, but for \emph{statistics} it frequently does when we have only layers based on computed summaries in a given plot. For example plots using only \code{stat\_summary()} or \code{geom\_smooth()} can be easily and seriously distorted when setting limits manually excludes from computations individual observations that are not plotted on their own.
-
-The limits in \emph{coordinates} work differently, they do not set boundaries to the data included. Instead, these limits only affect the plotting area. A simple example demonstrates this.
-
-<<>>=
-set.seed(12345)
-fake3.data <- data.frame(x = 1:20, y = (1:20)^2 + rnorm(20))
-p <- ggplot(fake3.data, aes(x, y)) +
-       geom_point() +
-       geom_smooth(method = "lm")
-p
-@
-
-Uses all data, so the smooth curve is the same, but only part is visible.
-
-<<>>=
-p + coord_cartesian(xlim = c(1, 10))
-@
-
-The smooth line is fitted only to the data within limits.
-
-<<>>=
-p + xlim(1, 10)
-@
-
-Depending on the case coordinate limits or scale limits will be the correct ones to use. However, whenever there are calculations involved, and observations present outside the limits, only one of these two approaches will give the correct plot. One should think of scale limits as a kind of data subsetting and of coordinate limits as setting a zoomed window onto the plotting area.
 
 \subsection{Pie charts}
 \index{plots!pie charts|(}
@@ -2517,7 +2563,7 @@ ggplot(my.data, aes(x,y,label = greek.label)) +
    expand_limits(y = c(-2, 4))
 @
 
-As expression accepts multiple arguments separated by commas, the labels can be written more concisely using a single call to \Rfunction{expression()}.
+As \Rfunction{expression()} accepts multiple arguments separated by commas, the labels can be written more concisely using a single call to \Rfunction{expression()}.
 
 <<plotmath-03a>>=
 ggplot(my.data, aes(x, y, label = greek.label)) +
@@ -2653,6 +2699,16 @@ ggplot(cars, aes(speed, dist)) +
   xlab(parse(text = "x[1]*plain(   test)"))
 @
 
+Finally, it can be surprising that trailing zeros in numeric values appearing within an expression or text to be parsed are dropped. To force the trailing zeros to be retained we need to enclose the number in quotation marks so that it is interpreted as a character string.
+
+<<expr-parse-box-11>>=
+ggplot(cars, aes(speed, dist)) +
+  geom_point() +
+  annotate(geom = "text",
+           x = rep(6, 3), y = c(90, 100, 110),
+           label = c("'1.00'*x^2", "1.00*x^2", "1.01*x^2"), parse = TRUE)
+@
+
 \end{explainbox}
 
 Above we used paste to insert values stored in a variable, and this combined with \Rfunction{format()}, \Rfunction{sprintf()}, and \Rfunction{strftime()} gives already a lot of flexibility.
@@ -2741,19 +2797,6 @@ tiff(file = "fig1.tiff", width = 1000, height = 800)
 print(fig1)
 dev.off()
 @
-
-\subsection{Using \LaTeX\ instead of plotmath}
-\index{plots!using Latex@using \LaTeX|(}
-\index{tikz output device|see{plots, using \LaTeX}}
-To use \LaTeX\ syntax in plots we need to use a different \emph{software device} for output. It is called \code{Tikz} and defined in package \pkgname{tikzDevice}. This device generates output that can be interpreted by \LaTeX\ either as a self-contained file or as a file to be input into another \LaTeX\ source file. As the bulk of this handbook does not use this device, we will use it explicitly and input the files into this section. A \TeX\ distribution should be installed, with \LaTeX\ and several (\LaTeX) packages including \pkgname{tikz}.
-
-\subsubsection{Fonts}
-
-Font face selection, weight, size, maths, etc. are set with \LaTeX\ syntax. The main advantage of using \LaTeX\ is the consistency between the typesetting of the text body and figure labels and legends. For those familiar with \LaTeX\ not having to remember/learn the syntax of plotmath will a bonus.
-
-We will revisit the example from the previous sections, but now using \LaTeX\ for the subscripted Greek $\alpha$ for labels instead of \code{plotmath}. In this example we use as subscripts numeric values from another variable in the same dataframe.
-\index{plots!using Latex@using \LaTeX|)}
-\index{graphic output devices|)}
 
 \section{Building complex data displays}
 \index{examples!modular plot construction|(}
@@ -2954,375 +2997,6 @@ ggplot(data = mtcars,
        means_text
 @
 
-\section{Extended examples}
-\index{plots!advanced examples|(}
-In this section we first produce some publication-ready plots requiring the use of different combinations of what has been presented earlier in this chapter and then we recreate some well known plots, using versions from Wikipedia articles as models. Our objective here is to show, how by combining different terms and modifiers from the grammar of graphics we can build step by step very complex plots and/or annotate them with sophisticated labels. Here we do not use any packages extending \ggplot. Even more elaborate versions of these plots are presented in later chapters using \ggplot together with other packages.
-
-\subsection{Heat maps}\label{sec:plot:heatmap}
-\index{plots!advanced examples!heatmap plot|(}
-Heat maps are 3D plots, with two axes with cartesian coordinates giving origin to rectangular tiles, with a third dimension represented by the \code{fill} of the tiles. They are used to describe deviations from a reference or controls condition, with for example, blue representing values below the reference and red above. A color gradient represents the size of the deviation. Simple heat maps can be produced directly with \ggplot functions and methods. Heat maps with similitude trees obtained through clustering require additional tools.
-
-The main difference with a generic tile plot (See section \ref{sec:tileplot} on page \pageref{sec:tileplot}) is that the fill scale is centred on zero and the red to blue colours used for fill represent a ``temperature''. Nowadays, the name \emph{heatmap} is also used for tile plots using other color for fill, as long as they represent deviations from a central value.
-
-\sloppy
-To obtain a heat map, then we need to use as fill scale \ggscale{scale\_fill\_gradient2()}. In the first plot we use the default colors for the fill, and in second example we use different ones.
-
-For the examples in this section we use artificial data to build a correlation matrix, which we convert into a data frame before plotting.
-
-<<>>=
-set.seed(123)
-x <- matrix(rnorm(200), nrow = 20, ncol = 10)
-y <- matrix(rnorm(200), nrow = 20, ncol = 10)
-cor.mat <- cor(x,y)
-cor.df <- data.frame(cor = as.vector(cor.mat),
-           x = rep(letters[1:10], 10),
-           y = LETTERS[rep(1:10, rep(10, 10))])
-@
-
-<<>>=
-ggplot(cor.df, aes(x, y, fill = cor)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient2()
-@
-
-<<>>=
-ggplot(cor.df, aes(x, y, fill = cor)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient2(low = "darkred", mid = "yellow",
-  high = "darkgreen")
-@
-\index{plots!advanced examples!heatmap plot|)}
-
-\subsection{Quadrat plots}
-\index{plots!advanced examples!quadrat plot|(}
-
-A quadrat plot is usually a scatter plot, although sometimes lines are also used. The scales are symmetrical both for $x$ and $y$ and negative and positive ranges: the origin $x = 0, y = 0$ is at the geometrical center of the plot.
-
-We generate an artificial data set with \code{y} values correlated to \code{x} values.
-
-<<>>=
-set.seed(4567)
-x <- rnorm(200, sd = 1)
-quadrat_data.df <- data.frame(x = x,
-                              y = rnorm(200, sd = 0.5) + 0.5 * x)
-@
-
-Here we draw a simple quadrat plot, by adding two lines and using fixed coordinates with a 1:1 ratio between $x$ and $y$ scales.
-
-<<>>=
-ggplot(data = quadrat_data.df, aes(x, y)) +
-    geom_vline(xintercept = 0) +
-    geom_hline(yintercept = 0) +
-    geom_point() +
-    coord_fixed(ratio = 1) +
-    theme_bw()
-@
-
-We may want to add lines showing 1:1 slopes, make the axes limits symmetric, and make points semi-transparent to allow overlapping points to be visualized. We expand the limits with \Rfunction{expand\_limits()} rather that set them with \code{limits} or \Rfunction{xlim()} and \Rfunction{ylim()}, so that if there are observations in the data set outside our target limits, the limits will still include them. In other words, we set a minimum expanse for the limits of the axes, but allow them to \emph{grow} further if needed.
-
-<<>>=
-ggplot(data = quadrat_data.df, aes(x, y)) +
-    geom_vline(xintercept = 0) +
-    geom_hline(yintercept = 0) +
-    geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
-    geom_abline(slope = -1, intercept = 0, color = "blue", linetype = "dashed") +
-    geom_point(alpha = 0.5) +
-    scale_color_identity(guide = FALSE) +
-    scale_fill_identity(guide = FALSE) +
-    coord_fixed(ratio = 1) +
-    expand_limits(x = -3, y = -3) +
-    expand_limits(x = +3, y = +3) +
-    theme_bw()
-@
-
-It is also easy to add a linear regression line with its confidence band.
-
-<<>>=
-ggplot(data = quadrat_data.df, aes(x, y)) +
-    geom_vline(xintercept = 0) +
-    geom_hline(yintercept = 0) +
-    stat_smooth(method = "lm") +
-    geom_point(alpha = 0.5) +
-    coord_fixed(ratio = 1) +
-    expand_limits(x = -3, y = -3) +
-    expand_limits(x = +3, y = +3) +
-    theme_bw()
-@
-\index{plots!advanced examples!quadrat plot|)}
-
-\subsection{Volcano plots}\label{sec:plot:volcano}
-\index{plots!advanced examples!volcano plot|(}
-
-A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
-We here demonstrate how to create a volcano plot with tick labels in untransformed units, off-scale values drawn at the edge of the plotting region and highlighted with a different shape, and points color coded according to whether expression is significantly enhanced or depressed, or the evidence for the direction of the effect is inconclusive. We use a random sample of size 5000 from real data from an RNAseq experiment, included in package \pkgname{learnrbook}.
-
-<<>>=
-head(clean5000.df, 4)
-@
-
-First we create a no-frills volcano plot. This is just an ordinary scatter plot, with a certain way of transforming the $P$-values. We do this transformation on the fly when mapping the $y$ aesthetic with \code{y = -log10(PValue)}.
-
-<<>>=
-ggplot(data = clean5000.df,
-         aes(x = logFC,
-             y = -log10(PValue),
-             color = factor(outcome))) +
-    geom_point() +
-    scale_color_manual(values = c("blue", "grey10", "red"), guide = FALSE)
-@
-
-Now we add quite many tweaks to the $x$ and $y$ scales. 1) we show tick labels in back-transformed units, at \emph{nice} round numbers. 2) We add publication-ready axis labels. 3) We restrict the limits of the $x$ and $y$ scales, but use \code{oob = scales::squish} so that instead of being dropped observations outside the range limits are plotted at the limit and highlighted with a a different \code{shape}. We also use the black and white \emph{theme} instead of the default one.
-
-As we assume the reverse log transformation to be generally useful we define a function \Rfunction{reverselog\_trans()} for it. In the plot we use this function to set the transformation as part of the $y$-scale definition, so that we can directly map $P$-values to the $y$ \emph{aesthetic}.
-
-<<>>=
-reverselog_trans <- function(base = exp(1)) {
-  trans <- function(x) -log(x, base)
-  inv <- function(x) base^(-x)
-  scales::trans_new(paste0("reverselog-", format(base)), trans, inv,
-                    scales::log_breaks(base = base),
-                    domain = c(1e-100, Inf))
-}
-
-ggplot(data = clean5000.df,
-         aes(x = logFC,
-             y = PValue,
-             color = factor(outcome),
-             shape = factor(ifelse(PValue <= 1e-40, "out", "in")))) +
-    geom_vline(xintercept = c(log2(2/3), log2(3/2)), linetype = "dotted",
-               color = "grey75") +
-    geom_point() +
-    scale_color_manual(values = c("blue", "grey80", "red"), guide = FALSE) +
-    scale_x_continuous(breaks = c(log2(1e-2), log2(1e-1), log2(1/2),
-                                  0, log2(2), log2(1e1), log2(1e2)),
-                       labels = c("1/100", "1/10", "1/2", "1",
-                                  "2", "10", "100"),
-                       limits = c(log2(1e-2), log2(1e2)),
-                       name = "Relative expression",
-                       minor_breaks = NULL) +
-    scale_y_continuous(trans = reverselog_trans(10),
-                       breaks = c(1, 1e-3, 1e-10, 1e-20, 1e-30, 1e-40),
-                       labels = scales::trans_format("log10",
-                                                     scales::math_format(10^.x)),
-                       limits = c(1, 1e-40), # axis is reversed!
-                       name = expression(italic(P)-{value}),
-                       oob = scales::squish,
-                       minor_breaks = NULL) +
-    scale_shape(guide = FALSE) +
-    theme_bw()
-@
-\index{plots!advanced examples!volcano plot|)}
-
-\subsection{Anscombe's regression examples}\label{sec:plot:anscombe}
-\index{plots!advanced examples!Anscombe's linear regression plots|(}
-
-<<>>=
-opts_chunk$set(opts_fig_wide_square)
-@
-
-This is another figure from Wikipedia \url{http://commons.wikimedia.org/wiki/File:Anscombe.svg?uselang=en-gb}.
-
-This classical example form \citeauthor{Anscombe1973} (\citeyear{Anscombe1973}) demonstrates four very different data sets that yield exactly the same results when a linear regression model is fit to them, including $R^2 = 0.666$. It is usually presented as a warning about the need to check model fits beyond looking at $R^2$ and other parameter's estimates.
-
-I will redraw the Wikipedia figure using \ggplot, but first I rearrange the original data.
-
-<<>>=
-# we rearrange the data
-my.mat <- matrix(as.matrix(anscombe), ncol = 2)
-my.anscombe <- data.frame(x = my.mat[ , 1],
-                          y = my.mat[ , 2],
-                          case=factor(rep(1:4, rep(11,4))))
-@
-
-Once the data is in a data frame, plotting the observations plus the regression lines is easy.
-
-<<>>=
-ggplot(my.anscombe, aes(x,y)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  facet_wrap(~case, ncol = 2)
-@
-
-It is not much more difficult to make it look similar to the Wikipedia original.
-
-<<>>=
-ggplot(my.anscombe, aes(x,y)) +
-  geom_point(shape = 21, fill = "orange", size = 3) +
-  geom_smooth(method = "lm", se = FALSE) +
-  facet_wrap(~case, ncol = 2) +
-  theme_bw(16)
-@
-
-Although I think that the confidence bands make the point of the example much clearer.
-
-<<>>=
-ggplot(my.anscombe, aes(x,y)) +
-  geom_point(shape = 21, fill = "orange", size = 3) +
-  geom_smooth(method = "lm") +
-  facet_wrap(~case, ncol = 2) +
-  theme_bw(16)
-@
-\index{plots!advanced examples!Anscombe's linear regression plots|)}
-
-\subsection{Plotting color patches}
-\index{plots!advanced examples!color patches|(}
-
-For choosing colours when designing plots, or scales used in them, an indexed colour patch plot is usually very convenient (see section \ref{sec:plot:colors} on page \pageref{sec:plot:colors}. We can produce such a chart of colors with subsets of colors, or colours re-ordered compared to their position in the value returned by \Rfunction{colors()}. As the present chapter is on package \ggplot we use this package in this example. As this charts are likely to be needed frequently, I define here a function \Rfunction{ggcolorchart()}.
-
-<<>>=
-ggcolorchart <- function(colors,
-                         ncol = NULL,
-                         use.names = NULL,
-                         text.size = 2) {
-    # needed if the argument passed is subset with [ ]!
-    force(colors)
-
-    len.colors <- length(colors)
-    # by default we attempt to use
-    if (is.null(ncol)) {
-      ncol <- max(trunc(sqrt(len.colors)), 1L)
-    }
-    # default for when to use color names
-    if (is.null(use.names)) {
-      use.names <- ncol < 8
-    }
-    # number of rows needed to fit all colors
-    nrow <- len.colors %/% ncol
-    if (len.colors %% ncol != 0) {
-      nrow <- nrow + 1
-    }
-    # we extend the vector with NAs to match number of tiles
-    if (len.colors < ncol*nrow) {
-      colors[(len.colors + 1):(ncol*nrow)] <- NA
-    }
-    # we build a data frame
-    colors.df <-
-      data.frame(color = colors,
-                 text.color =
-                   ifelse(sapply(colors,
-                                 function(x){mean(col2rgb(x))}) > 110,
-                                 "black", "white"),
-                 x = rep(1:ncol, nrow),
-                 y = rep(nrow:1, rep(ncol, nrow)),
-                 idx = ifelse(is.na(colors),
-                              "",
-                              format(1:(ncol * nrow), trim = TRUE)))
- # we build the plot
- p <- ggplot(colors.df, aes(x, y, fill = color))
- if (use.names) {
-   p <- p + aes(label = ifelse(is.na(colors), "", colors))
- } else {
-   p <- p + aes(label = format(idx, width = 3))
- }
- p <- p +
-    geom_tile(color = "white") +
-    scale_fill_identity() +
-    geom_text(size = text.size, aes(color = text.color)) +
-    scale_color_identity()
- p + theme_void()
-}
-@
-
-\begin{playground}
-After reading the use examples below, review the definition of the function, section by section, trying to understand what is the function of each section of the code. You can add print statements at different steps to look at the intermediate data values. Once you think you have grasped the purpose of a given statement, you can modify it in some way that modifies the output. For example, changing the defaults, for the shape of the tiles, e.g.\ so that the number of columns is about $1/3$ of the number of rows. Although you may never need exactly this function, studying its code will teach you some \emph{idioms} used by R programers. This function, in contrast to some other R code examples for plotting color tiles, does not contain any loop. It returns a \Rclass{ggplot} object, which be added to and/or modified.
-\end{playground}
-
-We first the predefined colors available in R.
-
-<<>>=
-ggcolorchart(colors()) +
-  ggtitle("R colors",
-          subtitle = "Labels give index or position in colors() vector")
-@
-\label{chunk:plot:color:tiles}
-
-<<echo=FALSE>>=
-opts_chunk$set(opts_fig_narrow)
-@
-
-We subset those containing ``blue'' in the name, using the default number of columns.
-
-<<>>=
-ggcolorchart(grep("blue", colors(), value = TRUE), text.size = 3)
-@
-
-We reduce the number of columns and obtain rectangular tiles. The default for \code{use.names} depends on the number of tile columns, triggering automatically the change in labels.
-
-<<>>=
-ggcolorchart(grep("blue", colors(), value = TRUE), ncol = 4)
-@
-
-We demonstrate how perceived colors are affected by the hue, saturation and value in the HSV colour model.
-
-<<>>=
-ggcolorchart(hsv(1, (0:48)/48, 0.67), text.size = 3) +
-  ggtitle("HSV saturation", "H = 1, S = 0..1, V = 0.67")
-@
-
-<<>>=
-ggcolorchart(hsv(1, 1, (0:48)/48), text.size = 3) +
-  ggtitle("HSV value", "H = 1, S = 1, V = 0..1")
-@
-
-<<>>=
-ggcolorchart(hsv((0:48)/48, 1, 1), text.size = 3) +
-  ggtitle("HSV hue", "H = 0..1, S = 1, V = 1")
-@
-
-We demonstrate how perceived colors are affected by the hue, chroma and luminance in the HCL colour model.
-
-<<>>=
-ggcolorchart(hcl((0:48)/48 * 360), text.size = 3) +
-  ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 35, l = 85")
-@
-
-<<>>=
-ggcolorchart(hcl((0:48)/48 * 360, l = 67), text.size = 3) +
-  ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 35, l = 67")
-@
-
-<<>>=
-ggcolorchart(hcl((0:48)/48 * 360, c = 67), text.size = 3) +
-    ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 67, l = 85")
-@
-
-\begin{playground}
-  The default order of the different colors in the vector returned by \Rfunction{colors()} results in a rather unappealing color tile plot (see page \pageref{chunk:plot:color:tiles}). Use functions \Rfunction{col2rgb()}, \Rfunction{rgb2hsv()} and \Rfunction{sort()} or \Rfunction{order()} to rearrange the tiles into a more pleasant arrangement, but still using for the labels the indexes to the positions of the colors in the original unsorted vector.
-\end{playground}
-\index{plots!advanced examples!color patches|)}
-
-\subsection{Pie charts vs.\ bar plots example}\label{sec:plot:pie:bar}
-\index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|(}
-
-<<>>=
-opts_chunk$set(opts_fig_wide)
-@
-
-There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
-
-Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
-
-<<>>=
-example.data <-
-  data.frame(values = c(17, 18, 20, 22, 23,
-                        20, 20, 19, 21, 20,
-                        23, 22, 20, 18, 17),
-             examples= rep(c("A", "B", "C"), c(5,5,5)),
-             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
-  )
-
-ggplot(example.data, aes(x = cols, y = values, fill = cols)) +
-  geom_col(width = 1) +
-  facet_grid(. ~ examples) +
-  scale_fill_identity()
-ggplot(example.data, aes(x = factor(1), y = values, fill = cols)) +
-  geom_col(width = 1) +
-  facet_grid(. ~ examples) +
-  scale_fill_identity() +
-  coord_polar(theta = "y")
-@
-\index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|)}
-\index{plots!advanced examples|(}
 
 <<eco=FALSE>>=
 try(detach(package:tidyverse))

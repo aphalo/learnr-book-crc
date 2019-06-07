@@ -1,0 +1,460 @@
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+opts_knit$set(concordance=TRUE)
+opts_knit$set(unnamed.chunk.label = 'plotting-chunk')
+@
+
+\chapter{Grammar of graphics: on-line extras}\label{chap:R:plotting}
+
+\begin{VF}
+The commonality between science and art is in trying to see profoundly---to develop strategies of seeing and showing.
+
+\VA{Edward Tufte}{}
+\end{VF}
+
+%\dictum[Edward Tufte]{The commonality between science and art is in trying to see profoundly---to develop strategies of seeing and showing.}
+
+\subsection{Using \LaTeX\ instead of plotmath}
+\index{plots!using Latex@using \LaTeX|(}
+\index{tikz output device|see{plots, using \LaTeX}}
+To use \LaTeX\ syntax in plots we need to use a different \emph{software device} for output. It is called \code{Tikz} and defined in package \pkgname{tikzDevice}. This device generates output that can be interpreted by \LaTeX\ either as a self-contained file or as a file to be input into another \LaTeX\ source file. As the bulk of this handbook does not use this device, we will use it explicitly and input the files into this section. A \TeX\ distribution should be installed, with \LaTeX\ and several (\LaTeX) packages including \pkgname{tikz}.
+
+\subsubsection{Fonts}
+
+Font face selection, weight, size, maths, etc. are set with \LaTeX\ syntax. The main advantage of using \LaTeX\ is the consistency between the typesetting of the text body and figure labels and legends. For those familiar with \LaTeX\ not having to remember/learn the syntax of plotmath will a bonus.
+
+We will revisit the example from the previous sections, but now using \LaTeX\ for the subscripted Greek $\alpha$ for labels instead of \code{plotmath}. In this example we use as subscripts numeric values from another variable in the same dataframe.
+\index{plots!using Latex@using \LaTeX|)}
+\index{graphic output devices|)}
+
+\section{Extended examples}
+\index{plots!advanced examples|(}
+In this section we first produce some publication-ready plots requiring the use of different combinations of what has been presented earlier in this chapter and then we recreate some well known plots, using versions from Wikipedia articles as models. Our objective here is to show, how by combining different terms and modifiers from the grammar of graphics we can build step by step very complex plots and/or annotate them with sophisticated labels. Here we do not use any packages extending \ggplot. Even more elaborate versions of these plots are presented in later chapters using \ggplot together with other packages.
+
+\subsection{Heat maps}\label{sec:plot:heatmap}
+\index{plots!advanced examples!heatmap plot|(}
+Heat maps are 3D plots, with two axes with cartesian coordinates giving origin to rectangular tiles, with a third dimension represented by the \code{fill} of the tiles. They are used to describe deviations from a reference or controls condition, with for example, blue representing values below the reference and red above. A color gradient represents the size of the deviation. Simple heat maps can be produced directly with \ggplot functions and methods. Heat maps with similitude trees obtained through clustering require additional tools.
+
+The main difference with a generic tile plot (See section \ref{sec:tileplot} on page \pageref{sec:tileplot}) is that the fill scale is centred on zero and the red to blue colours used for fill represent a ``temperature''. Nowadays, the name \emph{heatmap} is also used for tile plots using other color for fill, as long as they represent deviations from a central value.
+
+\sloppy
+To obtain a heat map, then we need to use as fill scale \ggscale{scale\_fill\_gradient2()}. In the first plot we use the default colors for the fill, and in second example we use different ones.
+
+For the examples in this section we use artificial data to build a correlation matrix, which we convert into a data frame before plotting.
+
+<<>>=
+set.seed(123)
+x <- matrix(rnorm(200), nrow = 20, ncol = 10)
+y <- matrix(rnorm(200), nrow = 20, ncol = 10)
+cor.mat <- cor(x,y)
+cor.df <- data.frame(cor = as.vector(cor.mat),
+           x = rep(letters[1:10], 10),
+           y = LETTERS[rep(1:10, rep(10, 10))])
+@
+
+<<>>=
+ggplot(cor.df, aes(x, y, fill = cor)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2()
+@
+
+<<>>=
+ggplot(cor.df, aes(x, y, fill = cor)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "darkred", mid = "yellow",
+  high = "darkgreen")
+@
+\index{plots!advanced examples!heatmap plot|)}
+
+\subsection{Quadrat plots}
+\index{plots!advanced examples!quadrat plot|(}
+
+A quadrat plot is usually a scatter plot, although sometimes lines are also used. The scales are symmetrical both for $x$ and $y$ and negative and positive ranges: the origin $x = 0, y = 0$ is at the geometrical center of the plot.
+
+We generate an artificial data set with \code{y} values correlated to \code{x} values.
+
+<<>>=
+set.seed(4567)
+x <- rnorm(200, sd = 1)
+quadrat_data.df <- data.frame(x = x,
+                              y = rnorm(200, sd = 0.5) + 0.5 * x)
+@
+
+Here we draw a simple quadrat plot, by adding two lines and using fixed coordinates with a 1:1 ratio between $x$ and $y$ scales.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    geom_point() +
+    coord_fixed(ratio = 1) +
+    theme_bw()
+@
+
+We may want to add lines showing 1:1 slopes, make the axes limits symmetric, and make points semi-transparent to allow overlapping points to be visualized. We expand the limits with \Rfunction{expand\_limits()} rather that set them with \code{limits} or \Rfunction{xlim()} and \Rfunction{ylim()}, so that if there are observations in the data set outside our target limits, the limits will still include them. In other words, we set a minimum expanse for the limits of the axes, but allow them to \emph{grow} further if needed.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+    geom_abline(slope = -1, intercept = 0, color = "blue", linetype = "dashed") +
+    geom_point(alpha = 0.5) +
+    scale_color_identity(guide = FALSE) +
+    scale_fill_identity(guide = FALSE) +
+    coord_fixed(ratio = 1) +
+    expand_limits(x = -3, y = -3) +
+    expand_limits(x = +3, y = +3) +
+    theme_bw()
+@
+
+It is also easy to add a linear regression line with its confidence band.
+
+<<>>=
+ggplot(data = quadrat_data.df, aes(x, y)) +
+    geom_vline(xintercept = 0) +
+    geom_hline(yintercept = 0) +
+    stat_smooth(method = "lm") +
+    geom_point(alpha = 0.5) +
+    coord_fixed(ratio = 1) +
+    expand_limits(x = -3, y = -3) +
+    expand_limits(x = +3, y = +3) +
+    theme_bw()
+@
+\index{plots!advanced examples!quadrat plot|)}
+
+\subsection{Volcano plots}\label{sec:plot:volcano}
+\index{plots!advanced examples!volcano plot|(}
+
+A volcano plot is just an elaborate version of a scatter plot, and can be created with \ggplot functions.
+We here demonstrate how to create a volcano plot with tick labels in untransformed units, off-scale values drawn at the edge of the plotting region and highlighted with a different shape, and points color coded according to whether expression is significantly enhanced or depressed, or the evidence for the direction of the effect is inconclusive. We use a random sample of size 5000 from real data from an RNAseq experiment, included in package \pkgname{learnrbook}.
+
+<<>>=
+head(clean5000.df, 4)
+@
+
+First we create a no-frills volcano plot. This is just an ordinary scatter plot, with a certain way of transforming the $P$-values. We do this transformation on the fly when mapping the $y$ aesthetic with \code{y = -log10(PValue)}.
+
+<<>>=
+ggplot(data = clean5000.df,
+         aes(x = logFC,
+             y = -log10(PValue),
+             color = factor(outcome))) +
+    geom_point() +
+    scale_color_manual(values = c("blue", "grey10", "red"), guide = FALSE)
+@
+
+Now we add quite many tweaks to the $x$ and $y$ scales. 1) we show tick labels in back-transformed units, at \emph{nice} round numbers. 2) We add publication-ready axis labels. 3) We restrict the limits of the $x$ and $y$ scales, but use \code{oob = scales::squish} so that instead of being dropped observations outside the range limits are plotted at the limit and highlighted with a a different \code{shape}. We also use the black and white \emph{theme} instead of the default one.
+
+As we assume the reverse log transformation to be generally useful we define a function \Rfunction{reverselog\_trans()} for it. In the plot we use this function to set the transformation as part of the $y$-scale definition, so that we can directly map $P$-values to the $y$ \emph{aesthetic}.
+
+<<>>=
+reverselog_trans <- function(base = exp(1)) {
+  trans <- function(x) -log(x, base)
+  inv <- function(x) base^(-x)
+  scales::trans_new(paste0("reverselog-", format(base)), trans, inv,
+                    scales::log_breaks(base = base),
+                    domain = c(1e-100, Inf))
+}
+
+ggplot(data = clean5000.df,
+         aes(x = logFC,
+             y = PValue,
+             color = factor(outcome),
+             shape = factor(ifelse(PValue <= 1e-40, "out", "in")))) +
+    geom_vline(xintercept = c(log2(2/3), log2(3/2)), linetype = "dotted",
+               color = "grey75") +
+    geom_point() +
+    scale_color_manual(values = c("blue", "grey80", "red"), guide = FALSE) +
+    scale_x_continuous(breaks = c(log2(1e-2), log2(1e-1), log2(1/2),
+                                  0, log2(2), log2(1e1), log2(1e2)),
+                       labels = c("1/100", "1/10", "1/2", "1",
+                                  "2", "10", "100"),
+                       limits = c(log2(1e-2), log2(1e2)),
+                       name = "Relative expression",
+                       minor_breaks = NULL) +
+    scale_y_continuous(trans = reverselog_trans(10),
+                       breaks = c(1, 1e-3, 1e-10, 1e-20, 1e-30, 1e-40),
+                       labels = scales::trans_format("log10",
+                                                     scales::math_format(10^.x)),
+                       limits = c(1, 1e-40), # axis is reversed!
+                       name = expression(italic(P)-{value}),
+                       oob = scales::squish,
+                       minor_breaks = NULL) +
+    scale_shape(guide = FALSE) +
+    theme_bw()
+@
+\index{plots!advanced examples!volcano plot|)}
+
+\subsection{Anscombe's regression examples}\label{sec:plot:anscombe}
+\index{plots!advanced examples!Anscombe's linear regression plots|(}
+
+<<>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+This is another figure from Wikipedia \url{http://commons.wikimedia.org/wiki/File:Anscombe.svg?uselang=en-gb}.
+
+This classical example form \citeauthor{Anscombe1973} (\citeyear{Anscombe1973}) demonstrates four very different data sets that yield exactly the same results when a linear regression model is fit to them, including $R^2 = 0.666$. It is usually presented as a warning about the need to check model fits beyond looking at $R^2$ and other parameter's estimates.
+
+I will redraw the Wikipedia figure using \ggplot, but first I rearrange the original data.
+
+<<>>=
+# we rearrange the data
+my.mat <- matrix(as.matrix(anscombe), ncol = 2)
+my.anscombe <- data.frame(x = my.mat[ , 1],
+                          y = my.mat[ , 2],
+                          case=factor(rep(1:4, rep(11,4))))
+@
+
+Once the data is in a data frame, plotting the observations plus the regression lines is easy.
+
+<<>>=
+ggplot(my.anscombe, aes(x,y)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~case, ncol = 2)
+@
+
+It is not much more difficult to make it look similar to the Wikipedia original.
+
+<<>>=
+ggplot(my.anscombe, aes(x,y)) +
+  geom_point(shape = 21, fill = "orange", size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~case, ncol = 2) +
+  theme_bw(16)
+@
+
+Although I think that the confidence bands make the point of the example much clearer.
+
+<<>>=
+ggplot(my.anscombe, aes(x,y)) +
+  geom_point(shape = 21, fill = "orange", size = 3) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~case, ncol = 2) +
+  theme_bw(16)
+@
+\index{plots!advanced examples!Anscombe's linear regression plots|)}
+
+\subsection{Plotting color patches}
+\index{plots!advanced examples!color patches|(}
+
+For choosing colours when designing plots, or scales used in them, an indexed colour patch plot is usually very convenient (see section \ref{sec:plot:colors} on page \pageref{sec:plot:colors}. We can produce such a chart of colors with subsets of colors, or colours re-ordered compared to their position in the value returned by \Rfunction{colors()}. As the present chapter is on package \ggplot we use this package in this example. As this charts are likely to be needed frequently, I define here a function \Rfunction{ggcolorchart()}.
+
+<<>>=
+ggcolorchart <- function(colors,
+                         ncol = NULL,
+                         use.names = NULL,
+                         text.size = 2) {
+    # needed if the argument passed is subset with [ ]!
+    force(colors)
+
+    len.colors <- length(colors)
+    # by default we attempt to use
+    if (is.null(ncol)) {
+      ncol <- max(trunc(sqrt(len.colors)), 1L)
+    }
+    # default for when to use color names
+    if (is.null(use.names)) {
+      use.names <- ncol < 8
+    }
+    # number of rows needed to fit all colors
+    nrow <- len.colors %/% ncol
+    if (len.colors %% ncol != 0) {
+      nrow <- nrow + 1
+    }
+    # we extend the vector with NAs to match number of tiles
+    if (len.colors < ncol*nrow) {
+      colors[(len.colors + 1):(ncol*nrow)] <- NA
+    }
+    # we build a data frame
+    colors.df <-
+      data.frame(color = colors,
+                 text.color =
+                   ifelse(sapply(colors,
+                                 function(x){mean(col2rgb(x))}) > 110,
+                                 "black", "white"),
+                 x = rep(1:ncol, nrow),
+                 y = rep(nrow:1, rep(ncol, nrow)),
+                 idx = ifelse(is.na(colors),
+                              "",
+                              format(1:(ncol * nrow), trim = TRUE)))
+ # we build the plot
+ p <- ggplot(colors.df, aes(x, y, fill = color))
+ if (use.names) {
+   p <- p + aes(label = ifelse(is.na(colors), "", colors))
+ } else {
+   p <- p + aes(label = format(idx, width = 3))
+ }
+ p <- p +
+    geom_tile(color = "white") +
+    scale_fill_identity() +
+    geom_text(size = text.size, aes(color = text.color)) +
+    scale_color_identity()
+ p + theme_void()
+}
+@
+
+\begin{playground}
+After reading the use examples below, review the definition of the function, section by section, trying to understand what is the function of each section of the code. You can add print statements at different steps to look at the intermediate data values. Once you think you have grasped the purpose of a given statement, you can modify it in some way that modifies the output. For example, changing the defaults, for the shape of the tiles, e.g.\ so that the number of columns is about $1/3$ of the number of rows. Although you may never need exactly this function, studying its code will teach you some \emph{idioms} used by R programers. This function, in contrast to some other R code examples for plotting color tiles, does not contain any loop. It returns a \Rclass{ggplot} object, which be added to and/or modified.
+\end{playground}
+
+We first the predefined colors available in R.
+
+<<>>=
+ggcolorchart(colors()) +
+  ggtitle("R colors",
+          subtitle = "Labels give index or position in colors() vector")
+@
+\label{chunk:plot:color:tiles}
+
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+We subset those containing ``blue'' in the name, using the default number of columns.
+
+<<>>=
+ggcolorchart(grep("blue", colors(), value = TRUE), text.size = 3)
+@
+
+We reduce the number of columns and obtain rectangular tiles. The default for \code{use.names} depends on the number of tile columns, triggering automatically the change in labels.
+
+<<>>=
+ggcolorchart(grep("blue", colors(), value = TRUE), ncol = 4)
+@
+
+We demonstrate how perceived colors are affected by the hue, saturation and value in the HSV colour model.
+
+<<>>=
+ggcolorchart(hsv(1, (0:48)/48, 0.67), text.size = 3) +
+  ggtitle("HSV saturation", "H = 1, S = 0..1, V = 0.67")
+@
+
+<<>>=
+ggcolorchart(hsv(1, 1, (0:48)/48), text.size = 3) +
+  ggtitle("HSV value", "H = 1, S = 1, V = 0..1")
+@
+
+<<>>=
+ggcolorchart(hsv((0:48)/48, 1, 1), text.size = 3) +
+  ggtitle("HSV hue", "H = 0..1, S = 1, V = 1")
+@
+
+We demonstrate how perceived colors are affected by the hue, chroma and luminance in the HCL colour model.
+
+<<>>=
+ggcolorchart(hcl((0:48)/48 * 360), text.size = 3) +
+  ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 35, l = 85")
+@
+
+<<>>=
+ggcolorchart(hcl((0:48)/48 * 360, l = 67), text.size = 3) +
+  ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 35, l = 67")
+@
+
+<<>>=
+ggcolorchart(hcl((0:48)/48 * 360, c = 67), text.size = 3) +
+    ggtitle("CIE-LUV 'hcl' hue", "h = 0..360, c = 67, l = 85")
+@
+
+\begin{playground}
+  The default order of the different colors in the vector returned by \Rfunction{colors()} results in a rather unappealing color tile plot (see page \pageref{chunk:plot:color:tiles}). Use functions \Rfunction{col2rgb()}, \Rfunction{rgb2hsv()} and \Rfunction{sort()} or \Rfunction{order()} to rearrange the tiles into a more pleasant arrangement, but still using for the labels the indexes to the positions of the colors in the original unsorted vector.
+\end{playground}
+\index{plots!advanced examples!color patches|)}
+
+\subsection{Pie charts vs.\ bar plots example}\label{sec:plot:pie:bar}
+\index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|(}
+
+<<>>=
+opts_chunk$set(opts_fig_wide)
+@
+
+There is an example figure widely used in Wikipedia to show how much easier it is to `read' bar plots than pie charts (\url{http://commons.wikimedia.org/wiki/File:Piecharts.svg?uselang=en-gb}).
+
+Here is my \ggplot version of the same figure, using much simpler code and obtaining almost the same result.
+
+<<>>=
+example.data <-
+  data.frame(values = c(17, 18, 20, 22, 23,
+                        20, 20, 19, 21, 20,
+                        23, 22, 20, 18, 17),
+             examples= rep(c("A", "B", "C"), c(5,5,5)),
+             cols = rep(c("red", "blue", "green", "yellow", "black"), 3)
+  )
+
+ggplot(example.data, aes(x = cols, y = values, fill = cols)) +
+  geom_col(width = 1) +
+  facet_grid(. ~ examples) +
+  scale_fill_identity()
+ggplot(example.data, aes(x = factor(1), y = values, fill = cols)) +
+  geom_col(width = 1) +
+  facet_grid(. ~ examples) +
+  scale_fill_identity() +
+  coord_polar(theta = "y")
+@
+\index{plots!advanced examples!pies vs. bar plots@plots!advanced examples!pies \emph{vs.}\ bar plots|)}
+\index{plots!advanced examples|(}
+
+
+\section{Deleted}
+
+\subsection{Coordinate limits}\label{sec:plot:coord:limits}
+\index{plots!coordinates!cartesian}
+\index{plots!coordinates!setting limits}
+
+The limits of set using \emph{scales}, such as \code{scale\_x\_continuous()} or \code{scale\_y\_continuous()}, and the convenience functions \code{xlim()} and \code{ylim()}, set boundaries to the data used by both \emph{geometries} and \emph{statistics} (See section \ref{sec:plot:scales:limits} on page \pageref{sec:plot:scales:limits}). When plotting individual observations this does not come as a surprise, but for \emph{statistics} it frequently does when we have only layers based on computed summaries in a given plot. For example plots using only \code{stat\_summary()} or \code{geom\_smooth()} can be easily and seriously distorted when setting limits manually excludes from computations individual observations that are not plotted on their own.
+
+The limits in \emph{coordinates} work differently, they do not set boundaries to the data included. Instead, these limits only affect the plotting area. A simple example demonstrates this.
+
+<<>>=
+set.seed(12345)
+fake3.data <- data.frame(x = 1:20, y = (1:20)^2 + rnorm(20))
+p <- ggplot(fake3.data, aes(x, y)) +
+       geom_point() +
+       geom_smooth(method = "lm")
+p
+@
+
+Uses all data, so the smooth curve is the same, but only part is visible.
+
+<<>>=
+p + coord_cartesian(xlim = c(1, 10))
+@
+
+The smooth line is fitted only to the data within limits.
+
+<<>>=
+p + xlim(1, 10)
+@
+
+Depending on the case coordinate limits or scale limits will be the correct ones to use. However, whenever there are calculations involved, and observations present outside the limits, only one of these two approaches will give the correct plot. One should think of scale limits as a kind of data subsetting and of coordinate limits as setting a zoomed window onto the plotting area.
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+Function \code{update\_labels} allows the replacement of labels in an existing plot. We first create a plot with one set of labels, and afterwards we replace them.
+
+<<axis-labels-04, eval=eval_plots_all>>=
+p <-
+    ggplot(data = mtcars,
+           aes(x = disp, y = hp, colour = factor(cyl),
+               shape = factor(cyl))) +
+      geom_point() +
+      labs(x = "Engine displacement)",
+           y = "Gross horsepower",
+           colour = "Number of\ncylinders",
+           shape = "Number of\ncylinders")
+p
+@
+
+<<axis-labels-05, eval=eval_plots_all>>=
+update_labels(p, list(x = "Cilindrada",
+                      y = "Potencia bruta (caballos de fuerza)",
+                      colour = "no. de\ncilindros",
+                      shape = "no. de\ncilindros"))
+@
+
+%%%%%%%%%%%%%%%%%%%%
