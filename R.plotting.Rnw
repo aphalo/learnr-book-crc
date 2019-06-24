@@ -89,7 +89,7 @@ In the examples in this chapter we describe the of use package \ggplot. We start
 
 What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of the package). What is meant by grammar in this case is that plots are assembled piece by piece using different `nouns' and `verbs' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantic-based and to a large extent how the plot looks when is printed, displayed or exported to a bitmap or vector-graphics file is controlled by themes.
 
-We can think of plotting as representing the observations or data in a graphical language. We use the properties of graphical objects to represent different aspects of our data. An observation can consist in multiple values recorded. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist in height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ direction. The observations could be represented on the plot by points and/or joined by lines.
+We can think of plotting as representing the observations or data in a graphical language. We use the properties of graphical objects to represent different aspects of our data. An observation can consist in multiple values recorded. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist in height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ dimension. The observations could be represented on the plot by points and/or joined by lines.
 
 The grammar of graphics allows us to design plots by combining various elements in ways that are nearly orthogonal. In other words, the majority of the possible combinations of ``words'' yield valid plots as long as we assemble them respecting the rules of the grammar. This flexibility makes \ggplot extremely powerful as we can build plots and even types of plots which were not even considered while designing the \ggplot package.
 
@@ -109,7 +109,7 @@ When we design a plot, we need to map data variables to aesthetics\index{plots!a
 \subsection{Geometries}
 
 \sloppy%
-Geometries\index{plots!geometries} describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a `point' or symbol for each observation, while \gggeom{geom\_line()}, draws line segments between successive observations. Some geometries rely by default on statistics, but most `geoms' default to the identity statistics. Each time a \emph{geometry} is used to add a graphical representation of data to a plot, we say that a new \emph{layer} has been added. The name \emph{layer} reflects the fact that each new layer added is plotted on top of the layers already present in the plot, or rather when a plot is printed the layers will be generated in the order they were added to the ggplot object.
+Geometries\index{plots!geometries} describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a `point' or symbol for each observation, while \gggeom{geom\_line()}, draws line segments between observations. Some geometries rely by default on statistics, but most `geoms' default to the identity statistics. Each time a \emph{geometry} is used to add a graphical representation of data to a plot, we say that a new \emph{layer} has been added. The name \emph{layer} reflects the fact that each new layer added is plotted on top of the layers already present in the plot, or rather when a plot is printed the layers will be generated in the order they were added to the ggplot object. For example, one layer in a plot can display the observations, another layer a regression line fitted to them, and a third one may contain annotations such an equation or a text label.
 
 \subsection{Statistics}
 
@@ -181,10 +181,10 @@ summary(p)
 @
 We can also obtain view into the structure by means of \code{str()}.
 
-Load package \pkgname{gginnards} and use methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()} to explore ggplot objects with different numbers of layers or mappings. You will see that the plot elements that we added to the plot are stored as members of a list with nested lists conforming a tree-like structure.
+Package \pkgname{gginnards} provides methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()}. Use these methods to explore ggplot objects with different numbers of layers or mappings. You will see that the plot elements that were added to the plot are stored as members of a list with nested lists conforming a tree-like structure.
 \end{advplayground}
 
-Although \emph{aesthetics} can be mapped to variables in the data, they can also be set to a constant value, within a layer.
+Although \emph{aesthetics} can be mapped to variables in the data, they can also be set to constant values, but only within layers, not as whole-plot defaults.
 
 <<ggplot-basics-04a>>=
 ggplot(data = mtcars,
@@ -211,9 +211,9 @@ ggplot(data = mtcars,
   scale_y_log10()
 @
 
-The range limits of a scale can be set manually, instead of automatically as by default. Scales limits function as \emph{a window into the data}: observations outside the scale limits are not mapped---these observations are not included in the graphical representation. Furthermore, when using \code{stats} the computations are only applied to observations that fall within the limits. These limits \emph{indirectly} also affect the plotting area when the plotting area is automatically set based on the range of the (within limits) data---even the range of values mapped to other aesthetics is likely to change when the data are subset.
+The range limits of a scale can be set manually, instead of automatically as by default. Scales limits function as \emph{a window into the data}: observations outside the scale limits are not mapped---these observations are not included in the graphical representation. Furthermore, when using \code{stats} the computations are only applied to observations that fall within the limits. These limits \emph{indirectly} also affect the plotting area when the plotting area is automatically set based on the range of the (within limits) data---even the range of values mapped to other aesthetics may change when the data are subset.
 
-In contrast to \emph{statistics}, \emph{coordinates} function as a \emph{zoomed view} into the plotting area, and do not affect which observations are used by \code{stats}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but we manually set $y$ limits.
+In contrast to \emph{scale limits}, \emph{coordinates} function as a \emph{zoomed view} into the plotting area, and do not affect which observations are used by \code{stats}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but we manually set $y$ limits.
 
 <<ggplot-basics-07>>=
 ggplot(data = mtcars,
@@ -277,7 +277,7 @@ Each of the elements of the grammar exemplified above has several different memb
 
 \subsection{Data and mappings in layers}
 
-In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as follows, as it emphasizes that \code{mtcars} contains the data shared by all layers in the plot and that a common mapping to aesthetics is used.
+In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as described above, passing an argument, \code{mtcars} in these examples, to the \code{data} parameter of \Rfunction{ggplot()}. Data passed in this way becomes the default for all layers in the plot. The same applies to the argument passed to \code{mapping}.
 
 <<ggplot-basics-12, eval=eval_plots_all>>=
 ggplot(data = mtcars,
@@ -285,7 +285,7 @@ ggplot(data = mtcars,
   geom_point()
 @
 
-However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers. In which case the those passed as arguments to \Rfunction{ggplot()} behave as defaults to those layers that inherit them, but can be overridden by arguments passed to individual layers. Making it possible to code the same plot as follows.
+However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers. In which case the those passed as arguments to \Rfunction{ggplot()}, if present,  are overridden by arguments passed to individual layers. Making it possible to code the same plot as follows.
 
 <<ggplot-basics-13, eval=eval_plots_all>>=
 ggplot() +
@@ -343,7 +343,7 @@ str(p, max.level = 1)
 @
 \end{warningbox}
 
-When we used in the previous section operator \code{+} to assemble the plots we were operating on \Rlang objects. In the same way we can operate on saved objects.
+When we used in the previous section operator \code{+} to assemble the plots we were operating on ``anonymous'' \Rlang objects. In the same way we can operate on saved or ``named'' objects.
 
 <<ggplot-objects-02>>=
 p +
@@ -355,7 +355,7 @@ p +
 \end{playground}
 
 \begin{infobox}
-  In the examples above we have been adding elements one by one, using the \code{+} operator. It is also possible to add multiple components in a single operation using a list. This is useful, when we want to save sets of components in a variable so as to reuse them in multiple plots. This saves typing, ensures consistency and can make alterations to a set of similar plots easier.
+  In the examples above we have been adding elements one by one, using the \code{+} operator. It is also possible to add multiple components in a single operation using a list. This is useful, when we want to save sets of components in a variable so as to reuse them in multiple plots. This saves typing, ensures consistency and can make alterations to a set of similar plots much easier.
 
   <<ggplot-objects-info-01>>=
   my.layers <- list(
@@ -833,7 +833,7 @@ ggplot(data = mtcars, aes(x = disp, y = mpg,
                   min.segment.length = 0.2, point.padding = 0.1)
 @
 
-\section{Plot insets}\label{sec:plot:insets}
+\subsection{Plot insets}\label{sec:plot:insets}
 
 The support for insets in \pkgname{ggplot2} is confined to \code{annotation\_custom()} which was designed to be used for static annotations expected to be the same in each panel of a plot (The use of annotations is described in section \ref{sec:plot:annotate}). Package \pkgname{ggpmisc} provides geoms that mimic \code{geom\_text()} in relation to the \emph{aesthetics} used, but that similarly to \code{geom\_sf()} expect that the column in \code{data} mapped to the \code{label} aesthetics are lists of objects containing multiple pieces of information, rather than atomic vectors. Similarly to \code{geom\_sf()} these geoms do not inherit the plot's default mappings to aesthetics. Three geometries are currently available: \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()}.
 
@@ -1462,76 +1462,70 @@ p <- ggplot(data = mtcars, aes(mpg, wt)) + geom_point()
 p
 @
 
+A grid of panels has two dimensions, a vertical and horizontal one. The two dimensions can be assigned to two factors or discrete variables. Until recently a formula syntax was the only available one. Although this notation has been retained, the preferred syntax is currently to use the parameters \code{rows} and \code{cols}. We use \code{cols} in this example. Note that we need to use \code{vars()} to enclose the names of the variables in the data.
+
 <<facets-01>>=
+p + facet_grid(cols = vars(cyl))
+@
+
+Was in the ``historical notation'' written as
+<<facets-01a, eval=eval_plots_all>>=
 p + facet_grid(. ~ cyl)
 @
 
+By default all panels have the same scale limits and share the plotting scape equally.
 <<facets-02, eval=eval_plots_all>>=
-p + facet_grid(cyl ~ .)
-@
-
-<<facets-03, eval=eval_plots_all>>=
-p + facet_grid(. ~ cyl, scales = "free")
-@
-
-<<facets-04, eval=eval_plots_all>>=
-p + facet_grid(. ~ cyl, scales = "free", space = "free")
+p + facet_grid(cols = vars(cyl), scales = "free")
+p + facet_grid(cols = vars(cyl), scales = "free", space = "free")
 @
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
 @
 
-<<facets-05>>=
-p + facet_grid(vs ~ am)
+To obtain a 2D grid we need to specify both \code{rows} and \code{cols}
+<<facets-05, eval=eval_plots_all>>=
+p + facet_grid(rows = vars(vs), cols = vars(am))
 @
 
+Margins display an additional column or row of panels with the combines data.
 <<facets-06>>=
-p + facet_grid(vs ~ am, margins = TRUE)
+p + facet_grid(cols = vars(cyl), margins = TRUE)
 @
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 @
 
-<<facets-07, eval=eval_plots_all>>=
-p + facet_grid(. ~ vs + am)
+We can represent more than one variable per dimension of the grid of plot panels. For this example, we change the default labeller used for the panels by one that includes the name of the variable.
+<<facets-07>>=
+p + facet_grid(cols = vars(vs, am), labeller = label_both)
 @
 
 <<facets-08, eval=eval_plots_all>>=
-p + facet_grid(. ~ vs + am, labeller = label_both)
-@
-
-<<echo=FALSE>>=
-opts_chunk$set(opts_fig_very_wide)
-@
-
-<<facets-09, eval=eval_plots_all>>=
-p + facet_grid(. ~ vs + am, margins = TRUE)
+p + facet_grid(cols = vars(vs, am))
 @
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 @
 
-<<facets-10>>=
-p + facet_grid(cyl ~ vs, labeller = label_both)
-@
-
+\begin{explainbox}
+Sometimes we may want to have mathematical expressions or Greek letters in the panel headings. The next example shows a way of achieving this. The key is to use a labeller that parses character strings into \Rlang expressions.
 <<facets-11, eval=eval_plots_all>>=
 mtcars$cyl12 <- factor(mtcars$cyl,
                        labels = c("alpha", "beta", "sqrt(x, y)"))
 p1 <- ggplot(data = mtcars, aes(mpg, wt)) +
       geom_point() +
-      facet_grid(. ~ cyl12, labeller = label_parsed)
+      facet_grid(cols = vars(cyl12), labeller = label_parsed)
 @
 
-Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a special syntax that allows us to use an expression where replacement based on the facet (panel) data takes place. See section \ref{sec:plot:plotmath} for an example of the use of \code{bquote()}, the R function on which this labeller is built upon.
+More frequently we may need to include the levels of the factor used in the faceting as part of the labels. Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a special syntax that allows us to use an expression where replacement based on the facet (panel) data takes place. See section \ref{sec:plot:plotmath} for an example of the use of \code{bquote()}, the \Rlang function on which this labeller is built upon.
 
-<<facets-12>>=
-p + facet_grid(. ~ vs, labeller = label_bquote(cols = alpha ^ .(vs)))
+<<facets-12, eval=eval_plots_all>>=
+p + facet_grid(cols = vars(cyl), labeller = label_bquote(cols = .(cyl)~"cylinders"))
 @
-
+\end{explainbox}
 %\begin{infobox}
 %\sloppy
 %In versions of \ggplot before 2.0.0, \code{labeller} was not implemented for \Rfunction{facet\_wrap()}, it was only available for \Rfunction{facet\_grid()}.
@@ -1540,17 +1534,17 @@ p + facet_grid(. ~ vs, labeller = label_bquote(cols = alpha ^ .(vs)))
 A minimal example of a wrapped facet. In this case the number of levels is small, when they are more the row of plots will be wrapped into two or more continuation rows. When using \Rfunction{facet\_wrap()} there is only one dimension, so no `.' is needed before or after the tilde.
 
 <<facets-13>>=
-p + facet_wrap(~ cyl)
+p + facet_wrap(facets = vars(cyl), ncol = 2)
 @
 
-An example showing that even though faceting with \code{facet\_wrap()} is along a single, possibly wrapped, row, it is possible to produce facets based on more than one variable.
+An example showing that even though faceting with \code{facet\_wrap()} is along a single possibly wrapped row, it is possible to produce facets based on more than one variable.
 
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide_square)
 @
 
 <<facets-15, eval=eval_plots_all>>=
-p + facet_wrap(~ vs + am, ncol=2)
+p + facet_wrap(facets = vars(vs, am), ncol=2, labeller = label_both)
 @
 
 <<echo=FALSE>>=
@@ -1681,7 +1675,7 @@ ggplot(fake2.data, aes(z, y)) + geom_point() +
 
 \begin{warningbox}
   In the examples above we demonstrate on purpose how some observations laying outside the limits we set were removed. In general setting hard limits should be avoided, even though a warning is issued when observations are omitted, as it is easy to unwillingly subset the data being plotted.
-  
+
 In contrast, function \Rfunction{expand\_limits()} makes it possible to safely \emph{expand} the dynamically computed default limits of a scale---in this case the scale limits will grow past the expanded values when needed to accommodate all observations. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each, matching how the limits of the $x$ and $y$ continuous scales are defined. Her we expand the limits to include the origin.
 
 <<scale-limits-04>>=
@@ -1692,7 +1686,7 @@ ggplot(fake2.data, aes(z, y)) + geom_point() + expand_limits(y = 0, x = 0)
 
 The \code{expand} parameter of the scales plays a different role than \Rfunction{expand\_limits()}. It controls how much larger the plotting area is compared to the limits. In other words it adds a ``margin'' to the plotting are outside the limits set either dynamically or manually. Very rarely plots are drawn so that observations are plotted on top of the axes, avoiding this is a key function of \code{expand}. Rug plots and marginal annotations will also require the plotting are to be expanded. In \ggplot the default is to always apply expansion.
 
-We here set the upper limit of the plotting area to be expanded by adding padding to the top and removing the padding from the bottom of the plotting area. 
+We here set the upper limit of the plotting area to be expanded by adding padding to the top and removing the padding from the bottom of the plotting area.
 <<scale-limits-05, eval=eval_plots_all>>=
 ggplot(fake2.data,
   aes(fill = group, colour = group, x = y)) +
