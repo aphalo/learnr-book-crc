@@ -16,6 +16,66 @@ The commonality between science and art is in trying to see profoundly---to deve
 
 %\dictum[Edward Tufte]{The commonality between science and art is in trying to see profoundly---to develop strategies of seeing and showing.}
 
+\subsection{Using the data pipes}
+
+We can pass as data argument to \code{ggplot()} the value returned by a pipe, and as \code{data} is the first parameter, \code{ggplot()} can be connected to a pipe. The example below is equivalent to that in the previous section.
+
+<<>>=
+ mtcars %>%
+  ggplot(aes(x = disp, y = mpg, colour = factor(cyl))) +
+          geom_point()
+@
+
+Or if we want to modify the data on the fly, in this case converting miles per gallon into litres per 100~km.  As seen earlier calculations like this can be done within the call to \code{aes()} but using a pipe can result in easier to understand code.
+
+<<>>=
+ mtcars %>%
+  mutate(L_100km = 270 / mpg) %>%
+  ggplot(aes(x = disp, y = L_100km, colour = factor(cyl))) +
+          geom_point()
+@
+
+Another way in which the flexibility of package \pkgname{ggplot2}'s implementation of the grammar of graphics can be exploited is by accessing and modifying the default data within a layer. The simplest example is plotting selected observations from the data in a certain layer, doing the selection on-the-fly. To make this code work, several of the packages comprising the \pkgname{tidyverse} need to be loaded. In this case we use a dot \code{.} to get access to the global default data for the plot.
+
+<<>>=
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = cyl)) +
+  geom_point(colour = "blue") +
+  geom_point(data = . %>% filter(cyl == 8), shape = 21, colour = "red", size = 3)
+@
+
+Instead of function \code{filter()} we can use any R function that returns a data frame or a \code{tibble}, or as shown below a \emph{pipe}. If we want to reuse the global aesthetic mappings, we should maintain the same column names.
+
+<<>>=
+p1 <-
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl))) +
+  geom_point() +
+  geom_text(data = . %>% group_by(cyl) %>%
+                   summarise(disp = mean(disp),
+                   mpg = mean(mpg),
+                   mpg_lab = format(mpg, digits = 1)),
+            aes(label = mpg_lab))
+p1
+@
+
+This is particularly useful when saving layers in a list or individually as a building block, as in such case we do not know what will be the data argument when our ``block'' is used. This is not equivalent to a \emph{statistic} as we are manipulating the data using the original variable names in the data frame passed as argument. Within a \emph{statistic} we access the data after they have been mapped to aesthetics, such as $x$, $y$, label, colour, etc.
+
+<<>>=
+means_text <-
+  geom_text(data = . %>% group_by(cyl) %>%
+                   summarise(disp = mean(disp),
+                   mpg = mean(mpg),
+                   mpg_lab = format(mpg, digits = 1)),
+            aes(label = mpg_lab))
+
+ggplot(data = mtcars,
+       aes(x = disp, y = mpg, colour = factor(cyl))) +
+       stat_smooth(colour = "black", method = "lm", formula = y ~ poly(x, 2)) +
+       geom_point() +
+       means_text
+@
+
 \subsection{Using \LaTeX\ instead of plotmath}
 \index{plots!using Latex@using \LaTeX|(}
 \index{tikz output device|see{plots, using \LaTeX}}
@@ -457,4 +517,4 @@ update_labels(p, list(x = "Cilindrada",
                       shape = "no. de\ncilindros"))
 @
 
-%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% 

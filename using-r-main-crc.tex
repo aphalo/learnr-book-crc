@@ -2589,6 +2589,84 @@ Function \Rfunction{sprintf()} is similar to \Clang's function of the same name.
 \begin{playground}
 Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunction{sprintf()} is more flexible and powerful. Those with experience in the use of the \Clang language will already know about \Rfunction{sprintf()} and its use of templates for formatting output. Even if you are familiar with  \Clang, look up the help pages for both functions, and practice, by trying to create the same formatted output by means of the two functions. Do also play with these functions with other types of data like \code{integer} and \code{character}.
 \end{playground}
+
+\begin{explainbox}
+  We have above described \Rconst{NA} as a single value ignoring modes, but in reality \Rconst{NA}s come in various flavours. \Rconst{NA\_real\_}, \Rconst{NA\_character\_}, etc. and \Rconst{NA} defaults to an \Rconst{NA} of class \Rclass{logical}. Frequently on-the-fly conversion does what one expects when entering \Rconst{NA}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{NA}\hlstd{)}
+\hlkwd{is.numeric}\hlstd{(a[}\hlnum{2}\hlstd{])}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.numeric}\hlstd{(}\hlnum{NA}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlstd{b} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"abc"}\hlstd{,} \hlnum{NA}\hlstd{)}
+\hlkwd{is.character}\hlstd{(b[}\hlnum{2}\hlstd{])}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.character}\hlstd{(}\hlnum{NA}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{class}\hlstd{(}\hlnum{NA}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "logical"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Even the following works:
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{a[}\hlnum{3}\hlstd{]} \hlkwb{<-} \hlstd{b[}\hlnum{2}\hlstd{]}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Problems may occur if we test for class before testing for \Rconst{NA} with \Rfunction{is.na()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# case 1}
+\hlstd{a} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{3}
+\hlkwa{if} \hlstd{(}\hlkwd{is.numeric}\hlstd{(a))} \hlkwd{sum}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] 6
+\end{verbatim}
+\begin{alltt}
+\hlcom{# case 2}
+\hlstd{a} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{NA}\hlstd{,}\hlnum{3}\hlstd{)}
+\hlkwa{if} \hlstd{(}\hlkwd{is.numeric}\hlstd{(a))} \hlkwd{sum}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] NA
+\end{verbatim}
+\begin{alltt}
+\hlcom{# case 3}
+\hlstd{a} \hlkwb{<-} \hlnum{NA}
+\hlkwa{if} \hlstd{(}\hlkwd{is.numeric}\hlstd{(a))} \hlkwd{sum}\hlstd{(a)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{explainbox}
+
 \index{type conversion|(}
 
 \section{Vector manipulation}\label{sec:vectors}\label{sec:calc:indexing}
@@ -5951,7 +6029,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.31    0.08    0.39
+##    0.24    0.01    0.25
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -6145,8 +6223,8 @@ Functions in the \emph{apply} family allow us to call an \Rlang function for eac
 \hlkwd{apply}\hlstd{(x,} \hlkwc{MARGIN} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{FUN} \hlstd{= mean)}
 \end{alltt}
 \begin{verbatim}
-##  [1] 0.4951379 0.5232205 0.3425161 0.3812330 0.5326360 0.4811894 0.6152066
-##  [8] 0.5188159 0.4375172 0.5926887
+##  [1] 0.5975802 0.4876428 0.5756337 0.4718833 0.6007052 0.5440471 0.4693834
+##  [8] 0.5740119 0.4845117 0.5760392
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -6171,8 +6249,8 @@ One or more additional named arguments can be passed to the function to be appli
 \hlkwd{apply}\hlstd{(x,} \hlkwc{MARGIN} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{FUN} \hlstd{= mean,} \hlkwc{trim} \hlstd{=} \hlnum{0.1}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##  [1] 0.4972186 0.5264856 0.3389417 0.3725149 0.5444665 0.5002163 0.6445309
-##  [8] 0.5281359 0.4150543 0.5994045
+##  [1] 0.6059110 0.4823726 0.5873145 0.4843841 0.6216325 0.5581429 0.4691536
+##  [8] 0.5824582 0.4997798 0.5954306
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8530,7 +8608,7 @@ To see how \Rfunction{is.formula()} has been defined, we can print it, simply by
 \begin{verbatim}
 ## function (x) 
 ## inherits(x, "formula")
-## <bytecode: 0x0000000017952e78>
+## <bytecode: 0x00000000198c4130>
 ## <environment: namespace:plyr>
 \end{verbatim}
 \end{kframe}
@@ -9594,7 +9672,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x0000000018b17010>
+## <bytecode: 0x000000001975b9c0>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9678,7 +9756,7 @@ Next we print the definition of \Rlang linear model fitting function \code{lm()}
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x0000000017c801e0>
+## <bytecode: 0x0000000018921b40>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -9819,7 +9897,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x0000000013d00780>
+## <bytecode: 0x0000000019eeb8a8>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -10136,7 +10214,7 @@ Even if we do not explicitly add them all, default elements may be used. The pro
 
 \subsection{Data}
 
-The data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns different values observed in that single event. In other words, as \emph{tidy data} as described in Chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}.
+The data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns different values observed in that single event. In other words, as so-called ``tidy data'' as described in Chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}.
 
 \subsection{Mapping}
 
@@ -10241,7 +10319,7 @@ To make observations visible in the plot we need to add a suitable \emph{geometr
 \end{knitrout}
 
 \begin{warningbox}
-  In the examples above the plots were printed automatically, which is the default at the R console. However, as any other R objects ggplots can be given a name, stored,
+  In the examples above the plots were printed automatically, which is the default at the R console. However, as any other R objects, ggplots can be given a name, stored,
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -10263,7 +10341,7 @@ and printed at a later time.
 \end{warningbox}
 
 \begin{advplayground}
-  Above we have seen how to build a plot, layer by layer, using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
+Above we have seen how to build a plot, layer by layer, using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -10466,6 +10544,71 @@ As elsewhere in \Rlang, when a value is expected, either a value stored in a var
 
 Each of the elements of the grammar exemplified above has several different members, and many of the individual \emph{geometries} and \emph{statistics} accept arguments that can be used to modify their behaviour. There are also more \emph{aesthetics} than those shown above. Multiple data objects as well as multiple mappings can coexist within a single ggplot object. Packages and user code can define new \emph{geometries}, \emph{statistics} and even \emph{aesthetics}. Individual elements in a theme can be also modified and new complete themes created, re-used and shared. We will describe in the remaining sections of this chapter how to use the grammar of graphics to construct other types of graphical presentations including more complex plots than those in the examples above. We will start by seeing what are the consequences of \code{"gg"} objects being regular \Rlang objects and of graphical rendering being a separate step from the creation of the plot object.
 
+\subsection{Data and mappings in layers}
+
+In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as follows, as it emphasizes that \code{mtcars} contains the data shared by all layers in the plot and that a common mapping to aesthetics is used.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
+       \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers. In which case the those passed as arguments to \Rfunction{ggplot()} behave as defaults to those layers that inherit them, but can be overridden by arguments passed to individual layers. Making it possible to code the same plot as follows.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
+             \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+The default mapping can also be added directly with the \code{+} operator, instead of being passed as an argument to \Rfunction{ggplot()}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars)} \hlopt{+}
+  \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg)} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+It is possible even to have a default mapping for the whole plot, but no default data.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{()} \hlopt{+}
+  \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg)} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{data} \hlstd{= mtcars)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+In these examples, the plot remains unchanged, but this flexibility in the grammar allows in plots containing multiple layers, for each layer to use different data or a different mapping.
+
+\begin{explainbox}
+The argument passed to parameter \code{data} of a layer function, can be a function instead of a data frame, if the plot contains default data. In this case the function is applied to the default data and must return a data frame containing data to be used in the layer.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
+       \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{size} \hlstd{=} \hlnum{4}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{data} \hlstd{=} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)\{}\hlkwd{subset}\hlstd{(x, cyl} \hlopt{==} \hlnum{4}\hlstd{)\},} \hlkwc{colour} \hlstd{=} \hlstr{"yellow"}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{1.5}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{explainbox}
+
 \subsection{Plots as \Rlang objects}
 
 We can manipulate ggplot objects and their components in the same way as other \Rlang objects. We can operate on them using the operators and methods defined for the \code{"gg"} class they belong to. As shown above we start by saving a ggplot into a variable.
@@ -10481,10 +10624,13 @@ We can manipulate ggplot objects and their components in the same way as other \
 \end{knitrout}
 
 \begin{warningbox}
-  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self contained. Most importantly a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean session, or another computer, and rendered as long as package \ggplot and its dependencies are available. Another consequence of a copy of the data being stored in the plot object, is that editing the data used to create a \code{"gg"} object after its creation does \emph{not} affect rendered plots unless we recreate the "gg" object.
+  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self contained. Most importantly a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean R session, even on another computer, and rendered as long as package \ggplot and its dependencies are available. Another consequence of a copy of the data being stored in the plot object, is that editing the data used to create a \code{"gg"} object after its creation does \emph{not} affect rendered plots unless we recreate the "gg" object.
 
   With \code{str()} we can explore the structure of any \Rlang object, including those of class \code{"gg"}. We use \code{max.level = 1} to reduce the length of output, but to see deeper into the nested list you can increase the value passed as argument to \code{max.level} or simply accept its default.
 
+% the next chuck works but it leads to stack overflow in LaTeX
+% there is something wrong with how knitr handles the output of str()
+% eval_playground
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -10517,7 +10663,7 @@ When we used in the previous section operator \code{+} to assemble the plots we 
 \end{playground}
 
 \begin{infobox}
-  In the examples above we have been adding elements one by one, using the \code{+} operator. It is also possible to add multiple components in one go using a list. This is useful, when we want to save sets of components in a variable so as to reuse them in multiple plots.
+  In the examples above we have been adding elements one by one, using the \code{+} operator. It is also possible to add multiple components in a single operation using a list. This is useful, when we want to save sets of components in a variable so as to reuse them in multiple plots. This saves typing, ensures consistency and can make alterations to a set of similar plots easier.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -10603,7 +10749,7 @@ If we convert \code{cyl} into an ordered factor, a different discrete colour sca
 \end{knitrout}
 
 \begin{playground}
-Try a different mapping: \code{disp} $\rightarrow$ \code{color}, \code{cyl} $\rightarrow$ \code{x}. Continue by using \code{help(mtcars)} and/or \code{names(mtcars)} to see what variables are available, and then try the combinations that trigger your curiosity.
+Try a different mapping: \code{disp} $\rightarrow$ \code{color}, \code{cyl} $\rightarrow$ \code{x}. Continue by using \code{help(mtcars)} and/or \code{names(mtcars)} to see what variables are available, and then try the combinations that trigger your curiosity---i.e.\ explore the data.
 \end{playground}
 
 The mapping between data values and aesthetic values is controlled by scales. Different colour scales, and even palettes within a given scale, provide different mappings between data values and rendered colours.
@@ -10657,7 +10803,7 @@ We can use \code{scale\_shape\_manual} to choose each shape to be used. We set t
 \end{kframe}
 \end{knitrout}
 
-It is also possible to use characters as shapes. The character is centred on the position of the observation.
+It is also possible to use characters as shapes. The character is centred on the position of the observation. As the numbers used as symbols are self-explanatory, we suppress the default guide or key.
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -10676,7 +10822,7 @@ It is also possible to use characters as shapes. The character is centred on the
 \end{knitrout}
 
 \begin{infobox}
-  One variable in the data can be mapped to more than one aesthetic allowing redundant aesthetics. This may seem wasteful, but it is extremely useful as it allows one to produce figures that even when produced in color, can still be read if reproduced as monochrome images.
+  One variable in the data can be mapped to more than one aesthetic allowing redundant aesthetics. This may seem wasteful, but it is extremely useful as it allows one to produce figures that even when produced in color, can still be read if reproduced as black and white images.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -10789,13 +10935,13 @@ Play with the code in the chunk above. Remove or change each of the mappings and
 \end{playground}
 \index{plots!point geometry|(}
 
-It is common to draw error bars together with points representing the data and \gggeom{geom\_pointrange()} achieves this based on the values mapped to the \code{x}, \code{y}, \code{ymin} and \code{ymax}, using \code{y} for the position of the point and \code{ymin} and \code{ymax} for the positions of the ends of the line segment representing a range. Two other \emph{geometries}, \gggeom{geom\_range()} and  \gggeom{geom\_errorbar} draw only a segment or a segment with capped ends. They are frequently used together with \emph{statistics} when summaries are calculated on-the-fly, but can also used directly when the data summaries are stored in a data frame passed as argument to \code{data} (Please, see example on page \pageref{exmpl:plot:errorbar:precalc}.)
+It is common to draw error bars together with points representing means or medians of observations and \gggeom{geom\_pointrange()} achieves this based on the values mapped to the \code{x}, \code{y}, \code{ymin} and \code{ymax}, using \code{y} for the position of the point and \code{ymin} and \code{ymax} for the positions of the ends of the line segment representing a range. Two other \emph{geometries}, \gggeom{geom\_range()} and  \gggeom{geom\_errorbar} draw only a segment or a segment with capped ends. They are frequently used together with \emph{statistics} when summaries are calculated on-the-fly, but can be also used directly when the data summaries are stored in a data frame passed as argument to \code{data} (Please, see example on page \pageref{exmpl:plot:errorbar:precalc}).
 
 \subsection{Rug}
 \index{plots!rug marging|(}
 
 Rarely rug-plots are used by themselves. Instead they are usually an addition to
-scatter plots. An example of the use of \gggeom{geom\_rug()} follows. They make it easier to see the distribution
+scatter plots. An example of the use of \gggeom{geom\_rug()} follows. They make it easier to see the distribution of observations
 along the $x$- and $y$-axes.
 
 We generate new fake data by random sampling from the normal distribution. We use \code{set.seed(1234)} to initialize the pseudo-random number generator so that
@@ -10818,6 +10964,10 @@ the same data are generated each time the code is run.
 
 
 \end{knitrout}
+
+\begin{warningbox}
+  Rug plots are most useful when the local density of observations is not too high, otherwise rugs become too cluttered and the ``rug threads'' may overlap. When overlap is moderate making the segments semitransparent by setting the \code{alpha} aesthetic to a constant value smaller than one can make the variation in density easier to appreciate. When the number of observations is large, marginal density plots should be preferred.
+\end{warningbox}
 \index{plots!rug marging|)}
 
 \subsection{Line and area}\label{sec:plot:line}
@@ -10871,6 +11021,17 @@ Instead of drawing a line joining the successive observations, we may want to dr
 
 \end{knitrout}
 
+\begin{playground}
+Using the following toy data make three plots using \code{geom\_line()}, \code{geom\_path()}, and \code{geom\_step} to add a layer.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{toy.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{3}\hlstd{,}\hlnum{2}\hlstd{,}\hlnum{4}\hlstd{),} \hlkwc{y} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{playground}
+
 While \gggeom{geom\_line()} draws a line joining observations, \gggeom{geom\_area()} supports filling the area bellow the drawn line drawn based on the \code{x} and \code{y}, respecting the \code{fill} \emph{aesthetic}. In contrast \gggeom{geom\_ribbon} draws two lines based on the \code{x}, \code{ymin} and \code{ymax} \emph{aesthetics}, with the space between the lines filled according to the \code{fill} \emph{aesthetic}. Finally, \gggeom{geom\_polygom} is similar to \gggeom{geom\_path()} but connects the extreme observations forming a closed polygon that supports \code{fill}.
 
 Much of what was described above for \gggeom{geom\_point} can be adapted to \gggeom{geom\_line}, \gggeom{geom\_ribbon}, area and other geoms described in this section. In some cases, it is useful to stack the areas---e.g.\ when the values represent parts of a bigger whole. In the next, contrived, example, we stack the growth of the different trees by using \code{position = "stack"} instead of the default \code{position = "identity"}. We save the plot for reuse.
@@ -10892,7 +11053,7 @@ Much of what was described above for \gggeom{geom\_point} can be adapted to \ggg
 
 \end{knitrout}
 
-Finally three \emph{geometries} for drawing lines across the whole plotting area: \gggeom{geom\_hline}, \gggeom{geom\_vline} and \gggeom{geom\_abline}. The first two of the geometries draw horizontal and vertical lines, respectively, while the third one draws straight lines according to the \emph{aesthetics} \code{slope} and \code{intercept} determining the position. The lines drawn with the three geoms extend to the edge of the plotting area.
+Finally three \emph{geometries} for drawing lines across the whole plotting area: \gggeom{geom\_hline}, \gggeom{geom\_vline} and \gggeom{geom\_abline}. The first two draw horizontal and vertical lines, respectively, while the third one draws straight lines according to the \emph{aesthetics} \code{slope} and \code{intercept} determining the position. The lines drawn with these three geoms extend to the edge of the plotting area.
 
 \gggeom{geom\_hline} and \gggeom{geom\_vline} require a single aesthetic, \code{yintercept} and \code{xintercept}, respectively. Differently to other geoms, the data for these aesthetics can be also passed as constant numeric vectors. The reason for this is that these geoms are most frequently used to annotate plots rather than plotting observations. Let's assume that we want to highlight an event at the age of 1000 days.
 
@@ -10923,9 +11084,13 @@ Finally three \emph{geometries} for drawing lines across the whole plotting area
 \subsection{Column}\label{sec:plot:col}
 \index{plots!column plot|(}
 
-\Rlang users not familiar yet with \ggplot are frequently surprised by the default behaviour of \gggeom{geom\_bar()} as it uses \ggstat{stat\_count()} to produce a histogram, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). \gggeom{geom\_col()} is identical to \gggeom{geom\_bar()} but with \code{"identity"} as default statistic. The \emph{statistic} \ggstat{stat\_identity()} just echoes its input and is the default for the geometries described above. Starting from \ggplot ver. 2.2.1,  \gggeom{geom\_col()} can be used to create \emph{column plots} where each bar represents an observation or case in the data.
+The \emph{geometry} \gggeom{geom\_col()} can be used to create \emph{column plots} where each bar represents an observation or case in the data.
 
-We create artificial data that we will reuse in multiple variations of the figure.
+\begin{warningbox}
+\Rlang users not familiar yet with \ggplot are frequently surprised by the default behaviour of \gggeom{geom\_bar()} as it uses \ggstat{stat\_count()} to produce a histogram, rather than plotting values as is (see section \ref{sec:plot:summaries} on page \pageref{sec:plot:summaries}). \gggeom{geom\_col()} is identical to \gggeom{geom\_bar()} but with \code{"identity"} as default statistic, which passed along the data unaltered.
+\end{warningbox}
+
+We create artificial data that we will reuse in multiple variations of the next figure.
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -11062,7 +11227,7 @@ We can set \code{color = "grey50"} and \code{size = 1} to make the tile borders 
 Play with the arguments passed to parameters \code{color} and \code{size} in the example above, considering what features of the data are most clearly perceived in each of the plots you create.
 \end{playground}
 
-Any continuous fill scale can be used to control the appearance. Here we show a tile plot using a grey gradient.
+Any continuous fill scale can be used to control the appearance. Here we show a tile plot using a grey gradient, with missing values in red.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11102,7 +11267,7 @@ In contrast to \gggeom{geom\_tile()}, \gggeom{geom\_rect()} draws rectangular ti
 \subsection{Text}\label{sec:plot:text}
 \index{plots!text in|(}
 \index{plots!maths in|(}
-We can use \gggeom{geom\_text()} or \gggeom{geom\_label()} to add text labels to observations. For \gggeom{geom\_text()} and \gggeom{geom\_label()}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label positioning the centre of the text at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Values smaller than 0.5 shift the label left or down, and values larger than 0.5, right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, still using units based on the length or height of the text string. Recent versions of \pkgname{ggplot2} add justification using character constants for alignment: \code{"left"}, \code{"middle"}, \code{"right"}, \code{"bottom"}, \code{"center"} and \code{"top"}, and two special alignments, \code{"inward"} and \code{"outward"} that automatically vary based on the position in the plotting area.
+We can use \gggeom{geom\_text()} or \gggeom{geom\_label()} to add text labels to observations. For \gggeom{geom\_text()} and \gggeom{geom\_label()}, the aesthetic \code{label} provides the text to be plotted and the usual aesthetics \code{x} and \code{y} the location of the labels. As one would expect the \code{color} and \code{size} aesthetics can be also used for the text. In addition \code{angle} and \code{vjust} and \code{hjust} can be used to rotate the label, and adjust its position. The default value of 0.5 for both \code{hjust} and \code{vjust} centres the label positioning the centre of the text at the supplied \code{x} and \code{y} coordinates. `Vertical' and `horizontal' for justification refer to the text, not the plot. This is important when \code{angle} is different from zero. Values smaller than 0.5 shift the label left or down, and values larger than 0.5, right or up. A value of 1 or 0 sets the text so that its edge is at the supplied coordinate. Values outside the range $0\ldots 1$ shift the text even further away, however, still using units based on the length or height of the text string. Recent versions of \pkgname{ggplot2} make possible justification using character constants for alignment: \code{"left"}, \code{"middle"}, \code{"right"}, \code{"bottom"}, \code{"center"} and \code{"top"}, and two special alignments, \code{"inward"} and \code{"outward"} that automatically vary based on the position in the plotting area.
 
 In the case of \gggeom{geom\_label()} the text is enclosed in a box, which obeys the \code{fill} \emph{aesthetic} and takes additional parameters (described starting at page \pageref{start:plot:label}) allowing control on the shape and size of the box. However, it does not support rotation with the \code{angle} aesthetic.
 
@@ -11165,7 +11330,7 @@ Base R does not support the use of system fonts in graphics output devices. Howe
 In the examples above the character strings were all of the same length, containing a single character. Redo the plots above with longer character strings of various lengths mapped to the \code{label} \emph{aesthetic}. Do also play with justification of these labels.
 \end{playground}
 
-Plotting expressions (mathematical expressions) involves mapping to the \code{label} aesthetic character strings that can be parsed as expressions, and setting \code{parse = TRUE}. We here build the character strings using \Rfunction{paste()} but, of course, they could have also been entered one by one.
+Plotting expressions (mathematical expressions) involves mapping to the \code{label} aesthetic character strings that can be parsed as expressions, and setting \code{parse = TRUE}. We here build the character strings using \Rfunction{paste()} but, of course, they could have also been entered one by one. This use of \Rfunction{paste()} is an example of vectors of different lengths passed as arguments to a function and the shorter ones being recycled.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11200,9 +11365,9 @@ Plotting expressions (mathematical expressions) involves mapping to the \code{la
 
 \end{knitrout}
 
-Text and labels do not automatically expand the plotting area past there anchoring coordinates. In the example above we need to use \code{expand\_limits()} to ensure that the text is not clipped at the edge of the plotting area. Plotting maths and other alphabets using \Rlang expressions is discussed in section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath}.
+Text and labels do not automatically expand the plotting area past their anchoring coordinates. In the example above we need to use \code{expand\_limits()} to ensure that the text is not clipped at the edge of the plotting area. Plotting maths and other alphabets using \Rlang expressions is discussed in section \ref{sec:plot:plotmath} on page \pageref{sec:plot:plotmath}.
 
-In the examples above we plotted text and expressions present in the data frame passed as argument for \code{data}. It is also possible, and usually preferable, to build suitable labels on-the-fly within \code{aes} when setting the mapping for \code{label}. Here we use \gggeom{geom\_text()} and with strings parsed on-the-fly into expressions but character strings built in this way can also be used without parsing.
+In the examples above we plotted text and expressions present in the data frame passed as argument for \code{data}. It is also possible, and usually preferable, to build suitable labels on-the-fly within \code{aes()} when setting the mapping for \code{label}. Here we use \gggeom{geom\_text()} and with strings parsed on-the-fly into expressions but character strings built in this way can also be used without parsing.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11302,7 +11467,11 @@ If the parameter \code{check\_overlap} of \gggeom{geom\_text()} is set to \code{
 
 The support for insets in \pkgname{ggplot2} is confined to \code{annotation\_custom()} which was designed to be used for static annotations expected to be the same in each panel of a plot (The use of annotations is described in section \ref{sec:plot:annotate}). Package \pkgname{ggpmisc} provides geoms that mimic \code{geom\_text()} in relation to the \emph{aesthetics} used, but that similarly to \code{geom\_sf()} expect that the column in \code{data} mapped to the \code{label} aesthetics are lists of objects containing multiple pieces of information, rather than atomic vectors. Similarly to \code{geom\_sf()} these geoms do not inherit the plot's default mappings to aesthetics. Three geometries are currently available: \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()}.
 
-The plotting of tables by mapping a list of data frames to the \code{label} \emph{aesthetic} is done with \gggeom{geom\_table}. Positioning, justification and angle work as for \gggeom{geom\_text} and are applied to the whole table. Only \code{tibble} objects (see documentation of package \pkgname{tibble}) can contain as variables lists of data frames, so this \emph{geometry} requires the use of \code{tibble} objects pass the data. The table(s) are created as 'grid' \code{grob} objects, collected in a tree and added to the \code{ggplot} object as a new layer.
+\begin{warningbox}
+Given that  \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()} will rarely use a mapping inherited from the whole plot, by default they do not inherit it. Either the mapping should be supplied as argument to these functions or their parameter \code{inherit.aes} explicitly set to \code{TRUE}.
+\end{warningbox}
+
+The plotting of tables by mapping a list of data frames to the \code{label} \emph{aesthetic} is done with \gggeom{geom\_table}. Positioning, justification and angle work as for \gggeom{geom\_text} and are applied to the whole table. Only \code{tibble} objects (see documentation of package \pkgname{tibble}) can contain as variables lists of data frames, so this \emph{geometry} requires the use of \code{tibble} objects to store the data. The table(s) are created as 'grid' \code{grob} objects, collected in a tree and added to the \code{ggplot} object as a new layer.
 
 We first generate a \code{tibble} containing summaries from the data, formatted as character strings, wrap this tibble in a list and store this list as column in another \code{tibble}. To accomplish this we use functions from the tidyverse described in Chapter \ref{chap:R:data}.
 
@@ -11368,8 +11537,8 @@ Parsed text, using R's \emph{plotmath} syntax is supported in the table, with fa
                 \hlstr{'x^2'} \hlstd{= (}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}\hlopt{^}\hlnum{2}\hlstd{,}
                 \hlstr{'x^3'} \hlstd{= (}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}\hlopt{^}\hlnum{3}\hlstd{)}
 \hlstd{data.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{y} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{table.inset} \hlstd{=} \hlkwd{list}\hlstd{(tb.pm))}
-\hlkwd{ggplot}\hlstd{(data.tb,} \hlkwd{aes}\hlstd{(x, y,} \hlkwc{label} \hlstd{= table.inset))} \hlopt{+}
-  \hlkwd{geom_table}\hlstd{(}\hlkwc{size} \hlstd{=} \hlnum{7}\hlstd{,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
+\hlkwd{ggplot}\hlstd{(data.tb,} \hlkwc{mapping} \hlstd{=} \hlkwd{aes}\hlstd{(x, y,} \hlkwc{label} \hlstd{= table.inset))} \hlopt{+}
+  \hlkwd{geom_table}\hlstd{(}\hlkwc{inherit.aes} \hlstd{=} \hlnum{TRUE}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{7}\hlstd{,} \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
   \hlkwd{theme_void}\hlstd{()}
 \end{alltt}
 \end{kframe}
@@ -11379,7 +11548,7 @@ Parsed text, using R's \emph{plotmath} syntax is supported in the table, with fa
   The \emph{geometry} \gggeom{geom\_table()} uses internally functions from package \pkgname{gridExtra} to build a graphical object for the table. The use of table themes was not yet supported by this geometry at the time of writing.
 \end{explainbox}
 
-Geometry \gggeom{geom\_plot()} works very similarly to \code{geom\_table()} but instead of expecting a list data frames or tibbles to be mapped to the \code{label} aesthetics, it expects a list of ggplot objects. This allows adding as inset to a ggplot another ggplot. In the times when plots were hand drafted with India ink on paper, the use of inset plots was more frequent than nowadays. Inset plots can be very useful for zooming-in into parts of a main plot were observations are crowded and for displaying summaries based on the data shown in the main plot. The inset plots are nested in viewports which control the dimensions of the inset plot, and aesthetics \code{vp.height} and \code{vp.width} control their sizes---with defaults of 1/3 of the height and width of the plotting area of the main plot. Themes can be applied separately to the main and inset plots.
+Geometry \gggeom{geom\_plot()} works very similarly to \code{geom\_table()} but instead of expecting a list of data frames or tibbles to be mapped to the \code{label} aesthetics, it expects a list of ggplots (objects of class \code{gg}). This allows adding as inset to a ggplot another ggplot. In the times when plots were hand drafted with India ink on paper, the use of inset plots was more frequent than nowadays. Inset plots can be very useful for zooming-in into parts of a main plot were observations are crowded and for displaying summaries based on the observations shown in the main plot. The inset plots are nested in viewports which control the dimensions of the inset plot, and aesthetics \code{vp.height} and \code{vp.width} control their sizes---with defaults of 1/3 of the height and width of the plotting area of the main plot. Themes can be applied separately to the main and inset plots.
 
 In the first example of inset plots we include one of the summaries shown above as an inset table. We first create a tibble containing the plot to be inset.
 
@@ -11420,7 +11589,7 @@ In the first example of inset plots we include one of the summaries shown above 
 
 \end{knitrout}
 
-In the second example of inset plots we 1) use manually set limits to the coordinates to zoom into a region of the main plot, 2) adjust the \emph{theme} of the inset, 3) remove axis labels as they are the same as in the main plot, 4) add this zoomed version of the same plot as an inset and 5) highlight the zoomed-in region in the main plot. This fairly complex example shows how a new extension to \pkgname{ggplot2} can integrate well into the grammar of graphics paradigm. In this example, only to show an alternative approach, instead of colleting all the data into a data frame, we map constant values directly to the various aesthetics.
+In the second example of inset plots we 1) use manually set limits to the coordinates to zoom into a region of the main plot, 2) adjust the \emph{theme} of the inset, 3) remove axis labels as they are the same as in the main plot, 4) add this zoomed version of the same plot as an inset and 5) highlight the zoomed-in region in the main plot. This fairly complex example shows how a new extension to \pkgname{ggplot2} can integrate well into the grammar of graphics paradigm. In this example, only to show an alternative approach, instead of collecting all the data into a data frame, we map constant values directly to the various aesthetics.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11491,7 +11660,7 @@ You\index{plots!fonts} should be aware that \Rlang and \ggplot support the use o
 \begin{explainbox}
 Grid graphics provides the low level functions that both \pkgname{ggplot2} and \pkgname{lattice} use under the hood, support different types of units for expressing the coordinates of positions within the plotting area. All examples outside this text box use \code{"native"} data coordinates, however coordinates can be also given in physical units like \code{"mm"}. More useful when working with scalable plots is to use "npc" normalized parent coordinates, which are expressed as numbers in the range 0 to 1, relative to the dimensions of the sides of the current viewport, with origin at the lower left corner.
 
-Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} data coordinates, and trickery seems to be needed to get around this limitation. A rather general solution is provided by package \pkgname{ggpmisc} through \emph{aesthetics} \code{npcx} and \code{npcy} and geometries that support them. At the time of writing, \gggeom{geom\_text\_npc()}, \gggeom{geom\_label\_npc()}, \gggeom{geom\_table\_npc()}, \gggeom{geom\_plot\_npc()} and \gggeom{geom\_grob\_npc()}. These \emph{geometries} are useful for annotating plots and adding insets at positions relative to the plotting area that remain always consistent across different plots, or across panels when using facets with free axis limits. Being geometries they provide great freedom in the elements added to different panels and their positions.
+Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} data coordinates, and trickery seems to be needed to get around this limitation. A rather general solution is provided by package \pkgname{ggpmisc} through \emph{aesthetics} \code{npcx} and \code{npcy} and geometries that support them. At the time of writing, \gggeom{geom\_text\_npc()}, \gggeom{geom\_label\_npc()}, \gggeom{geom\_table\_npc()}, \gggeom{geom\_plot\_npc()} and \gggeom{geom\_grob\_npc()}. These \emph{geometries} are useful for annotating plots and adding insets at positions relative to the plotting area that remain always consistent across different plots, or across panels when using facets with free axis limits. Being geometries they provide freedom in the elements added to different panels and their positions.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11514,12 +11683,12 @@ Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} 
 \section{Statistics}\label{sec:plot:statistics}
 \index{plots!statistics|(}
 
-Before learning about \ggplot \emph{statistics} it is important to understand how the mapping of factors to \emph{aesthetic} works. When a factor, for example is mapped, for example, to \code{colour} it creates a new grouping, with the observations matching a given level of the factor, corresponding to a group. Most \emph{statistics} operate on the data for each of these groups separately, returning a summary for each group, for example, the mean of the observations in a group.
+Before learning about \ggplot \emph{statistics} it is important to understand how the mapping of factors to \emph{aesthetic} works. When a factor, for example, is mapped to \code{colour} it creates a new grouping, with the observations matching a given level of the factor, corresponding to a group. Most \emph{statistics} operate on the data for each of these groups separately, returning a summary for each group, for example, the mean of the observations in a group.
 
 \subsection{Functions}\label{sec:plot:function}
 \index{plots!plotting functions|(}
 \index{plots!statistics!function}
-In addition to plotting data from a data frame with variables to map to $x$ and $y$ \emph{aesthetics}, it is possible to have only a variable mapped to $x$ and use \ggstat{stat\_function()} to compute the values to be mapped to $y$ using an \Rlang function. This avoids the need to generate data beforehand as even the number of data points to be generated can be also set when adding \code{geom\_function}. Any \Rlang function, user defined or not, can be used as long as it is vectorised, with the length of the returned vector equal to the length of the vector used as \code{x} argument.
+In addition to plotting data from a data frame with variables to map to $x$ and $y$ \emph{aesthetics}, it is possible to have only a variable mapped to $x$ and use \ggstat{stat\_function()} to compute the values to be mapped to $y$ using an \Rlang function. This avoids the need to generate data beforehand as even the number of data points to be generated can be set in \code{geom\_function}. Any \Rlang function, user defined or not, can be used as long as it is vectorised, with the length of the returned vector equal to the length of the vector used as \code{x} argument.
 
 We start with the Normal distribution function.
 
@@ -11669,7 +11838,7 @@ We can plot error bars corresponding to $\pm$s.e. (standard errors) with the fun
 \end{knitrout}
 
 \begin{warningbox}\label{box:plot:coord:lims}
-\textbf{Scale- and coordinate limits are very different.}\index{limits!coordinate}\index{limits!scale} Scale limits restrict the data used, while coordinate limits restrict the data that are visible. For a scatter plot, the effect of either approach on the resulting plot are equivalent, as no calculations are involved, but when using \emph{statistics} to compute summaries, one should almost always rely on coordinate limits, to make sure that no data are excluded from the calculated summary. See section \ref{sec:plot:coord:limits} for details.
+\textbf{Scale- and coordinate limits are very different.}\index{limits!coordinate}\index{limits!scale} Scale limits restrict the data used, while coordinate limits restrict the data that are visible. For a scatter plot, the effect of either approach on the resulting plot are equivalent, as no calculations are involved, but when using \emph{statistics} to compute summaries, one should almost always rely on coordinate limits, to make sure that no data are excluded from the calculated summary. \emph{When manually setting scale limits one should never ignore warning messages related to excluded observations.} See section \ref{sec:plot:coord:limits} for details.
 \end{warningbox}
 
 Finally we can plot error bars showing $\pm$s.d. (standard deviation).
@@ -11684,7 +11853,7 @@ Finally we can plot error bars showing $\pm$s.d. (standard deviation).
 
 We do not give an example here, but instead of using these functions (from package \Hmisc) it is possible to use user-defined functions. In addition as arguments to any function used, except for the first one containing the actual data, are supplied as a list through formal argument \code{fun.args}, there is a lot of flexibility with respect to what functions can be used.
 
-Finally we plot the means in a scatter plot, with the observations superimposed and $p = 0.95$ confidence interval (the order in which the geoms are added is important: by having \gggeom{geom\_point()} last it is plotted on top of the bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets mapping them to factors in the data set can be used to distinguish them. Adding \ggstat{stat\_summary()} twice allows us to plot the mean and the error bars using different colors.
+Finally we plot the means in a scatter plot, with the observations superimposed and $p = 0.95$ confidence interval (the order in which the geoms are added is important: by having \gggeom{geom\_point()} last this layer is plotted on top of the error bars. In this case we set fill, colour and alpha (transparency) to constants, but in more complex data sets mapping them to factors in the data set can be used to distinguish them. Adding \ggstat{stat\_summary()} twice allows us to plot the mean and the error bars using different colors.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11708,7 +11877,7 @@ Finally we plot the means in a scatter plot, with the observations superimposed 
 \end{knitrout}
 
 Similarly as with scatter plots, we can plot summaries as columns.
-If we supply a different argument to \code{stat} we can for example plot the means or medians for a variable, for each \code{class} of car.
+If we supply a different argument to \code{geom} we can for example plot the means or medians for a variable, for each \code{class} of car.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11719,38 +11888,18 @@ If we supply a different argument to \code{stat} we can for example plot the mea
 \end{kframe}
 \end{knitrout}
 
-The ``reverse'' syntax is also valid, as we can add the \emph{statistics} to the plot object and pass the \emph{geometry} as an argument to it. In general in this book we avoid this alternative syntax for consistency.
+The ``reverse'' syntax is also valid, as we can add the \emph{geometry} to the plot object and pass the \emph{statistics} as an argument to it. In general in this book we avoid this alternative syntax for the sake of consistency.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{ggplot}\hlstd{(mpg,} \hlkwd{aes}\hlstd{(class, hwy))} \hlopt{+}
-  \hlkwd{geom_bar}\hlstd{(}\hlkwc{stat} \hlstd{=} \hlstr{"summary"}\hlstd{,} \hlkwc{fun.y} \hlstd{= mean)}
+  \hlkwd{geom_col}\hlstd{(}\hlkwc{stat} \hlstd{=} \hlstr{"summary"}\hlstd{,} \hlkwc{fun.y} \hlstd{= mean)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-And we can easily add error bars to the column plot. We use \code{size} to make the lines of the error bars thicker, and a value smaller than zero for \code{fatten} to make the point smaller. The default \emph{geometry} in \ggstat{stat\_summary()} is \gggeom{geom\_pointrange()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(mpg,} \hlkwd{aes}\hlstd{(class, hwy))} \hlopt{+}
-  \hlkwd{stat_summary}\hlstd{(}\hlkwc{geom} \hlstd{=} \hlstr{"col"}\hlstd{,} \hlkwc{fun.y} \hlstd{= mean)} \hlopt{+}
-  \hlkwd{stat_summary}\hlstd{(}\hlkwc{fun.data} \hlstd{=} \hlstr{"mean_se"}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{1}\hlstd{,}
-               \hlkwc{fatten} \hlstd{=} \hlnum{0.5}\hlstd{,} \hlkwc{color} \hlstd{=} \hlstr{"red"}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.7\textwidth]{figure/pos-summary-plot-11-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Instead of making the point smaller, we can pass \code{"linerange"} as argument for \code{geom} to eliminate the point completely by use of \gggeom{geom\_linerange()}.
+And we can easily add error bars to the column plot. We use \code{size} to make the lines of the error bars thicker. The default \emph{geometry} in \ggstat{stat\_summary()} is \gggeom{geom\_pointrange()}, so we can pass \code{"linerange"} as argument for \code{geom} to eliminate the point.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11762,7 +11911,7 @@ Instead of making the point smaller, we can pass \code{"linerange"} as argument 
 \end{kframe}
 \end{knitrout}
 
-Passing \code{"errorbar"} to \code{geom} results in the use of \gggeom{geom\_errorbar()} resulting in traditional ``capped'' error bars. However, this type of error bars has been criticized as adding unnecessary clutter to plots \autocite{Tufte1983}. We use \code{width} to reduce the width of the cross lines at the ends of the bars.
+Passing \code{"errorbar"} to \code{geom} results in the use of \gggeom{geom\_errorbar()} resulting in traditional ``capped'' error bars. However, this type of error bars has been criticized as adding unnecessary clutter to plots \autocite{Tufte1983}. We use \code{width} to reduce the width of the caps at the ends of the error bars.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11890,7 +12039,7 @@ Instead of using the default \code{formula} for a linear regression as smoother,
 \end{knitrout}
 
 It is possible to use other types of models, including GAM and GLM, as smoothers, but we will give only two simple examples of the use of \code{nls()} to fit a model non-linear in its parameters. In the first one we fit a Michaelis-Menten equation to reaction rate (\code{rate}) versus reactant concentration (\code{conc}). \code{Puromycin} is a data set included in the \Rlang distribution. Function \Rfunction{SSmicmen()}
-is also from \Rlang, and is a \emph{self starting} implementation of Michaelis-Menten function. Thanks to this, even though the fit is done with an iterative algorithm, we do not need to explicitly provide starting values for them. We need to set \code{se = FALSE} because
+is also from \Rlang, and is a \emph{self starting} implementation of Michaelis-Menten function. Thanks to this, even though the fit is done with an iterative algorithm, we do not need to explicitly provide starting values for the parameters to be fitted. We need to set \code{se = FALSE} because
 standard errors are not supported by the \code{predict()} method for \code{nls} fitted models.
 
 \begin{knitrout}\footnotesize
@@ -11923,7 +12072,7 @@ In the second example we define the same model directly in the model formula, an
 \end{knitrout}
 
 \begin{warningbox}
-The different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. The \code{alpha} (transparency) aesthetic can be mapped to a constant to make underlying layers visible, or \code{alpha} can be mapped to a data variable for example making the transparency of points in a plot depend on the number of observations used in its calculation.
+The different geoms and elements can be added in almost any order to a ggplot object, but they will be plotted in the order that they are added. The \code{alpha} (transparency) aesthetic can be mapped to a constant to make underlying layers visible, or \code{alpha} can be mapped to a data variable, for example, making the transparency of points in a plot depend on the number of observations used in its calculation.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -12210,7 +12359,7 @@ As with other \emph{geometries} their appearance obeys both the usual \emph{aest
 \subsection{Violin plots}\label{sec:plot:violin}
 \index{plots!violin plot|(}
 
-Violin plots are a more recent development than box plots, and usable with relatively large numbers of observations. They could be thought as being a sort of hybrid between an empirical density function (see section \ref{sec:plot:density} on page \pageref{sec:plot:density}) and a box plot (see section \ref{sec:boxplot} on page \pageref{sec:boxplot}). As is the case with box plots, they are particularly useful when comparing distributions of related data, side by side. They can be created with  \gggeom{geom\_violin()} as shown in the examples below. They are most frequently used to compare empirical density distributions between groups, by plotting them side by side.
+Violin plots are a more recent development than box plots, and usable with relatively large numbers of observations. They could be thought as being a sort of hybrid between an empirical density function (see section \ref{sec:plot:density} on page \pageref{sec:plot:density}) and a box plot (see section \ref{sec:boxplot} on page \pageref{sec:boxplot}). As is the case with box plots, they are particularly useful when comparing distributions of related data, side by side. They can be created with  \gggeom{geom\_violin()} as shown in the examples below.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -12241,7 +12390,7 @@ Violin plots are a more recent development than box plots, and usable with relat
 
 As with other \emph{geometries} their appearance obeys both the usual \emph{aesthetics} such as colour, and others specific to these type of visual representation.
 
-Other types of displays related to violin plots are beeswarm plots and sina plots, using categorical scatter plots can be produced with \emph{geometries} defined in packages \pkgname{ggbeeswarm} and \pkgname{ggforce}, respectively. A minimal example is shown here. See the documentation of the packages for details about the many options in their use.
+Other types of displays related to violin plots are \emph{beeswarm} plots and \emph{sina} plots, and can be produced with \emph{geometries} defined in packages \pkgname{ggbeeswarm} and \pkgname{ggforce}, respectively. A minimal example is shown here. See the documentation of the packages for details about the many options in their use.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -12267,10 +12416,6 @@ Other types of displays related to violin plots are beeswarm plots and sina plot
 \index{plots!panels|see{plots, facets}}
 Facets are a special kind of plots containing multiple panels in which the panels share some properties.
 These sets of coordinated panels are a useful tool for visualizing complex data. These plots became popular through the \code{trellis} graphs in \langname{S}, and the \pkgname{lattice} package in \Rlang. The basic idea is to have row and/or columns of plots with common scales, all plots showing values for the same response variable. This is useful when there are multiple classification factors in a data set. Similarly looking plots but with free scales or with the same scale but a `floating' intercept are sometimes also useful. In \ggplot there are two possible types of facets: facets organized in a grid, and facets along a single `axis' but wrapped into several rows. These are produced by adding \Rfunction{facet\_grid()} or \Rfunction{facet\_wrap()} to a ggplot, respectively. In the examples below we use \gggeom{geom\_point()} but faceting can be used with any \Rclass{ggplot} object.
-
-\begin{warningbox}
-  The code underlying faceting has been rewritten in \ggplot version 2.2.0. All the examples given here are backwards compatible with versions 2.1.0. The new functionality is related to the writing of extensions or controlled through themes.
-\end{warningbox}
 
 
 
@@ -12437,10 +12582,10 @@ Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a speci
 
 \end{knitrout}
 
-\begin{infobox}
-\sloppy
-In versions of \ggplot before 2.0.0, \code{labeller} was not implemented for \Rfunction{facet\_wrap()}, it was only available for \Rfunction{facet\_grid()}.
-\end{infobox}
+%\begin{infobox}
+%\sloppy
+%In versions of \ggplot before 2.0.0, \code{labeller} was not implemented for \Rfunction{facet\_wrap()}, it was only available for \Rfunction{facet\_grid()}.
+%\end{infobox}
 
 A minimal example of a wrapped facet. In this case the number of levels is small, when they are more the row of plots will be wrapped into two or more continuation rows. When using \Rfunction{facet\_wrap()} there is only one dimension, so no `.' is needed before or after the tilde.
 
@@ -12563,8 +12708,9 @@ Make an empty plot (\code{ggplot()}) and add to it as title an expression produc
 \index{plots!title|)}
 \index{plots!labels|)}
 
-\subsection{Convenience functions: Scale limits} To\index{plots!scales!limits} change the limits of any scale we can use \Rfunction{lims()}, using the name of the aesthetic as argument name and a suitable vector of values as argument. Most frequently we need to change the limits only of the scales for $x$ and/or $y$ aesthetics. Functions \Rfunction{ylim()} and \Rfunction{xlim()} makes this easy. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} is identical except for the scale it affects.
-For continuous scales we can set both limits using \Rfunction{xlim()} or \Rfunction{ylim()} which in this case accept two numeric values setting the low and high limit respectively. The order of the two values determines the direction of the scale. As elsewhere in \ggplot passing \code{NA} as argument for a limit keeps the existing limit.
+\subsection{Continuous scales}\label{sec:plot:scales:continuous}
+
+We start by listing the most frequently used arguments to the continuous scale functions: \code{name}, \code{breaks}, \code{minor\_breaks}, \code{labels}, \code{limits}, \code{expand}, \code{na.value}, \code{trans}, \code{guide}, and \code{position}. The value of \code{name} is used for axis labels or key title, it defaults to the mapped variable or expression. The arguments to \code{breaks} and \code{minor\_breaks} override the default locations of major and minor ticks and grid lines, setting them to \code{NULL} suppresses the ticks. By default the tick labels are generated from the value of \code{breaks} but an argument to \code{labels} of the same length as \code{breaks} replaces these defaults. The values of \code{limits} determine both the range of values in the data included and the plotting area as described above---by default the off-range observations are replaced by \code{NA} but it is also possible to ``squish'' these observations towards the edge of the plotting area. The argument to \code{expand} determines the size of the margins or padding added to the area delimited by \code{lims} to set the limits of the plotting area. The value passed to \code{na.value} is used as replacement for \code{NA} valued observations---most useful for \code{color} and \code{fill} aesthetics. The transformation object passed as argument to \code{trans} determines the transformation used---the transformation affects the rendering, but breaks and tick label remain expressed in the original data units. The argument to \code{guide} determines the type of key or removes the default key. Finally, \code{position} controls in the axis is located on the \code{"right"}, \code{"left"}, \code{"top"} or \code{"bottom"} of the plot. Depending on the scale in question not all these parameters are used.
 
 
 
@@ -12581,26 +12727,6 @@ We generate new fake data.
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+} \hlkwd{ylim}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{100}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-scales-10-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\subsection{Continuous scales}\label{sec:plot:scales:continuous}
-
-We start by listing the most frequently used arguments to the continuous scale functions: \code{name}, \code{breaks}, \code{minor\_breaks}, \code{labels}, \code{limits}, \code{expand}, \code{na.value}, \code{trans}, \code{guide}, and \code{position}. The value of \code{name} is used for axis labels or key title, it defaults to the mapped variable or expression. The arguments to \code{breaks} and \code{minor\_breaks} override the default locations of major and minor ticks and grid lines, setting them to \code{NULL} suppresses the ticks. By default the tick labels are generated from the value of \code{breaks} but an argument to \code{labels} of the same length as \code{breaks} replaces these defaults. The values of \code{limits} determine both the range of values in the data included and the plotting area as described above---by default the off-range observations are replaced by \code{NA} but it is also possible to ``squish'' these observations towards the edge of the plotting area. The argument to \code{expand} determines the size of the margins or padding added to the area delimited by \code{lims} to set the limits of the plotting area. The value passed to \code{na.value} is used as replacement for \code{NA} valued observations---most useful for \code{color} and \code{fill} aesthetics. The transformation object passed as argument to \code{trans} determines the transformation used---the transformation affects the rendering, but breaks and tick label remain expressed in the original data units. The argument to \code{guide} determines the type of key or removes the default key. Finally, \code{position} controls in the axis is located on the \code{"right"}, \code{"left"}, \code{"top"} or \code{"bottom"} of the plot. Depending on the scale in question not all these parameters are used.
-
 \subsubsection{Limits}
 
 Limits are relevant to all types of scales, but we here exemplify them using the $x$ and $y$ aesthetics.
@@ -12612,18 +12738,9 @@ In the next example we set hard limits, which will exclude observations from bot
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{limits} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{50}\hlstd{,} \hlnum{100}\hlstd{))}
+  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{limits} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{100}\hlstd{))}
 \end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: Removed 35 rows containing missing values (geom\_point).}}\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-45-1} 
-
-}
-
-
-
+\end{kframe}
 \end{knitrout}
 
 To set only one limit leaving the other free, we use \code{NA}.
@@ -12634,23 +12751,24 @@ To set only one limit leaving the other free, we use \code{NA}.
 \hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
   \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{limits} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{50}\hlstd{,} \hlnum{NA}\hlstd{))}
 \end{alltt}
+\end{kframe}
+\end{knitrout}
 
+Functions \Rfunction{ylim()} and \Rfunction{xlim()} are convenience functions that set the limits to the default scales in use. We here exemplify the use of \Rfunction{ylim()} only, but \Rfunction{xlim()} is identical except for the scale it affects.
 
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: Removed 35 rows containing missing values (geom\_point).}}\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-46-1} 
-
-}
-
-
-
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+} \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{ylim}\hlstd{(}\hlnum{50}\hlstd{,} \hlnum{NA}\hlstd{)}
+\end{alltt}
+\end{kframe}
 \end{knitrout}
 
 \begin{warningbox}
-  In the example above we demonstrate on purpose how some observations were removed. In general setting hard limits should be avoided, even though a warning is issued, as it is easy to unwillingly subset the data being plotted.
-\end{warningbox}
-
-Function \Rfunction{expand\_limits()} makes it possible to safely expand the dynamically computed default limits of a scale but does without restrict them---the plot will grow when needed to accommodate. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each, matching how the limits of the $x$ and $y$ continuous scales are defined. In the next example we expand the limits to include the origin.
+  In the examples above we demonstrate on purpose how some observations laying outside the limits we set were removed. In general setting hard limits should be avoided, even though a warning is issued when observations are omitted, as it is easy to unwillingly subset the data being plotted.
+  
+In contrast, function \Rfunction{expand\_limits()} makes it possible to safely \emph{expand} the dynamically computed default limits of a scale---in this case the scale limits will grow past the expanded values when needed to accommodate all observations. The arguments to \code{x} and \code{y} are numeric vectors of length one or two each, matching how the limits of the $x$ and $y$ continuous scales are defined. Her we expand the limits to include the origin.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -12659,7 +12777,7 @@ Function \Rfunction{expand\_limits()} makes it possible to safely expand the dyn
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-47-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-scale-limits-04-1} 
 
 }
 
@@ -12667,7 +12785,11 @@ Function \Rfunction{expand\_limits()} makes it possible to safely expand the dyn
 
 \end{knitrout}
 
-We here set the upper limit of the plotting area to be expanded by adding padding to the top and removing the padding from the bottom of the plotting area.
+\end{warningbox}
+
+The \code{expand} parameter of the scales plays a different role than \Rfunction{expand\_limits()}. It controls how much larger the plotting area is compared to the limits. In other words it adds a ``margin'' to the plotting are outside the limits set either dynamically or manually. Very rarely plots are drawn so that observations are plotted on top of the axes, avoiding this is a key function of \code{expand}. Rug plots and marginal annotations will also require the plotting are to be expanded. In \ggplot the default is to always apply expansion.
+
+We here set the upper limit of the plotting area to be expanded by adding padding to the top and removing the padding from the bottom of the plotting area. 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -12677,13 +12799,6 @@ We here set the upper limit of the plotting area to be expanded by adding paddin
   \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{expand} \hlstd{=} \hlkwd{expand_scale}\hlstd{(}\hlkwc{add} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{0.02}\hlstd{)))}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-48-1} 
-
-}
-
-
-
 \end{knitrout}
 
 Here we instead use a multiplier to a similar effect as above.
@@ -12696,13 +12811,6 @@ Here we instead use a multiplier to a similar effect as above.
   \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{expand} \hlstd{=} \hlkwd{expand_scale}\hlstd{(}\hlkwc{mult} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{0.1}\hlstd{)))}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-49-1} 
-
-}
-
-
-
 \end{knitrout}
 
 In the case of scales, we cannot reverse their direction through the setting of limits. We need instead to use a transformation as described in the next section.
@@ -12723,9 +12831,59 @@ Test what is the result if the first limit is larger than the second one. Is it 
 \end{knitrout}
 \end{playground}
 
+\subsubsection{Ticks and their labels}
+
+Parameter \code{breaks}\index{plots!scales!continuous!tick breaks} is used to set the location of ticks along the axis. Parameter \code{labels}\index{plots!scales!continuous!tick labels} is used to set the tick label to be used at each break. Both can be passed either a vector or a function as argument. The default is to compute good ones based on the limits and format the numbers as strings.
+
+When manually setting breaks, we can keep the default computed labels for the \code{breaks}.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{, pi} \hlopt{*} \hlnum{10}\hlstd{,} \hlnum{40}\hlstd{,} \hlnum{60}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+We can also set tick labels manually, in parallel to the setting of \code{breaks} by passing as arguments two vectors of equal length. Using an expression we obtain a Greek letter.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{, pi} \hlopt{*} \hlnum{10}\hlstd{,} \hlnum{40}\hlstd{,} \hlnum{60}\hlstd{),}
+                     \hlkwc{labels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"20"}\hlstd{,} \hlkwd{expression}\hlstd{(}\hlnum{10}\hlopt{*}\hlstd{pi),} \hlstr{"40"}\hlstd{,} \hlstr{"60"}\hlstd{))}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-scale-ticks-02-1} 
+
+}
+
+
+
+\end{knitrout}
+
+Package \pkgname{scales} provides several functions for the automatic generation of labels. To display tick labels as percentages for data available as decimal fractions, we can use function \code{scales::percent()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y} \hlopt{/} \hlkwd{max}\hlstd{(y)))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{labels} \hlstd{= scales}\hlopt{::}\hlstd{percent)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+In the case of currency we can use \code{scales::dollar()}, to use commas to separate thousands, millions, and so on, we can use \code{scales::comma()}, for exponents of 10, useful for logarithmic-transformed scales \code{scales::scientific\_format()}.
+It is also possible to use user-defined functions both for breaks and labels.
+
 \subsubsection{Transformed scales}
 
-The\index{plots!scales!continuous!transformations} default scale used by the \code{y} aesthetic uses \code{position = "identity"}, but there are predefined for transformed scales.
+The\index{plots!scales!continuous!transformations} default scale used by the \code{y} aesthetic uses \code{trans = "identity"}, but there are also available predefined scales with transformations.
 
 Although transformations can be passed as argument to \ggscale{scale\_x\_continuous()} and \ggscale{scale\_y\_continuous()}, there are predefined convenience scale functions for \code{log10}, \code{sqrt} and \code{reverse}.
 
@@ -12742,7 +12900,7 @@ We can use \ggscale{scale\_x\_reverse()} to reverse the direction of a continuou
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-51-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-scale-trans-01-1} 
 
 }
 
@@ -12760,13 +12918,6 @@ Axis tick-labels display the original values before applying the transformation.
   \hlkwd{scale_y_log10}\hlstd{(}\hlkwc{breaks}\hlstd{=}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,}\hlnum{20}\hlstd{,}\hlnum{50}\hlstd{,}\hlnum{100}\hlstd{))}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-52-1} 
-
-}
-
-
-
 \end{knitrout}
 
 In contrast, transforming the data on-the-fly when mapping it to the $x$ \emph{aesthetic}, results in tick-labels expressed in the logarithm of the original data.
@@ -12777,16 +12928,9 @@ In contrast, transforming the data on-the-fly when mapping it to the $x$ \emph{a
 \hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z,} \hlkwd{log10}\hlstd{(y)))} \hlopt{+} \hlkwd{geom_point}\hlstd{()}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-53-1} 
-
-}
-
-
-
 \end{knitrout}
 
-We show here how to specify a transformation to a continuous scale, using a predefined ``transformation'' object.
+We show next how to specify a transformation to a continuous scale, using a predefined ``transformation'' object.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -12795,13 +12939,6 @@ We show here how to specify a transformation to a continuous scale, using a pred
   \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{trans} \hlstd{=} \hlstr{"reciprocal"}\hlstd{)}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-54-1} 
-
-}
-
-
-
 \end{knitrout}
 
 Natural logarithms are important in growth analysis as the slope against time gives the relative growth rate. We show this with the \code{Orange} data set.
@@ -12816,143 +12953,11 @@ Natural logarithms are important in growth analysis as the slope against time gi
   \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{trans} \hlstd{=} \hlstr{"log"}\hlstd{,} \hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{50}\hlstd{,} \hlnum{100}\hlstd{,} \hlnum{200}\hlstd{))}
 \end{alltt}
 \end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-55-1} 
-
-}
-
-
-
 \end{knitrout}
-
-In section \ref{sec:plot:volcano} on page \pageref{sec:plot:volcano} we define and use a transformation object.
 
 \begin{warningbox}
-When combining scale transformations and summaries, one should be aware of which data are used, transformed or not.
+When combining scale transformations and \emph{statistics}, one should be aware of which data are used, transformed or not. The two last examples above are not equivalent, as the transformation applied to the scale does not affect the data.
 \end{warningbox}
-
-\subsubsection{Tick labels}
-
-Finally, when\index{plots!scales!continuous!tick labels} wanting to display tick labels for data available as fractions as percentages, we can use
-\code{labels = scales::percent}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y} \hlopt{/} \hlkwd{max}\hlstd{(y)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{labels} \hlstd{= scales}\hlopt{::}\hlstd{percent)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-56-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\sloppy
-In the case of currency we can use \code{labels = scales::dollar}, and if we want to use commas to separate thousands, millions, and so on, we can use \code{labels = scales::comma}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{labels} \hlstd{= scales}\hlopt{::}\hlstd{dollar)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-57-1} 
-
-}
-
-
-
-\end{knitrout}
-
-When using breaks, we can just accept the default labels for the \code{breaks}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{40}\hlstd{,} \hlnum{47}\hlstd{,} \hlnum{60}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-58-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can also set tick labels manually, in parallel to the setting of \code{breaks}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{40}\hlstd{,} \hlnum{47}\hlstd{,} \hlnum{60}\hlstd{),}
-                     \hlkwc{labels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"20"}\hlstd{,} \hlstr{"40"}\hlstd{,} \hlstr{"->"}\hlstd{,} \hlstr{"60"}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-59-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Using an expression we obtain a Greek letter.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{breaks} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{40}\hlstd{,} \hlnum{47}\hlstd{,} \hlnum{60}\hlstd{),}
-                     \hlkwc{labels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"20"}\hlstd{,} \hlstr{"40"}\hlstd{,} \hlkwd{expression}\hlstd{(alpha),} \hlstr{"60"}\hlstd{))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-60-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can pass a function that accepts the breaks and returns labels to \code{labels}. Package \scales defines several formatters, or we can define our own. For \code{log10} scales
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(fake2.data,} \hlkwd{aes}\hlstd{(z, y))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{scale_y_continuous}\hlstd{(}\hlkwc{labels} \hlstd{= scales}\hlopt{::}\hlkwd{scientific_format}\hlstd{())}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-61-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\sloppy
-Please, see section \ref{sec:plot:volcano} on page \pageref{sec:plot:volcano} for an example of the use of \code{scales::math\_format} together with a logarithmic transformation of the data.
 
 \subsection{Time and date scales for $x$ and $y$}
 
@@ -13101,7 +13106,7 @@ We order the columns in the plot based on \code{mpg\$hwy} by reordering \code{mp
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-68-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-51-1} 
 
 }
 
@@ -13119,7 +13124,7 @@ Or the same on-the-fly, which is much better as the data remains unmodified..
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-69-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-52-1} 
 
 }
 
@@ -13137,7 +13142,7 @@ Or ordering based on a different variable, \code{displ}.
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-70-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-53-1} 
 
 }
 
@@ -13157,7 +13162,7 @@ Alternatively we can use \ggscale{scale\_x\_discrete()} to reorder and select th
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-71-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-54-1} 
 
 }
 
@@ -13379,7 +13384,7 @@ We create a data frame containing a variable \code{colors} containing character 
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-80-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-63-1} 
 
 }
 
@@ -13410,7 +13415,7 @@ While using the identity scale, how would you need to change the code example ab
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-81-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-64-1} 
 
 }
 
@@ -13431,7 +13436,7 @@ While using the identity scale, how would you need to change the code example ab
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-82-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-65-1} 
 
 }
 
@@ -13450,7 +13455,7 @@ While using the identity scale, how would you need to change the code example ab
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-83-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-66-1} 
 
 }
 
@@ -13461,7 +13466,13 @@ While using the identity scale, how would you need to change the code example ab
 
 \section{Adding annotations}
 \index{plots!annotations}
-Annotations use the data coordinates of the plot, but do not `inherit' the default data or mapped aesthetics from the enclosing \Rclass{ggplot} object. They are added to a ggplot with \Rfunction{annotate()}. Annotations frequently make use \code{"text"} or \code{"label"} \emph{geometries} with character strings as data, possibly to be parsed as expressions. However, other \emph{geometries} can also be very useful. We show a simple example using \code{"text"}.
+Annotations use the data coordinates of the plot, but do not `inherit' the default data or mapped aesthetics from the enclosing \Rclass{ggplot} object. They are added to a ggplot with \Rfunction{annotate()}. Annotations frequently make use \code{"text"} or \code{"label"} \emph{geometries} with character strings as data, possibly to be parsed as expressions. However, other \emph{geometries} can also be very useful.
+
+\begin{warningbox}
+While layers added to a plot directly using \emph{geometries} and \emph{statistics} follow faceting, annotation layers added with \Rfunction{annotate()} are replicated unchanged in every panel of a faceted plot. The reason is that annotation layers take the data as constant values which are directly mapped to the aesthetics and consequently these data are the same in every panel as no grouping is possible.
+\end{warningbox}
+
+We show a simple example using \code{"text"}.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -13581,7 +13592,7 @@ We make the equivalent of the first bar plot above. As we are still using \gggeo
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-84-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-67-1} 
 
 }
 
@@ -13611,8 +13622,8 @@ Even with four slices pie charts can be difficult to read. Compare the following
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-85-1} 
-\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-85-2} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-68-1} 
+\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-68-2} 
 
 }
 
@@ -14146,7 +14157,7 @@ Looking at the definition of \ggtheme{theme\_minimal()} gives us enough informat
 ##             panel.border = element_blank(), strip.background = element_blank(), 
 ##             plot.background = element_blank(), complete = TRUE)
 ## }
-## <bytecode: 0x000000002aee9760>
+## <bytecode: 0x00000000260ce2d8>
 ## <environment: namespace:ggplot2>
 \end{verbatim}
 \end{kframe}
@@ -14862,7 +14873,7 @@ The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows on
 
 As in any type of script with instructions (for humans or computers), we should avoid unnecessary repetition, as repetition conspires against consistent results and is a major source of errors when the script needs to be modified. Not less important, a shorter script, if well written is easier to read.
 
-One approach is to use user-defined functions\index{plots!consistent format using functions}. One can for example, write simple wrapper functions on top functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \Rfunction{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, instead of a wrapper we can use a specialization of the generic. Such a specialized methods is almost invisible to users (e.g.\ does not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses both approaches.
+One approach is to use user-defined functions\index{plots!consistent format using functions}. One can write simple wrapper functions making use of functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \Rfunction{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, instead of a wrapper we can use a specialization of the generic. Such a specialized methods is almost invisible to users (e.g.\ does not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses both approaches.
 
 The graphic style of plots is best adjusted by means of themes. Although themes can be also used as building blocks as described below in the together with layers and scales, in can be better to add them when plots are being rendered as we may want to use different themes when, for example, rendering the same plot on different devices such as a printer or screen.
 
@@ -14899,9 +14910,9 @@ And now we can assemble the final plot by putting the saved ``blocks'' together.
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-91-1} 
-\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-91-2} 
-\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-91-3} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-74-1} 
+\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-74-2} 
+\includegraphics[width=.54\textwidth]{figure/pos-main-chunk-74-3} 
 
 }
 
@@ -14919,7 +14930,7 @@ We can also save intermediate results.
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-92-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-75-1} 
 
 }
 
@@ -14940,7 +14951,7 @@ into a "list" object. When we later add the list to a \code{"gg"} object, the me
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-93-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-76-1} 
 
 }
 
@@ -14981,225 +14992,7 @@ Which could be used as follows.
 \end{alltt}
 \end{kframe}
 
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-95-1} 
-
-}
-
-
-
-\end{knitrout}
-
-We can also write a function that encompasses all the needed blocks. This can be used, for example, to define new specialized \code{plot()} methods for the generic function \code{plot()}. The example below would plot objects of a hypothetical class \code{"zzz"}, containing variables $x$ and $y$. To show a bit fancier use, we scale both variables to a mean of 1, and then we plot them on a coordinate system with a fixed ratio of 1 between $x$ and $y$ scales.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{plot.zzz} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{...}\hlstd{) \{}
-  \hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= data,} \hlkwd{aes}\hlstd{(x} \hlopt{/} \hlkwd{mean}\hlstd{(x), y} \hlopt{/} \hlkwd{mean}\hlstd{(y), ...))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{coord_fixed}\hlstd{()} \hlopt{+}
-  \hlkwd{labs}\hlstd{(}\hlkwc{x} \hlstd{=} \hlstr{"scaled x"}\hlstd{,} \hlkwc{y} \hlstd{=} \hlstr{"scaled y"}\hlstd{,} \hlkwc{title} \hlstd{=} \hlstr{"Plot of a \textbackslash{}"zzz\textbackslash{}" object"}\hlstd{)}
-\hlstd{\}}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{some_data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{),}
-                        \hlkwc{y} \hlstd{=} \hlkwd{rnorm}\hlstd{(}\hlnum{20}\hlstd{,} \hlnum{5}\hlstd{,} \hlnum{3}\hlstd{))}
-\hlkwd{class}\hlstd{(some_data)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"zzz"}\hlstd{,} \hlkwd{class}\hlstd{(some_data))}
-\hlkwd{plot}\hlstd{(some_data)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-97-1} 
-
-}
-
-
-
-\end{knitrout}
-
-\begin{explainbox}
-Frequently, simpler program code can be written when null objects and null operations are available. The return value of adding \code{NULL} or \code{list()} to a \code{ggplot} object is a copy of the object. In both cases the rendered plot is the same as the one from the original object.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{# not run}
-\hlstd{myplot}
-\hlstd{myplot} \hlopt{+} \hlkwa{NULL}
-\hlstd{myplot} \hlopt{+} \hlkwd{list}\hlstd{()}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-The code in the next chunk is valid, it returns a blank plot. This apparently useless plot, can be very useful when writing functions that return \Rclass{ggplot} objects or build them piece by piece in a loop.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-99-1} 
-
-}
-
-
-
-\end{knitrout}
-
-It is also important to keep in mind that code in the next two chunks is valid. In other words, the default aesthetics mapping does not need to be defined within the call to function \code{ggplot()}, neither is a default mapping needed at all when a mapping is passed to each layer in the plot.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(mtcars)} \hlopt{+}
-  \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-100-1} 
-
-}
-
-
-
-\end{knitrout}
-
-or
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
-             \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-101-1} 
-
-}
-
-
-
-\end{knitrout}
-\end{explainbox}
-
-\subsection{Using the data pipes}
-
-We can pass as data argument to \code{ggplot()} the value returned by a pipe, and as \code{data} is the first parameter, \code{ggplot()} can be connected to a pipe. The example below is equivalent to that in the previous section.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
- \hlstd{mtcars} \hlopt{%>%}
-  \hlkwd{ggplot}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-          \hlkwd{geom_point}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-102-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Or if we want to modify the data on the fly, in this case converting miles per gallon into litres per 100~km.  As seen earlier calculations like this can be done within the call to \code{aes()} but using a pipe can result in easier to understand code.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
- \hlstd{mtcars} \hlopt{%>%}
-  \hlkwd{mutate}\hlstd{(}\hlkwc{L_100km} \hlstd{=} \hlnum{270} \hlopt{/} \hlstd{mpg)} \hlopt{%>%}
-  \hlkwd{ggplot}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= L_100km,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-          \hlkwd{geom_point}\hlstd{()}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-103-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Another way in which the flexibility of package \pkgname{ggplot2}'s implementation of the grammar of graphics can be exploited is by accessing and modifying the default data within a layer. The simplest example is plotting selected observations from the data in a certain layer, doing the selection on-the-fly. To make this code work, several of the packages comprising the \pkgname{tidyverse} need to be loaded. In this case we use a dot \code{.} to get access to the global default data for the plot.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
-       \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{= cyl))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{data} \hlstd{= .} \hlopt{%>%} \hlkwd{filter}\hlstd{(cyl} \hlopt{==} \hlnum{8}\hlstd{),} \hlkwc{shape} \hlstd{=} \hlnum{21}\hlstd{,} \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,} \hlkwc{size} \hlstd{=} \hlnum{3}\hlstd{)}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-104-1} 
-
-}
-
-
-
-\end{knitrout}
-
-Instead of function \code{filter()} we can use any R function that returns a data frame or a \code{tibble}, or as shown below a \emph{pipe}. If we want to reuse the global aesthetic mappings, we should maintain the same column names.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{p1} \hlkwb{<-}
-\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
-       \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_text}\hlstd{(}\hlkwc{data} \hlstd{= .} \hlopt{%>%} \hlkwd{group_by}\hlstd{(cyl)} \hlopt{%>%}
-                   \hlkwd{summarise}\hlstd{(}\hlkwc{disp} \hlstd{=} \hlkwd{mean}\hlstd{(disp),}
-                   \hlkwc{mpg} \hlstd{=} \hlkwd{mean}\hlstd{(mpg),}
-                   \hlkwc{mpg_lab} \hlstd{=} \hlkwd{format}\hlstd{(mpg,} \hlkwc{digits} \hlstd{=} \hlnum{1}\hlstd{)),}
-            \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= mpg_lab))}
-\hlstd{p1}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-105-1} 
-
-}
-
-
-
-\end{knitrout}
-
-This is particularly useful when saving layers in a list or individually as a building block, as in such case we do not know what will be the data argument when our ``block'' is used. This is not equivalent to a \emph{statistic} as we are manipulating the data using the original variable names in the data frame passed as argument. Within a \emph{statistic} we access the data after they have been mapped to aesthetics, such as $x$, $y$, label, colour, etc.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{means_text} \hlkwb{<-}
-  \hlkwd{geom_text}\hlstd{(}\hlkwc{data} \hlstd{= .} \hlopt{%>%} \hlkwd{group_by}\hlstd{(cyl)} \hlopt{%>%}
-                   \hlkwd{summarise}\hlstd{(}\hlkwc{disp} \hlstd{=} \hlkwd{mean}\hlstd{(disp),}
-                   \hlkwc{mpg} \hlstd{=} \hlkwd{mean}\hlstd{(mpg),}
-                   \hlkwc{mpg_lab} \hlstd{=} \hlkwd{format}\hlstd{(mpg,} \hlkwc{digits} \hlstd{=} \hlnum{1}\hlstd{)),}
-            \hlkwd{aes}\hlstd{(}\hlkwc{label} \hlstd{= mpg_lab))}
-
-\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,}
-       \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= disp,} \hlkwc{y} \hlstd{= mpg,} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl)))} \hlopt{+}
-       \hlkwd{stat_smooth}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"black"}\hlstd{,} \hlkwc{method} \hlstd{=} \hlstr{"lm"}\hlstd{,} \hlkwc{formula} \hlstd{= y} \hlopt{~} \hlkwd{poly}\hlstd{(x,} \hlnum{2}\hlstd{))} \hlopt{+}
-       \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-       \hlstd{means_text}
-\end{alltt}
-\end{kframe}
-
-{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-106-1} 
+{\centering \includegraphics[width=.54\textwidth]{figure/pos-main-chunk-78-1} 
 
 }
 
@@ -15281,7 +15074,7 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 \end{alltt}
 \begin{verbatim}
 ##        sysname        release        version       nodename        machine 
-##      "Windows"       "10 x64"  "build 17763"        "MUSTI"       "x86-64" 
+##      "Windows"       "10 x64"  "build 18362"        "MUSTI"       "x86-64" 
 ##          login           user effective_user 
 ##       "aphalo"       "aphalo"       "aphalo"
 \end{verbatim}
@@ -15298,7 +15091,7 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 \begin{verbatim}
 ## R version 3.6.0 (2019-04-26)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 17763)
+## Running under: Windows 10 x64 (build 18362)
 ## 
 ## Matrix products: default
 ## 
@@ -15313,10 +15106,11 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [1] tools     stats     grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] hexbin_1.27.3    forcats_0.4.0    dplyr_0.8.1      purrr_0.3.2     
-##  [5] readr_1.3.1      tidyr_0.8.3      tibble_2.1.1     ggforce_0.2.2   
-##  [9] ggbeeswarm_0.6.0 ggpmisc_0.3.1    gginnards_0.0.2  ggrepel_0.8.1   
-## [13] ggplot2_3.1.1    svglite_1.2.2    stringr_1.4.0    knitr_1.23      
+##  [1] forcats_0.4.0      dplyr_0.8.1        purrr_0.3.2       
+##  [4] readr_1.3.1        tidyr_0.8.3        tibble_2.1.3      
+##  [7] ggforce_0.2.2      ggbeeswarm_0.6.0   ggpmisc_0.3.1.9000
+## [10] gginnards_0.0.2    ggrepel_0.8.1      ggplot2_3.2.0     
+## [13] svglite_1.2.2      stringr_1.4.0      knitr_1.23        
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] nlme_3.1-139        sf_0.7-4            lubridate_1.7.4    
@@ -15326,28 +15120,28 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [13] lazyeval_0.2.2      colorspace_1.4-1    nnet_7.3-12        
 ## [16] withr_2.1.2         tidyselect_0.2.5    gridExtra_2.3      
 ## [19] compiler_3.6.0      cli_1.1.0           rvest_0.3.4        
-## [22] formatR_1.6         htmlTable_1.13.1    xml2_1.2.0         
+## [22] formatR_1.7         htmlTable_1.13.1    xml2_1.2.0         
 ## [25] labeling_0.3        checkmate_1.9.3     scales_1.0.0       
-## [28] classInt_0.3-3      digest_0.6.19       foreign_0.8-71     
-## [31] htmltools_0.3.6     base64enc_0.1-3     pkgconfig_2.0.2    
-## [34] highr_0.8           htmlwidgets_1.3     rlang_0.3.4        
-## [37] readxl_1.3.1        rstudioapi_0.10     farver_1.1.0       
-## [40] generics_0.0.2      tikzDevice_0.12     jsonlite_1.6       
-## [43] acepack_1.4.1       magrittr_1.5        polynom_1.4-0      
-## [46] Formula_1.2-3       Matrix_1.2-17       Rcpp_1.0.1         
-## [49] munsell_0.5.0       gdtools_0.1.8       stringi_1.4.3      
-## [52] MASS_7.3-51.4       plyr_1.8.4          grid_3.6.0         
-## [55] crayon_1.3.4        lattice_0.20-38     haven_2.1.0        
-## [58] splines_3.6.0       hms_0.4.2           magick_2.0         
-## [61] pillar_1.4.0        reshape2_1.4.3      glue_1.3.1         
-## [64] evaluate_0.13       latticeExtra_0.6-28 data.table_1.12.2  
-## [67] modelr_0.1.4        tweenr_1.0.1        graphics_3.6.0     
-## [70] cellranger_1.1.0    gtable_0.3.0        polyclip_1.10-0    
-## [73] assertthat_0.2.1    xfun_0.7            broom_0.5.2        
-## [76] tidyverse_1.2.1     e1071_1.7-1         filehash_2.4-2     
-## [79] class_7.3-15        survival_2.44-1.1   viridisLite_0.3.0  
-## [82] beeswarm_0.2.3      units_0.6-3         cluster_2.0.8      
-## [85] learnrbook_0.0.2
+## [28] hexbin_1.27.3       classInt_0.3-3      digest_0.6.19      
+## [31] foreign_0.8-71      htmltools_0.3.6     base64enc_0.1-3    
+## [34] pkgconfig_2.0.2     highr_0.8           htmlwidgets_1.3    
+## [37] rlang_0.3.4         readxl_1.3.1        rstudioapi_0.10    
+## [40] farver_1.1.0        generics_0.0.2      tikzDevice_0.12    
+## [43] jsonlite_1.6        acepack_1.4.1       magrittr_1.5       
+## [46] polynom_1.4-0       Formula_1.2-3       Matrix_1.2-17      
+## [49] Rcpp_1.0.1          munsell_0.5.0       gdtools_0.1.9      
+## [52] stringi_1.4.3       MASS_7.3-51.4       plyr_1.8.4         
+## [55] grid_3.6.0          crayon_1.3.4        lattice_0.20-38    
+## [58] haven_2.1.0         splines_3.6.0       hms_0.4.2          
+## [61] magick_2.0          pillar_1.4.1        reshape2_1.4.3     
+## [64] glue_1.3.1          evaluate_0.14       latticeExtra_0.6-28
+## [67] data.table_1.12.2   modelr_0.1.4        tweenr_1.0.1       
+## [70] graphics_3.6.0      cellranger_1.1.0    gtable_0.3.0       
+## [73] polyclip_1.10-0     assertthat_0.2.1    xfun_0.7           
+## [76] broom_0.5.2         tidyverse_1.2.1     e1071_1.7-2        
+## [79] filehash_2.4-2      class_7.3-15        survival_2.44-1.1  
+## [82] viridisLite_0.3.0   beeswarm_0.2.3      units_0.6-3        
+## [85] cluster_2.0.8       learnrbook_0.0.2
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
