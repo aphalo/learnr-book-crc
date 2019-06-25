@@ -1488,13 +1488,13 @@ To obtain a 2D grid we need to specify both \code{rows} and \code{cols}
 p + facet_grid(rows = vars(vs), cols = vars(am))
 @
 
-Margins display an additional column or row of panels with the combines data.
-<<facets-06>>=
-p + facet_grid(cols = vars(cyl), margins = TRUE)
-@
-
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
+@
+
+Margins display an additional column or row of panels with the combined data.
+<<facets-06>>=
+p + facet_grid(cols = vars(cyl), margins = TRUE)
 @
 
 We can represent more than one variable per dimension of the grid of plot panels. For this example, we change the default labeller used for the panels by one that includes the name of the variable.
@@ -1502,16 +1502,9 @@ We can represent more than one variable per dimension of the grid of plot panels
 p + facet_grid(cols = vars(vs, am), labeller = label_both)
 @
 
-<<facets-08, eval=eval_plots_all>>=
-p + facet_grid(cols = vars(vs, am))
-@
-
-<<echo=FALSE>>=
-opts_chunk$set(opts_fig_wide)
-@
-
 \begin{explainbox}
 Sometimes we may want to have mathematical expressions or Greek letters in the panel headings. The next example shows a way of achieving this. The key is to use a labeller that parses character strings into \Rlang expressions.
+
 <<facets-11, eval=eval_plots_all>>=
 mtcars$cyl12 <- factor(mtcars$cyl,
                        labels = c("alpha", "beta", "sqrt(x, y)"))
@@ -1522,9 +1515,17 @@ p1 <- ggplot(data = mtcars, aes(mpg, wt)) +
 
 More frequently we may need to include the levels of the factor used in the faceting as part of the labels. Here we use as \code{labeller} function \Rfunction{label\_bquote()} with a special syntax that allows us to use an expression where replacement based on the facet (panel) data takes place. See section \ref{sec:plot:plotmath} for an example of the use of \code{bquote()}, the \Rlang function on which this labeller is built upon.
 
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
 <<facets-12, eval=eval_plots_all>>=
 p + facet_grid(cols = vars(cyl), labeller = label_bquote(cols = .(cyl)~"cylinders"))
 @
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
+
 \end{explainbox}
 %\begin{infobox}
 %\sloppy
@@ -1812,95 +1813,31 @@ By\index{plots!scales!time!axis labels} default the tick labels produced and the
 
 \subsection{Discrete scales for $x$ and $y$}
 
-In\index{plots!scales!limits}\index{plots!scales!discrete} the case of ordered or unordered factors, the tick labels are by default the names of the factor levels. Consequently one roundabout way to obtaining the desired tick labels is to use them as factor levels. This approach is not recommended as in most cases the text of the desired tick labels may not be recognized as a valid name making the code using them difficult to type in scripts or at the command prompt. It is best to use simple mnemonic short names for factor levels and variables, and to set suitable labels when plotting, as we will show here.
-
-\begin{explainbox}
-When using factors, the ordering used for plotting levels is the one they have in the factor. When a factor is created, the default is for levels to be stored in alphabetical order. This default can be easily overridden at the time of creation, as well as the order modified at a later time.
-
-<<>>=
-default.fct <- factor(c("a", "c", "f", "f", "a", "d"))
-levels(default.fct)
-@
-
-<<>>=
-levels.fct <- factor(c("a", "c", "f", "f", "a", "d"),
-                      levels = c("f", "a", "d", "c"))
-levels(levels.fct)
-@
-
-Reorder can be used to change the order of the levels based on the values of a numeric variable. We will visit once again the \code{Orange} data set.
-
-<<>>=
-my1.Tree <- with(Orange,
-                reorder(Tree, -circumference))
-levels(Orange$Tree)
-levels(my1.Tree)
-@
-
-Which is equivalent to reversing the order in this particular case.
-
-<<>>=
-my2.Tree <- with(Orange,
-                factor(Tree,
-                levels = rev(levels(Tree))))
-levels(Orange$Tree)
-levels(my2.Tree)
-@
-
-We restore the default ordering.
-
-<<>>=
-my3.Tree <- with(Orange,
-                factor(Tree,
-                levels = sort(levels(Tree))))
-levels(Orange$Tree)
-levels(my3.Tree)
-@
-
-We can set the levels in any arbitrary order by explicitly listing the level names, not only at the time of creation but also later. Here we show that it is possible to not only reorder existing levels, but even to add a level for which there are no observations.
-
-<<>>=
-my3.Tree <- with(Orange,
-                factor(Tree,
-                levels = c("1", "2", "3", "4", "5", "9")))
-levels(Orange$Tree)
-levels(my3.Tree)
-@
-
-\end{explainbox}
+In\index{plots!scales!limits}\index{plots!scales!discrete} the case of ordered or unordered factors, the tick labels are by default the names of the factor levels. Consequently one roundabout way to obtaining the desired tick labels is to use them as factor levels. This approach is not recommended as in most cases the text of the desired tick labels may not be recognized as a valid name making the code using them difficult to type in scripts or at the command prompt. It is best to use simple mnemonic short names for factor levels and variables, and to set suitable through \emph{scales} when plotting, as we will show here.
 
 We use here once again the \code{mpg} data set.
+We can use \ggscale{scale\_x\_discrete()} to reorder and select the columns without altering the data. If we use this approach to subset the data, then to avoid warnings we need to add \code{na.rm = TRUE}. We additionally use \code{scale\_x\_discret} to convert level names to uppercase.
 
-We order the columns in the plot based on \code{mpg\$hwy} by reordering \code{mpg\$class}. This approach makes sense if this ordering is needed for all plots. It is always bad to keep several versions of a single data set as it easily leads to mistakes and confusion.
-
-<<>>=
-my.mpg <- mpg
-my.mpg$class <- with(my.mpg, reorder(factor(class), hwy))
-ggplot(my.mpg, aes(class, hwy)) +
-  stat_summary(geom = "col", fun.y = mean)
-@
-
-Or the same on-the-fly, which is much better as the data remains unmodified..
-
-<<>>=
-ggplot(mpg, aes(reorder(factor(class), hwy), hwy)) +
-  stat_summary(geom = "col", fun.y = mean)
-@
-
-Or ordering based on a different variable, \code{displ}.
-
-<<>>=
-ggplot(mpg, aes(reorder(factor(class), displ), hwy)) +
-  stat_summary(geom = "col", fun.y = mean)
-@
-
-Alternatively we can use \ggscale{scale\_x\_discrete()} to reorder and select the columns without altering the data. If we use this approach to subset the data, then to avoid warnings we need to add \code{na.rm = TRUE}. We use the scale in this example to convert level names to uppercase. The complementary function of \Rfunction{toupper()} is \Rfunction{tolower()}.
-
-<<>>=
+<<scale-discrete-10>>=
 ggplot(mpg, aes(class, hwy)) +
   stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
   scale_x_discrete(limits = c("compact", "subcompact", "midsize"),
-  labels = toupper)
+                   labels = c("COMPACT", "SUBCOMPACT", "MIDSIZE"))
+@
+
+If only case needs to be changed, to \Rfunction{toupper()} and \Rfunction{tolower()} allow a more general and less error prone approach.
+<<scale-discrete-10a, echo=3:4, eval=eval_plots_all>>=
+ggplot(mpg, aes(class, hwy)) +
+  stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
+  scale_x_discrete(limits = c("compact", "subcompact", "midsize"),
+                   labels = toupper)
+@
+
+Alternatively, we can change the order of the columns in the plot by reordering the levels of factor \code{mpg\$class}. This approach makes sense if the ordering needs to be done programmatically. See section \ref{sec:calc:factors} on page \pageref{sec:calc:factors} for details. The example below shows how to reorder the columns based on the \code{mean()} of \code{hwy}.
+
+<<scale-discrete-11, eval=eval_plots_all>>=
+ggplot(mpg, aes(reorder(x = factor(class), X = hwy, FUN = mean), hwy)) +
+  stat_summary(geom = "col", fun.y = mean)
 @
 
 \subsection{Size}
