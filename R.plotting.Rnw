@@ -2317,66 +2317,25 @@ deparse_test(a)
 @
 
 \index{plots!math expressions|)}
-
-\section{Generating output files}
-\index{devices!output|see{graphic output devices}}
-\index{graphic output devices|(}
-It is possible, when using \RStudio, to directly export the displayed plot to a file. However, if the file will have to be generated again at a later time, or a series of plots need to be produced with consistent format, it is best to include the commands to export the plot in the script.
-
-In R,\index{plots!printing}\index{plots!saving}\index{plots!output to files} files are created by printing to different devices. Printing is directed to a currently open device. Some devices produce screen output, others files. Devices depend on drivers. There are both devices that or part of R, and devices that can be added through packages.
-
-A very\index{plots!PDF output} simple example of PDF output (width and height in inches):
-
-<<eval=FALSE>>=
-fig1 <- ggplot(data.frame(x = -3:3), aes(x = x)) +
-  stat_function(fun = dnorm)
-pdf(file = "fig1.pdf", width = 8, height = 6)
-print(fig1)
-dev.off()
-@
-
-Encapsulated\index{plots!Postscript output} Postscript output (width and height in inches):
-
-<<eval=FALSE>>=
-postscript(file = "fig1.eps", width = 8, height = 6)
-print(fig1)
-dev.off()
-@
-
-There are Graphics devices for\index{plots!bitmap output} BMP, JPEG, PNG and TIFF format bitmap files. In this case the default units for width and height is pixels. For example we can generate TIFF output:
-
-<<eval=FALSE>>=
-tiff(file = "fig1.tiff", width = 1000, height = 800)
-print(fig1)
-dev.off()
-@
-
-\section{Building complex data displays}
+\section{Creating complex data displays}\label{sec:plot:composition}
 \index{examples!modular plot construction|(}
 
-In this section we do not refer to those aspects of the design of a plot that can be adjust through themes (see section \ref{sec:plot:themes} on page \pageref{sec:plot:themes}. Whenever this possibility exists, it is the best. Here we refer to aspects that are not really part of the graphical (''artistic'') design, but instead mappings, labels and similar data and metadata related aspects of plots. In many cases scales (see section \ref{sec:plot:scales} on page \pageref{sec:plot:scales}) also fall within the scope of the present section.
-
-\subsection{Using the grammar of graphics for individual plots}\label{sec:plot:composition}
-
-The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows one to build and test plots incrementally. In daily use, it is best to start with a simple design for a plot, print this plot, checking that the output is as expected and the code error-free. Afterwards, one can map additional \emph{aesthetics} and \emph{geometries} and \emph{statistics} gradually. The final steps are then to add \emph{annotations} and the text or expressions used for titles, and axis and key labels.
+The grammar of graphics\index{grammar of graphics}\index{plots!layers} allows one to build and test plots incrementally. In daily use, when creating a completely new plot, it is best to start with a simple design for a plot, print this plot, checking that the output is as expected and the code error-free. Afterwards, one can map additional \emph{aesthetics} and add \emph{geometries} and \emph{statistics} gradually. The final steps are then to add \emph{annotations} and the text or expressions used for titles, and axis and key labels. Another approach is to start with an existing plot and modify it, e.g.\ by using the same plotting code with different \code{data} or mapping different variables. When reusing code for a different data set, scale \code{limits} and \code{names} are likely to need to edited.
 
 \begin{playground}
   Build a graphically complex data plot of your interest, step by step. By step by step, I do not refer to using the grammar in the construction of the plot as earlier, but of taking advantage of this modularity to test intermediate version in an iterative design process, first by building up the complex plot in stages as a tool in debugging, and later using iteration in the processes of improving the graphic design of the plot and improving its readability and effectiveness.
 \end{playground}
 
-As in any type of script with instructions (for humans or computers), we should avoid unnecessary repetition, as repetition conspires against consistent results and is a major source of errors when the script needs to be modified. Not less important, a shorter script, if well written is easier to read.
+\section{Creating sets of plots}\label{sec:plot:sets:of}
 
-One approach is to use user-defined functions\index{plots!consistent format using functions}. One can write simple wrapper functions making use of functions defined in \ggplot, for example, adding/changing the defaults mappings to ones suitable for our application. In the case of \Rfunction{ggplot()}, as it is defined as a generic function, if one's data is stored in objects of a user-defined class, instead of a wrapper we can use a specialization of the generic. Such a specialized methods is almost invisible to users (e.g.\ does not require a different syntax or adding a word to the grammar). At the other extreme of complexity compared to a wrapper function, we could write a function that encapsulates all the code needed to build a specific type of plot. Package \pkgname{ggspectra} uses both approaches.
-
-The graphic style of plots is best adjusted by means of themes. Although themes can be also used as building blocks as described below in the together with layers and scales, in can be better to add them when plots are being rendered as we may want to use different themes when, for example, rendering the same plot on different devices such as a printer or screen.
-
-As \Rclass{ggplot}\index{plots!reusing parts of} objects are composed using operator \code{+} to assemble together the different components, one can also store in a variable these components, or using a list, partial plots, which can be used to compose the final figure.
+Plots to be presented at a given occasion or published as part of the same work need to be consistent in various respects: themes, scales and palettes, annotations, titles and captions. To guarantee this consistency we need to build plots modularly and avoid repetition by assigning names to the ``modules'' that need to be used multiple times.
 
 \subsection{Saving plot layers and scales in variables}
 
-We can assign a ggplot object or a part of it to a variable, and then assemble a new plot from the different pieces.
+When creating plots with \ggplot\index{plots!reusing parts of} objects are composed using operator \code{+} to assemble together the individual components. The functions that create plot layers, scales, etc.\ are constructors of objects and the objects they return can be stored in variables, and once saved, added to multiple plots at a later time.
 
-<<>>=
+We create a plot and save it to variable \code{myplot} and we separately save the values returned by a call to function \code{labs()}.
+<<plot_composition-01, eval=eval_plots_all>>=
 myplot <- ggplot(data = mtcars,
                  aes(x = disp, y = mpg,
                  colour = factor(cyl))) +
@@ -2388,27 +2347,28 @@ mylabs <- labs(x = "Engine displacement)",
                shape = "Number of\ncylinders")
 @
 
-And now we can assemble the final plot by putting the saved ``blocks'' together. A \code{"gg"} object should always be on the left side of the \code{+} operator. We add layers or other elements to it.
+We assemble the final plot from the two parts we saved into variables. This is useful when we need to create several plots ensuring that scale \code{name} arguments are used consistently. In the example above, we saved these names, but the approach can be used for other plot components or lists of components.
 
-<<>>=
+\begin{warningbox}
+ When composing plots with the \code{+} operator the left hand side operand must be a \code{"gg"} object. The left operand is added to the \code{"gg"} object and the result returned.
+\end{warningbox}
+
+<<plot_composition-02, eval=eval_plots_all>>=
 myplot
 myplot + mylabs + theme_bw(16)
 myplot + mylabs + theme_bw(16) + ylim(0, NA)
 @
 
 We can also save intermediate results.
-
-<<>>=
+<<plot_composition-03, eval=eval_plots_all>>=
 mylogplot <- myplot + scale_y_log10(limits=c(8,55))
 mylogplot + mylabs + theme_bw(16)
 @
 
-\subsection{Saving plot layers and scales in variables in lists}
+\subsection{Saving plot layers and scales in lists}
 
-If the pieces to be put together do not include a \code{"gg"} object, we can group them
-into a "list" object. When we later add the list to a \code{"gg"} object, the members of the list are added one by one to the plot.
-
-<<>>=
+If the pieces to be put together do not include a \code{"gg"} object, we can group them into an \Rlang list and save it. When we later add the saved list to a \code{"gg"} object, the members of the list are added one by one to the plot respecting their order.
+<<plot_composition-11, eval=eval_plots_all>>=
 myparts <- list(mylabs, theme_bw(16))
 mylogplot + myparts
 @
@@ -2417,13 +2377,11 @@ mylogplot + myparts
 Revise the code you wrote for the ``playground'' exercise in section \ref{sec:plot:composition}, but this time, pre-building and saving groups of elements that you expect to be useful unchanged when composing a different plot of the same type, or a plot of a different type from the same data.
 \end{playground}
 
-\index{examples!modular plot construction|)}
-
 \subsection{Using functions as building blocks}
 
-When the blocks we assemble need to accept arguments when used, we have to define functions instead of saving constant blocks to variables either individually or grouped in lists. The functions we define, have to return either a \code{"gg"} object, a list of components or a single plot component. The simplest use is to alter some defaults in existing functions which return \code{"gg"} objects or layers. The ellipsis (\code{...}) allows passing named arguments to a nested function. In this case, every single passed by name to \code{bw\_ggplot()} will be copied as argument to the nested call the \code{ggplot()}. Be aware, that supplying arguments by position, is not possible, unless, one includes the parameters explicitly in the wrapper function.
+When the blocks we assemble need to accept arguments when used, we have to define functions instead of saving plot components to variables. The functions we define, have to return either a \code{"gg"} object, a list of plot components or a single plot component. The simplest use is to alter some defaults in existing constructor functions returning \code{"gg"} objects or layers. The ellipsis (\code{...}) allows passing named arguments to a nested function. In this case, every single argument passed by name to \code{bw\_ggplot()} will be copied as argument to the nested call to \code{ggplot()}. Be aware, that supplying arguments by position, is possible only for parameters explicitly included in the definition of the wrapper function.
 
-<<>>=
+<<plot_composition-21, eval=eval_plots_all>>=
 bw_ggplot <- function(...) {
   ggplot(...) +
   theme_bw()
@@ -2432,13 +2390,46 @@ bw_ggplot <- function(...) {
 
 Which could be used as follows.
 
-<<>>=
+<<plot_composition-22, eval=eval_plots_all>>=
 bw_ggplot(data = mtcars,
           aes(x = disp, y = mpg,
           colour = factor(cyl))) +
           geom_point()
 @
+\index{examples!modular plot construction|)}
 
+\section{Generating output files}
+\index{devices!output|see{graphic output devices}}
+\index{graphic output devices|(}
+It is possible, when using \RStudio, to directly export the displayed plot to a file. However, if the file will have to be generated again at a later time, or a series of plots need to be produced with consistent format, it is best to include the commands to export the plot in the script.
+
+In R,\index{plots!printing}\index{plots!saving}\index{plots!output to files} files are created by printing to different devices. Printing is directed to a currently open device such a window in \RStudio. Some devices produce screen output, others files. Devices depend on drivers. There are both devices that or part of \Rlang, and devices that can be defined in packages.
+
+Creating a file involves opening a device, printing and closing the device in sequence. In most cases the file remains locked until the device is close.
+
+For example rendering a plot to\index{plots!PDF output} PDF or Encapsulated Postcript (setting width and height in inches) .
+
+<<plot-file-01, eval=eval_plots_all>>=
+fig1 <- ggplot(data.frame(x = -3:3), aes(x = x)) +
+  stat_function(fun = dnorm)
+pdf(file = "fig1.pdf", width = 8, height = 6)
+print(fig1)
+dev.off()
+@
+
+Encapsulated\index{plots!Postscript output} Postscript output (width and height in inches):
+<<plot-file-02, eval=eval_plots_all>>=
+postscript(file = "fig1.eps", width = 8, height = 6)
+print(fig1)
+dev.off()
+@
+
+There are Graphics devices for\index{plots!bitmap output} BMP, JPEG, PNG and TIFF format bitmap files (width and height in pixels).
+<<plot-file-03, eval=eval_plots_all>>=
+tiff(file = "fig1.tiff", width = 1000, height = 800)
+print(fig1)
+dev.off()
+@
 
 <<eco=FALSE>>=
 try(detach(package:tidyverse))
