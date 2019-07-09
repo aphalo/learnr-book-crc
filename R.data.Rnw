@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'data-chunk')
 @
 
-\chapter{Grammars of Data}\label{chap:R:data}
+\chapter{New grammars of Data}\label{chap:R:data}
 
 \begin{VF}
 Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.
@@ -16,19 +16,29 @@ Essentially everything in S[R], for instance, a call to a function, is an S[R] o
 
 %\dictum[Patrick J. Burns (1998) S Poetry. \url{http://www.burns-stat.com/documents/books/s-poetry/}]{Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.}
 
+<<echo=FALSE>>=
+# set to TRUE to test non-executed code chunks and rendering of plots
+eval_online_data <- FALSE
+eval_yoctopuce <- FALSE
+@
+
 \section{Aims of this chapter}
 
-Base \Rlang and the recommended packages (installed by default) include many functions for importing and/or manipulating data. This is a complete set, that supports all the usually needed operations. These functions have stable and well described behaviour, so they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages.
+Base \Rlang and the recommended packages (installed by default) include many functions for importing and/or manipulating data. This is a complete set, that supports all the usually needed operations. These functions have stable and well described behaviour, so they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter we aim at describing the new syntaxes introduced by the most popular of these extensions aiming at improving in various ways how we can manipulate data in \Rlang.
 
-Many functions from base \Rlang had been designed to perform optimally on rather small data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly in performance and random-access memory in computers has become cheaper, making the design constraints less limiting, but on the other the size of data sets has also increased. In some cases performance is constrained by the design of the \Rlang language itself. Some contributed packages have aimed at improving performance by relying on different compromises between usability, speed and reliability than base \Rlang. Package \pkgname{data.table} is the best example of an alternative implementation of data storage maximizing speed of processing for large data sets using a new semantics and requiring a new syntax. We could say that package \pkgname{data.table} is based on a ``grammar of data'' that is different to that in the \Rlang language. The compromise in this case has been the use of a less intuitive syntax, and by defaulting to call by reference of arguments instead of by copy, increasing the ``responsibility'' of the writer of code defining new functions.
+\section{Introduction}
 
-In the case of the alternative file-reading functions defined in package \pkgname{readr} the increased speed is obtained at the cost of error-prone guessing of column types and widths. A different compromise, that makes base \Rlang functions preferable as long as their slower performance is not a problem and column widths and types are not known at the time an script is written or if it is not guaranteed to remain the same when the same script may be reused.
+By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Most of these had been originally designed to perform optimally on rather small data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly in performance and random-access memory in computers has become cheaper, making constraints imposed by the original design of \Rlang less limiting, but on the other hand, the size of data sets has also increased. Some contributed packages have aimed at improving performance by relying on different compromises between usability, speed and reliability than used for base \Rlang.
 
-When a computation includes a chain of sequential operations, if using base \Rlang, we can either store intermediate returned value in a variable at each step, or nested multiple function calls. The first approach is verbose, but results in readable scripts, specially if variable names for intermediate results are wisely chosen. The second approach becomes very difficult too read as soon as there is more than one nesting level. Attempts to find an alternative syntax have borrowed the concept of data \emph{pipes} from Unix shells \autocite{Kernigham1981}. That it has been possible to write packages that define the operators needed to ``add'' this new syntax to \Rlang is a testimony to its flexibility and extensibility. Two packages, \pkgname{magrittr} and \pkgname{wrapr}, define operators for pipe-based syntax.
+Package \pkgname{data.table} is the best example of an alternative implementation of data storage maximizing speed of processing for large data sets using a new semantics and requiring a new syntax. We could say that package \pkgname{data.table} is based on a ``grammar of data'' that is different to that in the \Rlang language. The compromise in this case has been the use of a less intuitive syntax, and by defaulting to call by reference of arguments instead of by copy, increasing the ``responsibility'' of the author of code defining new functions.
 
-A different aspect of the \Rlang syntax is extraction of members from lists and data frames by name. Base \Rlang provides two different operators for this, \code{\$} and \code{[]}, with different syntax. These two operators also differ in how \emph{incomplete names} are handled. Package \pkgname{tibble} alters this syntax for an alternative to base \Rlang's data frames. Once again, a new syntax allows new functionality at the expense of partial incompatibility with the base \Rlang syntax. Objects of class \code{"tb"} were also an attempt to improve performance compared to objects of class \code{"data.frame"}. \Rlang performance has improved in recent releases and now the performance is not the same, but depending on the operations or data either base \Rlang data frames or tibbles perform better.
+In the case of the alternative file-reading functions defined in package \pkgname{readr} the increased speed is obtained at the cost of error-prone guessing of column types and widths. A different compromise, that makes base \Rlang functions preferable as long as their slower performance is not a problem when column widths and types are not known at the time an script is written, or if column widths and types are not guaranteed to remain the same during the lifetime of the script.
 
-Base \Rlang function \Rfunction{subset()} has an unusual syntax, as it evaluates the expression passed as second argument within the data frame passed as its first argument. This saves typing at the expense of increasing the risk of bugs as by reading the call to subset it is not obvious which names are resolved in the environment of the function and which ones within its first argument. In addition, changes elsewhere in a script can change how a call to subset is interpreted. In reality, subset is a wrapper function built on top of the extraction operator \code{[]}. It is a convenience function, mostly intended to be used at the console, rather than in scripts. To extract columns from a data frame is always best to use the \code{[[]]} operator with a character string as argument.
+When a computation includes a chain of sequential operations, if using base \Rlang, we can either store at each step in the computation the returned value in a variable, or nest multiple function calls. The first approach is verbose, but allows readable scripts, specially if variable names are wisely chosen. The second approach becomes very difficult too read as soon as there is more than one nesting level. Attempts to find an alternative syntax have borrowed the concept of data \emph{pipes} from Unix shells \autocite{Kernigham1981}. Interestingly, that it has been possible to write packages that define the operators needed to ``add'' this new syntax to \Rlang is a testimony to its flexibility and extensibility. Two packages, \pkgname{magrittr} and \pkgname{wrapr}, define operators for pipe-based syntax.
+
+A different aspect of the \Rlang syntax is extraction of members from lists and data frames by name. Base \Rlang provides two different operators for this, \code{\$} and \code{[]}, with different syntax. These two operators also differ in how \emph{incomplete names} are handled. Package \pkgname{tibble} alters this syntax for an alternative to base \Rlang's data frames. Once again, a new syntax allows new functionality at the expense of partial incompatibility with the base \Rlang syntax. Objects of class \code{"tb"} were also an attempt to improve performance compared to objects of class \code{"data.frame"}. \Rlang performance has improved in recent releases and currently even though performance is not the same, depending on the operations and data either \Rlang's data frames or tibbles perform better.
+
+Base \Rlang function \Rfunction{subset()} has an unusual syntax, as it evaluates the expression passed as second argument within the data frame passed as its first argument (see \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}). This saves typing at the expense of increasing the risk of bugs as by reading the call to subset it is not obvious which names are resolved in the environment of the function and which ones within its first argument. In addition, changes elsewhere in a script can change how a call to subset is interpreted. In reality, subset is a wrapper function built on top of the extraction operator \code{[]}. It is a convenience function, mostly intended to be used at the console, rather than in scripts. To extract columns from a data frame is always best to use the \code{[[]]} operator with a character string as argument.
 
 Package \pkgname{dplyr} provides convenience functions that work in a similar way as base \Rlang \code{subset()}. This package has suffered quite drastic changes during its development with respect of how to handle the dilemma caused by ``guessing'' of the environment where names should be looked up. There is no easy answer, a simplified syntax leads to ambiguity, and a fully specified syntax is verbose. Recent versions of the package introduced a terse syntax to achieve a concise way of specifying where to lookup for names. Apparently this syntax was found to be too obscure and a new change introduced. I guess the answer is as above, for code that needs to highly reliable and produce reproducible results we should at least for the time being use base \Rlang. For code that is to be used once, or for which reproducibility can depend on the use of a specific (old or soon to be old) version of \pkgname{dplyr} the conciseness of the new syntax will be an advantage.
 
@@ -84,38 +94,41 @@ if (!dir.exists(save.path)) {
 @
 \end{infobox}
 
-\section{Introduction}
+\section{Replacements for \texttt{data.frame}}
 
-By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Several recently developed packages provide somehow different, and in my view \emph{frequently} easier ways of working with data in \Rlang. Their design has aimed at making writing data analysis scripts easier, while the original design of \Rlang emphasized more interactive use by typing at the \Rlang console.
+\subsection{\pkgname{data.table}}
+The function call semantics of the \Rlang language is that arguments are passed to functions by copy. If the arguments are modified within the code of a function, these changes are local to the function. If implemented näively this semantic would impose a huge toll on performance, however, \Rlang in most situations only makes a copy if and when the value changes. Consequently, for modern versions of \Rlang which are very good at avoiding unnecessary copying of objects, the normal \Rlang semantics has only a moderate negative impact on performance. However, this impact can be still a problem as modification is detected at the object level, and consequently \Rlang may make copies of for example even a huge data frame when only values in a single column or even just an attribute has changed.
 
-Some other recent packages emphasize computation speed, at some cost with respect to simplicity of use, and in particular intuitiveness of their use. Of course, as with any user interface, much depends on one's own preferences and attitudes to data analysis. However, a package designed for maximum efficiency like \pkgname{data.table} requires of the user to have a good understanding of computers to be able to handle the unusual behavior compared to the rest of \Rlang. As the present book is not aimed at users with a strong background in computer science, package \pkgname{data.table} will not described here. I base this chapter on what I mostly use myself for everyday data analysis and scripting, and exclude the complexities of high performance \Rlang programming and package development.
+Package \pkgname{data.table} passes arguments to functions by reference, avoiding making any copies, but any assignments within a function affect the variable passed as argument. This simplifies the needed tests and also by avoiding the need to make a copy of arguments to functions achieves the best possible performance. This is a specialized package but extremely useful when dealing with large data set. Writing user code, such as scripts, requires a good understanding of the pass-by-reference semantics. Package \pkgname{data.table} makes no attempt at backwards compatibility with base \Rlang \code{data.frame}.
 
-The chapter is divided into three sections, the first one deals with reading data saved by other programs or measuring instrumentation, stored locally or remotely in files or  databases. The second section will deal with transformations of the data that do not combine different observations, although they may combine different variables from a single observation event, select certain variables or observations from a larger set, or join, or combine, data from different sources. The third section will deal with operations that produce summaries or involve other operations on groups of observations.
+\subsection{\pkgname{tibble}}
 
-\section{The new words and grammar}
+The authors of package \pkgname{tibble} describe as their class as backwards compatible with \code{data.frame} and make them a derived class. This backwards compatibility is incomplete 
 
-The first obvious difference between scripts using the new and old grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is through temporary files.
+\section{Data pipes}
 
-<<pipes-x01,engine="bash">>=
+The first obvious difference between scripts using some of the new grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS, pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is usually implemented by means of temporary files.
+
+<<pipes-x01,engine="bash",eval=FALSE>>=
 stdin | grep("abc") | more
 @
 
-So, how can \emph{pipes} exist within a single script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects instead of through OS files. As an abstraction there is no difference.
+How can \emph{pipes} exist within a single \Ralng script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects stored in memory instead of through temporary OS files stored on disk. As an abstraction there is no difference.
 
-What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a correctly working script is available still pipes provide a more concise way of stating operations and with familiarity with the paradigm easier to read scripts (for humans).
+What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a bug-free script is developed, pipes by allowing more concise code, usually improve readability (for humans).
 
-The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages and some operators re-exported.
+\subsection{\pkgname{magrittr}}
 
+The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages.
 We start with a toy example first written using separate steps and normal \Rlang syntax
 <<pipes-x02>>=
 data.in <- 1:10
 data.tmp <- sqrt(data.in)
 data.out <- sum(data.tmp)
-rm(data.tmp)
+rm(data.tmp) # clean up!
 @
 
 next using nested function calls still using normal \Rlang syntax
-
 <<pipes-x03>>=
 data.out <- sum(sqrt(data.in))
 @
@@ -125,7 +138,9 @@ written as a pipe using the chaining operator from package \pkgname{magrittr}.
 data.in %>% sqrt() %>% sum() -> data.out
 @
 
-Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes useful are the new classes, functions and methods defined in the different \pkgname{tidyverse} packages. We will describe them following the usual flow of data through a data analysis pipe, starting with data input and output, and continuing in the next chapter with plotting.
+Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages. It is important to be aware the 
+
+
 
 \section{Data input and output}\label{sec:data:io}
 
@@ -749,7 +764,7 @@ uvi.tb
 
 Many of the functions described above accept am URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
 
-<<url-01>>=
+<<url-01, eval=eval_online_data>>=
 logger.df <-
       read.csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
                 header = FALSE,
@@ -758,7 +773,7 @@ sapply(logger.df, class)
 sapply(logger.df, mode)
 @
 
-<<url-02>>=
+<<url-02, eval=eval_online_data>>=
 logger.tb <-
     read_csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
               col_names = c("time", "temperature"))
@@ -768,7 +783,7 @@ sapply(logger.tb, mode)
 
 While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}.
 
-<<url-11>>=
+<<url-11, eval=eval_online_data>>=
 download.file("http://r4photobiology.info/learnr/my-data.xlsx",
               "data/my-data-dwn.xlsx",
               mode = "wb")
@@ -776,14 +791,14 @@ download.file("http://r4photobiology.info/learnr/my-data.xlsx",
 
 Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into R.
 
-<<url-03>>=
+<<url-03, eval=eval_online_data>>=
 remote_thiamin.df <-
   read.spss(file = "http://r4photobiology.info/learnr/thiamin.sav",
             to.data.frame = TRUE)
 head(remote_thiamin.df)
 @
 
-<<url-04>>=
+<<url-04, eval=eval_online_data>>=
 remote_my_spss.tb <-
     read_sav(file = "http://r4photobiology.info/learnr/thiamin.sav")
 remote_my_spss.tb
@@ -793,7 +808,7 @@ Function \Rfunction{download.file()} in \Rlang default \pkgname{utils} package c
 
 In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it (commented out code, as we have a local copy), and then we open the local file.
 
-<<url-05,eval=-2>>=
+<<url-05, eval=eval_online_data>>=
 my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
                 "surface_gauss/pevpr.sfc.mon.ltm.nc",
                 sep = "")
@@ -825,7 +840,7 @@ This example is not run, and needs setting the configuration of the YoctoPuce mo
 
 Here we use function \Rfunction{fromJSON()} to retrieve logged data from one sensor.
 
-<<iot-01,eval=FALSE>>=
+<<iot-01, eval=eval_yoctopuce>>=
 hub.url <- "http://127.0.0.1:4444/"
 Meteo01.lst <-
     fromJSON(paste(hub.url, "byName/Meteo01/dataLogger.json",
@@ -836,7 +851,7 @@ Meteo01.lst
 
 The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is \emph{tidy} with respect to the variables, with quantity names and units also returned by the module, as well as the time.
 
-<<iot-02,eval=FALSE>>=
+<<iot-02, eval=eval_yoctopuce>>=
     val.vector <- unlist(Meteo01.lst[["val"]])
     dplyr::transmute(Meteo01.lst,
                      utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),

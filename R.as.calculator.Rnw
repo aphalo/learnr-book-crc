@@ -1634,13 +1634,32 @@ subset(a.df, x > 3)[ , -3]
 subset(a.df, x > 3)$x
 @
 
-None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original one. Another way to delete a column from a data frame is to assign \code{NULL} to it in the same way as members are deleted from \code{list}s.
-
-<<data-frames-6>>=
-a.df[["x2"]] <- NULL
-a.df$x3 <- NULL
-a.df
+None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name, if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df} deleting in the process the original one.
+\begin{warningbox}
+  In the example above the names in the expression passed as second argument to \code{subset()} are first searched within \code{ad.df} but if not found, searched in the environment. There being no variable \code{A} in the data frame \code{a.df}, vector \code{A} from the environment is silently used in the expression resulting in a returned data frame with no rows.
+<<data-frames-5a>>=
+A <- 1
+subset(a.df, A > 3)
 @
+
+The use of \Rfunction{subset()} is convenient, but more prone to result in bugs compared to directly using the extraction operator \code{[]}. This same ``cost'' to achieving convenience applies to functions like \Rfunction{attach()} and \Rfunction{with()} described below. The longer time a script is expected to be used, adapted and reused, the more careful we should be when using any of these functions. An alternative way of avoiding excessive verbosity is to keep the names of data frames short.
+\end{warningbox}
+
+A frequently used way of deleting a column by name from a data frame is to assign \code{NULL} to it ---i.e.\ in the same way as members are deleted from \code{list}s. This approach modifies \code{a.df} in place.
+<<data-frames-6>>=
+aa.df <- a.df
+colnames(aa.df)
+aa.df[["y"]] <- NULL
+colnames(aa.df)
+@
+
+\begin{explainbox}
+Alternatively we can use negative indexing to remove columns from a copy of a data frame. In this example we remove a single column. As base \Rlang does not support negative indexing by name, we need to find the numerical index to the column to delete.
+<<data-frames-6a>>=
+a.df[ , -which(colnames(a.df) == "y")]
+@
+Instead of using the equality test we can use the operator \code{\%in\%} or function \code{grepl()} to delete multiple columns in a single statement.
+\end{explainbox}
 
 \begin{playground}
 In the previous code chuck we deleted the last two columns of the data frame \code{a.df}.
