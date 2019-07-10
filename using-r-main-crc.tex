@@ -213,7 +213,7 @@ Base \Rlang and the recommended packages (installed by default) include many fun
 
 \section{Introduction}
 
-By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Most of these had been originally designed to perform optimally on rather small data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly in performance and random-access memory in computers has become cheaper, making constraints imposed by the original design of \Rlang less limiting, but on the other hand, the size of data sets has also increased. Some contributed packages have aimed at improving performance by relying on different compromises between usability, speed and reliability than used for base \Rlang. 
+By reading previous chapters, you have already become familiar with base \Rlang classes, methods, functions and operators for storing and manipulating data. Most of these had been originally designed to perform optimally on rather small data sets \autocite[see][]{Matloff2011}. The \Rlang implementation has been over the years improved significantly in performance and random-access memory in computers has become cheaper, making constraints imposed by the original design of \Rlang less limiting, but on the other hand, the size of data sets has also increased. Some contributed packages have aimed at improving performance by relying on different compromises between usability, speed and reliability than used for base \Rlang.
 
 Package \pkgname{data.table} is the best example of an alternative implementation of data storage maximizing speed of processing for large data sets using a new semantics and requiring a new syntax. We could say that package \pkgname{data.table} is based on a ``grammar of data'' that is different to that in the \Rlang language. The compromise in this case has been the use of a less intuitive syntax, and by defaulting to call by reference of arguments instead of by copy, increasing the ``responsibility'' of the author of code defining new functions.
 
@@ -247,6 +247,7 @@ For executing the examples listed in this chapter you need first to load the fol
 \hlkwd{library}\hlstd{(learnrbook)}
 \hlkwd{library}\hlstd{(tibble)}
 \hlkwd{library}\hlstd{(magrittr)}
+\hlkwd{library}\hlstd{(wrapr)}
 \hlkwd{library}\hlstd{(stringr)}
 \hlkwd{library}\hlstd{(dplyr)}
 \hlkwd{library}\hlstd{(tidyr)}
@@ -298,36 +299,369 @@ We also make sure the folder used to save data read from the internet, exists.
 \end{knitrout}
 \end{infobox}
 
-\section{Introduction}
+\section{Replacements for \texttt{data.frame}}
 
- Several recently developed packages provide somehow different, and in my view \emph{frequently} easier ways of working with data in \Rlang. Their design has aimed at making writing data analysis scripts easier, while the original design of \Rlang emphasized more interactive use by typing at the \Rlang console.
+\subsection{\pkgname{data.table}}
+The function call semantics of the \Rlang language is that arguments are passed to functions by copy. If the arguments are modified within the code of a function, these changes are local to the function. If implemented näively this semantic would impose a huge toll on performance, however, \Rlang in most situations only makes a copy if and when the value changes. Consequently, for modern versions of \Rlang which are very good at avoiding unnecessary copying of objects, the normal \Rlang semantics has only a moderate negative impact on performance. However, this impact can be still a problem as modification is detected at the object level, and consequently \Rlang may make copies of for example even a huge data frame when only values in a single column or even just an attribute has changed.
 
-Some other recent packages emphasize computation speed, at some cost with respect to simplicity of use, and in particular intuitiveness of their use. Of course, as with any user interface, much depends on one's own preferences and attitudes to data analysis. However, a package designed for maximum efficiency like \pkgname{data.table} requires of the user to have a good understanding of computers to be able to handle the unusual behavior compared to the rest of \Rlang. As the present book is not aimed at users with a strong background in computer science, package \pkgname{data.table} will not described here. I base this chapter on what I mostly use myself for everyday data analysis and scripting, and exclude the complexities of high performance \Rlang programming and package development.
+Package \pkgname{data.table} passes arguments to functions by reference, avoiding making any copies, but any assignments within a function affect the variable passed as argument. This simplifies the needed tests and also by avoiding the need to make a copy of arguments to functions achieves the best possible performance. This is a specialized package but extremely useful when dealing with large data set. Writing user code, such as scripts, requires a good understanding of the pass-by-reference semantics. Package \pkgname{data.table} makes no attempt at backwards compatibility with base \Rlang \code{data.frame}.
 
-The chapter is divided into three sections, the first one deals with reading data saved by other programs or measuring instrumentation, stored locally or remotely in files or  databases. The second section will deal with transformations of the data that do not combine different observations, although they may combine different variables from a single observation event, select certain variables or observations from a larger set, or join, or combine, data from different sources. The third section will deal with operations that produce summaries or involve other operations on groups of observations.
+\subsection{\pkgname{tibble}}
 
-\section{The new words and grammar}
+The authors of package \pkgname{tibble} describe their \Rclass{tbl} class as backwards compatible with \Rclass{data.frame} and make them a derived class. This backwards compatibility is only partial so in some situations they are not equivalent.
 
-The first obvious difference between scripts using the new and old grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is through temporary files.
+The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed be the design of base \Rlang data frames at the cost of creating some incompatibilities due to altered syntax for member extraction and by adding support for ``columns'' of class \Rclass{list} and removing support for columns of class \Rclass{matrix} (???). Handling of attributes is also differen, with no row names added by default. There are also differences in default behaviour of both constructors and methods. Although, objects of class \Rclass{tbl} can passed as arguments to most functions that expect data frames as input, not all of them are guaranteed to work correctly because of the change in syntax.
+
+\begin{warningbox}
+It is easy to write code that will work correctly both with data frames and tibbles. However, code that is syntactically correct according to the \Rlang language may fail if a tibble is used in place of a data frame.
+\end{warningbox}
+
+\begin{infobox}
+In their first incarnation, the name for \Rclass{tibble} was \code{data\_frame} (with a dash instead of a dot). The old name is still recognized, but it is better to only use \Rfunction{tibble()} to avoid confusion. One should be aware that although the constructor \Rfunction{tibble()} and conversion function \Rfunction{as.tibble()}, as well as the test \Rfunction{is.tibble()} use the name \Rclass{tibble}, the class attribute is named \code{tbl}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{)}
+\hlkwd{is.tibble}\hlstd{(my.tb)}
+\end{alltt}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: `is.tibble()` is deprecated, use `is\_tibble()`.\\\#\# This warning is displayed once per session.}}\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{class}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Furthermore, by necessity, to support tibbles based on different underlying data sources a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \Rclass{tbl\_df}.
+\end{infobox}
+
+We start with the constructor and conversion methods. For this we will define our own diagnosis function.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{show_classes} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+  \hlkwd{cat}\hlstd{(}
+    \hlkwd{paste}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlkwd{class}\hlstd{(x)[}\hlnum{1}\hlstd{],}
+    \hlstr{"containing:"}\hlstd{),}
+    \hlkwd{paste}\hlstd{(}\hlkwd{names}\hlstd{(x),}
+          \hlkwd{sapply}\hlstd{(x, class),} \hlkwc{collapse} \hlstd{=} \hlstr{", "}\hlstd{,} \hlkwc{sep} \hlstd{=} \hlstr{": "}\hlstd{),}
+    \hlkwc{sep} \hlstd{=} \hlstr{"\textbackslash{}n"}\hlstd{)}
+    \hlstd{)}
+\hlstd{\}}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+In the next two chunks we can see some of the differences. The \Rfunction{tibble()} constructor does not by default convert character data into factors, while the \Rfunction{data.frame()} constructor does.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{codes} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{),} \hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{integers} \hlstd{=} \hlnum{1L}\hlopt{:}\hlnum{3L}\hlstd{)}
+\hlkwd{is.data.frame}\hlstd{(my.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.tibble}\hlstd{(my.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{show_classes}\hlstd{(my.df)}
+\end{alltt}
+\begin{verbatim}
+## data.frame containing:
+## codes: factor, numbers: integer, integers: integer
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Tibbles are data frames---or more formally class \Rclass{tibble} is derived from class \code{data.frame}. However, data frames are not tibbles.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{codes} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{),} \hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{integers} \hlstd{=} \hlnum{1L}\hlopt{:}\hlnum{3L}\hlstd{)}
+\hlkwd{is.data.frame}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.tibble}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{show_classes}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## tbl_df containing:
+## codes: character, numbers: integer, integers: integer
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The \Rfunction{print()} method for tibbles, overrides the one defined for data frames.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{print}\hlstd{(my.df)}
+\end{alltt}
+\begin{verbatim}
+##   codes numbers integers
+## 1     A       1        1
+## 2     B       2        2
+## 3     C       3        3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{print}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 3 x 3
+##   codes numbers integers
+##   <chr>   <int>    <int>
+## 1 A           1        1
+## 2 B           2        2
+## 3 C           3        3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+An aesthetic difference is in how tibbles and data frames are printed when they have many rows. Construct a data frame and an equivalent tibble with at least 50 rows, and then test how the output looks when they are printed.
+\end{playground}
+
+Data frames can be converted into tibbles with \code{as.tibble()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my_conv.tb} \hlkwb{<-} \hlkwd{as.tibble}\hlstd{(my.df)}
+\end{alltt}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: `as.tibble()` is deprecated, use `as\_tibble()` (but mind the new semantics).\\\#\# This warning is displayed once per session.}}\begin{alltt}
+\hlkwd{is.data.frame}\hlstd{(my_conv.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.tibble}\hlstd{(my_conv.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{show_classes}\hlstd{(my_conv.tb)}
+\end{alltt}
+\begin{verbatim}
+## tbl_df containing:
+## codes: factor, numbers: integer, integers: integer
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my_conv.df} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(my.tb)}
+\hlkwd{is.data.frame}\hlstd{(my_conv.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{is.tibble}\hlstd{(my_conv.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{show_classes}\hlstd{(my_conv.df)}
+\end{alltt}
+\begin{verbatim}
+## data.frame containing:
+## codes: character, numbers: integer, integers: integer
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+Look carefully at the result of the conversions. Why do we now have a data frame with \code{A} as \code{character} and tibble with \code{A} as a \code{factor}?
+\end{playground}
+
+\begin{explainbox}
+Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between authors on what is the \emph{correct} behaviour based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
+
+We have already seen that calling \Rfunction{as.data.frame()} on a tibble strips the derived class attributes, returning a data frame. We now look at the whole contents on the \code{"class"} attribute to better exemplify the problem. We also test the two objects for equality, in two different ways. Using the operator \code{==} tests for equivalent objects. Objects that contain the same data. Using \Rfunction{identical()} tests that objects are exactly the same, including attributes such as class.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{class}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{class}\hlstd{(my_conv.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] "data.frame"
+\end{verbatim}
+\begin{alltt}
+\hlstd{my.tb} \hlopt{==} \hlstd{my_conv.df}
+\end{alltt}
+\begin{verbatim}
+##      codes numbers integers
+## [1,]  TRUE    TRUE     TRUE
+## [2,]  TRUE    TRUE     TRUE
+## [3,]  TRUE    TRUE     TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{identical}\hlstd{(my.tb, my_conv.df)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Now we derive from a tibble, and then attempt a conversion back into a tibble.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.xtb} \hlkwb{<-} \hlstd{my.tb}
+\hlkwd{class}\hlstd{(my.xtb)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"xtb"}\hlstd{,} \hlkwd{class}\hlstd{(my.xtb))}
+\hlkwd{class}\hlstd{(my.xtb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "xtb"        "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\begin{alltt}
+\hlstd{my_conv_x.tb} \hlkwb{<-} \hlkwd{as_tibble}\hlstd{(my.xtb)}
+\hlkwd{class}\hlstd{(my_conv_x.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\begin{alltt}
+\hlstd{my.xtb} \hlopt{==} \hlstd{my_conv_x.tb}
+\end{alltt}
+\begin{verbatim}
+##      codes numbers integers
+## [1,]  TRUE    TRUE     TRUE
+## [2,]  TRUE    TRUE     TRUE
+## [3,]  TRUE    TRUE     TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{identical}\hlstd{(my.xtb, my_conv_x.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Packages in the \pkgname{tidyverse} follow approach 2). If in doubt about the behaviour of some function, then you need to do a test similar to the I have presented in the chunks in this box.
+\end{explainbox}
+
+There are additional important differences between the constructors \Rfunction{tibble()} and \Rfunction{data.frame()}. One of them is that in a call to \Rfunction{tibble()}, member variables (``columns'')  being defined can be used in the definition of subsequent member variables.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{= a} \hlopt{+} \hlstd{b,} \hlkwc{d} \hlstd{= letters[a} \hlopt{+} \hlnum{1}\hlstd{])}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 5 x 4
+##       a     b     c d    
+##   <int> <int> <int> <chr>
+## 1     1     5     6 b    
+## 2     2     4     6 c    
+## 3     3     3     6 d    
+## 4     4     2     6 e    
+## 5     5     1     6 f
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
+\end{playground}
+
+While data frame columns can be factors, vectors or matrices (with the same number of rows as the data frame), columns of tibbles can be factors, vectors or lists (with the same number of members as rows the tibble has).
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{=} \hlkwd{list}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{4}\hlstd{,} \hlnum{5}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 5 x 3
+##       a     b c        
+##   <int> <int> <list>   
+## 1     1     5 <chr [1]>
+## 2     2     4 <dbl [1]>
+## 3     3     3 <dbl [1]>
+## 4     4     2 <dbl [1]>
+## 5     5     1 <dbl [1]>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Which even allows a list of lists as a variable, or a list of vectors.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{=} \hlkwd{list}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{2}\hlstd{,} \hlnum{0}\hlopt{:}\hlnum{3}\hlstd{, letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{], letters[}\hlnum{3}\hlopt{:}\hlnum{1}\hlstd{]))}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 5 x 3
+##       a     b c        
+##   <int> <int> <list>   
+## 1     1     5 <chr [1]>
+## 2     2     4 <int [2]>
+## 3     3     3 <int [4]>
+## 4     4     2 <chr [3]>
+## 5     5     1 <chr [3]>
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{Data pipes}
+
+The first obvious difference between scripts using some of the new grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS, pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is usually implemented by means of temporary files.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 stdin | grep("abc") | more
 \end{alltt}
-
-\begin{verbatim}
-## U
-\end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-So, how can \emph{pipes} exist within a single script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects instead of through OS files. As an abstraction there is no difference.
+How can \emph{pipes} exist within a single \Rlang script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects stored in memory instead of through temporary OS files stored on disk. As an abstraction there is no difference.
 
-What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a correctly working script is available still pipes provide a more concise way of stating operations and with familiarity with the paradigm easier to read scripts (for humans).
+What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a bug-free script is developed, pipes by allowing more concise code, usually improve readability (for humans).
 
-The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages and some operators re-exported.
+\subsection{\pkgname{magrittr}}
 
+The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages.
 We start with a toy example first written using separate steps and normal \Rlang syntax
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -335,13 +669,12 @@ We start with a toy example first written using separate steps and normal \Rlang
 \hlstd{data.in} \hlkwb{<-} \hlnum{1}\hlopt{:}\hlnum{10}
 \hlstd{data.tmp} \hlkwb{<-} \hlkwd{sqrt}\hlstd{(data.in)}
 \hlstd{data.out} \hlkwb{<-} \hlkwd{sum}\hlstd{(data.tmp)}
-\hlkwd{rm}\hlstd{(data.tmp)}
+\hlkwd{rm}\hlstd{(data.tmp)} \hlcom{# clean up!}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
 next using nested function calls still using normal \Rlang syntax
-
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -359,7 +692,50 @@ written as a pipe using the chaining operator from package \pkgname{magrittr}.
 \end{kframe}
 \end{knitrout}
 
-Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes useful are the new classes, functions and methods defined in the different \pkgname{tidyverse} packages. We will describe them following the usual flow of data through a data analysis pipe, starting with data input and output, and continuing in the next chapter with plotting.
+\begin{explainbox}
+The \Roperator{\%>\%} from package \pkgname{magrittr} takes two operands. The value returned by the \emph{lhs} (left hand side) operand, which can be any \Rlang expression, is passed as first argument to the \emph{rhs} operand, which must be must be a function accepting at least one argument. Consequently, the function in the \emph{rhs} must have a suitable signature for the pipe to work and it is impossible to pass piped arguments by name or to any other parameter than the first one.
+
+Some base \Rlang functions like \code{subset()} have a signature that is suitable for use in pipes, while using \code{assign()} in a pipe will in most cases require defining a wrapper function to change the order of the formal parameters.
+\end{explainbox}
+
+\subsection{\pkgname{wrapr}}
+
+The \Roperator{\%.>\%} or ``dot-pipe'' operator from pakage \pkgname{wrapr} adds more ``sugar'' by allowing expressions both on rhs and lhs, and any position in the rhs for the piped value.
+
+Rewritten using the dot-pipe operator the pipe in the previous chunk becomes
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{data.in} \hlopt{%.>%} \hlkwd{sqrt}\hlstd{(.)} \hlopt{%.>%} \hlkwd{sum}\hlstd{(.)} \hlkwb{->} \hlstd{data.out}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+This operator allows us to do things like, which \Roperator{\%>\%} does not allow.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{data.in} \hlopt{%.>%} \hlstd{(}\hlnum{2} \hlopt{+} \hlstd{.}\hlopt{^}\hlnum{2}\hlstd{)} \hlopt{%.>%} \hlkwd{assign}\hlstd{(}\hlstr{"data.out"}\hlstd{, .)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+If needed or desired named arguments are supported.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{data.in} \hlopt{%.>%} \hlstd{(}\hlnum{2} \hlopt{+} \hlstd{.}\hlopt{^}\hlnum{2}\hlstd{)} \hlopt{%.>%} \hlkwd{assign}\hlstd{(}\hlkwc{value} \hlstd{= .,} \hlkwc{x} \hlstd{=} \hlstr{"data.out"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{warningbox}
+\Rlang syntax for expressions is preserved, with the only caveat that because of the low precedence of the \Roperator{\%.>\%} operator we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses.
+\end{warningbox}
+
+In the rest of the chapter we will exclusively use dot pipes in examples to ensure readability.
+
+Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages.
 
 \section{Data input and output}\label{sec:data:io}
 
@@ -501,9 +877,9 @@ Base \Rlang provides several functions for portably working with files, they are
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2019-07-08 17:00:42 2019-07-08 17:00:42
+## xxx.txt    0 FALSE  666 2019-07-10 23:49:13 2019-07-10 23:49:13
 ##                       atime exe
-## xxx.txt 2019-07-08 17:00:42  no
+## xxx.txt 2019-07-10 23:49:13  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
@@ -2477,338 +2853,6 @@ Hadley Wickham, together with collaborators, has developed a set of \Rlang tools
 
 \subsection{Better data frames}
 
-Package \pkgname{tibble} defines an improved class \Rclass{tibble} that can be used in place of data frames. Changes are several, including differences in default behaviour of both constructors and methods. Objects of class \Rclass{tibble} can non-the-less be used as arguments for most functions that expect data frames as input.
-
-\begin{infobox}
-In their first incarnation, the name for \Rclass{tibble} was \code{data\_frame} (with a dash instead of a dot). The old name is still recognized, but it is better to only use \Rfunction{tibble()} to avoid confusion. One should be aware that although the constructor \Rfunction{tibble()} and conversion function \Rfunction{as.tibble()}, as well as the test \Rfunction{is.tibble()} use the name \Rclass{tibble}, the class attribute is named \code{tbl}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{)}
-\hlkwd{is.tibble}\hlstd{(my.tb)}
-\end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: `is.tibble()` is deprecated, use `is\_tibble()`.\\\#\# This warning is displayed once per session.}}\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{class}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Furthermore, by necessity, to support tibbles based on different underlying data sources a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \code{tbl\_df}.
-\end{infobox}
-
-We start with the constructor and conversion methods. For this we will define our own diagnosis function.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{show_classes} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
-  \hlkwd{cat}\hlstd{(}
-    \hlkwd{paste}\hlstd{(}\hlkwd{paste}\hlstd{(}\hlkwd{class}\hlstd{(x)[}\hlnum{1}\hlstd{],}
-    \hlstr{"containing:"}\hlstd{),}
-    \hlkwd{paste}\hlstd{(}\hlkwd{names}\hlstd{(x),}
-          \hlkwd{sapply}\hlstd{(x, class),} \hlkwc{collapse} \hlstd{=} \hlstr{", "}\hlstd{,} \hlkwc{sep} \hlstd{=} \hlstr{": "}\hlstd{),}
-    \hlkwc{sep} \hlstd{=} \hlstr{"\textbackslash{}n"}\hlstd{)}
-    \hlstd{)}
-\hlstd{\}}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-In the next two chunks we can see some of the differences. The \Rfunction{tibble()} constructor does not by default convert character data into factors, while the \Rfunction{data.frame()} constructor does.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{codes} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{),} \hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{integers} \hlstd{=} \hlnum{1L}\hlopt{:}\hlnum{3L}\hlstd{)}
-\hlkwd{is.data.frame}\hlstd{(my.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.tibble}\hlstd{(my.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{show_classes}\hlstd{(my.df)}
-\end{alltt}
-\begin{verbatim}
-## data.frame containing:
-## codes: factor, numbers: integer, integers: integer
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Tibbles are data frames---or more formally class \Rclass{tibble} is derived from class \code{data.frame}. However, data frames are not tibbles.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{codes} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{,} \hlstr{"C"}\hlstd{),} \hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{3}\hlstd{,} \hlkwc{integers} \hlstd{=} \hlnum{1L}\hlopt{:}\hlnum{3L}\hlstd{)}
-\hlkwd{is.data.frame}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.tibble}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{show_classes}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## tbl_df containing:
-## codes: character, numbers: integer, integers: integer
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The \Rfunction{print()} method for tibbles, overrides the one defined for data frames.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{print}\hlstd{(my.df)}
-\end{alltt}
-\begin{verbatim}
-##   codes numbers integers
-## 1     A       1        1
-## 2     B       2        2
-## 3     C       3        3
-\end{verbatim}
-\begin{alltt}
-\hlkwd{print}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 3 x 3
-##   codes numbers integers
-##   <chr>   <int>    <int>
-## 1 A           1        1
-## 2 B           2        2
-## 3 C           3        3
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-The main difference is in how tibbles and data frames are printed when they have many rows. Construct a data frame and an equivalent tibble with at least 50 rows, and then test how the output looks when they are printed.
-\end{playground}
-
-Data frames can be converted into tibbles with \code{as.tibble()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my_conv.tb} \hlkwb{<-} \hlkwd{as.tibble}\hlstd{(my.df)}
-\end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: `as.tibble()` is deprecated, use `as\_tibble()` (but mind the new semantics).\\\#\# This warning is displayed once per session.}}\begin{alltt}
-\hlkwd{is.data.frame}\hlstd{(my_conv.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.tibble}\hlstd{(my_conv.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{show_classes}\hlstd{(my_conv.tb)}
-\end{alltt}
-\begin{verbatim}
-## tbl_df containing:
-## codes: factor, numbers: integer, integers: integer
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my_conv.df} \hlkwb{<-} \hlkwd{as.data.frame}\hlstd{(my.tb)}
-\hlkwd{is.data.frame}\hlstd{(my_conv.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{is.tibble}\hlstd{(my_conv.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{show_classes}\hlstd{(my_conv.df)}
-\end{alltt}
-\begin{verbatim}
-## data.frame containing:
-## codes: character, numbers: integer, integers: integer
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-Look carefully at the result of the conversions. Why do we now have a data frame with \code{A} as \code{character} and tibble with \code{A} as a \code{factor}?
-\end{playground}
-
-\begin{explainbox}
-Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between author on what is the \emph{correct} behaviour based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
-
-We have already seen that calling \Rfunction{as.data.frame()} on a tibble strips the derived class attributes, returning a data frame. We now look at the whole contents on the \code{"class"} attribute to better exemplify the problem. We also test the two objects for equality, in two different ways. Using the operator \code{==} tests for equivalent objects. Objects that contain the same data. Using \Rfunction{identical()} tests that objects are exactly the same, including same attributes, including same equal class attributes.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{class}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{class}\hlstd{(my_conv.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlstd{my.tb} \hlopt{==} \hlstd{my_conv.df}
-\end{alltt}
-\begin{verbatim}
-##      codes numbers integers
-## [1,]  TRUE    TRUE     TRUE
-## [2,]  TRUE    TRUE     TRUE
-## [3,]  TRUE    TRUE     TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{identical}\hlstd{(my.tb, my_conv.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Now we derive from a tibble, and then attempt a conversion back into a tibble.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.xtb} \hlkwb{<-} \hlstd{my.tb}
-\hlkwd{class}\hlstd{(my.xtb)} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlstr{"xtb"}\hlstd{,} \hlkwd{class}\hlstd{(my.xtb))}
-\hlkwd{class}\hlstd{(my.xtb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "xtb"        "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlstd{my_conv_x.tb} \hlkwb{<-} \hlkwd{as_tibble}\hlstd{(my.xtb)}
-\hlkwd{class}\hlstd{(my_conv_x.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlstd{my.xtb} \hlopt{==} \hlstd{my_conv_x.tb}
-\end{alltt}
-\begin{verbatim}
-##      codes numbers integers
-## [1,]  TRUE    TRUE     TRUE
-## [2,]  TRUE    TRUE     TRUE
-## [3,]  TRUE    TRUE     TRUE
-\end{verbatim}
-\begin{alltt}
-\hlkwd{identical}\hlstd{(my.xtb, my_conv_x.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] FALSE
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Packages in the \pkgname{tidyverse} follow approach 2). If in doubt about the behaviour of some function, then you need to do a test similar to the I have presented in the chunks in this box.
-\end{explainbox}
-
-There are additional important differences between the constructors \Rfunction{tibble()} and \Rfunction{data.frame()}. One of them is that variables (``columns'')  being defined can be used in the definition of subsequent variables.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{= a} \hlopt{+} \hlstd{b,} \hlkwc{d} \hlstd{= letters[a} \hlopt{+} \hlnum{1}\hlstd{])}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 5 x 4
-##       a     b     c d    
-##   <int> <int> <int> <chr>
-## 1     1     5     6 b    
-## 2     2     4     6 c    
-## 3     3     3     6 d    
-## 4     4     2     6 e    
-## 5     5     1     6 f
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
-\end{playground}
-
-Furthermore, while data frame columns are required to be vectors, columns of tibbles can also be lists.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{=} \hlkwd{list}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{3}\hlstd{,} \hlnum{4}\hlstd{,} \hlnum{5}\hlstd{))}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 5 x 3
-##       a     b c        
-##   <int> <int> <list>   
-## 1     1     5 <chr [1]>
-## 2     2     4 <dbl [1]>
-## 3     3     3 <dbl [1]>
-## 4     4     2 <dbl [1]>
-## 5     5     1 <dbl [1]>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Which even allows a list of lists as a variable, or a list of vectors.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{tibble}\hlstd{(}\hlkwc{a} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlkwc{b} \hlstd{=} \hlnum{5}\hlopt{:}\hlnum{1}\hlstd{,} \hlkwc{c} \hlstd{=} \hlkwd{list}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{2}\hlstd{,} \hlnum{0}\hlopt{:}\hlnum{3}\hlstd{, letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{], letters[}\hlnum{3}\hlopt{:}\hlnum{1}\hlstd{]))}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 5 x 3
-##       a     b c        
-##   <int> <int> <list>   
-## 1     1     5 <chr [1]>
-## 2     2     4 <int [2]>
-## 3     3     3 <int [4]>
-## 4     4     2 <chr [3]>
-## 5     5     1 <chr [3]>
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
 \subsection{Tidying up data}
 
 In later sections of this and subsequent chapters we assume that available data is in a tidy arrangement, in which rows correspond to measurement events, and columns correspond to values for different variables measured at a given measuring event, or descriptors of groups or permanent features of the measured units. Real-world data can be quite messy, so frequently the first task in an analysis is to make data in ad-hoc or irregular formats ``tidy''. Please consult the vignette other documentation of package \pkgname{tidyr} for details.
@@ -3981,6 +4025,7 @@ can be run in a ``clean'' system.
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{tidyr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{dplyr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{stringr))}
+\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{wrapr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{magrittr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{tibble))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{learnrbook))}
@@ -4083,18 +4128,19 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [1] svglite_1.2.2 knitr_1.23   
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_1.0.1       cellranger_1.1.0 pillar_1.4.2     compiler_3.6.0  
+##  [1] Rcpp_1.0.1       pillar_1.4.2     compiler_3.6.0   cellranger_1.1.0
 ##  [5] highr_0.8        forcats_0.4.0    pdftools_2.2     zeallot_0.1.0   
-##  [9] ncdf4_1.16.1     lubridate_1.7.4  jsonlite_1.6     evaluate_0.14   
+##  [9] ncdf4_1.16.1     jsonlite_1.6     lubridate_1.7.4  evaluate_0.14   
 ## [13] tibble_2.1.3     RNetCDF_1.9-1    pkgconfig_2.0.2  rlang_0.4.0     
 ## [17] cli_1.1.0        curl_3.3         haven_2.1.1      xfun_0.8        
 ## [21] rJava_0.9-11     dplyr_0.8.3      stringr_1.4.0    xml2_1.2.0      
-## [25] vctrs_0.2.0      gdtools_0.1.9    xlsxjars_0.6.1   askpass_1.1     
-## [29] hms_0.4.2        tidyselect_0.2.5 glue_1.3.1       qpdf_1.1        
+## [25] gdtools_0.1.9    vctrs_0.2.0      xlsxjars_0.6.1   askpass_1.1     
+## [29] hms_0.5.0        tidyselect_0.2.5 glue_1.3.1       qpdf_1.1        
 ## [33] R6_2.4.0         fansi_0.4.0      readxl_1.3.1     foreign_0.8-71  
-## [37] tidyr_0.8.3      readr_1.3.1      purrr_0.3.2      magrittr_1.5    
-## [41] ellipsis_0.2.0.1 backports_1.1.4  assertthat_0.2.1 utf8_1.1.4      
-## [45] xlsx_0.6.1       stringi_1.4.3    learnrbook_0.0.2 crayon_1.3.4
+## [37] tidyr_0.8.3      wrapr_1.8.8      readr_1.3.1      purrr_0.3.2     
+## [41] magrittr_1.5     ellipsis_0.2.0.1 backports_1.1.4  assertthat_0.2.1
+## [45] utf8_1.1.4       xlsx_0.6.1       stringi_1.4.3    learnrbook_0.0.2
+## [49] crayon_1.3.4
 \end{verbatim}
 \end{kframe}
 \end{knitrout}

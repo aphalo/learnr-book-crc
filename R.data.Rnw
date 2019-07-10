@@ -56,6 +56,7 @@ For executing the examples listed in this chapter you need first to load the fol
 library(learnrbook)
 library(tibble)
 library(magrittr)
+library(wrapr)
 library(stringr)
 library(dplyr)
 library(tidyr)
@@ -103,7 +104,134 @@ Package \pkgname{data.table} passes arguments to functions by reference, avoidin
 
 \subsection{\pkgname{tibble}}
 
-The authors of package \pkgname{tibble} describe as their class as backwards compatible with \code{data.frame} and make them a derived class. This backwards compatibility is incomplete 
+The authors of package \pkgname{tibble} describe their \Rclass{tbl} class as backwards compatible with \Rclass{data.frame} and make them a derived class. This backwards compatibility is only partial so in some situations they are not equivalent.
+
+The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed be the design of base \Rlang data frames at the cost of creating some incompatibilities due to altered syntax for member extraction and by adding support for ``columns'' of class \Rclass{list} and removing support for columns of class \Rclass{matrix} (???). Handling of attributes is also differen, with no row names added by default. There are also differences in default behaviour of both constructors and methods. Although, objects of class \Rclass{tbl} can passed as arguments to most functions that expect data frames as input, not all of them are guaranteed to work correctly because of the change in syntax.
+
+\begin{warningbox}
+It is easy to write code that will work correctly both with data frames and tibbles. However, code that is syntactically correct according to the \Rlang language may fail if a tibble is used in place of a data frame.
+\end{warningbox}
+
+\begin{infobox}
+In their first incarnation, the name for \Rclass{tibble} was \code{data\_frame} (with a dash instead of a dot). The old name is still recognized, but it is better to only use \Rfunction{tibble()} to avoid confusion. One should be aware that although the constructor \Rfunction{tibble()} and conversion function \Rfunction{as.tibble()}, as well as the test \Rfunction{is.tibble()} use the name \Rclass{tibble}, the class attribute is named \code{tbl}.
+
+<<tibble-info-01>>=
+my.tb <- tibble(numbers = 1:3)
+is.tibble(my.tb)
+class(my.tb)
+@
+
+Furthermore, by necessity, to support tibbles based on different underlying data sources a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \Rclass{tbl\_df}.
+\end{infobox}
+
+We start with the constructor and conversion methods. For this we will define our own diagnosis function.
+
+<<tibble-01>>=
+show_classes <- function(x) {
+  cat(
+    paste(paste(class(x)[1],
+    "containing:"),
+    paste(names(x),
+          sapply(x, class), collapse = ", ", sep = ": "),
+    sep = "\n")
+    )
+}
+@
+
+In the next two chunks we can see some of the differences. The \Rfunction{tibble()} constructor does not by default convert character data into factors, while the \Rfunction{data.frame()} constructor does.
+
+<<tibble-02>>=
+my.df <- data.frame(codes = c("A", "B", "C"), numbers = 1:3, integers = 1L:3L)
+is.data.frame(my.df)
+is.tibble(my.df)
+show_classes(my.df)
+@
+
+Tibbles are data frames---or more formally class \Rclass{tibble} is derived from class \code{data.frame}. However, data frames are not tibbles.
+
+<<tibble-03>>=
+my.tb <- tibble(codes = c("A", "B", "C"), numbers = 1:3, integers = 1L:3L)
+is.data.frame(my.tb)
+is.tibble(my.tb)
+show_classes(my.tb)
+@
+
+The \Rfunction{print()} method for tibbles, overrides the one defined for data frames.
+
+<<tibble-04>>=
+print(my.df)
+print(my.tb)
+@
+
+\begin{playground}
+An aesthetic difference is in how tibbles and data frames are printed when they have many rows. Construct a data frame and an equivalent tibble with at least 50 rows, and then test how the output looks when they are printed.
+\end{playground}
+
+Data frames can be converted into tibbles with \code{as.tibble()}.
+
+<<tibble-05>>=
+my_conv.tb <- as.tibble(my.df)
+is.data.frame(my_conv.tb)
+is.tibble(my_conv.tb)
+show_classes(my_conv.tb)
+@
+
+<<tibble-06>>=
+my_conv.df <- as.data.frame(my.tb)
+is.data.frame(my_conv.df)
+is.tibble(my_conv.df)
+show_classes(my_conv.df)
+@
+
+\begin{playground}
+Look carefully at the result of the conversions. Why do we now have a data frame with \code{A} as \code{character} and tibble with \code{A} as a \code{factor}?
+\end{playground}
+
+\begin{explainbox}
+Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between authors on what is the \emph{correct} behaviour based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
+
+We have already seen that calling \Rfunction{as.data.frame()} on a tibble strips the derived class attributes, returning a data frame. We now look at the whole contents on the \code{"class"} attribute to better exemplify the problem. We also test the two objects for equality, in two different ways. Using the operator \code{==} tests for equivalent objects. Objects that contain the same data. Using \Rfunction{identical()} tests that objects are exactly the same, including attributes such as class.
+
+<<tibble-box-01>>=
+class(my.tb)
+class(my_conv.df)
+my.tb == my_conv.df
+identical(my.tb, my_conv.df)
+@
+
+Now we derive from a tibble, and then attempt a conversion back into a tibble.
+
+<<tibble-box-02>>=
+my.xtb <- my.tb
+class(my.xtb) <- c("xtb", class(my.xtb))
+class(my.xtb)
+my_conv_x.tb <- as_tibble(my.xtb)
+class(my_conv_x.tb)
+my.xtb == my_conv_x.tb
+identical(my.xtb, my_conv_x.tb)
+@
+
+The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Packages in the \pkgname{tidyverse} follow approach 2). If in doubt about the behaviour of some function, then you need to do a test similar to the I have presented in the chunks in this box.
+\end{explainbox}
+
+There are additional important differences between the constructors \Rfunction{tibble()} and \Rfunction{data.frame()}. One of them is that in a call to \Rfunction{tibble()}, member variables (``columns'')  being defined can be used in the definition of subsequent member variables.
+<<tibble-07>>=
+tibble(a = 1:5, b = 5:1, c = a + b, d = letters[a + 1])
+@
+
+\begin{playground}
+What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
+\end{playground}
+
+While data frame columns can be factors, vectors or matrices (with the same number of rows as the data frame), columns of tibbles can be factors, vectors or lists (with the same number of members as rows the tibble has).
+<<tibble-08>>=
+tibble(a = 1:5, b = 5:1, c = list("a", 2, 3, 4, 5))
+@
+
+Which even allows a list of lists as a variable, or a list of vectors.
+<<tibble-09>>=
+tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
+@
 
 \section{Data pipes}
 
@@ -113,7 +241,7 @@ The first obvious difference between scripts using some of the new grammars is t
 stdin | grep("abc") | more
 @
 
-How can \emph{pipes} exist within a single \Ralng script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects stored in memory instead of through temporary OS files stored on disk. As an abstraction there is no difference.
+How can \emph{pipes} exist within a single \Rlang script? Within \Rlang data sources and sinks are \Rlang objects and instead of programs being chained into a pipe, functions are chained. The connection between functions is through temporary \Rlang objects stored in memory instead of through temporary OS files stored on disk. As an abstraction there is no difference.
 
 What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a bug-free script is developed, pipes by allowing more concise code, usually improve readability (for humans).
 
@@ -138,9 +266,38 @@ written as a pipe using the chaining operator from package \pkgname{magrittr}.
 data.in %>% sqrt() %>% sum() -> data.out
 @
 
-Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages. It is important to be aware the 
+\begin{explainbox}
+The \Roperator{\%>\%} from package \pkgname{magrittr} takes two operands. The value returned by the \emph{lhs} (left hand side) operand, which can be any \Rlang expression, is passed as first argument to the \emph{rhs} operand, which must be must be a function accepting at least one argument. Consequently, the function in the \emph{rhs} must have a suitable signature for the pipe to work and it is impossible to pass piped arguments by name or to any other parameter than the first one.
 
+Some base \Rlang functions like \code{subset()} have a signature that is suitable for use in pipes, while using \code{assign()} in a pipe will in most cases require defining a wrapper function to change the order of the formal parameters.
+\end{explainbox}
 
+\subsection{\pkgname{wrapr}}
+
+The \Roperator{\%.>\%} or ``dot-pipe'' operator from pakage \pkgname{wrapr} adds more ``sugar'' by allowing expressions both on rhs and lhs, and any position in the rhs for the piped value.
+
+Rewritten using the dot-pipe operator the pipe in the previous chunk becomes
+<<pipes-x05>>=
+data.in %.>% sqrt(.) %.>% sum(.) -> data.out
+@
+
+This operator allows us to do things like, which \Roperator{\%>\%} does not allow.
+<<pipes-x06>>=
+data.in %.>% (2 + .^2) %.>% assign("data.out", .)
+@
+
+If needed or desired named arguments are supported.
+<<pipes-x07>>=
+data.in %.>% (2 + .^2) %.>% assign(value = ., x = "data.out")
+@
+
+\begin{warningbox}
+\Rlang syntax for expressions is preserved, with the only caveat that because of the low precedence of the \Roperator{\%.>\%} operator we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses.
+\end{warningbox}
+
+In the rest of the chapter we will exclusively use dot pipes in examples to ensure readability.
+
+Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages.
 
 \section{Data input and output}\label{sec:data:io}
 
@@ -882,132 +1039,6 @@ Hadley Wickham, together with collaborators, has developed a set of \Rlang tools
 
 \subsection{Better data frames}
 
-Package \pkgname{tibble} defines an improved class \Rclass{tibble} that can be used in place of data frames. Changes are several, including differences in default behaviour of both constructors and methods. Objects of class \Rclass{tibble} can non-the-less be used as arguments for most functions that expect data frames as input.
-
-\begin{infobox}
-In their first incarnation, the name for \Rclass{tibble} was \code{data\_frame} (with a dash instead of a dot). The old name is still recognized, but it is better to only use \Rfunction{tibble()} to avoid confusion. One should be aware that although the constructor \Rfunction{tibble()} and conversion function \Rfunction{as.tibble()}, as well as the test \Rfunction{is.tibble()} use the name \Rclass{tibble}, the class attribute is named \code{tbl}.
-
-<<tibble-info-01>>=
-my.tb <- tibble(numbers = 1:3)
-is.tibble(my.tb)
-class(my.tb)
-@
-
-Furthermore, by necessity, to support tibbles based on different underlying data sources a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \code{tbl\_df}.
-\end{infobox}
-
-We start with the constructor and conversion methods. For this we will define our own diagnosis function.
-
-<<tibble-01>>=
-show_classes <- function(x) {
-  cat(
-    paste(paste(class(x)[1],
-    "containing:"),
-    paste(names(x),
-          sapply(x, class), collapse = ", ", sep = ": "),
-    sep = "\n")
-    )
-}
-@
-
-In the next two chunks we can see some of the differences. The \Rfunction{tibble()} constructor does not by default convert character data into factors, while the \Rfunction{data.frame()} constructor does.
-
-<<tibble-02>>=
-my.df <- data.frame(codes = c("A", "B", "C"), numbers = 1:3, integers = 1L:3L)
-is.data.frame(my.df)
-is.tibble(my.df)
-show_classes(my.df)
-@
-
-Tibbles are data frames---or more formally class \Rclass{tibble} is derived from class \code{data.frame}. However, data frames are not tibbles.
-
-<<tibble-03>>=
-my.tb <- tibble(codes = c("A", "B", "C"), numbers = 1:3, integers = 1L:3L)
-is.data.frame(my.tb)
-is.tibble(my.tb)
-show_classes(my.tb)
-@
-
-The \Rfunction{print()} method for tibbles, overrides the one defined for data frames.
-
-<<tibble-04>>=
-print(my.df)
-print(my.tb)
-@
-
-\begin{playground}
-The main difference is in how tibbles and data frames are printed when they have many rows. Construct a data frame and an equivalent tibble with at least 50 rows, and then test how the output looks when they are printed.
-\end{playground}
-
-Data frames can be converted into tibbles with \code{as.tibble()}.
-
-<<tibble-05>>=
-my_conv.tb <- as.tibble(my.df)
-is.data.frame(my_conv.tb)
-is.tibble(my_conv.tb)
-show_classes(my_conv.tb)
-@
-
-<<tibble-06>>=
-my_conv.df <- as.data.frame(my.tb)
-is.data.frame(my_conv.df)
-is.tibble(my_conv.df)
-show_classes(my_conv.df)
-@
-
-\begin{playground}
-Look carefully at the result of the conversions. Why do we now have a data frame with \code{A} as \code{character} and tibble with \code{A} as a \code{factor}?
-\end{playground}
-
-\begin{explainbox}
-Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between author on what is the \emph{correct} behaviour based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
-
-We have already seen that calling \Rfunction{as.data.frame()} on a tibble strips the derived class attributes, returning a data frame. We now look at the whole contents on the \code{"class"} attribute to better exemplify the problem. We also test the two objects for equality, in two different ways. Using the operator \code{==} tests for equivalent objects. Objects that contain the same data. Using \Rfunction{identical()} tests that objects are exactly the same, including same attributes, including same equal class attributes.
-
-<<tibble-box-01>>=
-class(my.tb)
-class(my_conv.df)
-my.tb == my_conv.df
-identical(my.tb, my_conv.df)
-@
-
-Now we derive from a tibble, and then attempt a conversion back into a tibble.
-
-<<tibble-box-02>>=
-my.xtb <- my.tb
-class(my.xtb) <- c("xtb", class(my.xtb))
-class(my.xtb)
-my_conv_x.tb <- as_tibble(my.xtb)
-class(my_conv_x.tb)
-my.xtb == my_conv_x.tb
-identical(my.xtb, my_conv_x.tb)
-@
-
-The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Packages in the \pkgname{tidyverse} follow approach 2). If in doubt about the behaviour of some function, then you need to do a test similar to the I have presented in the chunks in this box.
-\end{explainbox}
-
-There are additional important differences between the constructors \Rfunction{tibble()} and \Rfunction{data.frame()}. One of them is that variables (``columns'')  being defined can be used in the definition of subsequent variables.
-
-<<tibble-07>>=
-tibble(a = 1:5, b = 5:1, c = a + b, d = letters[a + 1])
-@
-
-\begin{playground}
-What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
-\end{playground}
-
-Furthermore, while data frame columns are required to be vectors, columns of tibbles can also be lists.
-
-<<tibble-08>>=
-tibble(a = 1:5, b = 5:1, c = list("a", 2, 3, 4, 5))
-@
-
-Which even allows a list of lists as a variable, or a list of vectors.
-
-<<tibble-09>>=
-tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
-@
-
 \subsection{Tidying up data}
 
 In later sections of this and subsequent chapters we assume that available data is in a tidy arrangement, in which rows correspond to measurement events, and columns correspond to values for different variables measured at a given measuring event, or descriptors of groups or permanent features of the measured units. Real-world data can be quite messy, so frequently the first task in an analysis is to make data in ad-hoc or irregular formats ``tidy''. Please consult the vignette other documentation of package \pkgname{tidyr} for details.
@@ -1483,6 +1514,7 @@ try(detach(package:readr))
 try(detach(package:tidyr))
 try(detach(package:dplyr))
 try(detach(package:stringr))
+try(detach(package:wrapr))
 try(detach(package:magrittr))
 try(detach(package:tibble))
 try(detach(package:learnrbook))
