@@ -299,6 +299,134 @@ In the rest of the chapter we will exclusively use dot pipes in examples to ensu
 
 Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages.
 
+\section{Reshaping with \pkgname{tidyr}}
+
+Data stored in table-like formats can be arranged in different ways. In base \Rlang most model fitting functions and the \Rfunction{plot()} method for data frame expect data to be arranged in ``long form'' so that each row in a data frame corresponds to a single observation (or measurement) event on a subject. Each column corresponds to a different measured feature, time of measurement or a factor describing a classification of subjects according to treatments or features of the experimental design (e.g.\ blocks). Covariates measured on the same subject at an earlier point in time may be also stored in a column. Data arranged in long form has been nicknamed as ``tidy'' and this is reflected in the name given to the \pkgname{tidtverse} suite of packages. Data in which columns correspond to measurement events is described as being in a ``wide form''.
+
+Although long-form data is and has been the most commonly used arrangement of data in \Rlang, not always manipulation of such data has been possible with concise \Rlang statements. The packages in the \pkgname{tidyverse} provide convenience functions to simplify coding of data manipulation, which in some cases have in addition improved performance compared to base \Rlang---i.e.\ the same operations can be coded using only base \Rlang.
+
+Real-world data is frequently stored in wide format or even ad-hoc formats, so frequently the first task in data analysis is to reshape the data.Package \pkgname{tidyr} provides functions for ``reshaping'' data (replacing the older packages \pkgname{reshape} and \pkgname{reshape2}) from wide- to long form and \emph{vice versa}.
+
+%% replace iris with an example that is really ``wide''
+
+Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use as an example the \Rdata{iris} data set included in base \Rlang. We use \code{gather} to obtain a long-form tibble. By comparing \code{iris} with \code{long\_iris} we can appreciate how \Rfunction{gather()} reshaped its input.
+<<tidy-tibble-01>>=
+head(iris, 2)
+long_iris <- gather(iris, key = part, value = dimension, -Species)
+head(long_iris)
+@
+In this statement we can see the convenience of dispensing with quotation marks for the new (\code{part} and \code{dimension} and existing \code{Species} column names.
+
+\begin{warningbox}
+However, altering the normal interpretation of the name passed as argument to \code{key} and \code{value} prevents there arguments to be recognised as the name of variable. We need to use a new operator \code{!!} to restore the normal \Rlang behaviour.
+<<tidy-tibble-01a>>=
+part <- "not part"
+long_iris <- gather(iris, key = !!part, value = dimension, -Species)
+head(long_iris)
+@
+\end{warningbox}
+
+\begin{playground}
+To better understand why I added \code{-Species} as an argument, edit the code removing it, and execute the statement to see how the returned tibble is different.
+\end{playground}
+
+For the reverse operation, converting from long form to wide form we use \Rfunction{spread()}.
+<<tidy-tibble-01b, eval=FALSE>>=
+spread(long_iris, key = c(!!part, Species), value = dimension) # does not work!!
+@
+
+\subsection{Row-wise manipulations}
+
+We can calculate derived quantities by combining different variables measured on the same measuring unit---i.e.\ calculations within a single row of a data frame or tibble. In this case there are two options, we add new variables (columns) retaining existing ones using \Rfunction{mutate()} or we assemble a new tibble containing only the columns we explicitly specify using \Rfunction{transmute()}.
+
+Continuing with the example from the previous section, we most likely would like to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr}. We use regular expressions as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or in other words using rows displaced relative to the current one. As shown in the example in section \ref{sec:dataex:birch} on page \pageref{sec:dataex:birch}, within a single call to \Rfunction{mutate()} values calculated first can be used in the calculations for later variables.
+
+<<tidy-tibble-02>>=
+long_iris <- mutate(long_iris,
+                    plant_part = str_extract(part, "^[:alpha:]*"),
+                    part_dim = str_extract(part, "[:alpha:]*$"))
+long_iris
+@
+
+In the next few chunks we print the returned values rather than saving then in variables. In most cases in practice one will combine these function into a ``pipe'' using operator \Roperator{\%>\%} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}, and for more realistic examples, section \ref{sec:dataex} starting on page \pageref{sec:dataex}).
+
+Function \Rfunction{arrange()} is used for sorting the rows---makes sorting a data frame simpler than by using \Rfunction{sort()} and \Rfunction{order()}. These two base \Rlang methods are more versatile.
+
+<<tidy-tibble-03>>=
+arrange(long_iris, Species, plant_part, part_dim)
+@
+
+Function \Rfunction{filter()} to select a subset of rows---similar to \Rfunction{subset()} but with a syntax consistent with that of other functions in the \pkgname{tidyverse}.
+
+<<tidy-tibble-04>>=
+filter(long_iris, plant_part == "Petal")
+@
+
+Function \Rfunction{slice()} to select a subset of rows based on their positions---would be done with positional indexes with \code{[ , ]} in base R.
+
+<<tidy-tibble-05>>=
+slice(long_iris, 1:5)
+@
+
+Function \Rfunction{select()} to select a subset of columns---requires selection with subindexes in base R. In the first example we remove one column by name.
+
+<<tidy-tibble-06>>=
+select(long_iris, -part)
+@
+
+In addition \Rfunction{select()} as other functions in \pkgname{dplyr} can be used together with functions \Rfunction{starts\_with()}, \Rfunction{ends\_with()}, \Rfunction{contains()}, and \Rfunction{matches()} to select groups of columns to be selected to be retained or removed. For this example we use \Rlang \code{iris} instead of our \code{long\_iris}.
+
+<<tidy-tibble-06a>>=
+select(iris, -starts_with("Sepal"))
+@
+
+<<tidy-tibble-06b>>=
+select(iris, Species, matches("pal"))
+@
+
+Function \Rfunction{rename()} to rename columns---requires the use of \Rfunction{names()} and \Rfunction{names<-()} and a way of matching the old name in base R.
+
+<<tidy-tibble-07>>=
+rename(long_iris, dim = dimension)
+@
+
+The first advantage a user sees of these functions is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} and for accessing SQL based databases with the same syntax. The functions are also optimized for fast performance.
+
+\subsection{Group-wise manipulations}
+
+Another important operation is to summarize quantities by group of rows. Contrary to base R, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable, compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
+
+The first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}.
+
+<<tibble-grouped-01>>=
+my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
+my_gr.tb <- group_by(my.tb, letters)
+@
+
+Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
+
+<<tibble-grouped-02>>=
+summarise(my_gr.tb,
+          mean_numbers = mean(numbers),
+          median_numbers = median(numbers),
+          n = n())
+@
+
+\begin{explainbox}
+\textbf{How is grouping implemented for data-frame-based tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members.
+
+<<tibble-grouped-box-01>>=
+my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
+class(my.tb)
+my_gr.tb <- group_by(my.tb, letters)
+class(my_gr.tb)
+@
+
+\begin{playground}
+Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb} and \code{my\_gr.tb}. Trysee how the groups information is stored in
+\end{playground}
+\end{explainbox}
+
 \section{Data input and output}\label{sec:data:io}
 
 Several recently released \Rlang packages have made it easier and faster to import data. This together with wider and faster internet access to data sources, has made it possible to efficiently work with relatively large data sets. The way \Rlang is implemented, keeping all data in memory (RAM), imposes limits to the size of data sets that can analysed with base \Rlang functions, classes of objects and syntax. One option for processing big data sets is to use a 64 bit version of \Rlang under a 64 bit operating system in a computer with enough RAM to hold all the data. For data sets large enough not to fit in computer RAM, one can use different packages that allow selective reading of data from files, or by storing data in databases outside of \Rlang and using queries to load subsets of the data. We will start with the simplest case, files with the native formats used by \Rlang itself.
@@ -1038,123 +1166,6 @@ To make the problem of manipulating data, tractable and consistent, the first st
 Hadley Wickham, together with collaborators, has developed a set of \Rlang tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citebooktitle{Wickham2017} \autocite{Wickham2017}. The book \citebooktitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citebooktitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
 
 \subsection{Better data frames}
-
-\subsection{Tidying up data}
-
-In later sections of this and subsequent chapters we assume that available data is in a tidy arrangement, in which rows correspond to measurement events, and columns correspond to values for different variables measured at a given measuring event, or descriptors of groups or permanent features of the measured units. Real-world data can be quite messy, so frequently the first task in an analysis is to make data in ad-hoc or irregular formats ``tidy''. Please consult the vignette other documentation of package \pkgname{tidyr} for details.
-
-In most cases using function \Rfunction{gather()} is the easiest way of converting data in a ``wide'' form into data into ``long'' form, or \emph{tidy} format. We will use the \code{iris} data set included with R. We print \code{iris} as a tibble for the nicer formatting of the screen output, but we do not save the result. We use \code{gather} to obtain a long-form tibble. Be aware that in this case, the original wide form would in some cases be best for further analysis.
-
-We first convert \code{iris} into a tibble to more easily control the length of output.
-
-<<tidy-tibble-01>>=
-data(iris)
-iris.tb <- as.tibble(iris)
-iris.tb
-@
-
-By comparing \code{iris.tb} above with \code{long\_iris} below we can appreciate how \Rfunction{gather()} transformed its input.
-
-<<tidy-tibble-01a>>=
-long_iris <- gather(iris.tb, key = part, value = dimension, -Species)
-long_iris
-@
-
-\begin{playground}
-To better understand why I added \code{-Species} as an argument, edit the code removing it, and execute the statement to see how the returned tibble is different.
-\end{playground}
-
-\subsection{Row-wise manipulations}
-
-We can calculate derived quantities by combining different variables measured on the same measuring unit---i.e.\ calculations within a single row of a data frame or tibble. In this case there are two options, we add new variables (columns) retaining existing ones using \Rfunction{mutate()} or we assemble a new tibble containing only the columns we explicitly specify using \Rfunction{transmute()}.
-
-Continuing with the example from the previous section, we most likely would like to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr}. We use regular expressions as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or in other words using rows displaced relative to the current one. As shown in the example in section \ref{sec:dataex:birch} on page \pageref{sec:dataex:birch}, within a single call to \Rfunction{mutate()} values calculated first can be used in the calculations for later variables.
-
-<<tidy-tibble-02>>=
-long_iris <- mutate(long_iris,
-                    plant_part = str_extract(part, "^[:alpha:]*"),
-                    part_dim = str_extract(part, "[:alpha:]*$"))
-long_iris
-@
-
-In the next few chunks we print the returned values rather than saving then in variables. In most cases in practice one will combine these function into a ``pipe'' using operator \Roperator{\%>\%} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}, and for more realistic examples, section \ref{sec:dataex} starting on page \pageref{sec:dataex}).
-
-Function \Rfunction{arrange()} is used for sorting the rows---makes sorting a data frame simpler than by using \Rfunction{sort()} and \Rfunction{order()}. These two base \Rlang methods are more versatile.
-
-<<tidy-tibble-03>>=
-arrange(long_iris, Species, plant_part, part_dim)
-@
-
-Function \Rfunction{filter()} to select a subset of rows---similar to \Rfunction{subset()} but with a syntax consistent with that of other functions in the \pkgname{tidyverse}.
-
-<<tidy-tibble-04>>=
-filter(long_iris, plant_part == "Petal")
-@
-
-Function \Rfunction{slice()} to select a subset of rows based on their positions---would be done with positional indexes with \code{[ , ]} in base R.
-
-<<tidy-tibble-05>>=
-slice(long_iris, 1:5)
-@
-
-Function \Rfunction{select()} to select a subset of columns---requires selection with subindexes in base R. In the first example we remove one column by name.
-
-<<tidy-tibble-06>>=
-select(long_iris, -part)
-@
-
-In addition \Rfunction{select()} as other functions in \pkgname{dplyr} can be used together with functions \Rfunction{starts\_with()}, \Rfunction{ends\_with()}, \Rfunction{contains()}, and \Rfunction{matches()} to select groups of columns to be selected to be retained or removed. For this example we use \Rlang \code{iris} instead of our \code{long\_iris}.
-
-<<tidy-tibble-06a>>=
-select(iris.tb, -starts_with("Sepal"))
-@
-
-<<tidy-tibble-06b>>=
-select(iris.tb, Species, matches("pal"))
-@
-
-Function \Rfunction{rename()} to rename columns---requires the use of \Rfunction{names()} and \Rfunction{names<-()} and a way of matching the old name in base R.
-
-<<tidy-tibble-07>>=
-rename(long_iris, dim = dimension)
-@
-
-The first advantage a user sees of these functions is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} and for accessing SQL based databases with the same syntax. The functions are also optimized for fast performance.
-
-\subsection{Group-wise manipulations}
-
-Another important operation is to summarize quantities by group of rows. Contrary to base R, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable, compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
-
-The first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}.
-
-<<tibble-grouped-01>>=
-my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
-my_gr.tb <- group_by(my.tb, letters)
-@
-
-Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
-
-<<tibble-grouped-02>>=
-summarise(my_gr.tb,
-          mean_numbers = mean(numbers),
-          median_numbers = median(numbers),
-          n = n())
-@
-
-\begin{explainbox}
-\textbf{How is grouping implemented for data-frame-based tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members.
-
-<<tibble-grouped-box-01>>=
-my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
-class(my.tb)
-my_gr.tb <- group_by(my.tb, letters)
-class(my_gr.tb)
-@
-
-\begin{playground}
-Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb} and \code{my\_gr.tb}. Trysee how the groups information is stored in
-\end{playground}
-\end{explainbox}
 
 \section{Grammar for manipulation of character strings}\label{sec:data:strings}
 

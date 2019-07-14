@@ -737,6 +737,2952 @@ In the rest of the chapter we will exclusively use dot pipes in examples to ensu
 
 Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages.
 
+\section{Reshaping data}
+
+Data stored in table-like formats can be arranged in different ways. In base \Rlang most model fitting functions and the \Rfunction{plot()} method for data frame expect data to be arranged in ``long form'' so that each row in a data frame corresponds to a single observation (or measurement) event on a subject. Each column corresponds to a different measured feature, time of measurement or a factor describing a classification of subjects according to treatments or features of the experimental design (e.g.\ blocks). Covariates measured on the same subject at an earlier point in time may be also stored in a column. Data arranged in long form has been nicknamed as ``tidy'' and this is reflected in the name given to the \pkgname{tidtverse} suite of packages. Data in which columns correspond to measurement events is described as being in a ``wide form''.
+
+Although long-form data is and has been the most commonly used arrangement of data in \Rlang, not always manipulation of such data has been possible with concise \Rlang statements. The packages in the \pkgname{tidyverse} provide convenience functions to simplify coding of data manipulation, which in some cases have in addition improved performance compared to base \Rlang---i.e.\ the same operations can be coded using only base \Rlang.
+
+Real-world data is frequently stored in wide format or even ad-hoc formats, so frequently the first task in data analysis is to reshape the data.Package \pkgname{tidyr} provides functions for ``reshaping'' data (replacing the older packages \pkgname{reshape} and \pkgname{reshape2}) from wide- to long form and \emph{vice versa}.
+
+%% replace iris with an example that is really ``wide''
+
+Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use as an example the \Rdata{iris} data set included in base \Rlang. We use \code{gather} to obtain a long-form tibble. By comparing \code{iris} with \code{long\_iris} we can appreciate how \Rfunction{gather()} reshaped its input.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{head}\hlstd{(iris,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## 1          5.1         3.5          1.4         0.2  setosa
+## 2          4.9         3.0          1.4         0.2  setosa
+\end{verbatim}
+\begin{alltt}
+\hlstd{long_iris} \hlkwb{<-} \hlkwd{gather}\hlstd{(iris,} \hlkwc{key} \hlstd{= part,} \hlkwc{value} \hlstd{= dimension,} \hlopt{-}\hlstd{Species)}
+\hlkwd{head}\hlstd{(long_iris)}
+\end{alltt}
+\begin{verbatim}
+##   Species         part dimension
+## 1  setosa Sepal.Length       5.1
+## 2  setosa Sepal.Length       4.9
+## 3  setosa Sepal.Length       4.7
+## 4  setosa Sepal.Length       4.6
+## 5  setosa Sepal.Length       5.0
+## 6  setosa Sepal.Length       5.4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+In this statement we can see the convenience of dispensing with quotation marks for the new (\code{part} and \code{dimension} and existing \code{Species} column names.
+
+\begin{warningbox}
+However, altering the normal interpretation of the name passed as argument to \code{key} and \code{value} prevents there arguments to be recognised as the name of variable. We need to use a new operator \code{!!} to restore the normal \Rlang behaviour.
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{part} \hlkwb{<-} \hlstr{"not part"}
+\hlstd{long_iris} \hlkwb{<-} \hlkwd{gather}\hlstd{(iris,} \hlkwc{key} \hlstd{=} \hlopt{!!}\hlstd{part,} \hlkwc{value} \hlstd{= dimension,} \hlopt{-}\hlstd{Species)}
+\hlkwd{head}\hlstd{(long_iris)}
+\end{alltt}
+\begin{verbatim}
+##   Species     not part dimension
+## 1  setosa Sepal.Length       5.1
+## 2  setosa Sepal.Length       4.9
+## 3  setosa Sepal.Length       4.7
+## 4  setosa Sepal.Length       4.6
+## 5  setosa Sepal.Length       5.0
+## 6  setosa Sepal.Length       5.4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\end{warningbox}
+
+\begin{playground}
+To better understand why I added \code{-Species} as an argument, edit the code removing it, and execute the statement to see how the returned tibble is different.
+\end{playground}
+
+\subsection{Row-wise manipulations}
+
+We can calculate derived quantities by combining different variables measured on the same measuring unit---i.e.\ calculations within a single row of a data frame or tibble. In this case there are two options, we add new variables (columns) retaining existing ones using \Rfunction{mutate()} or we assemble a new tibble containing only the columns we explicitly specify using \Rfunction{transmute()}.
+
+Continuing with the example from the previous section, we most likely would like to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr}. We use regular expressions as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or in other words using rows displaced relative to the current one. As shown in the example in section \ref{sec:dataex:birch} on page \pageref{sec:dataex:birch}, within a single call to \Rfunction{mutate()} values calculated first can be used in the calculations for later variables.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{long_iris} \hlkwb{<-} \hlkwd{mutate}\hlstd{(long_iris,}
+                    \hlkwc{plant_part} \hlstd{=} \hlkwd{str_extract}\hlstd{(part,} \hlstr{"^[:alpha:]*"}\hlstd{),}
+                    \hlkwc{part_dim} \hlstd{=} \hlkwd{str_extract}\hlstd{(part,} \hlstr{"[:alpha:]*$"}\hlstd{))}
+\hlstd{long_iris}
+\end{alltt}
+\begin{verbatim}
+##        Species     not part dimension plant_part part_dim
+## 1       setosa Sepal.Length       5.1        not     part
+## 2       setosa Sepal.Length       4.9        not     part
+## 3       setosa Sepal.Length       4.7        not     part
+## 4       setosa Sepal.Length       4.6        not     part
+## 5       setosa Sepal.Length       5.0        not     part
+## 6       setosa Sepal.Length       5.4        not     part
+## 7       setosa Sepal.Length       4.6        not     part
+## 8       setosa Sepal.Length       5.0        not     part
+## 9       setosa Sepal.Length       4.4        not     part
+## 10      setosa Sepal.Length       4.9        not     part
+## 11      setosa Sepal.Length       5.4        not     part
+## 12      setosa Sepal.Length       4.8        not     part
+## 13      setosa Sepal.Length       4.8        not     part
+## 14      setosa Sepal.Length       4.3        not     part
+## 15      setosa Sepal.Length       5.8        not     part
+## 16      setosa Sepal.Length       5.7        not     part
+## 17      setosa Sepal.Length       5.4        not     part
+## 18      setosa Sepal.Length       5.1        not     part
+## 19      setosa Sepal.Length       5.7        not     part
+## 20      setosa Sepal.Length       5.1        not     part
+## 21      setosa Sepal.Length       5.4        not     part
+## 22      setosa Sepal.Length       5.1        not     part
+## 23      setosa Sepal.Length       4.6        not     part
+## 24      setosa Sepal.Length       5.1        not     part
+## 25      setosa Sepal.Length       4.8        not     part
+## 26      setosa Sepal.Length       5.0        not     part
+## 27      setosa Sepal.Length       5.0        not     part
+## 28      setosa Sepal.Length       5.2        not     part
+## 29      setosa Sepal.Length       5.2        not     part
+## 30      setosa Sepal.Length       4.7        not     part
+## 31      setosa Sepal.Length       4.8        not     part
+## 32      setosa Sepal.Length       5.4        not     part
+## 33      setosa Sepal.Length       5.2        not     part
+## 34      setosa Sepal.Length       5.5        not     part
+## 35      setosa Sepal.Length       4.9        not     part
+## 36      setosa Sepal.Length       5.0        not     part
+## 37      setosa Sepal.Length       5.5        not     part
+## 38      setosa Sepal.Length       4.9        not     part
+## 39      setosa Sepal.Length       4.4        not     part
+## 40      setosa Sepal.Length       5.1        not     part
+## 41      setosa Sepal.Length       5.0        not     part
+## 42      setosa Sepal.Length       4.5        not     part
+## 43      setosa Sepal.Length       4.4        not     part
+## 44      setosa Sepal.Length       5.0        not     part
+## 45      setosa Sepal.Length       5.1        not     part
+## 46      setosa Sepal.Length       4.8        not     part
+## 47      setosa Sepal.Length       5.1        not     part
+## 48      setosa Sepal.Length       4.6        not     part
+## 49      setosa Sepal.Length       5.3        not     part
+## 50      setosa Sepal.Length       5.0        not     part
+## 51  versicolor Sepal.Length       7.0        not     part
+## 52  versicolor Sepal.Length       6.4        not     part
+## 53  versicolor Sepal.Length       6.9        not     part
+## 54  versicolor Sepal.Length       5.5        not     part
+## 55  versicolor Sepal.Length       6.5        not     part
+## 56  versicolor Sepal.Length       5.7        not     part
+## 57  versicolor Sepal.Length       6.3        not     part
+## 58  versicolor Sepal.Length       4.9        not     part
+## 59  versicolor Sepal.Length       6.6        not     part
+## 60  versicolor Sepal.Length       5.2        not     part
+## 61  versicolor Sepal.Length       5.0        not     part
+## 62  versicolor Sepal.Length       5.9        not     part
+## 63  versicolor Sepal.Length       6.0        not     part
+## 64  versicolor Sepal.Length       6.1        not     part
+## 65  versicolor Sepal.Length       5.6        not     part
+## 66  versicolor Sepal.Length       6.7        not     part
+## 67  versicolor Sepal.Length       5.6        not     part
+## 68  versicolor Sepal.Length       5.8        not     part
+## 69  versicolor Sepal.Length       6.2        not     part
+## 70  versicolor Sepal.Length       5.6        not     part
+## 71  versicolor Sepal.Length       5.9        not     part
+## 72  versicolor Sepal.Length       6.1        not     part
+## 73  versicolor Sepal.Length       6.3        not     part
+## 74  versicolor Sepal.Length       6.1        not     part
+## 75  versicolor Sepal.Length       6.4        not     part
+## 76  versicolor Sepal.Length       6.6        not     part
+## 77  versicolor Sepal.Length       6.8        not     part
+## 78  versicolor Sepal.Length       6.7        not     part
+## 79  versicolor Sepal.Length       6.0        not     part
+## 80  versicolor Sepal.Length       5.7        not     part
+## 81  versicolor Sepal.Length       5.5        not     part
+## 82  versicolor Sepal.Length       5.5        not     part
+## 83  versicolor Sepal.Length       5.8        not     part
+## 84  versicolor Sepal.Length       6.0        not     part
+## 85  versicolor Sepal.Length       5.4        not     part
+## 86  versicolor Sepal.Length       6.0        not     part
+## 87  versicolor Sepal.Length       6.7        not     part
+## 88  versicolor Sepal.Length       6.3        not     part
+## 89  versicolor Sepal.Length       5.6        not     part
+## 90  versicolor Sepal.Length       5.5        not     part
+## 91  versicolor Sepal.Length       5.5        not     part
+## 92  versicolor Sepal.Length       6.1        not     part
+## 93  versicolor Sepal.Length       5.8        not     part
+## 94  versicolor Sepal.Length       5.0        not     part
+## 95  versicolor Sepal.Length       5.6        not     part
+## 96  versicolor Sepal.Length       5.7        not     part
+## 97  versicolor Sepal.Length       5.7        not     part
+## 98  versicolor Sepal.Length       6.2        not     part
+## 99  versicolor Sepal.Length       5.1        not     part
+## 100 versicolor Sepal.Length       5.7        not     part
+## 101  virginica Sepal.Length       6.3        not     part
+## 102  virginica Sepal.Length       5.8        not     part
+## 103  virginica Sepal.Length       7.1        not     part
+## 104  virginica Sepal.Length       6.3        not     part
+## 105  virginica Sepal.Length       6.5        not     part
+## 106  virginica Sepal.Length       7.6        not     part
+## 107  virginica Sepal.Length       4.9        not     part
+## 108  virginica Sepal.Length       7.3        not     part
+## 109  virginica Sepal.Length       6.7        not     part
+## 110  virginica Sepal.Length       7.2        not     part
+## 111  virginica Sepal.Length       6.5        not     part
+## 112  virginica Sepal.Length       6.4        not     part
+## 113  virginica Sepal.Length       6.8        not     part
+## 114  virginica Sepal.Length       5.7        not     part
+## 115  virginica Sepal.Length       5.8        not     part
+## 116  virginica Sepal.Length       6.4        not     part
+## 117  virginica Sepal.Length       6.5        not     part
+## 118  virginica Sepal.Length       7.7        not     part
+## 119  virginica Sepal.Length       7.7        not     part
+## 120  virginica Sepal.Length       6.0        not     part
+## 121  virginica Sepal.Length       6.9        not     part
+## 122  virginica Sepal.Length       5.6        not     part
+## 123  virginica Sepal.Length       7.7        not     part
+## 124  virginica Sepal.Length       6.3        not     part
+## 125  virginica Sepal.Length       6.7        not     part
+## 126  virginica Sepal.Length       7.2        not     part
+## 127  virginica Sepal.Length       6.2        not     part
+## 128  virginica Sepal.Length       6.1        not     part
+## 129  virginica Sepal.Length       6.4        not     part
+## 130  virginica Sepal.Length       7.2        not     part
+## 131  virginica Sepal.Length       7.4        not     part
+## 132  virginica Sepal.Length       7.9        not     part
+## 133  virginica Sepal.Length       6.4        not     part
+## 134  virginica Sepal.Length       6.3        not     part
+## 135  virginica Sepal.Length       6.1        not     part
+## 136  virginica Sepal.Length       7.7        not     part
+## 137  virginica Sepal.Length       6.3        not     part
+## 138  virginica Sepal.Length       6.4        not     part
+## 139  virginica Sepal.Length       6.0        not     part
+## 140  virginica Sepal.Length       6.9        not     part
+## 141  virginica Sepal.Length       6.7        not     part
+## 142  virginica Sepal.Length       6.9        not     part
+## 143  virginica Sepal.Length       5.8        not     part
+## 144  virginica Sepal.Length       6.8        not     part
+## 145  virginica Sepal.Length       6.7        not     part
+## 146  virginica Sepal.Length       6.7        not     part
+## 147  virginica Sepal.Length       6.3        not     part
+## 148  virginica Sepal.Length       6.5        not     part
+## 149  virginica Sepal.Length       6.2        not     part
+## 150  virginica Sepal.Length       5.9        not     part
+## 151     setosa  Sepal.Width       3.5        not     part
+## 152     setosa  Sepal.Width       3.0        not     part
+## 153     setosa  Sepal.Width       3.2        not     part
+## 154     setosa  Sepal.Width       3.1        not     part
+## 155     setosa  Sepal.Width       3.6        not     part
+## 156     setosa  Sepal.Width       3.9        not     part
+## 157     setosa  Sepal.Width       3.4        not     part
+## 158     setosa  Sepal.Width       3.4        not     part
+## 159     setosa  Sepal.Width       2.9        not     part
+## 160     setosa  Sepal.Width       3.1        not     part
+## 161     setosa  Sepal.Width       3.7        not     part
+## 162     setosa  Sepal.Width       3.4        not     part
+## 163     setosa  Sepal.Width       3.0        not     part
+## 164     setosa  Sepal.Width       3.0        not     part
+## 165     setosa  Sepal.Width       4.0        not     part
+## 166     setosa  Sepal.Width       4.4        not     part
+## 167     setosa  Sepal.Width       3.9        not     part
+## 168     setosa  Sepal.Width       3.5        not     part
+## 169     setosa  Sepal.Width       3.8        not     part
+## 170     setosa  Sepal.Width       3.8        not     part
+## 171     setosa  Sepal.Width       3.4        not     part
+## 172     setosa  Sepal.Width       3.7        not     part
+## 173     setosa  Sepal.Width       3.6        not     part
+## 174     setosa  Sepal.Width       3.3        not     part
+## 175     setosa  Sepal.Width       3.4        not     part
+## 176     setosa  Sepal.Width       3.0        not     part
+## 177     setosa  Sepal.Width       3.4        not     part
+## 178     setosa  Sepal.Width       3.5        not     part
+## 179     setosa  Sepal.Width       3.4        not     part
+## 180     setosa  Sepal.Width       3.2        not     part
+## 181     setosa  Sepal.Width       3.1        not     part
+## 182     setosa  Sepal.Width       3.4        not     part
+## 183     setosa  Sepal.Width       4.1        not     part
+## 184     setosa  Sepal.Width       4.2        not     part
+## 185     setosa  Sepal.Width       3.1        not     part
+## 186     setosa  Sepal.Width       3.2        not     part
+## 187     setosa  Sepal.Width       3.5        not     part
+## 188     setosa  Sepal.Width       3.6        not     part
+## 189     setosa  Sepal.Width       3.0        not     part
+## 190     setosa  Sepal.Width       3.4        not     part
+## 191     setosa  Sepal.Width       3.5        not     part
+## 192     setosa  Sepal.Width       2.3        not     part
+## 193     setosa  Sepal.Width       3.2        not     part
+## 194     setosa  Sepal.Width       3.5        not     part
+## 195     setosa  Sepal.Width       3.8        not     part
+## 196     setosa  Sepal.Width       3.0        not     part
+## 197     setosa  Sepal.Width       3.8        not     part
+## 198     setosa  Sepal.Width       3.2        not     part
+## 199     setosa  Sepal.Width       3.7        not     part
+## 200     setosa  Sepal.Width       3.3        not     part
+## 201 versicolor  Sepal.Width       3.2        not     part
+## 202 versicolor  Sepal.Width       3.2        not     part
+## 203 versicolor  Sepal.Width       3.1        not     part
+## 204 versicolor  Sepal.Width       2.3        not     part
+## 205 versicolor  Sepal.Width       2.8        not     part
+## 206 versicolor  Sepal.Width       2.8        not     part
+## 207 versicolor  Sepal.Width       3.3        not     part
+## 208 versicolor  Sepal.Width       2.4        not     part
+## 209 versicolor  Sepal.Width       2.9        not     part
+## 210 versicolor  Sepal.Width       2.7        not     part
+## 211 versicolor  Sepal.Width       2.0        not     part
+## 212 versicolor  Sepal.Width       3.0        not     part
+## 213 versicolor  Sepal.Width       2.2        not     part
+## 214 versicolor  Sepal.Width       2.9        not     part
+## 215 versicolor  Sepal.Width       2.9        not     part
+## 216 versicolor  Sepal.Width       3.1        not     part
+## 217 versicolor  Sepal.Width       3.0        not     part
+## 218 versicolor  Sepal.Width       2.7        not     part
+## 219 versicolor  Sepal.Width       2.2        not     part
+## 220 versicolor  Sepal.Width       2.5        not     part
+## 221 versicolor  Sepal.Width       3.2        not     part
+## 222 versicolor  Sepal.Width       2.8        not     part
+## 223 versicolor  Sepal.Width       2.5        not     part
+## 224 versicolor  Sepal.Width       2.8        not     part
+## 225 versicolor  Sepal.Width       2.9        not     part
+## 226 versicolor  Sepal.Width       3.0        not     part
+## 227 versicolor  Sepal.Width       2.8        not     part
+## 228 versicolor  Sepal.Width       3.0        not     part
+## 229 versicolor  Sepal.Width       2.9        not     part
+## 230 versicolor  Sepal.Width       2.6        not     part
+## 231 versicolor  Sepal.Width       2.4        not     part
+## 232 versicolor  Sepal.Width       2.4        not     part
+## 233 versicolor  Sepal.Width       2.7        not     part
+## 234 versicolor  Sepal.Width       2.7        not     part
+## 235 versicolor  Sepal.Width       3.0        not     part
+## 236 versicolor  Sepal.Width       3.4        not     part
+## 237 versicolor  Sepal.Width       3.1        not     part
+## 238 versicolor  Sepal.Width       2.3        not     part
+## 239 versicolor  Sepal.Width       3.0        not     part
+## 240 versicolor  Sepal.Width       2.5        not     part
+## 241 versicolor  Sepal.Width       2.6        not     part
+## 242 versicolor  Sepal.Width       3.0        not     part
+## 243 versicolor  Sepal.Width       2.6        not     part
+## 244 versicolor  Sepal.Width       2.3        not     part
+## 245 versicolor  Sepal.Width       2.7        not     part
+## 246 versicolor  Sepal.Width       3.0        not     part
+## 247 versicolor  Sepal.Width       2.9        not     part
+## 248 versicolor  Sepal.Width       2.9        not     part
+## 249 versicolor  Sepal.Width       2.5        not     part
+## 250 versicolor  Sepal.Width       2.8        not     part
+## 251  virginica  Sepal.Width       3.3        not     part
+## 252  virginica  Sepal.Width       2.7        not     part
+## 253  virginica  Sepal.Width       3.0        not     part
+## 254  virginica  Sepal.Width       2.9        not     part
+## 255  virginica  Sepal.Width       3.0        not     part
+## 256  virginica  Sepal.Width       3.0        not     part
+## 257  virginica  Sepal.Width       2.5        not     part
+## 258  virginica  Sepal.Width       2.9        not     part
+## 259  virginica  Sepal.Width       2.5        not     part
+## 260  virginica  Sepal.Width       3.6        not     part
+## 261  virginica  Sepal.Width       3.2        not     part
+## 262  virginica  Sepal.Width       2.7        not     part
+## 263  virginica  Sepal.Width       3.0        not     part
+## 264  virginica  Sepal.Width       2.5        not     part
+## 265  virginica  Sepal.Width       2.8        not     part
+## 266  virginica  Sepal.Width       3.2        not     part
+## 267  virginica  Sepal.Width       3.0        not     part
+## 268  virginica  Sepal.Width       3.8        not     part
+## 269  virginica  Sepal.Width       2.6        not     part
+## 270  virginica  Sepal.Width       2.2        not     part
+## 271  virginica  Sepal.Width       3.2        not     part
+## 272  virginica  Sepal.Width       2.8        not     part
+## 273  virginica  Sepal.Width       2.8        not     part
+## 274  virginica  Sepal.Width       2.7        not     part
+## 275  virginica  Sepal.Width       3.3        not     part
+## 276  virginica  Sepal.Width       3.2        not     part
+## 277  virginica  Sepal.Width       2.8        not     part
+## 278  virginica  Sepal.Width       3.0        not     part
+## 279  virginica  Sepal.Width       2.8        not     part
+## 280  virginica  Sepal.Width       3.0        not     part
+## 281  virginica  Sepal.Width       2.8        not     part
+## 282  virginica  Sepal.Width       3.8        not     part
+## 283  virginica  Sepal.Width       2.8        not     part
+## 284  virginica  Sepal.Width       2.8        not     part
+## 285  virginica  Sepal.Width       2.6        not     part
+## 286  virginica  Sepal.Width       3.0        not     part
+## 287  virginica  Sepal.Width       3.4        not     part
+## 288  virginica  Sepal.Width       3.1        not     part
+## 289  virginica  Sepal.Width       3.0        not     part
+## 290  virginica  Sepal.Width       3.1        not     part
+## 291  virginica  Sepal.Width       3.1        not     part
+## 292  virginica  Sepal.Width       3.1        not     part
+## 293  virginica  Sepal.Width       2.7        not     part
+## 294  virginica  Sepal.Width       3.2        not     part
+## 295  virginica  Sepal.Width       3.3        not     part
+## 296  virginica  Sepal.Width       3.0        not     part
+## 297  virginica  Sepal.Width       2.5        not     part
+## 298  virginica  Sepal.Width       3.0        not     part
+## 299  virginica  Sepal.Width       3.4        not     part
+## 300  virginica  Sepal.Width       3.0        not     part
+## 301     setosa Petal.Length       1.4        not     part
+## 302     setosa Petal.Length       1.4        not     part
+## 303     setosa Petal.Length       1.3        not     part
+## 304     setosa Petal.Length       1.5        not     part
+## 305     setosa Petal.Length       1.4        not     part
+## 306     setosa Petal.Length       1.7        not     part
+## 307     setosa Petal.Length       1.4        not     part
+## 308     setosa Petal.Length       1.5        not     part
+## 309     setosa Petal.Length       1.4        not     part
+## 310     setosa Petal.Length       1.5        not     part
+## 311     setosa Petal.Length       1.5        not     part
+## 312     setosa Petal.Length       1.6        not     part
+## 313     setosa Petal.Length       1.4        not     part
+## 314     setosa Petal.Length       1.1        not     part
+## 315     setosa Petal.Length       1.2        not     part
+## 316     setosa Petal.Length       1.5        not     part
+## 317     setosa Petal.Length       1.3        not     part
+## 318     setosa Petal.Length       1.4        not     part
+## 319     setosa Petal.Length       1.7        not     part
+## 320     setosa Petal.Length       1.5        not     part
+## 321     setosa Petal.Length       1.7        not     part
+## 322     setosa Petal.Length       1.5        not     part
+## 323     setosa Petal.Length       1.0        not     part
+## 324     setosa Petal.Length       1.7        not     part
+## 325     setosa Petal.Length       1.9        not     part
+## 326     setosa Petal.Length       1.6        not     part
+## 327     setosa Petal.Length       1.6        not     part
+## 328     setosa Petal.Length       1.5        not     part
+## 329     setosa Petal.Length       1.4        not     part
+## 330     setosa Petal.Length       1.6        not     part
+## 331     setosa Petal.Length       1.6        not     part
+## 332     setosa Petal.Length       1.5        not     part
+## 333     setosa Petal.Length       1.5        not     part
+## 334     setosa Petal.Length       1.4        not     part
+## 335     setosa Petal.Length       1.5        not     part
+## 336     setosa Petal.Length       1.2        not     part
+## 337     setosa Petal.Length       1.3        not     part
+## 338     setosa Petal.Length       1.4        not     part
+## 339     setosa Petal.Length       1.3        not     part
+## 340     setosa Petal.Length       1.5        not     part
+## 341     setosa Petal.Length       1.3        not     part
+## 342     setosa Petal.Length       1.3        not     part
+## 343     setosa Petal.Length       1.3        not     part
+## 344     setosa Petal.Length       1.6        not     part
+## 345     setosa Petal.Length       1.9        not     part
+## 346     setosa Petal.Length       1.4        not     part
+## 347     setosa Petal.Length       1.6        not     part
+## 348     setosa Petal.Length       1.4        not     part
+## 349     setosa Petal.Length       1.5        not     part
+## 350     setosa Petal.Length       1.4        not     part
+## 351 versicolor Petal.Length       4.7        not     part
+## 352 versicolor Petal.Length       4.5        not     part
+## 353 versicolor Petal.Length       4.9        not     part
+## 354 versicolor Petal.Length       4.0        not     part
+## 355 versicolor Petal.Length       4.6        not     part
+## 356 versicolor Petal.Length       4.5        not     part
+## 357 versicolor Petal.Length       4.7        not     part
+## 358 versicolor Petal.Length       3.3        not     part
+## 359 versicolor Petal.Length       4.6        not     part
+## 360 versicolor Petal.Length       3.9        not     part
+## 361 versicolor Petal.Length       3.5        not     part
+## 362 versicolor Petal.Length       4.2        not     part
+## 363 versicolor Petal.Length       4.0        not     part
+## 364 versicolor Petal.Length       4.7        not     part
+## 365 versicolor Petal.Length       3.6        not     part
+## 366 versicolor Petal.Length       4.4        not     part
+## 367 versicolor Petal.Length       4.5        not     part
+## 368 versicolor Petal.Length       4.1        not     part
+## 369 versicolor Petal.Length       4.5        not     part
+## 370 versicolor Petal.Length       3.9        not     part
+## 371 versicolor Petal.Length       4.8        not     part
+## 372 versicolor Petal.Length       4.0        not     part
+## 373 versicolor Petal.Length       4.9        not     part
+## 374 versicolor Petal.Length       4.7        not     part
+## 375 versicolor Petal.Length       4.3        not     part
+## 376 versicolor Petal.Length       4.4        not     part
+## 377 versicolor Petal.Length       4.8        not     part
+## 378 versicolor Petal.Length       5.0        not     part
+## 379 versicolor Petal.Length       4.5        not     part
+## 380 versicolor Petal.Length       3.5        not     part
+## 381 versicolor Petal.Length       3.8        not     part
+## 382 versicolor Petal.Length       3.7        not     part
+## 383 versicolor Petal.Length       3.9        not     part
+## 384 versicolor Petal.Length       5.1        not     part
+## 385 versicolor Petal.Length       4.5        not     part
+## 386 versicolor Petal.Length       4.5        not     part
+## 387 versicolor Petal.Length       4.7        not     part
+## 388 versicolor Petal.Length       4.4        not     part
+## 389 versicolor Petal.Length       4.1        not     part
+## 390 versicolor Petal.Length       4.0        not     part
+## 391 versicolor Petal.Length       4.4        not     part
+## 392 versicolor Petal.Length       4.6        not     part
+## 393 versicolor Petal.Length       4.0        not     part
+## 394 versicolor Petal.Length       3.3        not     part
+## 395 versicolor Petal.Length       4.2        not     part
+## 396 versicolor Petal.Length       4.2        not     part
+## 397 versicolor Petal.Length       4.2        not     part
+## 398 versicolor Petal.Length       4.3        not     part
+## 399 versicolor Petal.Length       3.0        not     part
+## 400 versicolor Petal.Length       4.1        not     part
+## 401  virginica Petal.Length       6.0        not     part
+## 402  virginica Petal.Length       5.1        not     part
+## 403  virginica Petal.Length       5.9        not     part
+## 404  virginica Petal.Length       5.6        not     part
+## 405  virginica Petal.Length       5.8        not     part
+## 406  virginica Petal.Length       6.6        not     part
+## 407  virginica Petal.Length       4.5        not     part
+## 408  virginica Petal.Length       6.3        not     part
+## 409  virginica Petal.Length       5.8        not     part
+## 410  virginica Petal.Length       6.1        not     part
+## 411  virginica Petal.Length       5.1        not     part
+## 412  virginica Petal.Length       5.3        not     part
+## 413  virginica Petal.Length       5.5        not     part
+## 414  virginica Petal.Length       5.0        not     part
+## 415  virginica Petal.Length       5.1        not     part
+## 416  virginica Petal.Length       5.3        not     part
+## 417  virginica Petal.Length       5.5        not     part
+## 418  virginica Petal.Length       6.7        not     part
+## 419  virginica Petal.Length       6.9        not     part
+## 420  virginica Petal.Length       5.0        not     part
+## 421  virginica Petal.Length       5.7        not     part
+## 422  virginica Petal.Length       4.9        not     part
+## 423  virginica Petal.Length       6.7        not     part
+## 424  virginica Petal.Length       4.9        not     part
+## 425  virginica Petal.Length       5.7        not     part
+## 426  virginica Petal.Length       6.0        not     part
+## 427  virginica Petal.Length       4.8        not     part
+## 428  virginica Petal.Length       4.9        not     part
+## 429  virginica Petal.Length       5.6        not     part
+## 430  virginica Petal.Length       5.8        not     part
+## 431  virginica Petal.Length       6.1        not     part
+## 432  virginica Petal.Length       6.4        not     part
+## 433  virginica Petal.Length       5.6        not     part
+## 434  virginica Petal.Length       5.1        not     part
+## 435  virginica Petal.Length       5.6        not     part
+## 436  virginica Petal.Length       6.1        not     part
+## 437  virginica Petal.Length       5.6        not     part
+## 438  virginica Petal.Length       5.5        not     part
+## 439  virginica Petal.Length       4.8        not     part
+## 440  virginica Petal.Length       5.4        not     part
+## 441  virginica Petal.Length       5.6        not     part
+## 442  virginica Petal.Length       5.1        not     part
+## 443  virginica Petal.Length       5.1        not     part
+## 444  virginica Petal.Length       5.9        not     part
+## 445  virginica Petal.Length       5.7        not     part
+## 446  virginica Petal.Length       5.2        not     part
+## 447  virginica Petal.Length       5.0        not     part
+## 448  virginica Petal.Length       5.2        not     part
+## 449  virginica Petal.Length       5.4        not     part
+## 450  virginica Petal.Length       5.1        not     part
+## 451     setosa  Petal.Width       0.2        not     part
+## 452     setosa  Petal.Width       0.2        not     part
+## 453     setosa  Petal.Width       0.2        not     part
+## 454     setosa  Petal.Width       0.2        not     part
+## 455     setosa  Petal.Width       0.2        not     part
+## 456     setosa  Petal.Width       0.4        not     part
+## 457     setosa  Petal.Width       0.3        not     part
+## 458     setosa  Petal.Width       0.2        not     part
+## 459     setosa  Petal.Width       0.2        not     part
+## 460     setosa  Petal.Width       0.1        not     part
+## 461     setosa  Petal.Width       0.2        not     part
+## 462     setosa  Petal.Width       0.2        not     part
+## 463     setosa  Petal.Width       0.1        not     part
+## 464     setosa  Petal.Width       0.1        not     part
+## 465     setosa  Petal.Width       0.2        not     part
+## 466     setosa  Petal.Width       0.4        not     part
+## 467     setosa  Petal.Width       0.4        not     part
+## 468     setosa  Petal.Width       0.3        not     part
+## 469     setosa  Petal.Width       0.3        not     part
+## 470     setosa  Petal.Width       0.3        not     part
+## 471     setosa  Petal.Width       0.2        not     part
+## 472     setosa  Petal.Width       0.4        not     part
+## 473     setosa  Petal.Width       0.2        not     part
+## 474     setosa  Petal.Width       0.5        not     part
+## 475     setosa  Petal.Width       0.2        not     part
+## 476     setosa  Petal.Width       0.2        not     part
+## 477     setosa  Petal.Width       0.4        not     part
+## 478     setosa  Petal.Width       0.2        not     part
+## 479     setosa  Petal.Width       0.2        not     part
+## 480     setosa  Petal.Width       0.2        not     part
+## 481     setosa  Petal.Width       0.2        not     part
+## 482     setosa  Petal.Width       0.4        not     part
+## 483     setosa  Petal.Width       0.1        not     part
+## 484     setosa  Petal.Width       0.2        not     part
+## 485     setosa  Petal.Width       0.2        not     part
+## 486     setosa  Petal.Width       0.2        not     part
+## 487     setosa  Petal.Width       0.2        not     part
+## 488     setosa  Petal.Width       0.1        not     part
+## 489     setosa  Petal.Width       0.2        not     part
+## 490     setosa  Petal.Width       0.2        not     part
+## 491     setosa  Petal.Width       0.3        not     part
+## 492     setosa  Petal.Width       0.3        not     part
+## 493     setosa  Petal.Width       0.2        not     part
+## 494     setosa  Petal.Width       0.6        not     part
+## 495     setosa  Petal.Width       0.4        not     part
+## 496     setosa  Petal.Width       0.3        not     part
+## 497     setosa  Petal.Width       0.2        not     part
+## 498     setosa  Petal.Width       0.2        not     part
+## 499     setosa  Petal.Width       0.2        not     part
+## 500     setosa  Petal.Width       0.2        not     part
+## 501 versicolor  Petal.Width       1.4        not     part
+## 502 versicolor  Petal.Width       1.5        not     part
+## 503 versicolor  Petal.Width       1.5        not     part
+## 504 versicolor  Petal.Width       1.3        not     part
+## 505 versicolor  Petal.Width       1.5        not     part
+## 506 versicolor  Petal.Width       1.3        not     part
+## 507 versicolor  Petal.Width       1.6        not     part
+## 508 versicolor  Petal.Width       1.0        not     part
+## 509 versicolor  Petal.Width       1.3        not     part
+## 510 versicolor  Petal.Width       1.4        not     part
+## 511 versicolor  Petal.Width       1.0        not     part
+## 512 versicolor  Petal.Width       1.5        not     part
+## 513 versicolor  Petal.Width       1.0        not     part
+## 514 versicolor  Petal.Width       1.4        not     part
+## 515 versicolor  Petal.Width       1.3        not     part
+## 516 versicolor  Petal.Width       1.4        not     part
+## 517 versicolor  Petal.Width       1.5        not     part
+## 518 versicolor  Petal.Width       1.0        not     part
+## 519 versicolor  Petal.Width       1.5        not     part
+## 520 versicolor  Petal.Width       1.1        not     part
+## 521 versicolor  Petal.Width       1.8        not     part
+## 522 versicolor  Petal.Width       1.3        not     part
+## 523 versicolor  Petal.Width       1.5        not     part
+## 524 versicolor  Petal.Width       1.2        not     part
+## 525 versicolor  Petal.Width       1.3        not     part
+## 526 versicolor  Petal.Width       1.4        not     part
+## 527 versicolor  Petal.Width       1.4        not     part
+## 528 versicolor  Petal.Width       1.7        not     part
+## 529 versicolor  Petal.Width       1.5        not     part
+## 530 versicolor  Petal.Width       1.0        not     part
+## 531 versicolor  Petal.Width       1.1        not     part
+## 532 versicolor  Petal.Width       1.0        not     part
+## 533 versicolor  Petal.Width       1.2        not     part
+## 534 versicolor  Petal.Width       1.6        not     part
+## 535 versicolor  Petal.Width       1.5        not     part
+## 536 versicolor  Petal.Width       1.6        not     part
+## 537 versicolor  Petal.Width       1.5        not     part
+## 538 versicolor  Petal.Width       1.3        not     part
+## 539 versicolor  Petal.Width       1.3        not     part
+## 540 versicolor  Petal.Width       1.3        not     part
+## 541 versicolor  Petal.Width       1.2        not     part
+## 542 versicolor  Petal.Width       1.4        not     part
+## 543 versicolor  Petal.Width       1.2        not     part
+## 544 versicolor  Petal.Width       1.0        not     part
+## 545 versicolor  Petal.Width       1.3        not     part
+## 546 versicolor  Petal.Width       1.2        not     part
+## 547 versicolor  Petal.Width       1.3        not     part
+## 548 versicolor  Petal.Width       1.3        not     part
+## 549 versicolor  Petal.Width       1.1        not     part
+## 550 versicolor  Petal.Width       1.3        not     part
+## 551  virginica  Petal.Width       2.5        not     part
+## 552  virginica  Petal.Width       1.9        not     part
+## 553  virginica  Petal.Width       2.1        not     part
+## 554  virginica  Petal.Width       1.8        not     part
+## 555  virginica  Petal.Width       2.2        not     part
+## 556  virginica  Petal.Width       2.1        not     part
+## 557  virginica  Petal.Width       1.7        not     part
+## 558  virginica  Petal.Width       1.8        not     part
+## 559  virginica  Petal.Width       1.8        not     part
+## 560  virginica  Petal.Width       2.5        not     part
+## 561  virginica  Petal.Width       2.0        not     part
+## 562  virginica  Petal.Width       1.9        not     part
+## 563  virginica  Petal.Width       2.1        not     part
+## 564  virginica  Petal.Width       2.0        not     part
+## 565  virginica  Petal.Width       2.4        not     part
+## 566  virginica  Petal.Width       2.3        not     part
+## 567  virginica  Petal.Width       1.8        not     part
+## 568  virginica  Petal.Width       2.2        not     part
+## 569  virginica  Petal.Width       2.3        not     part
+## 570  virginica  Petal.Width       1.5        not     part
+## 571  virginica  Petal.Width       2.3        not     part
+## 572  virginica  Petal.Width       2.0        not     part
+## 573  virginica  Petal.Width       2.0        not     part
+## 574  virginica  Petal.Width       1.8        not     part
+## 575  virginica  Petal.Width       2.1        not     part
+## 576  virginica  Petal.Width       1.8        not     part
+## 577  virginica  Petal.Width       1.8        not     part
+## 578  virginica  Petal.Width       1.8        not     part
+## 579  virginica  Petal.Width       2.1        not     part
+## 580  virginica  Petal.Width       1.6        not     part
+## 581  virginica  Petal.Width       1.9        not     part
+## 582  virginica  Petal.Width       2.0        not     part
+## 583  virginica  Petal.Width       2.2        not     part
+## 584  virginica  Petal.Width       1.5        not     part
+## 585  virginica  Petal.Width       1.4        not     part
+## 586  virginica  Petal.Width       2.3        not     part
+## 587  virginica  Petal.Width       2.4        not     part
+## 588  virginica  Petal.Width       1.8        not     part
+## 589  virginica  Petal.Width       1.8        not     part
+## 590  virginica  Petal.Width       2.1        not     part
+## 591  virginica  Petal.Width       2.4        not     part
+## 592  virginica  Petal.Width       2.3        not     part
+## 593  virginica  Petal.Width       1.9        not     part
+## 594  virginica  Petal.Width       2.3        not     part
+## 595  virginica  Petal.Width       2.5        not     part
+## 596  virginica  Petal.Width       2.3        not     part
+## 597  virginica  Petal.Width       1.9        not     part
+## 598  virginica  Petal.Width       2.0        not     part
+## 599  virginica  Petal.Width       2.3        not     part
+## 600  virginica  Petal.Width       1.8        not     part
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In the next few chunks we print the returned values rather than saving then in variables. In most cases in practice one will combine these function into a ``pipe'' using operator \Roperator{\%>\%} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}, and for more realistic examples, section \ref{sec:dataex} starting on page \pageref{sec:dataex}).
+
+Function \Rfunction{arrange()} is used for sorting the rows---makes sorting a data frame simpler than by using \Rfunction{sort()} and \Rfunction{order()}. These two base \Rlang methods are more versatile.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{arrange}\hlstd{(long_iris, Species, plant_part, part_dim)}
+\end{alltt}
+\begin{verbatim}
+##        Species     not part dimension plant_part part_dim
+## 1       setosa Sepal.Length       5.1        not     part
+## 2       setosa Sepal.Length       4.9        not     part
+## 3       setosa Sepal.Length       4.7        not     part
+## 4       setosa Sepal.Length       4.6        not     part
+## 5       setosa Sepal.Length       5.0        not     part
+## 6       setosa Sepal.Length       5.4        not     part
+## 7       setosa Sepal.Length       4.6        not     part
+## 8       setosa Sepal.Length       5.0        not     part
+## 9       setosa Sepal.Length       4.4        not     part
+## 10      setosa Sepal.Length       4.9        not     part
+## 11      setosa Sepal.Length       5.4        not     part
+## 12      setosa Sepal.Length       4.8        not     part
+## 13      setosa Sepal.Length       4.8        not     part
+## 14      setosa Sepal.Length       4.3        not     part
+## 15      setosa Sepal.Length       5.8        not     part
+## 16      setosa Sepal.Length       5.7        not     part
+## 17      setosa Sepal.Length       5.4        not     part
+## 18      setosa Sepal.Length       5.1        not     part
+## 19      setosa Sepal.Length       5.7        not     part
+## 20      setosa Sepal.Length       5.1        not     part
+## 21      setosa Sepal.Length       5.4        not     part
+## 22      setosa Sepal.Length       5.1        not     part
+## 23      setosa Sepal.Length       4.6        not     part
+## 24      setosa Sepal.Length       5.1        not     part
+## 25      setosa Sepal.Length       4.8        not     part
+## 26      setosa Sepal.Length       5.0        not     part
+## 27      setosa Sepal.Length       5.0        not     part
+## 28      setosa Sepal.Length       5.2        not     part
+## 29      setosa Sepal.Length       5.2        not     part
+## 30      setosa Sepal.Length       4.7        not     part
+## 31      setosa Sepal.Length       4.8        not     part
+## 32      setosa Sepal.Length       5.4        not     part
+## 33      setosa Sepal.Length       5.2        not     part
+## 34      setosa Sepal.Length       5.5        not     part
+## 35      setosa Sepal.Length       4.9        not     part
+## 36      setosa Sepal.Length       5.0        not     part
+## 37      setosa Sepal.Length       5.5        not     part
+## 38      setosa Sepal.Length       4.9        not     part
+## 39      setosa Sepal.Length       4.4        not     part
+## 40      setosa Sepal.Length       5.1        not     part
+## 41      setosa Sepal.Length       5.0        not     part
+## 42      setosa Sepal.Length       4.5        not     part
+## 43      setosa Sepal.Length       4.4        not     part
+## 44      setosa Sepal.Length       5.0        not     part
+## 45      setosa Sepal.Length       5.1        not     part
+## 46      setosa Sepal.Length       4.8        not     part
+## 47      setosa Sepal.Length       5.1        not     part
+## 48      setosa Sepal.Length       4.6        not     part
+## 49      setosa Sepal.Length       5.3        not     part
+## 50      setosa Sepal.Length       5.0        not     part
+## 51      setosa  Sepal.Width       3.5        not     part
+## 52      setosa  Sepal.Width       3.0        not     part
+## 53      setosa  Sepal.Width       3.2        not     part
+## 54      setosa  Sepal.Width       3.1        not     part
+## 55      setosa  Sepal.Width       3.6        not     part
+## 56      setosa  Sepal.Width       3.9        not     part
+## 57      setosa  Sepal.Width       3.4        not     part
+## 58      setosa  Sepal.Width       3.4        not     part
+## 59      setosa  Sepal.Width       2.9        not     part
+## 60      setosa  Sepal.Width       3.1        not     part
+## 61      setosa  Sepal.Width       3.7        not     part
+## 62      setosa  Sepal.Width       3.4        not     part
+## 63      setosa  Sepal.Width       3.0        not     part
+## 64      setosa  Sepal.Width       3.0        not     part
+## 65      setosa  Sepal.Width       4.0        not     part
+## 66      setosa  Sepal.Width       4.4        not     part
+## 67      setosa  Sepal.Width       3.9        not     part
+## 68      setosa  Sepal.Width       3.5        not     part
+## 69      setosa  Sepal.Width       3.8        not     part
+## 70      setosa  Sepal.Width       3.8        not     part
+## 71      setosa  Sepal.Width       3.4        not     part
+## 72      setosa  Sepal.Width       3.7        not     part
+## 73      setosa  Sepal.Width       3.6        not     part
+## 74      setosa  Sepal.Width       3.3        not     part
+## 75      setosa  Sepal.Width       3.4        not     part
+## 76      setosa  Sepal.Width       3.0        not     part
+## 77      setosa  Sepal.Width       3.4        not     part
+## 78      setosa  Sepal.Width       3.5        not     part
+## 79      setosa  Sepal.Width       3.4        not     part
+## 80      setosa  Sepal.Width       3.2        not     part
+## 81      setosa  Sepal.Width       3.1        not     part
+## 82      setosa  Sepal.Width       3.4        not     part
+## 83      setosa  Sepal.Width       4.1        not     part
+## 84      setosa  Sepal.Width       4.2        not     part
+## 85      setosa  Sepal.Width       3.1        not     part
+## 86      setosa  Sepal.Width       3.2        not     part
+## 87      setosa  Sepal.Width       3.5        not     part
+## 88      setosa  Sepal.Width       3.6        not     part
+## 89      setosa  Sepal.Width       3.0        not     part
+## 90      setosa  Sepal.Width       3.4        not     part
+## 91      setosa  Sepal.Width       3.5        not     part
+## 92      setosa  Sepal.Width       2.3        not     part
+## 93      setosa  Sepal.Width       3.2        not     part
+## 94      setosa  Sepal.Width       3.5        not     part
+## 95      setosa  Sepal.Width       3.8        not     part
+## 96      setosa  Sepal.Width       3.0        not     part
+## 97      setosa  Sepal.Width       3.8        not     part
+## 98      setosa  Sepal.Width       3.2        not     part
+## 99      setosa  Sepal.Width       3.7        not     part
+## 100     setosa  Sepal.Width       3.3        not     part
+## 101     setosa Petal.Length       1.4        not     part
+## 102     setosa Petal.Length       1.4        not     part
+## 103     setosa Petal.Length       1.3        not     part
+## 104     setosa Petal.Length       1.5        not     part
+## 105     setosa Petal.Length       1.4        not     part
+## 106     setosa Petal.Length       1.7        not     part
+## 107     setosa Petal.Length       1.4        not     part
+## 108     setosa Petal.Length       1.5        not     part
+## 109     setosa Petal.Length       1.4        not     part
+## 110     setosa Petal.Length       1.5        not     part
+## 111     setosa Petal.Length       1.5        not     part
+## 112     setosa Petal.Length       1.6        not     part
+## 113     setosa Petal.Length       1.4        not     part
+## 114     setosa Petal.Length       1.1        not     part
+## 115     setosa Petal.Length       1.2        not     part
+## 116     setosa Petal.Length       1.5        not     part
+## 117     setosa Petal.Length       1.3        not     part
+## 118     setosa Petal.Length       1.4        not     part
+## 119     setosa Petal.Length       1.7        not     part
+## 120     setosa Petal.Length       1.5        not     part
+## 121     setosa Petal.Length       1.7        not     part
+## 122     setosa Petal.Length       1.5        not     part
+## 123     setosa Petal.Length       1.0        not     part
+## 124     setosa Petal.Length       1.7        not     part
+## 125     setosa Petal.Length       1.9        not     part
+## 126     setosa Petal.Length       1.6        not     part
+## 127     setosa Petal.Length       1.6        not     part
+## 128     setosa Petal.Length       1.5        not     part
+## 129     setosa Petal.Length       1.4        not     part
+## 130     setosa Petal.Length       1.6        not     part
+## 131     setosa Petal.Length       1.6        not     part
+## 132     setosa Petal.Length       1.5        not     part
+## 133     setosa Petal.Length       1.5        not     part
+## 134     setosa Petal.Length       1.4        not     part
+## 135     setosa Petal.Length       1.5        not     part
+## 136     setosa Petal.Length       1.2        not     part
+## 137     setosa Petal.Length       1.3        not     part
+## 138     setosa Petal.Length       1.4        not     part
+## 139     setosa Petal.Length       1.3        not     part
+## 140     setosa Petal.Length       1.5        not     part
+## 141     setosa Petal.Length       1.3        not     part
+## 142     setosa Petal.Length       1.3        not     part
+## 143     setosa Petal.Length       1.3        not     part
+## 144     setosa Petal.Length       1.6        not     part
+## 145     setosa Petal.Length       1.9        not     part
+## 146     setosa Petal.Length       1.4        not     part
+## 147     setosa Petal.Length       1.6        not     part
+## 148     setosa Petal.Length       1.4        not     part
+## 149     setosa Petal.Length       1.5        not     part
+## 150     setosa Petal.Length       1.4        not     part
+## 151     setosa  Petal.Width       0.2        not     part
+## 152     setosa  Petal.Width       0.2        not     part
+## 153     setosa  Petal.Width       0.2        not     part
+## 154     setosa  Petal.Width       0.2        not     part
+## 155     setosa  Petal.Width       0.2        not     part
+## 156     setosa  Petal.Width       0.4        not     part
+## 157     setosa  Petal.Width       0.3        not     part
+## 158     setosa  Petal.Width       0.2        not     part
+## 159     setosa  Petal.Width       0.2        not     part
+## 160     setosa  Petal.Width       0.1        not     part
+## 161     setosa  Petal.Width       0.2        not     part
+## 162     setosa  Petal.Width       0.2        not     part
+## 163     setosa  Petal.Width       0.1        not     part
+## 164     setosa  Petal.Width       0.1        not     part
+## 165     setosa  Petal.Width       0.2        not     part
+## 166     setosa  Petal.Width       0.4        not     part
+## 167     setosa  Petal.Width       0.4        not     part
+## 168     setosa  Petal.Width       0.3        not     part
+## 169     setosa  Petal.Width       0.3        not     part
+## 170     setosa  Petal.Width       0.3        not     part
+## 171     setosa  Petal.Width       0.2        not     part
+## 172     setosa  Petal.Width       0.4        not     part
+## 173     setosa  Petal.Width       0.2        not     part
+## 174     setosa  Petal.Width       0.5        not     part
+## 175     setosa  Petal.Width       0.2        not     part
+## 176     setosa  Petal.Width       0.2        not     part
+## 177     setosa  Petal.Width       0.4        not     part
+## 178     setosa  Petal.Width       0.2        not     part
+## 179     setosa  Petal.Width       0.2        not     part
+## 180     setosa  Petal.Width       0.2        not     part
+## 181     setosa  Petal.Width       0.2        not     part
+## 182     setosa  Petal.Width       0.4        not     part
+## 183     setosa  Petal.Width       0.1        not     part
+## 184     setosa  Petal.Width       0.2        not     part
+## 185     setosa  Petal.Width       0.2        not     part
+## 186     setosa  Petal.Width       0.2        not     part
+## 187     setosa  Petal.Width       0.2        not     part
+## 188     setosa  Petal.Width       0.1        not     part
+## 189     setosa  Petal.Width       0.2        not     part
+## 190     setosa  Petal.Width       0.2        not     part
+## 191     setosa  Petal.Width       0.3        not     part
+## 192     setosa  Petal.Width       0.3        not     part
+## 193     setosa  Petal.Width       0.2        not     part
+## 194     setosa  Petal.Width       0.6        not     part
+## 195     setosa  Petal.Width       0.4        not     part
+## 196     setosa  Petal.Width       0.3        not     part
+## 197     setosa  Petal.Width       0.2        not     part
+## 198     setosa  Petal.Width       0.2        not     part
+## 199     setosa  Petal.Width       0.2        not     part
+## 200     setosa  Petal.Width       0.2        not     part
+## 201 versicolor Sepal.Length       7.0        not     part
+## 202 versicolor Sepal.Length       6.4        not     part
+## 203 versicolor Sepal.Length       6.9        not     part
+## 204 versicolor Sepal.Length       5.5        not     part
+## 205 versicolor Sepal.Length       6.5        not     part
+## 206 versicolor Sepal.Length       5.7        not     part
+## 207 versicolor Sepal.Length       6.3        not     part
+## 208 versicolor Sepal.Length       4.9        not     part
+## 209 versicolor Sepal.Length       6.6        not     part
+## 210 versicolor Sepal.Length       5.2        not     part
+## 211 versicolor Sepal.Length       5.0        not     part
+## 212 versicolor Sepal.Length       5.9        not     part
+## 213 versicolor Sepal.Length       6.0        not     part
+## 214 versicolor Sepal.Length       6.1        not     part
+## 215 versicolor Sepal.Length       5.6        not     part
+## 216 versicolor Sepal.Length       6.7        not     part
+## 217 versicolor Sepal.Length       5.6        not     part
+## 218 versicolor Sepal.Length       5.8        not     part
+## 219 versicolor Sepal.Length       6.2        not     part
+## 220 versicolor Sepal.Length       5.6        not     part
+## 221 versicolor Sepal.Length       5.9        not     part
+## 222 versicolor Sepal.Length       6.1        not     part
+## 223 versicolor Sepal.Length       6.3        not     part
+## 224 versicolor Sepal.Length       6.1        not     part
+## 225 versicolor Sepal.Length       6.4        not     part
+## 226 versicolor Sepal.Length       6.6        not     part
+## 227 versicolor Sepal.Length       6.8        not     part
+## 228 versicolor Sepal.Length       6.7        not     part
+## 229 versicolor Sepal.Length       6.0        not     part
+## 230 versicolor Sepal.Length       5.7        not     part
+## 231 versicolor Sepal.Length       5.5        not     part
+## 232 versicolor Sepal.Length       5.5        not     part
+## 233 versicolor Sepal.Length       5.8        not     part
+## 234 versicolor Sepal.Length       6.0        not     part
+## 235 versicolor Sepal.Length       5.4        not     part
+## 236 versicolor Sepal.Length       6.0        not     part
+## 237 versicolor Sepal.Length       6.7        not     part
+## 238 versicolor Sepal.Length       6.3        not     part
+## 239 versicolor Sepal.Length       5.6        not     part
+## 240 versicolor Sepal.Length       5.5        not     part
+## 241 versicolor Sepal.Length       5.5        not     part
+## 242 versicolor Sepal.Length       6.1        not     part
+## 243 versicolor Sepal.Length       5.8        not     part
+## 244 versicolor Sepal.Length       5.0        not     part
+## 245 versicolor Sepal.Length       5.6        not     part
+## 246 versicolor Sepal.Length       5.7        not     part
+## 247 versicolor Sepal.Length       5.7        not     part
+## 248 versicolor Sepal.Length       6.2        not     part
+## 249 versicolor Sepal.Length       5.1        not     part
+## 250 versicolor Sepal.Length       5.7        not     part
+## 251 versicolor  Sepal.Width       3.2        not     part
+## 252 versicolor  Sepal.Width       3.2        not     part
+## 253 versicolor  Sepal.Width       3.1        not     part
+## 254 versicolor  Sepal.Width       2.3        not     part
+## 255 versicolor  Sepal.Width       2.8        not     part
+## 256 versicolor  Sepal.Width       2.8        not     part
+## 257 versicolor  Sepal.Width       3.3        not     part
+## 258 versicolor  Sepal.Width       2.4        not     part
+## 259 versicolor  Sepal.Width       2.9        not     part
+## 260 versicolor  Sepal.Width       2.7        not     part
+## 261 versicolor  Sepal.Width       2.0        not     part
+## 262 versicolor  Sepal.Width       3.0        not     part
+## 263 versicolor  Sepal.Width       2.2        not     part
+## 264 versicolor  Sepal.Width       2.9        not     part
+## 265 versicolor  Sepal.Width       2.9        not     part
+## 266 versicolor  Sepal.Width       3.1        not     part
+## 267 versicolor  Sepal.Width       3.0        not     part
+## 268 versicolor  Sepal.Width       2.7        not     part
+## 269 versicolor  Sepal.Width       2.2        not     part
+## 270 versicolor  Sepal.Width       2.5        not     part
+## 271 versicolor  Sepal.Width       3.2        not     part
+## 272 versicolor  Sepal.Width       2.8        not     part
+## 273 versicolor  Sepal.Width       2.5        not     part
+## 274 versicolor  Sepal.Width       2.8        not     part
+## 275 versicolor  Sepal.Width       2.9        not     part
+## 276 versicolor  Sepal.Width       3.0        not     part
+## 277 versicolor  Sepal.Width       2.8        not     part
+## 278 versicolor  Sepal.Width       3.0        not     part
+## 279 versicolor  Sepal.Width       2.9        not     part
+## 280 versicolor  Sepal.Width       2.6        not     part
+## 281 versicolor  Sepal.Width       2.4        not     part
+## 282 versicolor  Sepal.Width       2.4        not     part
+## 283 versicolor  Sepal.Width       2.7        not     part
+## 284 versicolor  Sepal.Width       2.7        not     part
+## 285 versicolor  Sepal.Width       3.0        not     part
+## 286 versicolor  Sepal.Width       3.4        not     part
+## 287 versicolor  Sepal.Width       3.1        not     part
+## 288 versicolor  Sepal.Width       2.3        not     part
+## 289 versicolor  Sepal.Width       3.0        not     part
+## 290 versicolor  Sepal.Width       2.5        not     part
+## 291 versicolor  Sepal.Width       2.6        not     part
+## 292 versicolor  Sepal.Width       3.0        not     part
+## 293 versicolor  Sepal.Width       2.6        not     part
+## 294 versicolor  Sepal.Width       2.3        not     part
+## 295 versicolor  Sepal.Width       2.7        not     part
+## 296 versicolor  Sepal.Width       3.0        not     part
+## 297 versicolor  Sepal.Width       2.9        not     part
+## 298 versicolor  Sepal.Width       2.9        not     part
+## 299 versicolor  Sepal.Width       2.5        not     part
+## 300 versicolor  Sepal.Width       2.8        not     part
+## 301 versicolor Petal.Length       4.7        not     part
+## 302 versicolor Petal.Length       4.5        not     part
+## 303 versicolor Petal.Length       4.9        not     part
+## 304 versicolor Petal.Length       4.0        not     part
+## 305 versicolor Petal.Length       4.6        not     part
+## 306 versicolor Petal.Length       4.5        not     part
+## 307 versicolor Petal.Length       4.7        not     part
+## 308 versicolor Petal.Length       3.3        not     part
+## 309 versicolor Petal.Length       4.6        not     part
+## 310 versicolor Petal.Length       3.9        not     part
+## 311 versicolor Petal.Length       3.5        not     part
+## 312 versicolor Petal.Length       4.2        not     part
+## 313 versicolor Petal.Length       4.0        not     part
+## 314 versicolor Petal.Length       4.7        not     part
+## 315 versicolor Petal.Length       3.6        not     part
+## 316 versicolor Petal.Length       4.4        not     part
+## 317 versicolor Petal.Length       4.5        not     part
+## 318 versicolor Petal.Length       4.1        not     part
+## 319 versicolor Petal.Length       4.5        not     part
+## 320 versicolor Petal.Length       3.9        not     part
+## 321 versicolor Petal.Length       4.8        not     part
+## 322 versicolor Petal.Length       4.0        not     part
+## 323 versicolor Petal.Length       4.9        not     part
+## 324 versicolor Petal.Length       4.7        not     part
+## 325 versicolor Petal.Length       4.3        not     part
+## 326 versicolor Petal.Length       4.4        not     part
+## 327 versicolor Petal.Length       4.8        not     part
+## 328 versicolor Petal.Length       5.0        not     part
+## 329 versicolor Petal.Length       4.5        not     part
+## 330 versicolor Petal.Length       3.5        not     part
+## 331 versicolor Petal.Length       3.8        not     part
+## 332 versicolor Petal.Length       3.7        not     part
+## 333 versicolor Petal.Length       3.9        not     part
+## 334 versicolor Petal.Length       5.1        not     part
+## 335 versicolor Petal.Length       4.5        not     part
+## 336 versicolor Petal.Length       4.5        not     part
+## 337 versicolor Petal.Length       4.7        not     part
+## 338 versicolor Petal.Length       4.4        not     part
+## 339 versicolor Petal.Length       4.1        not     part
+## 340 versicolor Petal.Length       4.0        not     part
+## 341 versicolor Petal.Length       4.4        not     part
+## 342 versicolor Petal.Length       4.6        not     part
+## 343 versicolor Petal.Length       4.0        not     part
+## 344 versicolor Petal.Length       3.3        not     part
+## 345 versicolor Petal.Length       4.2        not     part
+## 346 versicolor Petal.Length       4.2        not     part
+## 347 versicolor Petal.Length       4.2        not     part
+## 348 versicolor Petal.Length       4.3        not     part
+## 349 versicolor Petal.Length       3.0        not     part
+## 350 versicolor Petal.Length       4.1        not     part
+## 351 versicolor  Petal.Width       1.4        not     part
+## 352 versicolor  Petal.Width       1.5        not     part
+## 353 versicolor  Petal.Width       1.5        not     part
+## 354 versicolor  Petal.Width       1.3        not     part
+## 355 versicolor  Petal.Width       1.5        not     part
+## 356 versicolor  Petal.Width       1.3        not     part
+## 357 versicolor  Petal.Width       1.6        not     part
+## 358 versicolor  Petal.Width       1.0        not     part
+## 359 versicolor  Petal.Width       1.3        not     part
+## 360 versicolor  Petal.Width       1.4        not     part
+## 361 versicolor  Petal.Width       1.0        not     part
+## 362 versicolor  Petal.Width       1.5        not     part
+## 363 versicolor  Petal.Width       1.0        not     part
+## 364 versicolor  Petal.Width       1.4        not     part
+## 365 versicolor  Petal.Width       1.3        not     part
+## 366 versicolor  Petal.Width       1.4        not     part
+## 367 versicolor  Petal.Width       1.5        not     part
+## 368 versicolor  Petal.Width       1.0        not     part
+## 369 versicolor  Petal.Width       1.5        not     part
+## 370 versicolor  Petal.Width       1.1        not     part
+## 371 versicolor  Petal.Width       1.8        not     part
+## 372 versicolor  Petal.Width       1.3        not     part
+## 373 versicolor  Petal.Width       1.5        not     part
+## 374 versicolor  Petal.Width       1.2        not     part
+## 375 versicolor  Petal.Width       1.3        not     part
+## 376 versicolor  Petal.Width       1.4        not     part
+## 377 versicolor  Petal.Width       1.4        not     part
+## 378 versicolor  Petal.Width       1.7        not     part
+## 379 versicolor  Petal.Width       1.5        not     part
+## 380 versicolor  Petal.Width       1.0        not     part
+## 381 versicolor  Petal.Width       1.1        not     part
+## 382 versicolor  Petal.Width       1.0        not     part
+## 383 versicolor  Petal.Width       1.2        not     part
+## 384 versicolor  Petal.Width       1.6        not     part
+## 385 versicolor  Petal.Width       1.5        not     part
+## 386 versicolor  Petal.Width       1.6        not     part
+## 387 versicolor  Petal.Width       1.5        not     part
+## 388 versicolor  Petal.Width       1.3        not     part
+## 389 versicolor  Petal.Width       1.3        not     part
+## 390 versicolor  Petal.Width       1.3        not     part
+## 391 versicolor  Petal.Width       1.2        not     part
+## 392 versicolor  Petal.Width       1.4        not     part
+## 393 versicolor  Petal.Width       1.2        not     part
+## 394 versicolor  Petal.Width       1.0        not     part
+## 395 versicolor  Petal.Width       1.3        not     part
+## 396 versicolor  Petal.Width       1.2        not     part
+## 397 versicolor  Petal.Width       1.3        not     part
+## 398 versicolor  Petal.Width       1.3        not     part
+## 399 versicolor  Petal.Width       1.1        not     part
+## 400 versicolor  Petal.Width       1.3        not     part
+## 401  virginica Sepal.Length       6.3        not     part
+## 402  virginica Sepal.Length       5.8        not     part
+## 403  virginica Sepal.Length       7.1        not     part
+## 404  virginica Sepal.Length       6.3        not     part
+## 405  virginica Sepal.Length       6.5        not     part
+## 406  virginica Sepal.Length       7.6        not     part
+## 407  virginica Sepal.Length       4.9        not     part
+## 408  virginica Sepal.Length       7.3        not     part
+## 409  virginica Sepal.Length       6.7        not     part
+## 410  virginica Sepal.Length       7.2        not     part
+## 411  virginica Sepal.Length       6.5        not     part
+## 412  virginica Sepal.Length       6.4        not     part
+## 413  virginica Sepal.Length       6.8        not     part
+## 414  virginica Sepal.Length       5.7        not     part
+## 415  virginica Sepal.Length       5.8        not     part
+## 416  virginica Sepal.Length       6.4        not     part
+## 417  virginica Sepal.Length       6.5        not     part
+## 418  virginica Sepal.Length       7.7        not     part
+## 419  virginica Sepal.Length       7.7        not     part
+## 420  virginica Sepal.Length       6.0        not     part
+## 421  virginica Sepal.Length       6.9        not     part
+## 422  virginica Sepal.Length       5.6        not     part
+## 423  virginica Sepal.Length       7.7        not     part
+## 424  virginica Sepal.Length       6.3        not     part
+## 425  virginica Sepal.Length       6.7        not     part
+## 426  virginica Sepal.Length       7.2        not     part
+## 427  virginica Sepal.Length       6.2        not     part
+## 428  virginica Sepal.Length       6.1        not     part
+## 429  virginica Sepal.Length       6.4        not     part
+## 430  virginica Sepal.Length       7.2        not     part
+## 431  virginica Sepal.Length       7.4        not     part
+## 432  virginica Sepal.Length       7.9        not     part
+## 433  virginica Sepal.Length       6.4        not     part
+## 434  virginica Sepal.Length       6.3        not     part
+## 435  virginica Sepal.Length       6.1        not     part
+## 436  virginica Sepal.Length       7.7        not     part
+## 437  virginica Sepal.Length       6.3        not     part
+## 438  virginica Sepal.Length       6.4        not     part
+## 439  virginica Sepal.Length       6.0        not     part
+## 440  virginica Sepal.Length       6.9        not     part
+## 441  virginica Sepal.Length       6.7        not     part
+## 442  virginica Sepal.Length       6.9        not     part
+## 443  virginica Sepal.Length       5.8        not     part
+## 444  virginica Sepal.Length       6.8        not     part
+## 445  virginica Sepal.Length       6.7        not     part
+## 446  virginica Sepal.Length       6.7        not     part
+## 447  virginica Sepal.Length       6.3        not     part
+## 448  virginica Sepal.Length       6.5        not     part
+## 449  virginica Sepal.Length       6.2        not     part
+## 450  virginica Sepal.Length       5.9        not     part
+## 451  virginica  Sepal.Width       3.3        not     part
+## 452  virginica  Sepal.Width       2.7        not     part
+## 453  virginica  Sepal.Width       3.0        not     part
+## 454  virginica  Sepal.Width       2.9        not     part
+## 455  virginica  Sepal.Width       3.0        not     part
+## 456  virginica  Sepal.Width       3.0        not     part
+## 457  virginica  Sepal.Width       2.5        not     part
+## 458  virginica  Sepal.Width       2.9        not     part
+## 459  virginica  Sepal.Width       2.5        not     part
+## 460  virginica  Sepal.Width       3.6        not     part
+## 461  virginica  Sepal.Width       3.2        not     part
+## 462  virginica  Sepal.Width       2.7        not     part
+## 463  virginica  Sepal.Width       3.0        not     part
+## 464  virginica  Sepal.Width       2.5        not     part
+## 465  virginica  Sepal.Width       2.8        not     part
+## 466  virginica  Sepal.Width       3.2        not     part
+## 467  virginica  Sepal.Width       3.0        not     part
+## 468  virginica  Sepal.Width       3.8        not     part
+## 469  virginica  Sepal.Width       2.6        not     part
+## 470  virginica  Sepal.Width       2.2        not     part
+## 471  virginica  Sepal.Width       3.2        not     part
+## 472  virginica  Sepal.Width       2.8        not     part
+## 473  virginica  Sepal.Width       2.8        not     part
+## 474  virginica  Sepal.Width       2.7        not     part
+## 475  virginica  Sepal.Width       3.3        not     part
+## 476  virginica  Sepal.Width       3.2        not     part
+## 477  virginica  Sepal.Width       2.8        not     part
+## 478  virginica  Sepal.Width       3.0        not     part
+## 479  virginica  Sepal.Width       2.8        not     part
+## 480  virginica  Sepal.Width       3.0        not     part
+## 481  virginica  Sepal.Width       2.8        not     part
+## 482  virginica  Sepal.Width       3.8        not     part
+## 483  virginica  Sepal.Width       2.8        not     part
+## 484  virginica  Sepal.Width       2.8        not     part
+## 485  virginica  Sepal.Width       2.6        not     part
+## 486  virginica  Sepal.Width       3.0        not     part
+## 487  virginica  Sepal.Width       3.4        not     part
+## 488  virginica  Sepal.Width       3.1        not     part
+## 489  virginica  Sepal.Width       3.0        not     part
+## 490  virginica  Sepal.Width       3.1        not     part
+## 491  virginica  Sepal.Width       3.1        not     part
+## 492  virginica  Sepal.Width       3.1        not     part
+## 493  virginica  Sepal.Width       2.7        not     part
+## 494  virginica  Sepal.Width       3.2        not     part
+## 495  virginica  Sepal.Width       3.3        not     part
+## 496  virginica  Sepal.Width       3.0        not     part
+## 497  virginica  Sepal.Width       2.5        not     part
+## 498  virginica  Sepal.Width       3.0        not     part
+## 499  virginica  Sepal.Width       3.4        not     part
+## 500  virginica  Sepal.Width       3.0        not     part
+## 501  virginica Petal.Length       6.0        not     part
+## 502  virginica Petal.Length       5.1        not     part
+## 503  virginica Petal.Length       5.9        not     part
+## 504  virginica Petal.Length       5.6        not     part
+## 505  virginica Petal.Length       5.8        not     part
+## 506  virginica Petal.Length       6.6        not     part
+## 507  virginica Petal.Length       4.5        not     part
+## 508  virginica Petal.Length       6.3        not     part
+## 509  virginica Petal.Length       5.8        not     part
+## 510  virginica Petal.Length       6.1        not     part
+## 511  virginica Petal.Length       5.1        not     part
+## 512  virginica Petal.Length       5.3        not     part
+## 513  virginica Petal.Length       5.5        not     part
+## 514  virginica Petal.Length       5.0        not     part
+## 515  virginica Petal.Length       5.1        not     part
+## 516  virginica Petal.Length       5.3        not     part
+## 517  virginica Petal.Length       5.5        not     part
+## 518  virginica Petal.Length       6.7        not     part
+## 519  virginica Petal.Length       6.9        not     part
+## 520  virginica Petal.Length       5.0        not     part
+## 521  virginica Petal.Length       5.7        not     part
+## 522  virginica Petal.Length       4.9        not     part
+## 523  virginica Petal.Length       6.7        not     part
+## 524  virginica Petal.Length       4.9        not     part
+## 525  virginica Petal.Length       5.7        not     part
+## 526  virginica Petal.Length       6.0        not     part
+## 527  virginica Petal.Length       4.8        not     part
+## 528  virginica Petal.Length       4.9        not     part
+## 529  virginica Petal.Length       5.6        not     part
+## 530  virginica Petal.Length       5.8        not     part
+## 531  virginica Petal.Length       6.1        not     part
+## 532  virginica Petal.Length       6.4        not     part
+## 533  virginica Petal.Length       5.6        not     part
+## 534  virginica Petal.Length       5.1        not     part
+## 535  virginica Petal.Length       5.6        not     part
+## 536  virginica Petal.Length       6.1        not     part
+## 537  virginica Petal.Length       5.6        not     part
+## 538  virginica Petal.Length       5.5        not     part
+## 539  virginica Petal.Length       4.8        not     part
+## 540  virginica Petal.Length       5.4        not     part
+## 541  virginica Petal.Length       5.6        not     part
+## 542  virginica Petal.Length       5.1        not     part
+## 543  virginica Petal.Length       5.1        not     part
+## 544  virginica Petal.Length       5.9        not     part
+## 545  virginica Petal.Length       5.7        not     part
+## 546  virginica Petal.Length       5.2        not     part
+## 547  virginica Petal.Length       5.0        not     part
+## 548  virginica Petal.Length       5.2        not     part
+## 549  virginica Petal.Length       5.4        not     part
+## 550  virginica Petal.Length       5.1        not     part
+## 551  virginica  Petal.Width       2.5        not     part
+## 552  virginica  Petal.Width       1.9        not     part
+## 553  virginica  Petal.Width       2.1        not     part
+## 554  virginica  Petal.Width       1.8        not     part
+## 555  virginica  Petal.Width       2.2        not     part
+## 556  virginica  Petal.Width       2.1        not     part
+## 557  virginica  Petal.Width       1.7        not     part
+## 558  virginica  Petal.Width       1.8        not     part
+## 559  virginica  Petal.Width       1.8        not     part
+## 560  virginica  Petal.Width       2.5        not     part
+## 561  virginica  Petal.Width       2.0        not     part
+## 562  virginica  Petal.Width       1.9        not     part
+## 563  virginica  Petal.Width       2.1        not     part
+## 564  virginica  Petal.Width       2.0        not     part
+## 565  virginica  Petal.Width       2.4        not     part
+## 566  virginica  Petal.Width       2.3        not     part
+## 567  virginica  Petal.Width       1.8        not     part
+## 568  virginica  Petal.Width       2.2        not     part
+## 569  virginica  Petal.Width       2.3        not     part
+## 570  virginica  Petal.Width       1.5        not     part
+## 571  virginica  Petal.Width       2.3        not     part
+## 572  virginica  Petal.Width       2.0        not     part
+## 573  virginica  Petal.Width       2.0        not     part
+## 574  virginica  Petal.Width       1.8        not     part
+## 575  virginica  Petal.Width       2.1        not     part
+## 576  virginica  Petal.Width       1.8        not     part
+## 577  virginica  Petal.Width       1.8        not     part
+## 578  virginica  Petal.Width       1.8        not     part
+## 579  virginica  Petal.Width       2.1        not     part
+## 580  virginica  Petal.Width       1.6        not     part
+## 581  virginica  Petal.Width       1.9        not     part
+## 582  virginica  Petal.Width       2.0        not     part
+## 583  virginica  Petal.Width       2.2        not     part
+## 584  virginica  Petal.Width       1.5        not     part
+## 585  virginica  Petal.Width       1.4        not     part
+## 586  virginica  Petal.Width       2.3        not     part
+## 587  virginica  Petal.Width       2.4        not     part
+## 588  virginica  Petal.Width       1.8        not     part
+## 589  virginica  Petal.Width       1.8        not     part
+## 590  virginica  Petal.Width       2.1        not     part
+## 591  virginica  Petal.Width       2.4        not     part
+## 592  virginica  Petal.Width       2.3        not     part
+## 593  virginica  Petal.Width       1.9        not     part
+## 594  virginica  Petal.Width       2.3        not     part
+## 595  virginica  Petal.Width       2.5        not     part
+## 596  virginica  Petal.Width       2.3        not     part
+## 597  virginica  Petal.Width       1.9        not     part
+## 598  virginica  Petal.Width       2.0        not     part
+## 599  virginica  Petal.Width       2.3        not     part
+## 600  virginica  Petal.Width       1.8        not     part
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{filter()} to select a subset of rows---similar to \Rfunction{subset()} but with a syntax consistent with that of other functions in the \pkgname{tidyverse}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{filter}\hlstd{(long_iris, plant_part} \hlopt{==} \hlstr{"Petal"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] Species    not part   dimension  plant_part part_dim  
+## <0 rows> (or 0-length row.names)
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{slice()} to select a subset of rows based on their positions---would be done with positional indexes with \code{[ , ]} in base R.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{slice}\hlstd{(long_iris,} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   Species     not part dimension plant_part part_dim
+## 1  setosa Sepal.Length       5.1        not     part
+## 2  setosa Sepal.Length       4.9        not     part
+## 3  setosa Sepal.Length       4.7        not     part
+## 4  setosa Sepal.Length       4.6        not     part
+## 5  setosa Sepal.Length       5.0        not     part
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{select()} to select a subset of columns---requires selection with subindexes in base R. In the first example we remove one column by name.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{select}\hlstd{(long_iris,} \hlopt{-}\hlstd{part)}
+\end{alltt}
+\begin{verbatim}
+##        Species dimension plant_part part_dim
+## 1       setosa       5.1        not     part
+## 2       setosa       4.9        not     part
+## 3       setosa       4.7        not     part
+## 4       setosa       4.6        not     part
+## 5       setosa       5.0        not     part
+## 6       setosa       5.4        not     part
+## 7       setosa       4.6        not     part
+## 8       setosa       5.0        not     part
+## 9       setosa       4.4        not     part
+## 10      setosa       4.9        not     part
+## 11      setosa       5.4        not     part
+## 12      setosa       4.8        not     part
+## 13      setosa       4.8        not     part
+## 14      setosa       4.3        not     part
+## 15      setosa       5.8        not     part
+## 16      setosa       5.7        not     part
+## 17      setosa       5.4        not     part
+## 18      setosa       5.1        not     part
+## 19      setosa       5.7        not     part
+## 20      setosa       5.1        not     part
+## 21      setosa       5.4        not     part
+## 22      setosa       5.1        not     part
+## 23      setosa       4.6        not     part
+## 24      setosa       5.1        not     part
+## 25      setosa       4.8        not     part
+## 26      setosa       5.0        not     part
+## 27      setosa       5.0        not     part
+## 28      setosa       5.2        not     part
+## 29      setosa       5.2        not     part
+## 30      setosa       4.7        not     part
+## 31      setosa       4.8        not     part
+## 32      setosa       5.4        not     part
+## 33      setosa       5.2        not     part
+## 34      setosa       5.5        not     part
+## 35      setosa       4.9        not     part
+## 36      setosa       5.0        not     part
+## 37      setosa       5.5        not     part
+## 38      setosa       4.9        not     part
+## 39      setosa       4.4        not     part
+## 40      setosa       5.1        not     part
+## 41      setosa       5.0        not     part
+## 42      setosa       4.5        not     part
+## 43      setosa       4.4        not     part
+## 44      setosa       5.0        not     part
+## 45      setosa       5.1        not     part
+## 46      setosa       4.8        not     part
+## 47      setosa       5.1        not     part
+## 48      setosa       4.6        not     part
+## 49      setosa       5.3        not     part
+## 50      setosa       5.0        not     part
+## 51  versicolor       7.0        not     part
+## 52  versicolor       6.4        not     part
+## 53  versicolor       6.9        not     part
+## 54  versicolor       5.5        not     part
+## 55  versicolor       6.5        not     part
+## 56  versicolor       5.7        not     part
+## 57  versicolor       6.3        not     part
+## 58  versicolor       4.9        not     part
+## 59  versicolor       6.6        not     part
+## 60  versicolor       5.2        not     part
+## 61  versicolor       5.0        not     part
+## 62  versicolor       5.9        not     part
+## 63  versicolor       6.0        not     part
+## 64  versicolor       6.1        not     part
+## 65  versicolor       5.6        not     part
+## 66  versicolor       6.7        not     part
+## 67  versicolor       5.6        not     part
+## 68  versicolor       5.8        not     part
+## 69  versicolor       6.2        not     part
+## 70  versicolor       5.6        not     part
+## 71  versicolor       5.9        not     part
+## 72  versicolor       6.1        not     part
+## 73  versicolor       6.3        not     part
+## 74  versicolor       6.1        not     part
+## 75  versicolor       6.4        not     part
+## 76  versicolor       6.6        not     part
+## 77  versicolor       6.8        not     part
+## 78  versicolor       6.7        not     part
+## 79  versicolor       6.0        not     part
+## 80  versicolor       5.7        not     part
+## 81  versicolor       5.5        not     part
+## 82  versicolor       5.5        not     part
+## 83  versicolor       5.8        not     part
+## 84  versicolor       6.0        not     part
+## 85  versicolor       5.4        not     part
+## 86  versicolor       6.0        not     part
+## 87  versicolor       6.7        not     part
+## 88  versicolor       6.3        not     part
+## 89  versicolor       5.6        not     part
+## 90  versicolor       5.5        not     part
+## 91  versicolor       5.5        not     part
+## 92  versicolor       6.1        not     part
+## 93  versicolor       5.8        not     part
+## 94  versicolor       5.0        not     part
+## 95  versicolor       5.6        not     part
+## 96  versicolor       5.7        not     part
+## 97  versicolor       5.7        not     part
+## 98  versicolor       6.2        not     part
+## 99  versicolor       5.1        not     part
+## 100 versicolor       5.7        not     part
+## 101  virginica       6.3        not     part
+## 102  virginica       5.8        not     part
+## 103  virginica       7.1        not     part
+## 104  virginica       6.3        not     part
+## 105  virginica       6.5        not     part
+## 106  virginica       7.6        not     part
+## 107  virginica       4.9        not     part
+## 108  virginica       7.3        not     part
+## 109  virginica       6.7        not     part
+## 110  virginica       7.2        not     part
+## 111  virginica       6.5        not     part
+## 112  virginica       6.4        not     part
+## 113  virginica       6.8        not     part
+## 114  virginica       5.7        not     part
+## 115  virginica       5.8        not     part
+## 116  virginica       6.4        not     part
+## 117  virginica       6.5        not     part
+## 118  virginica       7.7        not     part
+## 119  virginica       7.7        not     part
+## 120  virginica       6.0        not     part
+## 121  virginica       6.9        not     part
+## 122  virginica       5.6        not     part
+## 123  virginica       7.7        not     part
+## 124  virginica       6.3        not     part
+## 125  virginica       6.7        not     part
+## 126  virginica       7.2        not     part
+## 127  virginica       6.2        not     part
+## 128  virginica       6.1        not     part
+## 129  virginica       6.4        not     part
+## 130  virginica       7.2        not     part
+## 131  virginica       7.4        not     part
+## 132  virginica       7.9        not     part
+## 133  virginica       6.4        not     part
+## 134  virginica       6.3        not     part
+## 135  virginica       6.1        not     part
+## 136  virginica       7.7        not     part
+## 137  virginica       6.3        not     part
+## 138  virginica       6.4        not     part
+## 139  virginica       6.0        not     part
+## 140  virginica       6.9        not     part
+## 141  virginica       6.7        not     part
+## 142  virginica       6.9        not     part
+## 143  virginica       5.8        not     part
+## 144  virginica       6.8        not     part
+## 145  virginica       6.7        not     part
+## 146  virginica       6.7        not     part
+## 147  virginica       6.3        not     part
+## 148  virginica       6.5        not     part
+## 149  virginica       6.2        not     part
+## 150  virginica       5.9        not     part
+## 151     setosa       3.5        not     part
+## 152     setosa       3.0        not     part
+## 153     setosa       3.2        not     part
+## 154     setosa       3.1        not     part
+## 155     setosa       3.6        not     part
+## 156     setosa       3.9        not     part
+## 157     setosa       3.4        not     part
+## 158     setosa       3.4        not     part
+## 159     setosa       2.9        not     part
+## 160     setosa       3.1        not     part
+## 161     setosa       3.7        not     part
+## 162     setosa       3.4        not     part
+## 163     setosa       3.0        not     part
+## 164     setosa       3.0        not     part
+## 165     setosa       4.0        not     part
+## 166     setosa       4.4        not     part
+## 167     setosa       3.9        not     part
+## 168     setosa       3.5        not     part
+## 169     setosa       3.8        not     part
+## 170     setosa       3.8        not     part
+## 171     setosa       3.4        not     part
+## 172     setosa       3.7        not     part
+## 173     setosa       3.6        not     part
+## 174     setosa       3.3        not     part
+## 175     setosa       3.4        not     part
+## 176     setosa       3.0        not     part
+## 177     setosa       3.4        not     part
+## 178     setosa       3.5        not     part
+## 179     setosa       3.4        not     part
+## 180     setosa       3.2        not     part
+## 181     setosa       3.1        not     part
+## 182     setosa       3.4        not     part
+## 183     setosa       4.1        not     part
+## 184     setosa       4.2        not     part
+## 185     setosa       3.1        not     part
+## 186     setosa       3.2        not     part
+## 187     setosa       3.5        not     part
+## 188     setosa       3.6        not     part
+## 189     setosa       3.0        not     part
+## 190     setosa       3.4        not     part
+## 191     setosa       3.5        not     part
+## 192     setosa       2.3        not     part
+## 193     setosa       3.2        not     part
+## 194     setosa       3.5        not     part
+## 195     setosa       3.8        not     part
+## 196     setosa       3.0        not     part
+## 197     setosa       3.8        not     part
+## 198     setosa       3.2        not     part
+## 199     setosa       3.7        not     part
+## 200     setosa       3.3        not     part
+## 201 versicolor       3.2        not     part
+## 202 versicolor       3.2        not     part
+## 203 versicolor       3.1        not     part
+## 204 versicolor       2.3        not     part
+## 205 versicolor       2.8        not     part
+## 206 versicolor       2.8        not     part
+## 207 versicolor       3.3        not     part
+## 208 versicolor       2.4        not     part
+## 209 versicolor       2.9        not     part
+## 210 versicolor       2.7        not     part
+## 211 versicolor       2.0        not     part
+## 212 versicolor       3.0        not     part
+## 213 versicolor       2.2        not     part
+## 214 versicolor       2.9        not     part
+## 215 versicolor       2.9        not     part
+## 216 versicolor       3.1        not     part
+## 217 versicolor       3.0        not     part
+## 218 versicolor       2.7        not     part
+## 219 versicolor       2.2        not     part
+## 220 versicolor       2.5        not     part
+## 221 versicolor       3.2        not     part
+## 222 versicolor       2.8        not     part
+## 223 versicolor       2.5        not     part
+## 224 versicolor       2.8        not     part
+## 225 versicolor       2.9        not     part
+## 226 versicolor       3.0        not     part
+## 227 versicolor       2.8        not     part
+## 228 versicolor       3.0        not     part
+## 229 versicolor       2.9        not     part
+## 230 versicolor       2.6        not     part
+## 231 versicolor       2.4        not     part
+## 232 versicolor       2.4        not     part
+## 233 versicolor       2.7        not     part
+## 234 versicolor       2.7        not     part
+## 235 versicolor       3.0        not     part
+## 236 versicolor       3.4        not     part
+## 237 versicolor       3.1        not     part
+## 238 versicolor       2.3        not     part
+## 239 versicolor       3.0        not     part
+## 240 versicolor       2.5        not     part
+## 241 versicolor       2.6        not     part
+## 242 versicolor       3.0        not     part
+## 243 versicolor       2.6        not     part
+## 244 versicolor       2.3        not     part
+## 245 versicolor       2.7        not     part
+## 246 versicolor       3.0        not     part
+## 247 versicolor       2.9        not     part
+## 248 versicolor       2.9        not     part
+## 249 versicolor       2.5        not     part
+## 250 versicolor       2.8        not     part
+## 251  virginica       3.3        not     part
+## 252  virginica       2.7        not     part
+## 253  virginica       3.0        not     part
+## 254  virginica       2.9        not     part
+## 255  virginica       3.0        not     part
+## 256  virginica       3.0        not     part
+## 257  virginica       2.5        not     part
+## 258  virginica       2.9        not     part
+## 259  virginica       2.5        not     part
+## 260  virginica       3.6        not     part
+## 261  virginica       3.2        not     part
+## 262  virginica       2.7        not     part
+## 263  virginica       3.0        not     part
+## 264  virginica       2.5        not     part
+## 265  virginica       2.8        not     part
+## 266  virginica       3.2        not     part
+## 267  virginica       3.0        not     part
+## 268  virginica       3.8        not     part
+## 269  virginica       2.6        not     part
+## 270  virginica       2.2        not     part
+## 271  virginica       3.2        not     part
+## 272  virginica       2.8        not     part
+## 273  virginica       2.8        not     part
+## 274  virginica       2.7        not     part
+## 275  virginica       3.3        not     part
+## 276  virginica       3.2        not     part
+## 277  virginica       2.8        not     part
+## 278  virginica       3.0        not     part
+## 279  virginica       2.8        not     part
+## 280  virginica       3.0        not     part
+## 281  virginica       2.8        not     part
+## 282  virginica       3.8        not     part
+## 283  virginica       2.8        not     part
+## 284  virginica       2.8        not     part
+## 285  virginica       2.6        not     part
+## 286  virginica       3.0        not     part
+## 287  virginica       3.4        not     part
+## 288  virginica       3.1        not     part
+## 289  virginica       3.0        not     part
+## 290  virginica       3.1        not     part
+## 291  virginica       3.1        not     part
+## 292  virginica       3.1        not     part
+## 293  virginica       2.7        not     part
+## 294  virginica       3.2        not     part
+## 295  virginica       3.3        not     part
+## 296  virginica       3.0        not     part
+## 297  virginica       2.5        not     part
+## 298  virginica       3.0        not     part
+## 299  virginica       3.4        not     part
+## 300  virginica       3.0        not     part
+## 301     setosa       1.4        not     part
+## 302     setosa       1.4        not     part
+## 303     setosa       1.3        not     part
+## 304     setosa       1.5        not     part
+## 305     setosa       1.4        not     part
+## 306     setosa       1.7        not     part
+## 307     setosa       1.4        not     part
+## 308     setosa       1.5        not     part
+## 309     setosa       1.4        not     part
+## 310     setosa       1.5        not     part
+## 311     setosa       1.5        not     part
+## 312     setosa       1.6        not     part
+## 313     setosa       1.4        not     part
+## 314     setosa       1.1        not     part
+## 315     setosa       1.2        not     part
+## 316     setosa       1.5        not     part
+## 317     setosa       1.3        not     part
+## 318     setosa       1.4        not     part
+## 319     setosa       1.7        not     part
+## 320     setosa       1.5        not     part
+## 321     setosa       1.7        not     part
+## 322     setosa       1.5        not     part
+## 323     setosa       1.0        not     part
+## 324     setosa       1.7        not     part
+## 325     setosa       1.9        not     part
+## 326     setosa       1.6        not     part
+## 327     setosa       1.6        not     part
+## 328     setosa       1.5        not     part
+## 329     setosa       1.4        not     part
+## 330     setosa       1.6        not     part
+## 331     setosa       1.6        not     part
+## 332     setosa       1.5        not     part
+## 333     setosa       1.5        not     part
+## 334     setosa       1.4        not     part
+## 335     setosa       1.5        not     part
+## 336     setosa       1.2        not     part
+## 337     setosa       1.3        not     part
+## 338     setosa       1.4        not     part
+## 339     setosa       1.3        not     part
+## 340     setosa       1.5        not     part
+## 341     setosa       1.3        not     part
+## 342     setosa       1.3        not     part
+## 343     setosa       1.3        not     part
+## 344     setosa       1.6        not     part
+## 345     setosa       1.9        not     part
+## 346     setosa       1.4        not     part
+## 347     setosa       1.6        not     part
+## 348     setosa       1.4        not     part
+## 349     setosa       1.5        not     part
+## 350     setosa       1.4        not     part
+## 351 versicolor       4.7        not     part
+## 352 versicolor       4.5        not     part
+## 353 versicolor       4.9        not     part
+## 354 versicolor       4.0        not     part
+## 355 versicolor       4.6        not     part
+## 356 versicolor       4.5        not     part
+## 357 versicolor       4.7        not     part
+## 358 versicolor       3.3        not     part
+## 359 versicolor       4.6        not     part
+## 360 versicolor       3.9        not     part
+## 361 versicolor       3.5        not     part
+## 362 versicolor       4.2        not     part
+## 363 versicolor       4.0        not     part
+## 364 versicolor       4.7        not     part
+## 365 versicolor       3.6        not     part
+## 366 versicolor       4.4        not     part
+## 367 versicolor       4.5        not     part
+## 368 versicolor       4.1        not     part
+## 369 versicolor       4.5        not     part
+## 370 versicolor       3.9        not     part
+## 371 versicolor       4.8        not     part
+## 372 versicolor       4.0        not     part
+## 373 versicolor       4.9        not     part
+## 374 versicolor       4.7        not     part
+## 375 versicolor       4.3        not     part
+## 376 versicolor       4.4        not     part
+## 377 versicolor       4.8        not     part
+## 378 versicolor       5.0        not     part
+## 379 versicolor       4.5        not     part
+## 380 versicolor       3.5        not     part
+## 381 versicolor       3.8        not     part
+## 382 versicolor       3.7        not     part
+## 383 versicolor       3.9        not     part
+## 384 versicolor       5.1        not     part
+## 385 versicolor       4.5        not     part
+## 386 versicolor       4.5        not     part
+## 387 versicolor       4.7        not     part
+## 388 versicolor       4.4        not     part
+## 389 versicolor       4.1        not     part
+## 390 versicolor       4.0        not     part
+## 391 versicolor       4.4        not     part
+## 392 versicolor       4.6        not     part
+## 393 versicolor       4.0        not     part
+## 394 versicolor       3.3        not     part
+## 395 versicolor       4.2        not     part
+## 396 versicolor       4.2        not     part
+## 397 versicolor       4.2        not     part
+## 398 versicolor       4.3        not     part
+## 399 versicolor       3.0        not     part
+## 400 versicolor       4.1        not     part
+## 401  virginica       6.0        not     part
+## 402  virginica       5.1        not     part
+## 403  virginica       5.9        not     part
+## 404  virginica       5.6        not     part
+## 405  virginica       5.8        not     part
+## 406  virginica       6.6        not     part
+## 407  virginica       4.5        not     part
+## 408  virginica       6.3        not     part
+## 409  virginica       5.8        not     part
+## 410  virginica       6.1        not     part
+## 411  virginica       5.1        not     part
+## 412  virginica       5.3        not     part
+## 413  virginica       5.5        not     part
+## 414  virginica       5.0        not     part
+## 415  virginica       5.1        not     part
+## 416  virginica       5.3        not     part
+## 417  virginica       5.5        not     part
+## 418  virginica       6.7        not     part
+## 419  virginica       6.9        not     part
+## 420  virginica       5.0        not     part
+## 421  virginica       5.7        not     part
+## 422  virginica       4.9        not     part
+## 423  virginica       6.7        not     part
+## 424  virginica       4.9        not     part
+## 425  virginica       5.7        not     part
+## 426  virginica       6.0        not     part
+## 427  virginica       4.8        not     part
+## 428  virginica       4.9        not     part
+## 429  virginica       5.6        not     part
+## 430  virginica       5.8        not     part
+## 431  virginica       6.1        not     part
+## 432  virginica       6.4        not     part
+## 433  virginica       5.6        not     part
+## 434  virginica       5.1        not     part
+## 435  virginica       5.6        not     part
+## 436  virginica       6.1        not     part
+## 437  virginica       5.6        not     part
+## 438  virginica       5.5        not     part
+## 439  virginica       4.8        not     part
+## 440  virginica       5.4        not     part
+## 441  virginica       5.6        not     part
+## 442  virginica       5.1        not     part
+## 443  virginica       5.1        not     part
+## 444  virginica       5.9        not     part
+## 445  virginica       5.7        not     part
+## 446  virginica       5.2        not     part
+## 447  virginica       5.0        not     part
+## 448  virginica       5.2        not     part
+## 449  virginica       5.4        not     part
+## 450  virginica       5.1        not     part
+## 451     setosa       0.2        not     part
+## 452     setosa       0.2        not     part
+## 453     setosa       0.2        not     part
+## 454     setosa       0.2        not     part
+## 455     setosa       0.2        not     part
+## 456     setosa       0.4        not     part
+## 457     setosa       0.3        not     part
+## 458     setosa       0.2        not     part
+## 459     setosa       0.2        not     part
+## 460     setosa       0.1        not     part
+## 461     setosa       0.2        not     part
+## 462     setosa       0.2        not     part
+## 463     setosa       0.1        not     part
+## 464     setosa       0.1        not     part
+## 465     setosa       0.2        not     part
+## 466     setosa       0.4        not     part
+## 467     setosa       0.4        not     part
+## 468     setosa       0.3        not     part
+## 469     setosa       0.3        not     part
+## 470     setosa       0.3        not     part
+## 471     setosa       0.2        not     part
+## 472     setosa       0.4        not     part
+## 473     setosa       0.2        not     part
+## 474     setosa       0.5        not     part
+## 475     setosa       0.2        not     part
+## 476     setosa       0.2        not     part
+## 477     setosa       0.4        not     part
+## 478     setosa       0.2        not     part
+## 479     setosa       0.2        not     part
+## 480     setosa       0.2        not     part
+## 481     setosa       0.2        not     part
+## 482     setosa       0.4        not     part
+## 483     setosa       0.1        not     part
+## 484     setosa       0.2        not     part
+## 485     setosa       0.2        not     part
+## 486     setosa       0.2        not     part
+## 487     setosa       0.2        not     part
+## 488     setosa       0.1        not     part
+## 489     setosa       0.2        not     part
+## 490     setosa       0.2        not     part
+## 491     setosa       0.3        not     part
+## 492     setosa       0.3        not     part
+## 493     setosa       0.2        not     part
+## 494     setosa       0.6        not     part
+## 495     setosa       0.4        not     part
+## 496     setosa       0.3        not     part
+## 497     setosa       0.2        not     part
+## 498     setosa       0.2        not     part
+## 499     setosa       0.2        not     part
+## 500     setosa       0.2        not     part
+## 501 versicolor       1.4        not     part
+## 502 versicolor       1.5        not     part
+## 503 versicolor       1.5        not     part
+## 504 versicolor       1.3        not     part
+## 505 versicolor       1.5        not     part
+## 506 versicolor       1.3        not     part
+## 507 versicolor       1.6        not     part
+## 508 versicolor       1.0        not     part
+## 509 versicolor       1.3        not     part
+## 510 versicolor       1.4        not     part
+## 511 versicolor       1.0        not     part
+## 512 versicolor       1.5        not     part
+## 513 versicolor       1.0        not     part
+## 514 versicolor       1.4        not     part
+## 515 versicolor       1.3        not     part
+## 516 versicolor       1.4        not     part
+## 517 versicolor       1.5        not     part
+## 518 versicolor       1.0        not     part
+## 519 versicolor       1.5        not     part
+## 520 versicolor       1.1        not     part
+## 521 versicolor       1.8        not     part
+## 522 versicolor       1.3        not     part
+## 523 versicolor       1.5        not     part
+## 524 versicolor       1.2        not     part
+## 525 versicolor       1.3        not     part
+## 526 versicolor       1.4        not     part
+## 527 versicolor       1.4        not     part
+## 528 versicolor       1.7        not     part
+## 529 versicolor       1.5        not     part
+## 530 versicolor       1.0        not     part
+## 531 versicolor       1.1        not     part
+## 532 versicolor       1.0        not     part
+## 533 versicolor       1.2        not     part
+## 534 versicolor       1.6        not     part
+## 535 versicolor       1.5        not     part
+## 536 versicolor       1.6        not     part
+## 537 versicolor       1.5        not     part
+## 538 versicolor       1.3        not     part
+## 539 versicolor       1.3        not     part
+## 540 versicolor       1.3        not     part
+## 541 versicolor       1.2        not     part
+## 542 versicolor       1.4        not     part
+## 543 versicolor       1.2        not     part
+## 544 versicolor       1.0        not     part
+## 545 versicolor       1.3        not     part
+## 546 versicolor       1.2        not     part
+## 547 versicolor       1.3        not     part
+## 548 versicolor       1.3        not     part
+## 549 versicolor       1.1        not     part
+## 550 versicolor       1.3        not     part
+## 551  virginica       2.5        not     part
+## 552  virginica       1.9        not     part
+## 553  virginica       2.1        not     part
+## 554  virginica       1.8        not     part
+## 555  virginica       2.2        not     part
+## 556  virginica       2.1        not     part
+## 557  virginica       1.7        not     part
+## 558  virginica       1.8        not     part
+## 559  virginica       1.8        not     part
+## 560  virginica       2.5        not     part
+## 561  virginica       2.0        not     part
+## 562  virginica       1.9        not     part
+## 563  virginica       2.1        not     part
+## 564  virginica       2.0        not     part
+## 565  virginica       2.4        not     part
+## 566  virginica       2.3        not     part
+## 567  virginica       1.8        not     part
+## 568  virginica       2.2        not     part
+## 569  virginica       2.3        not     part
+## 570  virginica       1.5        not     part
+## 571  virginica       2.3        not     part
+## 572  virginica       2.0        not     part
+## 573  virginica       2.0        not     part
+## 574  virginica       1.8        not     part
+## 575  virginica       2.1        not     part
+## 576  virginica       1.8        not     part
+## 577  virginica       1.8        not     part
+## 578  virginica       1.8        not     part
+## 579  virginica       2.1        not     part
+## 580  virginica       1.6        not     part
+## 581  virginica       1.9        not     part
+## 582  virginica       2.0        not     part
+## 583  virginica       2.2        not     part
+## 584  virginica       1.5        not     part
+## 585  virginica       1.4        not     part
+## 586  virginica       2.3        not     part
+## 587  virginica       2.4        not     part
+## 588  virginica       1.8        not     part
+## 589  virginica       1.8        not     part
+## 590  virginica       2.1        not     part
+## 591  virginica       2.4        not     part
+## 592  virginica       2.3        not     part
+## 593  virginica       1.9        not     part
+## 594  virginica       2.3        not     part
+## 595  virginica       2.5        not     part
+## 596  virginica       2.3        not     part
+## 597  virginica       1.9        not     part
+## 598  virginica       2.0        not     part
+## 599  virginica       2.3        not     part
+## 600  virginica       1.8        not     part
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In addition \Rfunction{select()} as other functions in \pkgname{dplyr} can be used together with functions \Rfunction{starts\_with()}, \Rfunction{ends\_with()}, \Rfunction{contains()}, and \Rfunction{matches()} to select groups of columns to be selected to be retained or removed. For this example we use \Rlang \code{iris} instead of our \code{long\_iris}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{select}\hlstd{(iris,} \hlopt{-}\hlkwd{starts_with}\hlstd{(}\hlstr{"Sepal"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+##     Petal.Length Petal.Width    Species
+## 1            1.4         0.2     setosa
+## 2            1.4         0.2     setosa
+## 3            1.3         0.2     setosa
+## 4            1.5         0.2     setosa
+## 5            1.4         0.2     setosa
+## 6            1.7         0.4     setosa
+## 7            1.4         0.3     setosa
+## 8            1.5         0.2     setosa
+## 9            1.4         0.2     setosa
+## 10           1.5         0.1     setosa
+## 11           1.5         0.2     setosa
+## 12           1.6         0.2     setosa
+## 13           1.4         0.1     setosa
+## 14           1.1         0.1     setosa
+## 15           1.2         0.2     setosa
+## 16           1.5         0.4     setosa
+## 17           1.3         0.4     setosa
+## 18           1.4         0.3     setosa
+## 19           1.7         0.3     setosa
+## 20           1.5         0.3     setosa
+## 21           1.7         0.2     setosa
+## 22           1.5         0.4     setosa
+## 23           1.0         0.2     setosa
+## 24           1.7         0.5     setosa
+## 25           1.9         0.2     setosa
+## 26           1.6         0.2     setosa
+## 27           1.6         0.4     setosa
+## 28           1.5         0.2     setosa
+## 29           1.4         0.2     setosa
+## 30           1.6         0.2     setosa
+## 31           1.6         0.2     setosa
+## 32           1.5         0.4     setosa
+## 33           1.5         0.1     setosa
+## 34           1.4         0.2     setosa
+## 35           1.5         0.2     setosa
+## 36           1.2         0.2     setosa
+## 37           1.3         0.2     setosa
+## 38           1.4         0.1     setosa
+## 39           1.3         0.2     setosa
+## 40           1.5         0.2     setosa
+## 41           1.3         0.3     setosa
+## 42           1.3         0.3     setosa
+## 43           1.3         0.2     setosa
+## 44           1.6         0.6     setosa
+## 45           1.9         0.4     setosa
+## 46           1.4         0.3     setosa
+## 47           1.6         0.2     setosa
+## 48           1.4         0.2     setosa
+## 49           1.5         0.2     setosa
+## 50           1.4         0.2     setosa
+## 51           4.7         1.4 versicolor
+## 52           4.5         1.5 versicolor
+## 53           4.9         1.5 versicolor
+## 54           4.0         1.3 versicolor
+## 55           4.6         1.5 versicolor
+## 56           4.5         1.3 versicolor
+## 57           4.7         1.6 versicolor
+## 58           3.3         1.0 versicolor
+## 59           4.6         1.3 versicolor
+## 60           3.9         1.4 versicolor
+## 61           3.5         1.0 versicolor
+## 62           4.2         1.5 versicolor
+## 63           4.0         1.0 versicolor
+## 64           4.7         1.4 versicolor
+## 65           3.6         1.3 versicolor
+## 66           4.4         1.4 versicolor
+## 67           4.5         1.5 versicolor
+## 68           4.1         1.0 versicolor
+## 69           4.5         1.5 versicolor
+## 70           3.9         1.1 versicolor
+## 71           4.8         1.8 versicolor
+## 72           4.0         1.3 versicolor
+## 73           4.9         1.5 versicolor
+## 74           4.7         1.2 versicolor
+## 75           4.3         1.3 versicolor
+## 76           4.4         1.4 versicolor
+## 77           4.8         1.4 versicolor
+## 78           5.0         1.7 versicolor
+## 79           4.5         1.5 versicolor
+## 80           3.5         1.0 versicolor
+## 81           3.8         1.1 versicolor
+## 82           3.7         1.0 versicolor
+## 83           3.9         1.2 versicolor
+## 84           5.1         1.6 versicolor
+## 85           4.5         1.5 versicolor
+## 86           4.5         1.6 versicolor
+## 87           4.7         1.5 versicolor
+## 88           4.4         1.3 versicolor
+## 89           4.1         1.3 versicolor
+## 90           4.0         1.3 versicolor
+## 91           4.4         1.2 versicolor
+## 92           4.6         1.4 versicolor
+## 93           4.0         1.2 versicolor
+## 94           3.3         1.0 versicolor
+## 95           4.2         1.3 versicolor
+## 96           4.2         1.2 versicolor
+## 97           4.2         1.3 versicolor
+## 98           4.3         1.3 versicolor
+## 99           3.0         1.1 versicolor
+## 100          4.1         1.3 versicolor
+## 101          6.0         2.5  virginica
+## 102          5.1         1.9  virginica
+## 103          5.9         2.1  virginica
+## 104          5.6         1.8  virginica
+## 105          5.8         2.2  virginica
+## 106          6.6         2.1  virginica
+## 107          4.5         1.7  virginica
+## 108          6.3         1.8  virginica
+## 109          5.8         1.8  virginica
+## 110          6.1         2.5  virginica
+## 111          5.1         2.0  virginica
+## 112          5.3         1.9  virginica
+## 113          5.5         2.1  virginica
+## 114          5.0         2.0  virginica
+## 115          5.1         2.4  virginica
+## 116          5.3         2.3  virginica
+## 117          5.5         1.8  virginica
+## 118          6.7         2.2  virginica
+## 119          6.9         2.3  virginica
+## 120          5.0         1.5  virginica
+## 121          5.7         2.3  virginica
+## 122          4.9         2.0  virginica
+## 123          6.7         2.0  virginica
+## 124          4.9         1.8  virginica
+## 125          5.7         2.1  virginica
+## 126          6.0         1.8  virginica
+## 127          4.8         1.8  virginica
+## 128          4.9         1.8  virginica
+## 129          5.6         2.1  virginica
+## 130          5.8         1.6  virginica
+## 131          6.1         1.9  virginica
+## 132          6.4         2.0  virginica
+## 133          5.6         2.2  virginica
+## 134          5.1         1.5  virginica
+## 135          5.6         1.4  virginica
+## 136          6.1         2.3  virginica
+## 137          5.6         2.4  virginica
+## 138          5.5         1.8  virginica
+## 139          4.8         1.8  virginica
+## 140          5.4         2.1  virginica
+## 141          5.6         2.4  virginica
+## 142          5.1         2.3  virginica
+## 143          5.1         1.9  virginica
+## 144          5.9         2.3  virginica
+## 145          5.7         2.5  virginica
+## 146          5.2         2.3  virginica
+## 147          5.0         1.9  virginica
+## 148          5.2         2.0  virginica
+## 149          5.4         2.3  virginica
+## 150          5.1         1.8  virginica
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{select}\hlstd{(iris, Species,} \hlkwd{matches}\hlstd{(}\hlstr{"pal"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+##        Species Sepal.Length Sepal.Width
+## 1       setosa          5.1         3.5
+## 2       setosa          4.9         3.0
+## 3       setosa          4.7         3.2
+## 4       setosa          4.6         3.1
+## 5       setosa          5.0         3.6
+## 6       setosa          5.4         3.9
+## 7       setosa          4.6         3.4
+## 8       setosa          5.0         3.4
+## 9       setosa          4.4         2.9
+## 10      setosa          4.9         3.1
+## 11      setosa          5.4         3.7
+## 12      setosa          4.8         3.4
+## 13      setosa          4.8         3.0
+## 14      setosa          4.3         3.0
+## 15      setosa          5.8         4.0
+## 16      setosa          5.7         4.4
+## 17      setosa          5.4         3.9
+## 18      setosa          5.1         3.5
+## 19      setosa          5.7         3.8
+## 20      setosa          5.1         3.8
+## 21      setosa          5.4         3.4
+## 22      setosa          5.1         3.7
+## 23      setosa          4.6         3.6
+## 24      setosa          5.1         3.3
+## 25      setosa          4.8         3.4
+## 26      setosa          5.0         3.0
+## 27      setosa          5.0         3.4
+## 28      setosa          5.2         3.5
+## 29      setosa          5.2         3.4
+## 30      setosa          4.7         3.2
+## 31      setosa          4.8         3.1
+## 32      setosa          5.4         3.4
+## 33      setosa          5.2         4.1
+## 34      setosa          5.5         4.2
+## 35      setosa          4.9         3.1
+## 36      setosa          5.0         3.2
+## 37      setosa          5.5         3.5
+## 38      setosa          4.9         3.6
+## 39      setosa          4.4         3.0
+## 40      setosa          5.1         3.4
+## 41      setosa          5.0         3.5
+## 42      setosa          4.5         2.3
+## 43      setosa          4.4         3.2
+## 44      setosa          5.0         3.5
+## 45      setosa          5.1         3.8
+## 46      setosa          4.8         3.0
+## 47      setosa          5.1         3.8
+## 48      setosa          4.6         3.2
+## 49      setosa          5.3         3.7
+## 50      setosa          5.0         3.3
+## 51  versicolor          7.0         3.2
+## 52  versicolor          6.4         3.2
+## 53  versicolor          6.9         3.1
+## 54  versicolor          5.5         2.3
+## 55  versicolor          6.5         2.8
+## 56  versicolor          5.7         2.8
+## 57  versicolor          6.3         3.3
+## 58  versicolor          4.9         2.4
+## 59  versicolor          6.6         2.9
+## 60  versicolor          5.2         2.7
+## 61  versicolor          5.0         2.0
+## 62  versicolor          5.9         3.0
+## 63  versicolor          6.0         2.2
+## 64  versicolor          6.1         2.9
+## 65  versicolor          5.6         2.9
+## 66  versicolor          6.7         3.1
+## 67  versicolor          5.6         3.0
+## 68  versicolor          5.8         2.7
+## 69  versicolor          6.2         2.2
+## 70  versicolor          5.6         2.5
+## 71  versicolor          5.9         3.2
+## 72  versicolor          6.1         2.8
+## 73  versicolor          6.3         2.5
+## 74  versicolor          6.1         2.8
+## 75  versicolor          6.4         2.9
+## 76  versicolor          6.6         3.0
+## 77  versicolor          6.8         2.8
+## 78  versicolor          6.7         3.0
+## 79  versicolor          6.0         2.9
+## 80  versicolor          5.7         2.6
+## 81  versicolor          5.5         2.4
+## 82  versicolor          5.5         2.4
+## 83  versicolor          5.8         2.7
+## 84  versicolor          6.0         2.7
+## 85  versicolor          5.4         3.0
+## 86  versicolor          6.0         3.4
+## 87  versicolor          6.7         3.1
+## 88  versicolor          6.3         2.3
+## 89  versicolor          5.6         3.0
+## 90  versicolor          5.5         2.5
+## 91  versicolor          5.5         2.6
+## 92  versicolor          6.1         3.0
+## 93  versicolor          5.8         2.6
+## 94  versicolor          5.0         2.3
+## 95  versicolor          5.6         2.7
+## 96  versicolor          5.7         3.0
+## 97  versicolor          5.7         2.9
+## 98  versicolor          6.2         2.9
+## 99  versicolor          5.1         2.5
+## 100 versicolor          5.7         2.8
+## 101  virginica          6.3         3.3
+## 102  virginica          5.8         2.7
+## 103  virginica          7.1         3.0
+## 104  virginica          6.3         2.9
+## 105  virginica          6.5         3.0
+## 106  virginica          7.6         3.0
+## 107  virginica          4.9         2.5
+## 108  virginica          7.3         2.9
+## 109  virginica          6.7         2.5
+## 110  virginica          7.2         3.6
+## 111  virginica          6.5         3.2
+## 112  virginica          6.4         2.7
+## 113  virginica          6.8         3.0
+## 114  virginica          5.7         2.5
+## 115  virginica          5.8         2.8
+## 116  virginica          6.4         3.2
+## 117  virginica          6.5         3.0
+## 118  virginica          7.7         3.8
+## 119  virginica          7.7         2.6
+## 120  virginica          6.0         2.2
+## 121  virginica          6.9         3.2
+## 122  virginica          5.6         2.8
+## 123  virginica          7.7         2.8
+## 124  virginica          6.3         2.7
+## 125  virginica          6.7         3.3
+## 126  virginica          7.2         3.2
+## 127  virginica          6.2         2.8
+## 128  virginica          6.1         3.0
+## 129  virginica          6.4         2.8
+## 130  virginica          7.2         3.0
+## 131  virginica          7.4         2.8
+## 132  virginica          7.9         3.8
+## 133  virginica          6.4         2.8
+## 134  virginica          6.3         2.8
+## 135  virginica          6.1         2.6
+## 136  virginica          7.7         3.0
+## 137  virginica          6.3         3.4
+## 138  virginica          6.4         3.1
+## 139  virginica          6.0         3.0
+## 140  virginica          6.9         3.1
+## 141  virginica          6.7         3.1
+## 142  virginica          6.9         3.1
+## 143  virginica          5.8         2.7
+## 144  virginica          6.8         3.2
+## 145  virginica          6.7         3.3
+## 146  virginica          6.7         3.0
+## 147  virginica          6.3         2.5
+## 148  virginica          6.5         3.0
+## 149  virginica          6.2         3.4
+## 150  virginica          5.9         3.0
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{rename()} to rename columns---requires the use of \Rfunction{names()} and \Rfunction{names<-()} and a way of matching the old name in base R.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{rename}\hlstd{(long_iris,} \hlkwc{dim} \hlstd{= dimension)}
+\end{alltt}
+\begin{verbatim}
+##        Species     not part dim plant_part part_dim
+## 1       setosa Sepal.Length 5.1        not     part
+## 2       setosa Sepal.Length 4.9        not     part
+## 3       setosa Sepal.Length 4.7        not     part
+## 4       setosa Sepal.Length 4.6        not     part
+## 5       setosa Sepal.Length 5.0        not     part
+## 6       setosa Sepal.Length 5.4        not     part
+## 7       setosa Sepal.Length 4.6        not     part
+## 8       setosa Sepal.Length 5.0        not     part
+## 9       setosa Sepal.Length 4.4        not     part
+## 10      setosa Sepal.Length 4.9        not     part
+## 11      setosa Sepal.Length 5.4        not     part
+## 12      setosa Sepal.Length 4.8        not     part
+## 13      setosa Sepal.Length 4.8        not     part
+## 14      setosa Sepal.Length 4.3        not     part
+## 15      setosa Sepal.Length 5.8        not     part
+## 16      setosa Sepal.Length 5.7        not     part
+## 17      setosa Sepal.Length 5.4        not     part
+## 18      setosa Sepal.Length 5.1        not     part
+## 19      setosa Sepal.Length 5.7        not     part
+## 20      setosa Sepal.Length 5.1        not     part
+## 21      setosa Sepal.Length 5.4        not     part
+## 22      setosa Sepal.Length 5.1        not     part
+## 23      setosa Sepal.Length 4.6        not     part
+## 24      setosa Sepal.Length 5.1        not     part
+## 25      setosa Sepal.Length 4.8        not     part
+## 26      setosa Sepal.Length 5.0        not     part
+## 27      setosa Sepal.Length 5.0        not     part
+## 28      setosa Sepal.Length 5.2        not     part
+## 29      setosa Sepal.Length 5.2        not     part
+## 30      setosa Sepal.Length 4.7        not     part
+## 31      setosa Sepal.Length 4.8        not     part
+## 32      setosa Sepal.Length 5.4        not     part
+## 33      setosa Sepal.Length 5.2        not     part
+## 34      setosa Sepal.Length 5.5        not     part
+## 35      setosa Sepal.Length 4.9        not     part
+## 36      setosa Sepal.Length 5.0        not     part
+## 37      setosa Sepal.Length 5.5        not     part
+## 38      setosa Sepal.Length 4.9        not     part
+## 39      setosa Sepal.Length 4.4        not     part
+## 40      setosa Sepal.Length 5.1        not     part
+## 41      setosa Sepal.Length 5.0        not     part
+## 42      setosa Sepal.Length 4.5        not     part
+## 43      setosa Sepal.Length 4.4        not     part
+## 44      setosa Sepal.Length 5.0        not     part
+## 45      setosa Sepal.Length 5.1        not     part
+## 46      setosa Sepal.Length 4.8        not     part
+## 47      setosa Sepal.Length 5.1        not     part
+## 48      setosa Sepal.Length 4.6        not     part
+## 49      setosa Sepal.Length 5.3        not     part
+## 50      setosa Sepal.Length 5.0        not     part
+## 51  versicolor Sepal.Length 7.0        not     part
+## 52  versicolor Sepal.Length 6.4        not     part
+## 53  versicolor Sepal.Length 6.9        not     part
+## 54  versicolor Sepal.Length 5.5        not     part
+## 55  versicolor Sepal.Length 6.5        not     part
+## 56  versicolor Sepal.Length 5.7        not     part
+## 57  versicolor Sepal.Length 6.3        not     part
+## 58  versicolor Sepal.Length 4.9        not     part
+## 59  versicolor Sepal.Length 6.6        not     part
+## 60  versicolor Sepal.Length 5.2        not     part
+## 61  versicolor Sepal.Length 5.0        not     part
+## 62  versicolor Sepal.Length 5.9        not     part
+## 63  versicolor Sepal.Length 6.0        not     part
+## 64  versicolor Sepal.Length 6.1        not     part
+## 65  versicolor Sepal.Length 5.6        not     part
+## 66  versicolor Sepal.Length 6.7        not     part
+## 67  versicolor Sepal.Length 5.6        not     part
+## 68  versicolor Sepal.Length 5.8        not     part
+## 69  versicolor Sepal.Length 6.2        not     part
+## 70  versicolor Sepal.Length 5.6        not     part
+## 71  versicolor Sepal.Length 5.9        not     part
+## 72  versicolor Sepal.Length 6.1        not     part
+## 73  versicolor Sepal.Length 6.3        not     part
+## 74  versicolor Sepal.Length 6.1        not     part
+## 75  versicolor Sepal.Length 6.4        not     part
+## 76  versicolor Sepal.Length 6.6        not     part
+## 77  versicolor Sepal.Length 6.8        not     part
+## 78  versicolor Sepal.Length 6.7        not     part
+## 79  versicolor Sepal.Length 6.0        not     part
+## 80  versicolor Sepal.Length 5.7        not     part
+## 81  versicolor Sepal.Length 5.5        not     part
+## 82  versicolor Sepal.Length 5.5        not     part
+## 83  versicolor Sepal.Length 5.8        not     part
+## 84  versicolor Sepal.Length 6.0        not     part
+## 85  versicolor Sepal.Length 5.4        not     part
+## 86  versicolor Sepal.Length 6.0        not     part
+## 87  versicolor Sepal.Length 6.7        not     part
+## 88  versicolor Sepal.Length 6.3        not     part
+## 89  versicolor Sepal.Length 5.6        not     part
+## 90  versicolor Sepal.Length 5.5        not     part
+## 91  versicolor Sepal.Length 5.5        not     part
+## 92  versicolor Sepal.Length 6.1        not     part
+## 93  versicolor Sepal.Length 5.8        not     part
+## 94  versicolor Sepal.Length 5.0        not     part
+## 95  versicolor Sepal.Length 5.6        not     part
+## 96  versicolor Sepal.Length 5.7        not     part
+## 97  versicolor Sepal.Length 5.7        not     part
+## 98  versicolor Sepal.Length 6.2        not     part
+## 99  versicolor Sepal.Length 5.1        not     part
+## 100 versicolor Sepal.Length 5.7        not     part
+## 101  virginica Sepal.Length 6.3        not     part
+## 102  virginica Sepal.Length 5.8        not     part
+## 103  virginica Sepal.Length 7.1        not     part
+## 104  virginica Sepal.Length 6.3        not     part
+## 105  virginica Sepal.Length 6.5        not     part
+## 106  virginica Sepal.Length 7.6        not     part
+## 107  virginica Sepal.Length 4.9        not     part
+## 108  virginica Sepal.Length 7.3        not     part
+## 109  virginica Sepal.Length 6.7        not     part
+## 110  virginica Sepal.Length 7.2        not     part
+## 111  virginica Sepal.Length 6.5        not     part
+## 112  virginica Sepal.Length 6.4        not     part
+## 113  virginica Sepal.Length 6.8        not     part
+## 114  virginica Sepal.Length 5.7        not     part
+## 115  virginica Sepal.Length 5.8        not     part
+## 116  virginica Sepal.Length 6.4        not     part
+## 117  virginica Sepal.Length 6.5        not     part
+## 118  virginica Sepal.Length 7.7        not     part
+## 119  virginica Sepal.Length 7.7        not     part
+## 120  virginica Sepal.Length 6.0        not     part
+## 121  virginica Sepal.Length 6.9        not     part
+## 122  virginica Sepal.Length 5.6        not     part
+## 123  virginica Sepal.Length 7.7        not     part
+## 124  virginica Sepal.Length 6.3        not     part
+## 125  virginica Sepal.Length 6.7        not     part
+## 126  virginica Sepal.Length 7.2        not     part
+## 127  virginica Sepal.Length 6.2        not     part
+## 128  virginica Sepal.Length 6.1        not     part
+## 129  virginica Sepal.Length 6.4        not     part
+## 130  virginica Sepal.Length 7.2        not     part
+## 131  virginica Sepal.Length 7.4        not     part
+## 132  virginica Sepal.Length 7.9        not     part
+## 133  virginica Sepal.Length 6.4        not     part
+## 134  virginica Sepal.Length 6.3        not     part
+## 135  virginica Sepal.Length 6.1        not     part
+## 136  virginica Sepal.Length 7.7        not     part
+## 137  virginica Sepal.Length 6.3        not     part
+## 138  virginica Sepal.Length 6.4        not     part
+## 139  virginica Sepal.Length 6.0        not     part
+## 140  virginica Sepal.Length 6.9        not     part
+## 141  virginica Sepal.Length 6.7        not     part
+## 142  virginica Sepal.Length 6.9        not     part
+## 143  virginica Sepal.Length 5.8        not     part
+## 144  virginica Sepal.Length 6.8        not     part
+## 145  virginica Sepal.Length 6.7        not     part
+## 146  virginica Sepal.Length 6.7        not     part
+## 147  virginica Sepal.Length 6.3        not     part
+## 148  virginica Sepal.Length 6.5        not     part
+## 149  virginica Sepal.Length 6.2        not     part
+## 150  virginica Sepal.Length 5.9        not     part
+## 151     setosa  Sepal.Width 3.5        not     part
+## 152     setosa  Sepal.Width 3.0        not     part
+## 153     setosa  Sepal.Width 3.2        not     part
+## 154     setosa  Sepal.Width 3.1        not     part
+## 155     setosa  Sepal.Width 3.6        not     part
+## 156     setosa  Sepal.Width 3.9        not     part
+## 157     setosa  Sepal.Width 3.4        not     part
+## 158     setosa  Sepal.Width 3.4        not     part
+## 159     setosa  Sepal.Width 2.9        not     part
+## 160     setosa  Sepal.Width 3.1        not     part
+## 161     setosa  Sepal.Width 3.7        not     part
+## 162     setosa  Sepal.Width 3.4        not     part
+## 163     setosa  Sepal.Width 3.0        not     part
+## 164     setosa  Sepal.Width 3.0        not     part
+## 165     setosa  Sepal.Width 4.0        not     part
+## 166     setosa  Sepal.Width 4.4        not     part
+## 167     setosa  Sepal.Width 3.9        not     part
+## 168     setosa  Sepal.Width 3.5        not     part
+## 169     setosa  Sepal.Width 3.8        not     part
+## 170     setosa  Sepal.Width 3.8        not     part
+## 171     setosa  Sepal.Width 3.4        not     part
+## 172     setosa  Sepal.Width 3.7        not     part
+## 173     setosa  Sepal.Width 3.6        not     part
+## 174     setosa  Sepal.Width 3.3        not     part
+## 175     setosa  Sepal.Width 3.4        not     part
+## 176     setosa  Sepal.Width 3.0        not     part
+## 177     setosa  Sepal.Width 3.4        not     part
+## 178     setosa  Sepal.Width 3.5        not     part
+## 179     setosa  Sepal.Width 3.4        not     part
+## 180     setosa  Sepal.Width 3.2        not     part
+## 181     setosa  Sepal.Width 3.1        not     part
+## 182     setosa  Sepal.Width 3.4        not     part
+## 183     setosa  Sepal.Width 4.1        not     part
+## 184     setosa  Sepal.Width 4.2        not     part
+## 185     setosa  Sepal.Width 3.1        not     part
+## 186     setosa  Sepal.Width 3.2        not     part
+## 187     setosa  Sepal.Width 3.5        not     part
+## 188     setosa  Sepal.Width 3.6        not     part
+## 189     setosa  Sepal.Width 3.0        not     part
+## 190     setosa  Sepal.Width 3.4        not     part
+## 191     setosa  Sepal.Width 3.5        not     part
+## 192     setosa  Sepal.Width 2.3        not     part
+## 193     setosa  Sepal.Width 3.2        not     part
+## 194     setosa  Sepal.Width 3.5        not     part
+## 195     setosa  Sepal.Width 3.8        not     part
+## 196     setosa  Sepal.Width 3.0        not     part
+## 197     setosa  Sepal.Width 3.8        not     part
+## 198     setosa  Sepal.Width 3.2        not     part
+## 199     setosa  Sepal.Width 3.7        not     part
+## 200     setosa  Sepal.Width 3.3        not     part
+## 201 versicolor  Sepal.Width 3.2        not     part
+## 202 versicolor  Sepal.Width 3.2        not     part
+## 203 versicolor  Sepal.Width 3.1        not     part
+## 204 versicolor  Sepal.Width 2.3        not     part
+## 205 versicolor  Sepal.Width 2.8        not     part
+## 206 versicolor  Sepal.Width 2.8        not     part
+## 207 versicolor  Sepal.Width 3.3        not     part
+## 208 versicolor  Sepal.Width 2.4        not     part
+## 209 versicolor  Sepal.Width 2.9        not     part
+## 210 versicolor  Sepal.Width 2.7        not     part
+## 211 versicolor  Sepal.Width 2.0        not     part
+## 212 versicolor  Sepal.Width 3.0        not     part
+## 213 versicolor  Sepal.Width 2.2        not     part
+## 214 versicolor  Sepal.Width 2.9        not     part
+## 215 versicolor  Sepal.Width 2.9        not     part
+## 216 versicolor  Sepal.Width 3.1        not     part
+## 217 versicolor  Sepal.Width 3.0        not     part
+## 218 versicolor  Sepal.Width 2.7        not     part
+## 219 versicolor  Sepal.Width 2.2        not     part
+## 220 versicolor  Sepal.Width 2.5        not     part
+## 221 versicolor  Sepal.Width 3.2        not     part
+## 222 versicolor  Sepal.Width 2.8        not     part
+## 223 versicolor  Sepal.Width 2.5        not     part
+## 224 versicolor  Sepal.Width 2.8        not     part
+## 225 versicolor  Sepal.Width 2.9        not     part
+## 226 versicolor  Sepal.Width 3.0        not     part
+## 227 versicolor  Sepal.Width 2.8        not     part
+## 228 versicolor  Sepal.Width 3.0        not     part
+## 229 versicolor  Sepal.Width 2.9        not     part
+## 230 versicolor  Sepal.Width 2.6        not     part
+## 231 versicolor  Sepal.Width 2.4        not     part
+## 232 versicolor  Sepal.Width 2.4        not     part
+## 233 versicolor  Sepal.Width 2.7        not     part
+## 234 versicolor  Sepal.Width 2.7        not     part
+## 235 versicolor  Sepal.Width 3.0        not     part
+## 236 versicolor  Sepal.Width 3.4        not     part
+## 237 versicolor  Sepal.Width 3.1        not     part
+## 238 versicolor  Sepal.Width 2.3        not     part
+## 239 versicolor  Sepal.Width 3.0        not     part
+## 240 versicolor  Sepal.Width 2.5        not     part
+## 241 versicolor  Sepal.Width 2.6        not     part
+## 242 versicolor  Sepal.Width 3.0        not     part
+## 243 versicolor  Sepal.Width 2.6        not     part
+## 244 versicolor  Sepal.Width 2.3        not     part
+## 245 versicolor  Sepal.Width 2.7        not     part
+## 246 versicolor  Sepal.Width 3.0        not     part
+## 247 versicolor  Sepal.Width 2.9        not     part
+## 248 versicolor  Sepal.Width 2.9        not     part
+## 249 versicolor  Sepal.Width 2.5        not     part
+## 250 versicolor  Sepal.Width 2.8        not     part
+## 251  virginica  Sepal.Width 3.3        not     part
+## 252  virginica  Sepal.Width 2.7        not     part
+## 253  virginica  Sepal.Width 3.0        not     part
+## 254  virginica  Sepal.Width 2.9        not     part
+## 255  virginica  Sepal.Width 3.0        not     part
+## 256  virginica  Sepal.Width 3.0        not     part
+## 257  virginica  Sepal.Width 2.5        not     part
+## 258  virginica  Sepal.Width 2.9        not     part
+## 259  virginica  Sepal.Width 2.5        not     part
+## 260  virginica  Sepal.Width 3.6        not     part
+## 261  virginica  Sepal.Width 3.2        not     part
+## 262  virginica  Sepal.Width 2.7        not     part
+## 263  virginica  Sepal.Width 3.0        not     part
+## 264  virginica  Sepal.Width 2.5        not     part
+## 265  virginica  Sepal.Width 2.8        not     part
+## 266  virginica  Sepal.Width 3.2        not     part
+## 267  virginica  Sepal.Width 3.0        not     part
+## 268  virginica  Sepal.Width 3.8        not     part
+## 269  virginica  Sepal.Width 2.6        not     part
+## 270  virginica  Sepal.Width 2.2        not     part
+## 271  virginica  Sepal.Width 3.2        not     part
+## 272  virginica  Sepal.Width 2.8        not     part
+## 273  virginica  Sepal.Width 2.8        not     part
+## 274  virginica  Sepal.Width 2.7        not     part
+## 275  virginica  Sepal.Width 3.3        not     part
+## 276  virginica  Sepal.Width 3.2        not     part
+## 277  virginica  Sepal.Width 2.8        not     part
+## 278  virginica  Sepal.Width 3.0        not     part
+## 279  virginica  Sepal.Width 2.8        not     part
+## 280  virginica  Sepal.Width 3.0        not     part
+## 281  virginica  Sepal.Width 2.8        not     part
+## 282  virginica  Sepal.Width 3.8        not     part
+## 283  virginica  Sepal.Width 2.8        not     part
+## 284  virginica  Sepal.Width 2.8        not     part
+## 285  virginica  Sepal.Width 2.6        not     part
+## 286  virginica  Sepal.Width 3.0        not     part
+## 287  virginica  Sepal.Width 3.4        not     part
+## 288  virginica  Sepal.Width 3.1        not     part
+## 289  virginica  Sepal.Width 3.0        not     part
+## 290  virginica  Sepal.Width 3.1        not     part
+## 291  virginica  Sepal.Width 3.1        not     part
+## 292  virginica  Sepal.Width 3.1        not     part
+## 293  virginica  Sepal.Width 2.7        not     part
+## 294  virginica  Sepal.Width 3.2        not     part
+## 295  virginica  Sepal.Width 3.3        not     part
+## 296  virginica  Sepal.Width 3.0        not     part
+## 297  virginica  Sepal.Width 2.5        not     part
+## 298  virginica  Sepal.Width 3.0        not     part
+## 299  virginica  Sepal.Width 3.4        not     part
+## 300  virginica  Sepal.Width 3.0        not     part
+## 301     setosa Petal.Length 1.4        not     part
+## 302     setosa Petal.Length 1.4        not     part
+## 303     setosa Petal.Length 1.3        not     part
+## 304     setosa Petal.Length 1.5        not     part
+## 305     setosa Petal.Length 1.4        not     part
+## 306     setosa Petal.Length 1.7        not     part
+## 307     setosa Petal.Length 1.4        not     part
+## 308     setosa Petal.Length 1.5        not     part
+## 309     setosa Petal.Length 1.4        not     part
+## 310     setosa Petal.Length 1.5        not     part
+## 311     setosa Petal.Length 1.5        not     part
+## 312     setosa Petal.Length 1.6        not     part
+## 313     setosa Petal.Length 1.4        not     part
+## 314     setosa Petal.Length 1.1        not     part
+## 315     setosa Petal.Length 1.2        not     part
+## 316     setosa Petal.Length 1.5        not     part
+## 317     setosa Petal.Length 1.3        not     part
+## 318     setosa Petal.Length 1.4        not     part
+## 319     setosa Petal.Length 1.7        not     part
+## 320     setosa Petal.Length 1.5        not     part
+## 321     setosa Petal.Length 1.7        not     part
+## 322     setosa Petal.Length 1.5        not     part
+## 323     setosa Petal.Length 1.0        not     part
+## 324     setosa Petal.Length 1.7        not     part
+## 325     setosa Petal.Length 1.9        not     part
+## 326     setosa Petal.Length 1.6        not     part
+## 327     setosa Petal.Length 1.6        not     part
+## 328     setosa Petal.Length 1.5        not     part
+## 329     setosa Petal.Length 1.4        not     part
+## 330     setosa Petal.Length 1.6        not     part
+## 331     setosa Petal.Length 1.6        not     part
+## 332     setosa Petal.Length 1.5        not     part
+## 333     setosa Petal.Length 1.5        not     part
+## 334     setosa Petal.Length 1.4        not     part
+## 335     setosa Petal.Length 1.5        not     part
+## 336     setosa Petal.Length 1.2        not     part
+## 337     setosa Petal.Length 1.3        not     part
+## 338     setosa Petal.Length 1.4        not     part
+## 339     setosa Petal.Length 1.3        not     part
+## 340     setosa Petal.Length 1.5        not     part
+## 341     setosa Petal.Length 1.3        not     part
+## 342     setosa Petal.Length 1.3        not     part
+## 343     setosa Petal.Length 1.3        not     part
+## 344     setosa Petal.Length 1.6        not     part
+## 345     setosa Petal.Length 1.9        not     part
+## 346     setosa Petal.Length 1.4        not     part
+## 347     setosa Petal.Length 1.6        not     part
+## 348     setosa Petal.Length 1.4        not     part
+## 349     setosa Petal.Length 1.5        not     part
+## 350     setosa Petal.Length 1.4        not     part
+## 351 versicolor Petal.Length 4.7        not     part
+## 352 versicolor Petal.Length 4.5        not     part
+## 353 versicolor Petal.Length 4.9        not     part
+## 354 versicolor Petal.Length 4.0        not     part
+## 355 versicolor Petal.Length 4.6        not     part
+## 356 versicolor Petal.Length 4.5        not     part
+## 357 versicolor Petal.Length 4.7        not     part
+## 358 versicolor Petal.Length 3.3        not     part
+## 359 versicolor Petal.Length 4.6        not     part
+## 360 versicolor Petal.Length 3.9        not     part
+## 361 versicolor Petal.Length 3.5        not     part
+## 362 versicolor Petal.Length 4.2        not     part
+## 363 versicolor Petal.Length 4.0        not     part
+## 364 versicolor Petal.Length 4.7        not     part
+## 365 versicolor Petal.Length 3.6        not     part
+## 366 versicolor Petal.Length 4.4        not     part
+## 367 versicolor Petal.Length 4.5        not     part
+## 368 versicolor Petal.Length 4.1        not     part
+## 369 versicolor Petal.Length 4.5        not     part
+## 370 versicolor Petal.Length 3.9        not     part
+## 371 versicolor Petal.Length 4.8        not     part
+## 372 versicolor Petal.Length 4.0        not     part
+## 373 versicolor Petal.Length 4.9        not     part
+## 374 versicolor Petal.Length 4.7        not     part
+## 375 versicolor Petal.Length 4.3        not     part
+## 376 versicolor Petal.Length 4.4        not     part
+## 377 versicolor Petal.Length 4.8        not     part
+## 378 versicolor Petal.Length 5.0        not     part
+## 379 versicolor Petal.Length 4.5        not     part
+## 380 versicolor Petal.Length 3.5        not     part
+## 381 versicolor Petal.Length 3.8        not     part
+## 382 versicolor Petal.Length 3.7        not     part
+## 383 versicolor Petal.Length 3.9        not     part
+## 384 versicolor Petal.Length 5.1        not     part
+## 385 versicolor Petal.Length 4.5        not     part
+## 386 versicolor Petal.Length 4.5        not     part
+## 387 versicolor Petal.Length 4.7        not     part
+## 388 versicolor Petal.Length 4.4        not     part
+## 389 versicolor Petal.Length 4.1        not     part
+## 390 versicolor Petal.Length 4.0        not     part
+## 391 versicolor Petal.Length 4.4        not     part
+## 392 versicolor Petal.Length 4.6        not     part
+## 393 versicolor Petal.Length 4.0        not     part
+## 394 versicolor Petal.Length 3.3        not     part
+## 395 versicolor Petal.Length 4.2        not     part
+## 396 versicolor Petal.Length 4.2        not     part
+## 397 versicolor Petal.Length 4.2        not     part
+## 398 versicolor Petal.Length 4.3        not     part
+## 399 versicolor Petal.Length 3.0        not     part
+## 400 versicolor Petal.Length 4.1        not     part
+## 401  virginica Petal.Length 6.0        not     part
+## 402  virginica Petal.Length 5.1        not     part
+## 403  virginica Petal.Length 5.9        not     part
+## 404  virginica Petal.Length 5.6        not     part
+## 405  virginica Petal.Length 5.8        not     part
+## 406  virginica Petal.Length 6.6        not     part
+## 407  virginica Petal.Length 4.5        not     part
+## 408  virginica Petal.Length 6.3        not     part
+## 409  virginica Petal.Length 5.8        not     part
+## 410  virginica Petal.Length 6.1        not     part
+## 411  virginica Petal.Length 5.1        not     part
+## 412  virginica Petal.Length 5.3        not     part
+## 413  virginica Petal.Length 5.5        not     part
+## 414  virginica Petal.Length 5.0        not     part
+## 415  virginica Petal.Length 5.1        not     part
+## 416  virginica Petal.Length 5.3        not     part
+## 417  virginica Petal.Length 5.5        not     part
+## 418  virginica Petal.Length 6.7        not     part
+## 419  virginica Petal.Length 6.9        not     part
+## 420  virginica Petal.Length 5.0        not     part
+## 421  virginica Petal.Length 5.7        not     part
+## 422  virginica Petal.Length 4.9        not     part
+## 423  virginica Petal.Length 6.7        not     part
+## 424  virginica Petal.Length 4.9        not     part
+## 425  virginica Petal.Length 5.7        not     part
+## 426  virginica Petal.Length 6.0        not     part
+## 427  virginica Petal.Length 4.8        not     part
+## 428  virginica Petal.Length 4.9        not     part
+## 429  virginica Petal.Length 5.6        not     part
+## 430  virginica Petal.Length 5.8        not     part
+## 431  virginica Petal.Length 6.1        not     part
+## 432  virginica Petal.Length 6.4        not     part
+## 433  virginica Petal.Length 5.6        not     part
+## 434  virginica Petal.Length 5.1        not     part
+## 435  virginica Petal.Length 5.6        not     part
+## 436  virginica Petal.Length 6.1        not     part
+## 437  virginica Petal.Length 5.6        not     part
+## 438  virginica Petal.Length 5.5        not     part
+## 439  virginica Petal.Length 4.8        not     part
+## 440  virginica Petal.Length 5.4        not     part
+## 441  virginica Petal.Length 5.6        not     part
+## 442  virginica Petal.Length 5.1        not     part
+## 443  virginica Petal.Length 5.1        not     part
+## 444  virginica Petal.Length 5.9        not     part
+## 445  virginica Petal.Length 5.7        not     part
+## 446  virginica Petal.Length 5.2        not     part
+## 447  virginica Petal.Length 5.0        not     part
+## 448  virginica Petal.Length 5.2        not     part
+## 449  virginica Petal.Length 5.4        not     part
+## 450  virginica Petal.Length 5.1        not     part
+## 451     setosa  Petal.Width 0.2        not     part
+## 452     setosa  Petal.Width 0.2        not     part
+## 453     setosa  Petal.Width 0.2        not     part
+## 454     setosa  Petal.Width 0.2        not     part
+## 455     setosa  Petal.Width 0.2        not     part
+## 456     setosa  Petal.Width 0.4        not     part
+## 457     setosa  Petal.Width 0.3        not     part
+## 458     setosa  Petal.Width 0.2        not     part
+## 459     setosa  Petal.Width 0.2        not     part
+## 460     setosa  Petal.Width 0.1        not     part
+## 461     setosa  Petal.Width 0.2        not     part
+## 462     setosa  Petal.Width 0.2        not     part
+## 463     setosa  Petal.Width 0.1        not     part
+## 464     setosa  Petal.Width 0.1        not     part
+## 465     setosa  Petal.Width 0.2        not     part
+## 466     setosa  Petal.Width 0.4        not     part
+## 467     setosa  Petal.Width 0.4        not     part
+## 468     setosa  Petal.Width 0.3        not     part
+## 469     setosa  Petal.Width 0.3        not     part
+## 470     setosa  Petal.Width 0.3        not     part
+## 471     setosa  Petal.Width 0.2        not     part
+## 472     setosa  Petal.Width 0.4        not     part
+## 473     setosa  Petal.Width 0.2        not     part
+## 474     setosa  Petal.Width 0.5        not     part
+## 475     setosa  Petal.Width 0.2        not     part
+## 476     setosa  Petal.Width 0.2        not     part
+## 477     setosa  Petal.Width 0.4        not     part
+## 478     setosa  Petal.Width 0.2        not     part
+## 479     setosa  Petal.Width 0.2        not     part
+## 480     setosa  Petal.Width 0.2        not     part
+## 481     setosa  Petal.Width 0.2        not     part
+## 482     setosa  Petal.Width 0.4        not     part
+## 483     setosa  Petal.Width 0.1        not     part
+## 484     setosa  Petal.Width 0.2        not     part
+## 485     setosa  Petal.Width 0.2        not     part
+## 486     setosa  Petal.Width 0.2        not     part
+## 487     setosa  Petal.Width 0.2        not     part
+## 488     setosa  Petal.Width 0.1        not     part
+## 489     setosa  Petal.Width 0.2        not     part
+## 490     setosa  Petal.Width 0.2        not     part
+## 491     setosa  Petal.Width 0.3        not     part
+## 492     setosa  Petal.Width 0.3        not     part
+## 493     setosa  Petal.Width 0.2        not     part
+## 494     setosa  Petal.Width 0.6        not     part
+## 495     setosa  Petal.Width 0.4        not     part
+## 496     setosa  Petal.Width 0.3        not     part
+## 497     setosa  Petal.Width 0.2        not     part
+## 498     setosa  Petal.Width 0.2        not     part
+## 499     setosa  Petal.Width 0.2        not     part
+## 500     setosa  Petal.Width 0.2        not     part
+## 501 versicolor  Petal.Width 1.4        not     part
+## 502 versicolor  Petal.Width 1.5        not     part
+## 503 versicolor  Petal.Width 1.5        not     part
+## 504 versicolor  Petal.Width 1.3        not     part
+## 505 versicolor  Petal.Width 1.5        not     part
+## 506 versicolor  Petal.Width 1.3        not     part
+## 507 versicolor  Petal.Width 1.6        not     part
+## 508 versicolor  Petal.Width 1.0        not     part
+## 509 versicolor  Petal.Width 1.3        not     part
+## 510 versicolor  Petal.Width 1.4        not     part
+## 511 versicolor  Petal.Width 1.0        not     part
+## 512 versicolor  Petal.Width 1.5        not     part
+## 513 versicolor  Petal.Width 1.0        not     part
+## 514 versicolor  Petal.Width 1.4        not     part
+## 515 versicolor  Petal.Width 1.3        not     part
+## 516 versicolor  Petal.Width 1.4        not     part
+## 517 versicolor  Petal.Width 1.5        not     part
+## 518 versicolor  Petal.Width 1.0        not     part
+## 519 versicolor  Petal.Width 1.5        not     part
+## 520 versicolor  Petal.Width 1.1        not     part
+## 521 versicolor  Petal.Width 1.8        not     part
+## 522 versicolor  Petal.Width 1.3        not     part
+## 523 versicolor  Petal.Width 1.5        not     part
+## 524 versicolor  Petal.Width 1.2        not     part
+## 525 versicolor  Petal.Width 1.3        not     part
+## 526 versicolor  Petal.Width 1.4        not     part
+## 527 versicolor  Petal.Width 1.4        not     part
+## 528 versicolor  Petal.Width 1.7        not     part
+## 529 versicolor  Petal.Width 1.5        not     part
+## 530 versicolor  Petal.Width 1.0        not     part
+## 531 versicolor  Petal.Width 1.1        not     part
+## 532 versicolor  Petal.Width 1.0        not     part
+## 533 versicolor  Petal.Width 1.2        not     part
+## 534 versicolor  Petal.Width 1.6        not     part
+## 535 versicolor  Petal.Width 1.5        not     part
+## 536 versicolor  Petal.Width 1.6        not     part
+## 537 versicolor  Petal.Width 1.5        not     part
+## 538 versicolor  Petal.Width 1.3        not     part
+## 539 versicolor  Petal.Width 1.3        not     part
+## 540 versicolor  Petal.Width 1.3        not     part
+## 541 versicolor  Petal.Width 1.2        not     part
+## 542 versicolor  Petal.Width 1.4        not     part
+## 543 versicolor  Petal.Width 1.2        not     part
+## 544 versicolor  Petal.Width 1.0        not     part
+## 545 versicolor  Petal.Width 1.3        not     part
+## 546 versicolor  Petal.Width 1.2        not     part
+## 547 versicolor  Petal.Width 1.3        not     part
+## 548 versicolor  Petal.Width 1.3        not     part
+## 549 versicolor  Petal.Width 1.1        not     part
+## 550 versicolor  Petal.Width 1.3        not     part
+## 551  virginica  Petal.Width 2.5        not     part
+## 552  virginica  Petal.Width 1.9        not     part
+## 553  virginica  Petal.Width 2.1        not     part
+## 554  virginica  Petal.Width 1.8        not     part
+## 555  virginica  Petal.Width 2.2        not     part
+## 556  virginica  Petal.Width 2.1        not     part
+## 557  virginica  Petal.Width 1.7        not     part
+## 558  virginica  Petal.Width 1.8        not     part
+## 559  virginica  Petal.Width 1.8        not     part
+## 560  virginica  Petal.Width 2.5        not     part
+## 561  virginica  Petal.Width 2.0        not     part
+## 562  virginica  Petal.Width 1.9        not     part
+## 563  virginica  Petal.Width 2.1        not     part
+## 564  virginica  Petal.Width 2.0        not     part
+## 565  virginica  Petal.Width 2.4        not     part
+## 566  virginica  Petal.Width 2.3        not     part
+## 567  virginica  Petal.Width 1.8        not     part
+## 568  virginica  Petal.Width 2.2        not     part
+## 569  virginica  Petal.Width 2.3        not     part
+## 570  virginica  Petal.Width 1.5        not     part
+## 571  virginica  Petal.Width 2.3        not     part
+## 572  virginica  Petal.Width 2.0        not     part
+## 573  virginica  Petal.Width 2.0        not     part
+## 574  virginica  Petal.Width 1.8        not     part
+## 575  virginica  Petal.Width 2.1        not     part
+## 576  virginica  Petal.Width 1.8        not     part
+## 577  virginica  Petal.Width 1.8        not     part
+## 578  virginica  Petal.Width 1.8        not     part
+## 579  virginica  Petal.Width 2.1        not     part
+## 580  virginica  Petal.Width 1.6        not     part
+## 581  virginica  Petal.Width 1.9        not     part
+## 582  virginica  Petal.Width 2.0        not     part
+## 583  virginica  Petal.Width 2.2        not     part
+## 584  virginica  Petal.Width 1.5        not     part
+## 585  virginica  Petal.Width 1.4        not     part
+## 586  virginica  Petal.Width 2.3        not     part
+## 587  virginica  Petal.Width 2.4        not     part
+## 588  virginica  Petal.Width 1.8        not     part
+## 589  virginica  Petal.Width 1.8        not     part
+## 590  virginica  Petal.Width 2.1        not     part
+## 591  virginica  Petal.Width 2.4        not     part
+## 592  virginica  Petal.Width 2.3        not     part
+## 593  virginica  Petal.Width 1.9        not     part
+## 594  virginica  Petal.Width 2.3        not     part
+## 595  virginica  Petal.Width 2.5        not     part
+## 596  virginica  Petal.Width 2.3        not     part
+## 597  virginica  Petal.Width 1.9        not     part
+## 598  virginica  Petal.Width 2.0        not     part
+## 599  virginica  Petal.Width 2.3        not     part
+## 600  virginica  Petal.Width 1.8        not     part
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The first advantage a user sees of these functions is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} and for accessing SQL based databases with the same syntax. The functions are also optimized for fast performance.
+
+\subsection{Group-wise manipulations}
+
+Another important operation is to summarize quantities by group of rows. Contrary to base R, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable, compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
+
+The first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{9}\hlstd{,} \hlkwc{letters} \hlstd{=} \hlkwd{rep}\hlstd{(letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{],} \hlnum{3}\hlstd{))}
+\hlstd{my_gr.tb} \hlkwb{<-} \hlkwd{group_by}\hlstd{(my.tb, letters)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{summarise}\hlstd{(my_gr.tb,}
+          \hlkwc{mean_numbers} \hlstd{=} \hlkwd{mean}\hlstd{(numbers),}
+          \hlkwc{median_numbers} \hlstd{=} \hlkwd{median}\hlstd{(numbers),}
+          \hlkwc{n} \hlstd{=} \hlkwd{n}\hlstd{())}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 3 x 4
+##   letters mean_numbers median_numbers     n
+##   <chr>          <dbl>          <int> <int>
+## 1 a                  4              4     3
+## 2 b                  5              5     3
+## 3 c                  6              6     3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{explainbox}
+\textbf{How is grouping implemented for data-frame-based tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{9}\hlstd{,} \hlkwc{letters} \hlstd{=} \hlkwd{rep}\hlstd{(letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{],} \hlnum{3}\hlstd{))}
+\hlkwd{class}\hlstd{(my.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\begin{alltt}
+\hlstd{my_gr.tb} \hlkwb{<-} \hlkwd{group_by}\hlstd{(my.tb, letters)}
+\hlkwd{class}\hlstd{(my_gr.tb)}
+\end{alltt}
+\begin{verbatim}
+## [1] "grouped_df" "tbl_df"     "tbl"        "data.frame"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb} and \code{my\_gr.tb}. Trysee how the groups information is stored in
+\end{playground}
+\end{explainbox}
+
 \section{Data input and output}\label{sec:data:io}
 
 Several recently released \Rlang packages have made it easier and faster to import data. This together with wider and faster internet access to data sources, has made it possible to efficiently work with relatively large data sets. The way \Rlang is implemented, keeping all data in memory (RAM), imposes limits to the size of data sets that can analysed with base \Rlang functions, classes of objects and syntax. One option for processing big data sets is to use a 64 bit version of \Rlang under a 64 bit operating system in a computer with enough RAM to hold all the data. For data sets large enough not to fit in computer RAM, one can use different packages that allow selective reading of data from files, or by storing data in databases outside of \Rlang and using queries to load subsets of the data. We will start with the simplest case, files with the native formats used by \Rlang itself.
@@ -877,9 +3823,9 @@ Base \Rlang provides several functions for portably working with files, they are
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2019-07-10 23:49:13 2019-07-10 23:49:13
+## xxx.txt    0 FALSE  666 2019-07-11 19:22:33 2019-07-11 19:22:33
 ##                       atime exe
-## xxx.txt 2019-07-10 23:49:13  no
+## xxx.txt 2019-07-11 19:22:33  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
@@ -2852,345 +5798,6 @@ To make the problem of manipulating data, tractable and consistent, the first st
 Hadley Wickham, together with collaborators, has developed a set of \Rlang tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citebooktitle{Wickham2017} \autocite{Wickham2017}. The book \citebooktitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citebooktitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
 
 \subsection{Better data frames}
-
-\subsection{Tidying up data}
-
-In later sections of this and subsequent chapters we assume that available data is in a tidy arrangement, in which rows correspond to measurement events, and columns correspond to values for different variables measured at a given measuring event, or descriptors of groups or permanent features of the measured units. Real-world data can be quite messy, so frequently the first task in an analysis is to make data in ad-hoc or irregular formats ``tidy''. Please consult the vignette other documentation of package \pkgname{tidyr} for details.
-
-In most cases using function \Rfunction{gather()} is the easiest way of converting data in a ``wide'' form into data into ``long'' form, or \emph{tidy} format. We will use the \code{iris} data set included with R. We print \code{iris} as a tibble for the nicer formatting of the screen output, but we do not save the result. We use \code{gather} to obtain a long-form tibble. Be aware that in this case, the original wide form would in some cases be best for further analysis.
-
-We first convert \code{iris} into a tibble to more easily control the length of output.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{data}\hlstd{(iris)}
-\hlstd{iris.tb} \hlkwb{<-} \hlkwd{as.tibble}\hlstd{(iris)}
-\hlstd{iris.tb}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 150 x 5
-##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
-##           <dbl>       <dbl>        <dbl>       <dbl> <fct>  
-##  1          5.1         3.5          1.4         0.2 setosa 
-##  2          4.9         3            1.4         0.2 setosa 
-##  3          4.7         3.2          1.3         0.2 setosa 
-##  4          4.6         3.1          1.5         0.2 setosa 
-##  5          5           3.6          1.4         0.2 setosa 
-##  6          5.4         3.9          1.7         0.4 setosa 
-##  7          4.6         3.4          1.4         0.3 setosa 
-##  8          5           3.4          1.5         0.2 setosa 
-##  9          4.4         2.9          1.4         0.2 setosa 
-## 10          4.9         3.1          1.5         0.1 setosa 
-## # ... with 140 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-By comparing \code{iris.tb} above with \code{long\_iris} below we can appreciate how \Rfunction{gather()} transformed its input.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{long_iris} \hlkwb{<-} \hlkwd{gather}\hlstd{(iris.tb,} \hlkwc{key} \hlstd{= part,} \hlkwc{value} \hlstd{= dimension,} \hlopt{-}\hlstd{Species)}
-\hlstd{long_iris}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 600 x 3
-##    Species part         dimension
-##    <fct>   <chr>            <dbl>
-##  1 setosa  Sepal.Length       5.1
-##  2 setosa  Sepal.Length       4.9
-##  3 setosa  Sepal.Length       4.7
-##  4 setosa  Sepal.Length       4.6
-##  5 setosa  Sepal.Length       5  
-##  6 setosa  Sepal.Length       5.4
-##  7 setosa  Sepal.Length       4.6
-##  8 setosa  Sepal.Length       5  
-##  9 setosa  Sepal.Length       4.4
-## 10 setosa  Sepal.Length       4.9
-## # ... with 590 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-To better understand why I added \code{-Species} as an argument, edit the code removing it, and execute the statement to see how the returned tibble is different.
-\end{playground}
-
-\subsection{Row-wise manipulations}
-
-We can calculate derived quantities by combining different variables measured on the same measuring unit---i.e.\ calculations within a single row of a data frame or tibble. In this case there are two options, we add new variables (columns) retaining existing ones using \Rfunction{mutate()} or we assemble a new tibble containing only the columns we explicitly specify using \Rfunction{transmute()}.
-
-Continuing with the example from the previous section, we most likely would like to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr}. We use regular expressions as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or in other words using rows displaced relative to the current one. As shown in the example in section \ref{sec:dataex:birch} on page \pageref{sec:dataex:birch}, within a single call to \Rfunction{mutate()} values calculated first can be used in the calculations for later variables.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{long_iris} \hlkwb{<-} \hlkwd{mutate}\hlstd{(long_iris,}
-                    \hlkwc{plant_part} \hlstd{=} \hlkwd{str_extract}\hlstd{(part,} \hlstr{"^[:alpha:]*"}\hlstd{),}
-                    \hlkwc{part_dim} \hlstd{=} \hlkwd{str_extract}\hlstd{(part,} \hlstr{"[:alpha:]*$"}\hlstd{))}
-\hlstd{long_iris}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 600 x 5
-##    Species part         dimension plant_part part_dim
-##    <fct>   <chr>            <dbl> <chr>      <chr>   
-##  1 setosa  Sepal.Length       5.1 Sepal      Length  
-##  2 setosa  Sepal.Length       4.9 Sepal      Length  
-##  3 setosa  Sepal.Length       4.7 Sepal      Length  
-##  4 setosa  Sepal.Length       4.6 Sepal      Length  
-##  5 setosa  Sepal.Length       5   Sepal      Length  
-##  6 setosa  Sepal.Length       5.4 Sepal      Length  
-##  7 setosa  Sepal.Length       4.6 Sepal      Length  
-##  8 setosa  Sepal.Length       5   Sepal      Length  
-##  9 setosa  Sepal.Length       4.4 Sepal      Length  
-## 10 setosa  Sepal.Length       4.9 Sepal      Length  
-## # ... with 590 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-In the next few chunks we print the returned values rather than saving then in variables. In most cases in practice one will combine these function into a ``pipe'' using operator \Roperator{\%>\%} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}, and for more realistic examples, section \ref{sec:dataex} starting on page \pageref{sec:dataex}).
-
-Function \Rfunction{arrange()} is used for sorting the rows---makes sorting a data frame simpler than by using \Rfunction{sort()} and \Rfunction{order()}. These two base \Rlang methods are more versatile.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{arrange}\hlstd{(long_iris, Species, plant_part, part_dim)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 600 x 5
-##    Species part         dimension plant_part part_dim
-##    <fct>   <chr>            <dbl> <chr>      <chr>   
-##  1 setosa  Petal.Length       1.4 Petal      Length  
-##  2 setosa  Petal.Length       1.4 Petal      Length  
-##  3 setosa  Petal.Length       1.3 Petal      Length  
-##  4 setosa  Petal.Length       1.5 Petal      Length  
-##  5 setosa  Petal.Length       1.4 Petal      Length  
-##  6 setosa  Petal.Length       1.7 Petal      Length  
-##  7 setosa  Petal.Length       1.4 Petal      Length  
-##  8 setosa  Petal.Length       1.5 Petal      Length  
-##  9 setosa  Petal.Length       1.4 Petal      Length  
-## 10 setosa  Petal.Length       1.5 Petal      Length  
-## # ... with 590 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Function \Rfunction{filter()} to select a subset of rows---similar to \Rfunction{subset()} but with a syntax consistent with that of other functions in the \pkgname{tidyverse}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{filter}\hlstd{(long_iris, plant_part} \hlopt{==} \hlstr{"Petal"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 300 x 5
-##    Species part         dimension plant_part part_dim
-##    <fct>   <chr>            <dbl> <chr>      <chr>   
-##  1 setosa  Petal.Length       1.4 Petal      Length  
-##  2 setosa  Petal.Length       1.4 Petal      Length  
-##  3 setosa  Petal.Length       1.3 Petal      Length  
-##  4 setosa  Petal.Length       1.5 Petal      Length  
-##  5 setosa  Petal.Length       1.4 Petal      Length  
-##  6 setosa  Petal.Length       1.7 Petal      Length  
-##  7 setosa  Petal.Length       1.4 Petal      Length  
-##  8 setosa  Petal.Length       1.5 Petal      Length  
-##  9 setosa  Petal.Length       1.4 Petal      Length  
-## 10 setosa  Petal.Length       1.5 Petal      Length  
-## # ... with 290 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Function \Rfunction{slice()} to select a subset of rows based on their positions---would be done with positional indexes with \code{[ , ]} in base R.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{slice}\hlstd{(long_iris,} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 5 x 5
-##   Species part         dimension plant_part part_dim
-##   <fct>   <chr>            <dbl> <chr>      <chr>   
-## 1 setosa  Sepal.Length       5.1 Sepal      Length  
-## 2 setosa  Sepal.Length       4.9 Sepal      Length  
-## 3 setosa  Sepal.Length       4.7 Sepal      Length  
-## 4 setosa  Sepal.Length       4.6 Sepal      Length  
-## 5 setosa  Sepal.Length       5   Sepal      Length
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Function \Rfunction{select()} to select a subset of columns---requires selection with subindexes in base R. In the first example we remove one column by name.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{select}\hlstd{(long_iris,} \hlopt{-}\hlstd{part)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 600 x 4
-##    Species dimension plant_part part_dim
-##    <fct>       <dbl> <chr>      <chr>   
-##  1 setosa        5.1 Sepal      Length  
-##  2 setosa        4.9 Sepal      Length  
-##  3 setosa        4.7 Sepal      Length  
-##  4 setosa        4.6 Sepal      Length  
-##  5 setosa        5   Sepal      Length  
-##  6 setosa        5.4 Sepal      Length  
-##  7 setosa        4.6 Sepal      Length  
-##  8 setosa        5   Sepal      Length  
-##  9 setosa        4.4 Sepal      Length  
-## 10 setosa        4.9 Sepal      Length  
-## # ... with 590 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-In addition \Rfunction{select()} as other functions in \pkgname{dplyr} can be used together with functions \Rfunction{starts\_with()}, \Rfunction{ends\_with()}, \Rfunction{contains()}, and \Rfunction{matches()} to select groups of columns to be selected to be retained or removed. For this example we use \Rlang \code{iris} instead of our \code{long\_iris}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{select}\hlstd{(iris.tb,} \hlopt{-}\hlkwd{starts_with}\hlstd{(}\hlstr{"Sepal"}\hlstd{))}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 150 x 3
-##    Petal.Length Petal.Width Species
-##           <dbl>       <dbl> <fct>  
-##  1          1.4         0.2 setosa 
-##  2          1.4         0.2 setosa 
-##  3          1.3         0.2 setosa 
-##  4          1.5         0.2 setosa 
-##  5          1.4         0.2 setosa 
-##  6          1.7         0.4 setosa 
-##  7          1.4         0.3 setosa 
-##  8          1.5         0.2 setosa 
-##  9          1.4         0.2 setosa 
-## 10          1.5         0.1 setosa 
-## # ... with 140 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{select}\hlstd{(iris.tb, Species,} \hlkwd{matches}\hlstd{(}\hlstr{"pal"}\hlstd{))}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 150 x 3
-##    Species Sepal.Length Sepal.Width
-##    <fct>          <dbl>       <dbl>
-##  1 setosa           5.1         3.5
-##  2 setosa           4.9         3  
-##  3 setosa           4.7         3.2
-##  4 setosa           4.6         3.1
-##  5 setosa           5           3.6
-##  6 setosa           5.4         3.9
-##  7 setosa           4.6         3.4
-##  8 setosa           5           3.4
-##  9 setosa           4.4         2.9
-## 10 setosa           4.9         3.1
-## # ... with 140 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Function \Rfunction{rename()} to rename columns---requires the use of \Rfunction{names()} and \Rfunction{names<-()} and a way of matching the old name in base R.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{rename}\hlstd{(long_iris,} \hlkwc{dim} \hlstd{= dimension)}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 600 x 5
-##    Species part           dim plant_part part_dim
-##    <fct>   <chr>        <dbl> <chr>      <chr>   
-##  1 setosa  Sepal.Length   5.1 Sepal      Length  
-##  2 setosa  Sepal.Length   4.9 Sepal      Length  
-##  3 setosa  Sepal.Length   4.7 Sepal      Length  
-##  4 setosa  Sepal.Length   4.6 Sepal      Length  
-##  5 setosa  Sepal.Length   5   Sepal      Length  
-##  6 setosa  Sepal.Length   5.4 Sepal      Length  
-##  7 setosa  Sepal.Length   4.6 Sepal      Length  
-##  8 setosa  Sepal.Length   5   Sepal      Length  
-##  9 setosa  Sepal.Length   4.4 Sepal      Length  
-## 10 setosa  Sepal.Length   4.9 Sepal      Length  
-## # ... with 590 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-The first advantage a user sees of these functions is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} and for accessing SQL based databases with the same syntax. The functions are also optimized for fast performance.
-
-\subsection{Group-wise manipulations}
-
-Another important operation is to summarize quantities by group of rows. Contrary to base R, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable, compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
-
-The first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{9}\hlstd{,} \hlkwc{letters} \hlstd{=} \hlkwd{rep}\hlstd{(letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{],} \hlnum{3}\hlstd{))}
-\hlstd{my_gr.tb} \hlkwb{<-} \hlkwd{group_by}\hlstd{(my.tb, letters)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{summarise}\hlstd{(my_gr.tb,}
-          \hlkwc{mean_numbers} \hlstd{=} \hlkwd{mean}\hlstd{(numbers),}
-          \hlkwc{median_numbers} \hlstd{=} \hlkwd{median}\hlstd{(numbers),}
-          \hlkwc{n} \hlstd{=} \hlkwd{n}\hlstd{())}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 3 x 4
-##   letters mean_numbers median_numbers     n
-##   <chr>          <dbl>          <int> <int>
-## 1 a                  4              4     3
-## 2 b                  5              5     3
-## 3 c                  6              6     3
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{explainbox}
-\textbf{How is grouping implemented for data-frame-based tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{my.tb} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{numbers} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{9}\hlstd{,} \hlkwc{letters} \hlstd{=} \hlkwd{rep}\hlstd{(letters[}\hlnum{1}\hlopt{:}\hlnum{3}\hlstd{],} \hlnum{3}\hlstd{))}
-\hlkwd{class}\hlstd{(my.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlstd{my_gr.tb} \hlkwb{<-} \hlkwd{group_by}\hlstd{(my.tb, letters)}
-\hlkwd{class}\hlstd{(my_gr.tb)}
-\end{alltt}
-\begin{verbatim}
-## [1] "grouped_df" "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-\begin{playground}
-Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb} and \code{my\_gr.tb}. Trysee how the groups information is stored in
-\end{playground}
-\end{explainbox}
 
 \section{Grammar for manipulation of character strings}\label{sec:data:strings}
 
