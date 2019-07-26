@@ -1,0 +1,1132 @@
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+opts_knit$set(concordance=TRUE)
+opts_knit$set(unnamed.chunk.label = 'data-chunk')
+@
+
+\chapter{Data input and output}\label{chap:R:data:io}
+
+\begin{VF}
+Most programmers have seen them, and most good programmers realize they've written at least one. They are huge, messy, ugly programs that should have been short, clean, beautiful programs.
+
+\VA{John Bentley}{Programming Pearls}
+\end{VF}
+
+<<echo=FALSE>>=
+# set to TRUE to test non-executed code chunks and rendering of plots
+eval_online_data <- FALSE
+eval_yoctopuce <- FALSE
+@
+
+\section{Aims of this chapter}
+
+Base \Rlang and the recommended packages (installed by default) include several functions for importing and exporting data. These functions have stable and well described behaviour, so they may be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter we aim at describing both data input and output with base \Rlang functions and with functions from contributed packages covering in detail only the most common ``foreign'' data formats.
+
+Developing software to read and write files with data stored in a format one does not have control on, or possibly a format one even needs to guess, can easily result in long, messy, ugly \Rlang scripts. Before writing your own, check for available \Rlang functions and those in contributed packages, of which in this chapter I only give some examples. A good place to look for packages for importing and exporting data into and out of \Rlang, in addition to the CRAN views, is the \emph{R OpenSci} list of packages at \url{https://ropensci.org/packages/}.
+
+\section{Introduction}
+
+In the alternative file-reading functions defined in package \pkgname{readr} the increased speed is obtained at the cost of error-prone guessing of column types and widths by default. When column widths and types are not known at the time an script is written, or if column widths and types are not guaranteed to remain the same during the lifetime of the script base \Rlang functions are to be preferred as long as their slower performance is not a problem. Fastest are the file reading functions from package \pkgname{data.table}.
+
+In this chapter you will familiarise with how to exchange data between \Rlang and other systems. The functions \code{save()} and \code{load()} that save and read data in \Rlang's native format are described in section \ref{}.
+
+\section{Packages used in this chapter}
+
+<<eval=FALSE>>=
+install.packages(learnrbook::pkgs_ch_data)
+@
+
+For executing the examples listed in this chapter you need first to load the following packages from the library:
+
+<<message=FALSE>>=
+library(learnrbook)
+library(tibble)
+library(magrittr)
+library(wrapr)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(readxl)
+library(xlsx)
+library(pdftools)
+library(foreign)
+library(haven)
+library(xml2)
+library(RNetCDF)
+library(ncdf4)
+library(lubridate)
+library(jsonlite)
+@
+
+\begin{infobox}
+Some data sets used in this and other chapters are available in package \pkgname{learnrbook}. In addition to the
+R data objects, we provide files saved in \emph{foreign} formats, which we used in examples on how to import data. The files can be either read from the \Rlang library, or from a copy in a local folder. In this chapter we
+assume the user has copied the folder \code{"extdata"} from the package to his working folder.
+
+Copy the files using:
+
+<<copy-data-files>>=
+pkg.path <- system.file("extdata", package = "learnrbook")
+file.copy(pkg.path, ".", overwrite = TRUE, recursive = TRUE)
+@
+
+We also make sure the folder used to save data read from the internet, exists.
+
+<<make-dir>>=
+save.path = "./data"
+if (!dir.exists(save.path)) {
+  dir.create(save.path)
+}
+@
+\end{infobox}
+
+\section{Data input and output}\label{sec:data:io}
+
+\Rlang packages have made it faster to import data saved in the same formats already supported by base \Rlang, but in some cases providing weaker guarantees of not corrupting the data than base \Rlang. Other contributed packages make it possible to directly access data stored in file formats not supported by base \Rlang functions.
+
+Faster internet access to data sources and cheaper random access memory (RAM) has made it possible to efficiently work with relatively large data sets in \Rlang. That \Rlang keeps all data in memory (RAM), imposes limits to the size of data \Rlang functions can operate on. For data sets large enough not to fit in computer RAM, one can use packages that allow selective reading of data from flat files, or one can keep data in databases outside of \Rlang and use database queries to load subsets of the data.
+
+\subsection{File names}\label{sec:files:filenames}
+
+When saving data to files from scripts or code that one expects to be run on a different operating system (OS), we need to be careful to chose files names valid under all OSs where the file could be used. This is specially important when developing \Rlang packages. Space characters should not be part of file names and contain at most one dot. For widest possible portability, underscores should be avoided, while embedded dashes are usually not a problem.
+
+\Rlang provides functions which help with portability, by hiding the idiosyncracies of the different OSs from \Rlang code. In scripts these functions should be preferred over direct call to OS commands whenever possible. Different OSs allow different characters in paths and OS functions differ in their names and/or output format, consequently e.g.\ the algorithm needed to extract a file name from a file path, is OS specific. However, \Rlang function \Rfunction{basename()} allows the inclusion of this operation in user's code portably.
+
+Under \pgrmname{MS-Windows} folder nesting in file paths is marked with backslash characters (\verb|\|) which are not ``normal'' characters in \Rlang, but rather ``escape'' characters (see section \ref{sec:calc:character} on page \pageref{sec:calc:character}). Within \Rlang forward slash (\verb|/|) can be used in their place in file paths, and should be always preferred to escaping backslashes as \verb|\\| to ensure portability.
+
+<<filenames-01>>=
+basename("extdata/my-file.txt")
+basename("extdata\\my-file.txt")
+@
+
+The complementary function is \Rfunction{dirname()} and extracts the bare path to the containing folder, from a full file path.
+<<filenames-03>>=
+dirname("extdata/my-file.txt")
+@
+
+\begin{warningbox}
+In this book paths and filenames valid in MS-Windows but expected to be compatible with most mainstream OSs are used.
+\end{warningbox}
+
+Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the path to the current working directory and to set a directory as current, respectively.
+<<filenames-05,eval=FALSE>>=
+# not run
+getwd()
+@
+
+Function \Rfunction{setwd()} returns the path to the current working directory, allowing us to portably set the working directory to the previous one. Both relative paths (relative to the current working directory), as in the example, or absolute paths (given in full) are accepted as argument. In mainstream OSs \code{"."} indicates the current directory and \code{".."} the directory above the current one.
+<<filenames-06,eval=FALSE>>=
+# not run
+oldwd <- setwd("..")
+getwd()
+@
+
+The returned value is always an absolute full path, so it remains valid even if the path to the working directory changes more than once before it being restored.
+<<filenames-07,eval=FALSE>>=
+# not run
+oldwd
+setwd(oldwd)
+getwd()
+@
+
+We can also obtain lists of files and/or directories (= disk folders) portably across OSs.
+<<filenames-09>>=
+head(list.files())
+head(list.dirs())
+head(dir())
+@
+
+\begin{playground}
+The default argument for parameter \code{path} is the current working directory, under Windows, Unix and Linux indicated by  \code{"."}. Convince yourself that this is indeed the default by calling the functions with an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
+\end{playground}
+
+\begin{playground}
+Use parameter \code{full.names} with \Rfunction{list.files()} to obtain either a list of files paths or bare file names. Similarly investigate how the returned list of files is affected by the argument passed to \code{all.names}.
+\end{playground}
+
+\begin{playground}
+Compare the behaviour of functions \Rfunction{dir()} and \Rfunction{list.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
+\end{playground}
+
+Base \Rlang provides several functions for portably working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for this ``family'' of functions.
+
+<<filenames-08>>=
+if (!file.exists("xxx.txt")) {
+  file.create("xxx.txt")
+}
+file.size("xxx.txt")
+file.info("xxx.txt")
+file.rename("xxx.txt", "zzz.txt")
+file.exists("xxx.txt")
+file.exists("zzz.txt")
+file.remove("zzz.txt")
+@
+
+\begin{playground}
+Function \Rfunction{file.path()} can be used to construct a file path from its components in a way that is portable across OSs. Look at the help page and play with the function to assemble some paths that exist in the computer you are using.
+\end{playground}
+
+\subsection{Text files}\label{sec:files:txt}
+
+\begin{warningbox}
+\textbf{Not all text files are born equal.} When reading text files, and \emph{foreign} binary files which may contain embedded text strings, there is potential for their misinterpretation during the import operation. One common source of problems, is that column headers are to be read as \Rlang names. As earlier discussed, there are strict rules, such as avoiding spaces or special characters if the names are to be used with the normal syntax. On import, some functions will attempt to sanitize the names, but others not. Most such names are still accessible in \Rlang statements, but a special syntax is needed to protect them from triggering syntax errors through their interpretation as something different than variable or function names---in \Rlang jargon we say that they need to be quoted.
+
+Some of the things we need to be on the watch for are:
+1) Mismatches between the character encoding expected by the function used to read the file, and the encoding used for saving the file.
+2) In some cases the cleanest solution is to rename the offending (column) names either before or after import.
+3) Is particularly disconcerting to the user, is when (invisible) leading or trailing spaces are present in the character strings stored in a worksheet.
+4) It is also important to realize that in most functions used for reading text files, by default the type of values is guessed at, either by reading a certain number of text lines at the top of the file or after reading the whole text. Typing mistakes, including the wrong kind of decimal marker, even in a single text line in a large file can prevent a whole column to be recognized as numeric and being stored as character values contrary to expectations.
+5) Finally the default decimal marker used for saving and expected when reading text files depends on the locale (language and sometimes country) settings of the computer or program being used.
+
+If you encounter problems after import, such as failure of indexing of data frame columns by name, use function \code{names()} to get the names printed to the console as a character vector. This is useful because character vectors are always printed with each string delimited by quotation marks.
+
+To demonstrate some of these problems in the first statement below I create a data frame with name sanitation disabled. And in the second statement with sanitation enabled.
+<<file-io-txt-00a>>=
+data.frame(a = 1, "a " = 2, " a" = 3, check.names = FALSE)
+data.frame(a = 1, "a " = 2, " a" = 3)
+@
+
+An even more subtle case is when characters can be easily confused by the user reading the output: not too difficult to distinguish are zero and o (\code{a0} vs.\ \code{aO}) or el and one (\code{al} vs.\ \code{a1}), except for the case of some specific fonts. When using encodings capable of storing many character shapes, such as unicode, in some cases two characters with almost identical visual shape may be encoded as different characters.
+
+<<file-io-txt-00b>>=
+data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
+@
+
+In some cases the import may result in very odd looking values stored in \Rlang variables, for example when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit encoded file.
+
+The hardest part of all these problems is to diagnose the origin of the problem, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required.
+\end{warningbox}
+
+\subsubsection[Base R and `utils']{Base \Rlang and \pkgname{utils}}
+
+Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL}, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base \Rlang functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
+
+In a format with delimited fields, a delimiter, in this case ``,'' is used to separate the values to be read. In this example, the values are aligned by inserting ``white space''. This is what is called comma-separated-values format (CSV). Function \Rfunction{write.csv()} and \Rfunction{read.csv()} can be used to write and read these files using the conventions used in this example.
+\begin{verbatim}
+ 1.0, 24.5, 346, ABC
+23.4, 45.6,  78, ZXY
+\end{verbatim}
+
+When reading a CSV file, white space is ignored and fields recognized based on separators. In most cases decimal points and exponential notation are allowed for floating point values. Alignment is optional, and helps only reading by humans, as white space is ignored. This miss-aligned version of the example above can be expected to be readable with base \Rlang function \Rfunction{read.csv()}.
+\begin{verbatim}
+1.0,24.5,346,ABC
+23.4,45.6,78,ZXY
+\end{verbatim}
+
+With a fixed format for fields no delimiters are needed, but a description of the format is required. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in \emph{fixed width format} can be read with base \Rlang function \Rfunction{read.fwf()}. Records, can be stored in multiple lines, each line with fields of different but fixed known widths.
+\begin{verbatim}
+ 10245346ABC
+234456 78ZXY
+\end{verbatim}
+
+Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in \langname{FORTRAN}, but not completely compatible with them. One particularity of \langname{FORTRAN} \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. Again an additional trick used to make text files (or stacks of punch cards!) smaller.
+
+\Rlang functions \Rfunction{write.table()} and \Rfunction{read.table()} default to separating fields with whitespace. Functions \Rfunction{write.csv()} and \Rfunction{read.csv()} have defaults for their arguments suitable for writing and reading CSV files in English-language locales. Functions \Rfunction{write.csv2()} and \Rfunction{read.csv2()} are similar but have defaults for delimiters and decimal markers suitable for CSV files in locales with languages like Spanish, French, or Finnish that use comma (,) as decimal marker and semi-colon (;) as field delimiter. Another frequently used field delimiter is the ``tab'' or tabulator character, and sometimes any white space character (tab, space). In most cases the records (observations) are delimited by new lines, but this is not the only possible approach as the user can pass the delimiters to used as arguments to the function call.
+
+We give examples of the use of all the functions described in the paragraphs above, starting by writing data to a file, and then reading this file back into the workspace. The \Rfunction{write()} method takes as argument a data frame or an object that can be coerced into a data frame (with \code{as.data.frame()}. In contrast to \Rfunction{save()}, these functions can only write a single data frame per file.
+
+<<file-io-txt-01>>=
+my.df <- data.frame(x = 1:5, y = 5:1 / 10, z = letters[1:5])
+@
+
+We write a CSV file suitable for an English language locale, and then display its contents. In most cases setting \code{row.names = FALSE} when writing a CSV file will help when it is read. Of course, if row names do contain important information, such as gene tags, you cannot skip writing the row names to the file unless you first copy these data into a column in the data frame. (Row names are stored separately as an attribute in \code{data.frame} objects, see section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes} for details.)
+<<file-io-txt-02>>=
+write.csv(my.df, file = "my-file1.csv", row.names = FALSE)
+file.show("my-file1.csv", pager = "console")
+@
+
+<<file-io-txt-02a, comment='', echo=FALSE>>=
+cat(readLines("my-file1.csv"), sep = "\n")
+@
+
+If we had written the file using default settings, reading the file so as to recover the original objects, would have required overriding of the default argument for parameter \code{row.names}.
+<<file-io-txt-02b>>=
+my_read1.df <- read.csv(file = "my-file1.csv")
+my_read1.df
+all.equal(my.df, my_read1.df, check.attributes = FALSE)
+@
+
+\begin{playground}
+Read the file with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look as a waste of time, the point of the exercise is for you to get familiar with \Rlang behaviour in case of such a mistake. This will help you recognize similar errors when they happen accidentally.
+\end{playground}
+
+We write a CSV file suitable for a Spanish, Finnish or similar locale, and then display its contents. It can be seen, that the same data frame is saved using different delimiters.
+\label{chunck:my:file1}
+<<file-io-txt-03>>=
+write.csv2(my.df, file = "my-file2.csv", row.names = FALSE)
+file.show("my-file2.csv", pager = "console")
+@
+
+<<file-io-txt-03a, comment='', echo=FALSE>>=
+cat(readLines('my-file2.csv'), sep = '\n')
+@
+
+\begin{playground}
+Read the file with function \Rfunction{read.csv()} instead of \Rfunction{read.csv2()}. This may look as an even more futile exercise than the previous one, but it isn't as the behaviour of \Rlang is different. Consider \emph{how} values are erroneously decoded in both exercises. If the \emph{structure} of the data frames read is not clear to you, remember that you can use function \Rfunction{str()} to look at the structure of \Rlang objects.
+\end{playground}
+
+We write a file with the fields separated by white space with function \Rfunction{write.table()}.
+<<file-io-txt-04>>=
+write.table(my.df, file = "my-file3.txt", row.names = FALSE)
+file.show("my-file3.txt", pager = "console")
+@
+
+<<file-io-txt-04a, comment='', echo=FALSE>>=
+cat(readLines('my-file3.txt'), sep = '\n')
+@
+
+In the case of \Rfunction{read.table()} there is no need to override the default, independently of row names are written to the file or not. The reason is related to the default behaviour of the \code{write} functions. Whether they write a column name (\code{""}, an empty character string) or not for the first column, containing the row names.
+<<file-io-txt-04b>>=
+my_read3.df <- read.table(file = "my-file3.txt", header = TRUE)
+my_read3.df
+all.equal(my.df, my_read3.df, check.attributes = FALSE)
+@
+
+\begin{playground}
+If you are still unclear about why the files were decoded in the way they were, now try to read them with \code{read.table()}. Do now the three examples make sense to you?
+\end{playground}
+
+Function \Rfunction{cat()} takes \Rlang objects and writes them after conversion to character strings to a file, inserting one or more characters as separators, by default a space. This separator can be set by an argument through parameter \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\\n"}.
+
+<<file-io-txt-05>>=
+my.lines <- c("abcd", "hello world", "123.45")
+cat(my.lines, file = "my-file4.txt", sep = "\n")
+file.show("my-file4.txt", pager = "console")
+@
+
+<<file-io-txt-05a, comment='', echo=FALSE>>=
+cat(readLines('my-file4.txt'), sep = '\n')
+@
+
+<<file-io-txt-05b>>=
+my_read.lines <- readLines('my-file4.txt')
+my_read.lines
+all.equal(my.lines, my_read.lines, check.attributes = FALSE)
+@
+
+\begin{warningbox}
+There are couple of things to remember when reading data from text files using base \Rlang functions \Rfunction{read.table()} and its relatives: by default columns containing character strings are converted into factors, and column names are sanitised (spaces and other ``inconvenient'' characters replaced with dots)
+
+Conversion into factors can be disabled on a column by column basis through parameter \code{as.is} or for the whole file read through \code{stringsAsFactors} as shown here.
+<<file-io-txt-Warn-01>>=
+read.table("my-file3.txt", stringsAsFactors = FALSE)
+@
+.
+\end{warningbox}
+
+\begin{playground}
+In reality  \Rfunction{read.csv()}, \code{read.csv2()} and \Rfunction{read.table()} are the same function with different default arguments to several of their parameters. Study the help page, and make by passing suitable arguments \Rfunction{read.csv()} behave as \Rfunction{read.table()}. Next open file \code{my-file1.csv} created on page \pageref{chunck:my:file1} in a text editor, such as the one in \RStudio and replace the field delimiters \code{,} by \code{;} in the whole file, save it  \code{my-file-mixed.csv} and then read it back using both \Rfunction{read.csv()} and \Rfunction{read.csv2()} passing in each case the argument needed for correct decoding of the file.
+\end{playground}
+
+\subsubsection[readr]{\pkgname{readr}}\label{sec:files:readr}
+
+<<>>=
+citation(package = "readr")
+@
+
+Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow much faster input and output, and have different default behaviour. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and sometimes silently do this even for some CSV files that are correctly decoded by the base functions. Base \Rlang functions are dumb, the file format or delimiters must be supplied as arguments. The \pkgname{readr} functions use ``magic'' to guess the format, in most cases they succeed, which is very handy, but occasionally the power of the magic is not strong enough. The ``magic'' can be overridden by passing arguments. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{datetime}.
+
+All \code{write} functions defined in this package have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
+
+Although in this section we exemplify the use of these functions by passing a file name as argument, URLs, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
+
+\begin{warningbox}
+The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \Rfunction{read.table()}, although they both read fields separated by white space, \Rfunction{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \Rfunction{read.table()} tolerates vertical misalignment. Other aspects of the default behaviour are also different, for example these functions do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \Rclass{tibble} which inherits from \Rclass{data.frame}).
+\end{warningbox}
+
+<<readr-01>>=
+read_csv(file = "my-file1.csv")
+@
+
+<<readr-02>>=
+read_csv2(file = "my-file2.csv")
+@
+
+Because of the vertically misaligned fields in file \code{my-file3.txt}, we need to use \Rfunction{read\_delim()} instead of \Rfunction{read\_table()}.
+<<readr-03>>=
+read_delim(file = "my-file3.txt", " ")
+@
+
+\begin{playground}
+See what happens when you modify the code to use \code{read} functions to read files that are not matched to them---i.e.\ mix and match functions and files from the three code chunks above. As mentioned earlier forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes.
+\end{playground}
+
+We demonstrate here the use of \Rfunction{write\_tsv()} to produce a text file with tab-separated fields.
+<<readr-04>>=
+write_tsv(my.df, path = "my-file5.tsv")
+file.show("my-file5.tsv", pager = "console")
+@
+
+<<readr-04a, comment='', echo=FALSE>>=
+cat(readLines('my-file5.tsv'), sep = '\n')
+@
+
+<<readr-04b>>=
+my_read4.df <- read_tsv(file = "my-file5.tsv")
+my_read4.df
+all.equal(my.df, my_read4.df, check.attributes = FALSE)
+@
+
+We demonstrate here the use of \Rfunction{write\_excel\_csv()} to produce a text file with comma-separated fields suitable for reading with Excel.
+<<readr-05>>=
+write_excel_csv(my.df, path = "my-file6.csv")
+file.show("my-file6.csv", pager = "console")
+@
+
+<<readr-05a, comment='', echo=FALSE>>=
+cat(readLines('my-file6.csv'), sep = '\n')
+@
+
+\begin{playground}
+Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer).
+\end{playground}
+
+<<readr-06>>=
+write_lines(my.lines, path = "my-file7.txt")
+file.show("my-file7.txt", pager = "console")
+@
+
+<<readr-06a, comment='', echo=FALSE>>=
+cat(read_lines("my-file7.txt"), sep = '\n')
+@
+
+<<readr-06b>>=
+my_read.lines <- read_lines("my-file7.txt")
+my_read.lines
+all.equal(my.lines, my_read.lines, check.attributes = FALSE)
+@
+
+Additional write and read functions not mentioned are also provided by the package: \Rfunction{write\_csv()}, \Rfunction{write\_delim()}, \Rfunction{write\_file()}, and \code{read\_fwf()}.
+
+\begin{advplayground}
+Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{read\_csv()}.
+\end{advplayground}
+
+\subsection{Worksheets}\label{sec:files:worksheets}
+
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
+
+\subsubsection{Exporting CSV files}
+
+If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into \Rlang using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a workable solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, to import the data directly from the workbook or worksheets into R.
+
+\subsubsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
+
+<<readxl-00>>=
+citation(package = "readxl")
+@
+
+This package exports only two functions for reading Excel workbooks in xlsx format. The interface is simple, and the package easy to instal. We will import a file that in Excel looks as in the screen capture below.
+
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/Book1-xlsx.png}
+\end{center}
+
+We first list the sheets contained in the workbook file with \Rfunction{excel\_sheets()}.
+<<readxl-01>>=
+sheets <- excel_sheets("extdata/Book1.xlsx")
+sheets
+@
+
+In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet.
+<<readxl-02>>=
+Book1.df <- read_excel("extdata/Book1.xlsx", sheet = "my data")
+Book1.df
+@
+
+Of the remaining arguments, \code{skip} is useful when we need to skip the top row of a worksheet.
+
+\subsubsection['xlsx']{\pkgname{xlsx}}
+
+<<xlsx-00>>=
+citation(package = "xlsx")
+@
+
+Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing Excel worksheet and workbooks, in different formats. It also allows selecting regions of a worksheet to be imported.
+
+Here we use function \Rfunction{read.xlsx()}, idexing the worksheet by name.
+
+<<xlsx-01>>=
+Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx", sheetName = "my data")
+Book1_xlsx.df
+@
+
+As above, but indexing by a numeric index.
+
+<<xlsx-02>>=
+Book1_xlsx2.df <- read.xlsx2("extdata/Book1.xlsx", sheetIndex = 1)
+Book1_xlsx2.df
+@
+
+With the three different functions we get a data frame or a tibble, which is compatible with data frames.
+<<xlsx-03>>=
+class(Book1.df)
+class(Book1_xlsx.df)
+class(Book1_xlsx2.df)
+@
+
+However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as such, while base \Rlang functions convert them to factors. The third function, \Rfunction{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \Rfunction{read.xlsx()}.
+<<xlsx-04>>=
+sapply(Book1.df, class)
+sapply(Book1_xlsx.df, class)
+sapply(Book1_xlsx2.df, class)
+@
+
+With function \Rfunction{write.xlsx()} we can also write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
+<<xlsx-05>>=
+set.seed(456321)
+my.data <- data.frame(x = 1:10, y = 1:10 + rnorm(10))
+write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "first copy")
+write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "second copy", append = TRUE)
+@
+
+When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/my-data-xlsx.png}
+\end{center}
+
+\begin{playground}
+If you have some worksheet files available, import them into R, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to read the data from them.
+\end{playground}
+
+\subsubsection['xml2']{\pkgname{xml2}}
+
+<<xml2-00>>=
+citation(package = "xml2")
+@
+
+Several modern data exchange formats are based on the XML standard format which uses schema for flexibility. Package \pkgname{xml2} provides functions for reading and parsing such files, as well as HTML files. This is a vast subject, of which I will only give a brief introduction.
+
+We first read a very simple web page with function \Rfunction{read\_html()}.
+
+<<xml2-01>>=
+web_page <- read_html("http://r4photobiology.info/R/index.html")
+html_structure(web_page)
+@
+
+And we extract the text from its \code{title} attribute, using functions \Rfunction{xml\_find\_all()} and \Rfunction{xml\_text()}.
+
+<<xml2-02>>=
+xml_text(xml_find_all(web_page, ".//title"))
+@
+
+The functions defined in this package and in package \pkgname{XML} can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through XML schemas.
+
+\subsection{Statistical software}\label{sec:files:stat}
+
+There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more more robust than those from \pkgname{haven}.
+
+\subsubsection[foreign]{\pkgname{foreign}}
+
+<<foreign-00>>=
+citation(package = "foreign")
+@
+
+Functions in this package allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPPS} among others, and a function for writing data into files with formats native to these three programs. Documentation is included with \Rlang describing them in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved with a recent version of \pgrmname{SPSS}.
+
+<<foreign-01>>=
+my_spss.df <- read.spss(file = "extdata/my-data.sav", to.data.frame = TRUE)
+head(my_spss.df)
+@
+
+Dates were not converted into \Rlang datetime objects, but instead into numbers.
+
+A second example, this time with a simple \code{.sav} file saved 15 years ago.
+
+<<foreign-02>>=
+thiamin.df <- read.spss(file = "extdata/thiamin.sav", to.data.frame = TRUE)
+head(thiamin.df)
+@
+
+Another example, for a Systat file saved on an PC more than 20 years ago, and rea.
+
+<<foreign-03>>=
+my_systat.df <- read.systat(file = "extdata/BIRCH1.SYS")
+head(my_systat.df)
+@
+
+The functions in \pkgname{foreign} can return data frames, but not always this is the default.
+
+\subsubsection[haven]{\pkgname{haven}}
+
+<<haven-00>>=
+citation(package = "haven")
+@
+
+The recently released package \pkgname{haven} is less ambitious in scope, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. The returned \Rclass{tibble} objects in cases when the imported file contained labelled values needs some further work from the user before obtaining `normal' data-frame-compatible \Rclass{tibble} objects.
+
+We here use function \Rfunction{read\_sav()} to import here a \code{.sav} file saved by a recent version of \pgrmname{SPSS}.
+
+<<haven-01>>=
+my_spss.tb <- read_sav(file = "extdata/my-data.sav")
+my_spss.tb
+head(my_spss.tb$harvest_date)
+@
+
+In this case the dates are correctly decoded.
+
+And an \pgrmname{SPSS}'s \code{.sav} file saved 15 years ago.
+
+<<haven-02>>=
+thiamin.tb <- read_sav(file = "extdata/thiamin.sav")
+thiamin.tb
+thiamin.tb <- as_factor(thiamin.tb)
+thiamin.tb
+@
+
+\begin{playground}
+Compare the values returned by different \code{read} functions when applied to the same file on disk. Use \Rfunction{names()}, \Rfunction{str()} and \Rfunction{class()} as tools in your exploration. If you are brave, also use \Rfunction{attributes()}, \Rfunction{mode()}, \Rfunction{dim()}, \Rfunction{dimnames()}, \Rfunction{nrow()} and \Rfunction{ncol()}.
+\end{playground}
+
+\begin{playground}
+If you use or have used in the past other statistical software or a general purpose language like \langname{Python}, look up some files, and import them into R.
+\end{playground}
+
+\subsection{NetCDF files}
+
+In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to an array of locations, like with data read from Affymetrix micro arrays used to study gene expression. The NetCDF format allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
+
+Officially described as
+\begin{quote}
+NetCDF is a set of software libraries and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
+\end{quote}
+
+As sometimes NetCDF files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in two or more steps.
+
+\subsubsection[ncdf4]{\pkgname{ncdf4}}
+
+<<ncdf4-00>>=
+citation(package = "ncdf4")
+@
+
+We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
+
+We first open a connection to the file with function \Rfunction{nc\_open()}.
+
+<<ncdf4-01>>=
+meteo_data.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
+# very long output
+# print(meteo_data.nc)
+@
+
+\begin{playground}
+Uncomment the \Rfunction{print()} statement above and study the metadata available for the data set as a whole, and for each variable.
+\end{playground}
+The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get here the variables one at a time with function \Rfunction{ncvar\_get()}.
+
+<<ncdf4-02>>=
+time.vec <- ncvar_get(meteo_data.nc, "time")
+head(time.vec)
+longitude <-  ncvar_get(meteo_data.nc, "lon")
+head(longitude)
+latitude <- ncvar_get(meteo_data.nc, "lat")
+head(latitude)
+@
+
+The \code{time} vector is rather odd, as it contains only month data as these are long-term averages. From the metadata we can infer that they correspond to the months of the year, and we directly generate these, instead of attempting a conversion.
+
+We construct a \Rclass{tibble} object with PET values for one grid point, we can take advantage of \emph{recycling} or short vectors.
+
+<<ncdf4-03>>=
+pet.tb <-
+    tibble(moth = month.abb[1:12],
+           lon = longitude[6],
+           lat = latitude[2],
+           pet = ncvar_get(meteo_data.nc, "pevpr")[6, 2, ]
+           )
+pet.tb
+@
+
+If we want to read in several grid points, we can use several different approaches. In this example we take all latitudes along one longitude. Here we avoid using loops altogether when creating a \emph{tidy} \Rclass{tibble} object. However, because of how the data is stored, we needed to transpose the intermediate array before conversion into a vector.
+
+<<ncdf4-04>>=
+pet2.tb <-
+    tibble(moth = rep(month.abb[1:12], length(latitude)),
+           lon = longitude[6],
+           lat = rep(latitude, each = 12),
+           pet = as.vector(t(ncvar_get(meteo_data.nc, "pevpr")[6, , ]))
+           )
+pet2.tb
+subset(pet2.tb, lat == latitude[2])
+@
+
+\begin{playground}
+Play with \code{as.vector(t(ncvar\_get(meteo\_data.nc, "pevpr")[6, , ]))} until you understand what is the effect of each of the nested function calls, starting from \code{ncvar\_get(meteo\_data.nc, "pevpr")}. You will also want to use \Rfunction{str()} to see the structure of the objects returned at each stage.
+\end{playground}
+
+\begin{playground}
+Instead of extracting data for one longitude across latitudes, extract data across longitudes for one latitude near the Equator.
+\end{playground}
+
+\subsubsection[RNetCDF]{\pkgname{RNetCDF}}
+
+\begin{warningbox}
+Package RNetCDF supports NetCDF3 files, but not those saved using the current NetCDF4 format.
+\end{warningbox}
+
+<<netcdf-00>>=
+citation(package = "RNetCDF")
+@
+
+We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print.nc()} we can find out the names and characteristics of the variables and attributes. We open the connection with function \Rfunction{open.nc()}.
+
+<<netcdf-01>>=
+meteo_data.nc <- open.nc("extdata/meteo-data.nc")
+str(meteo_data.nc)
+# very long output
+# print.nc(meteo_data.nc)
+@
+
+The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get variables, one at a time, with function \Rfunction{var.get.nc()}.
+
+<<netcdf-02>>=
+time.vec <- var.get.nc(meteo_data.nc, "time")
+head(time.vec)
+longitude <-  var.get.nc(meteo_data.nc, "lon")
+head(longitude)
+latitude <-  var.get.nc(meteo_data.nc, "lat")
+head(latitude)
+@
+
+We construct a \Rclass{tibble} object with values for midday UV Index for 26 days. For convenience, we convert the strings into \Rlang datetime objects.
+
+<<netcdf-03>>=
+uvi.tb <-
+    tibble(date = ymd(time.vec, tz="EET"),
+           lon = longitude[6],
+           lat = latitude[2],
+           uvi = var.get.nc(meteo_data.nc, "UVindex")[6,2,]
+           )
+uvi.tb
+@
+
+\subsection{Remotely located data}\label{sec:files:remote}
+
+Many of the functions described above accept am URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
+
+<<url-01, eval=eval_online_data>>=
+logger.df <-
+      read.csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
+                header = FALSE,
+                col.names = c("time", "temperature"))
+sapply(logger.df, class)
+sapply(logger.df, mode)
+@
+
+<<url-02, eval=eval_online_data>>=
+logger.tb <-
+    read_csv2(file = "http://r4photobiology.info/learnr/logger_1.txt",
+              col_names = c("time", "temperature"))
+sapply(logger.tb, class)
+sapply(logger.tb, mode)
+@
+
+While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}.
+
+<<url-11, eval=eval_online_data>>=
+download.file("http://r4photobiology.info/learnr/my-data.xlsx",
+              "data/my-data-dwn.xlsx",
+              mode = "wb")
+@
+
+Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into R.
+
+<<url-03, eval=eval_online_data>>=
+remote_thiamin.df <-
+  read.spss(file = "http://r4photobiology.info/learnr/thiamin.sav",
+            to.data.frame = TRUE)
+head(remote_thiamin.df)
+@
+
+<<url-04, eval=eval_online_data>>=
+remote_my_spss.tb <-
+    read_sav(file = "http://r4photobiology.info/learnr/thiamin.sav")
+remote_my_spss.tb
+@
+
+Function \Rfunction{download.file()} in \Rlang default \pkgname{utils} package can be used to download files using URLs. It supports differemt modes such as binary or text, and write or append, and different methods such as internal, wget and libcurl.
+
+In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it (commented out code, as we have a local copy), and then we open the local file.
+
+<<url-05, eval=eval_online_data>>=
+my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
+                "surface_gauss/pevpr.sfc.mon.ltm.nc",
+                sep = "")
+#download.file(my.url,
+#              mode = "wb",
+#              destfile = "extdata/pevpr.sfc.mon.ltm.nc")
+pet_ltm.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
+@
+
+\begin{warningbox}
+For portability NetCDF files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required at least under MS-Windows.
+\end{warningbox}
+
+\subsection{Data acquisition from physical devices}\label{sec:data:acquisition}
+
+Numerous modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or looged data. Formats based on XML schemas or in JSON format are commonly used.
+
+\subsubsection[jsonlite]{\pkgname{jsonlite}}
+
+<<iot-00>>=
+citation(package = "jsonlite")
+@
+
+We give here a simple example using a module from the \href{http://www.yoctopuce.com/}{YoctoPuce} family using a software hub running locally. We retrieve logged data from a YoctoMeteo module.
+
+\begin{infobox}
+This example is not run, and needs setting the configuration of the YoctoPuce module beforehand. Fully reproducible examples, including configuration instructions, will be included in a future revision of the manuscript.
+\end{infobox}
+
+Here we use function \Rfunction{fromJSON()} to retrieve logged data from one sensor.
+
+<<iot-01, eval=eval_yoctopuce>>=
+hub.url <- "http://127.0.0.1:4444/"
+Meteo01.lst <-
+    fromJSON(paste(hub.url, "byName/Meteo01/dataLogger.json",
+                   sep = ""))
+names(Meteo01.lst)
+Meteo01.lst
+@
+
+The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is \emph{tidy} with respect to the variables, with quantity names and units also returned by the module, as well as the time.
+
+<<iot-02, eval=eval_yoctopuce>>=
+    val.vector <- unlist(Meteo01.lst[["val"]])
+    dplyr::transmute(Meteo01.lst,
+                     utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
+                     qty = qty.name,
+                     unit = qty.unit,
+                     minimum = val.vector[c(TRUE, FALSE, FALSE)],
+                     mean = val.vector[c(FALSE, TRUE, FALSE)],
+                     maximum = val.vector[c(FALSE, FALSE, TRUE)],
+                     dur,
+                     freq)
+@
+
+\subsection{Databases}\label{sec:data:db}
+
+One of the advantages of using databases is that subsets of cases and variables can be retrieved from databases, even remotely, making it possible to work both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work.
+
+\begin{infobox}
+The contents of this section is still missing, but will in any case be basic. I recommend the book \citebooktitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite, especially in the case of connecting to databases.
+\end{infobox}
+
+%\section[Grammar of data manipulation]{The grammar of data manipulation of the \pkgname{tidyverse}}
+%
+%Packages in \code{tidyverse}, define more user-friendly \emph{apply} functions, which I describe in the next sections. These packages, do much more than providing replacements for \Rlang \emph{apply} functions. They define a ``grammar of data'' for data manipulations like transformations and summaries, based on the same philosophy as that behind the grammar of graphics on which package \pkgname{ggplot2} is based (see Chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}).
+%
+%To make the problem of manipulating data, tractable and consistent, the first step is to settle on a certain way of storing data. In \Rlang data frames, variables are most frequently in columns and cases are in rows. This is a good start and also frequently used in other software. The first major inconsistency across programs, and to some extent among \Rlang packages, is how to store data for sequential or repeated measurements. Do the rows represent measuring events, or measured objects? In R, data from individual measuring events are in most cases stored as rows, and if those that correspond to the same object or individual encoded with an index variable. Furthermore, say in a time sequence, the times or dates are stored in an additional variable. \Rlang approach is much more flexible in that it does not assume that observations on different individuals are synchronized. \citeauthor{Wickham2014a} \cite{Wickham2014a} has coined the name ``tidy data'' organized in this manner.
+%
+%Hadley Wickham, together with collaborators, has developed a set of \Rlang tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citebooktitle{Wickham2017} \autocite{Wickham2017}. The book \citebooktitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citebooktitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
+%
+%\subsection{Better data frames}
+%
+%\section{Grammar for manipulation of character strings}\label{sec:data:strings}
+%
+%\begin{warningbox}
+%  This section will contain an introduction to character-string manipulation with methods from packages \pkgname{stringr} and \pkgname{stringi}.
+%\end{warningbox}
+%
+%\section{Pipes and tees}\label{sec:data:pipes}
+%
+%Pipes have been part of Unix shells already starting from the early days of Unix in 1973. By the early 1980's the idea had led to the development of many \emph{tools} to be used in \pgrmname{sh} connected by pipes \autocite{Kernigham1981}. Shells developed more recently like the Korn shell, \pgrmname{ksh}, and \pgrmname{bash} maintained support for this approach \autocite{Rosenblatt1993}. The idea behind the concept of data pipe, is that one can directly use the output from one tool as input for the tool doing the next stage in the processing. These tools are simple programs that do a defined operation, such as \pgrmname{ls} or \pgrmname{cat}---from where the names of equivalent functions in \langname{R} were coined.
+%
+%Apple's OS X is based on Unix, and allows the use of pipes at the command prompt and in shell scripts. Linux uses the tools from the Gnu project that to a large extent replicate and extend the capabilities  by the and also natively supports \emph{pipes} equivalent to those in Unix. In Windows support for pipes was initially partial at the command prompt. Currently, Window's PowerShell supports the use of pipes, as well as some Linux shells are available in versions that can be used under MS-Windows.
+%
+%Within \Rlang code, the support for pipes is not native, but instead implemented by some recent packages. Most of the packages in the \code{tidyverse} support this new syntax through the use of package \pkgname{magrittr}. The use of pipes has advantages and disadvantages. They are at their best when connecting small functions with rather simple inputs and outputs. They tend, yet, to be difficult to debug, a problem that counterbalances the advantages of the clear and consice notation achieved.
+%
+%\subsection{Pipes and tees}
+%
+%The \emph{pipe} operator \Roperator{\%>\%} is defined in package \pkgname{magrittr}, but imported and re-exported by other packages in the \pkgname{tidyverse}. The idea is that the value returned by a function is passed by the pipe operator as the first argument to the next function in the ``pipeline''.
+%
+%We can chain some of the examples in the previous section into a ``pipe''.
+%
+%<<pipes-01>>=
+%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n())
+%@
+%
+%I we want to save the returned value, to me it feels more natural to use a left to right assignment, although the usual right to left one can also be used.
+%
+%<<pipes-02>>=
+%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n()) -> summary.tb
+%summary.tb
+%@
+%
+%<<pipes-03>>=
+%summary.tb <-
+%    tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
+%      group_by(letters) %>%
+%      summarise(mean_numbers = mean(numbers),
+%                var_numbers = var(numbers),
+%                n = n())
+%summary.tb
+%@
+%
+%As \Rfunction{print()} returns its input, we can also include it in the middle of a pipe as a simple way of visualizing what takes place at each step.
+%
+%<<pipes-04>>=
+%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
+%  print() %>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n())  %>%
+%            print() -> summary.tb
+%@
+%
+%\begin{explainbox}
+%\textbf{Why and how we can insert a call to \Rfunction{print()} in the middle of a pipe?} An extremely simple example, with a twist, follows.
+%
+%<<pipes-expl-01>>=
+%print("a") %>% print()
+%@
+%
+%The example above is equivalent to.
+%
+%<<pipes-expl-02>>=
+%print(print("a"))
+%@
+%
+%The examples above are somehow surprising but instructive. Function \Rfunction{print()} returns a value, its first argument, but \emph{invisibly}---see help for \Rfunction{invisible()}. Otherwise default printing would result in the value being printed twice at the \Rlang prompt. We can demonstrate this by saving the value returned by print.
+%
+%<<pipes-expl-03>>=
+%a <- print("a")
+%class(a)
+%a
+%b <- print(2)
+%class(b)
+%b
+%@
+%
+%\end{explainbox}
+%
+%\begin{playground}
+%Assemble different pipes, predict what will be the output, and check your prediction by executing the code.
+%\end{playground}
+%
+%Although \Roperator{\%>\%} is the most frequently used pipe operator, there are some additional ones available. We start by creating a tibble.
+%
+%<<pipes-11>>=
+%my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
+%@
+%
+%We first demonstrate that the pipe can have at its head a variable with the same operator as we used above, in this case a tibble.
+%
+%<<pipes-12>>=
+%my.tb %>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n())
+%my.tb
+%@
+%
+%We could save the output of the pipe to the same variable at the head of the pipe by explicitly using the same name, but operator \Roperator{\%<>\%} does this directly.
+%
+%<<pipes-13>>=
+%my.tb %<>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n())
+%my.tb
+%@
+%
+%A few additional operators defined in \pkgname{magrittr} are not re-exported by packages in the \pkgname{tidyverse}, so their use requires \pkgname{magrittr} to be loaded.
+%
+%When functions have a side-effect like \Rfunction{print()} displaying its input and passing it unchanged as the returned value, we do not need to split flow of processing through a pipe. In real house plumbing, when a split is needed a ``tee'' shaped pipe joint is used. This is where the name tee as used in programming originates. Operator \Roperator{\%T>\%} passes along not the value returned by a function, but instead the value passed to it as input.
+%
+%As in the previous chunk we assigned the summaries to \code{my.tb}, we need to re-create it to run the next example.
+%
+%<<pipes-14>>=
+%my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
+%@
+%
+%<<pipes-15>>=
+%sump <- function(x) {print("hello"); return(NULL)}
+%my.tb %>%
+%  group_by(letters) %>%
+%  summarise(mean_numbers = mean(numbers),
+%            var_numbers = var(numbers),
+%            n = n()) %T>%
+%  sump() -> summary.tb
+%@
+%
+%We can see that the value saved in \code{summary.tb} is the one returned by \Rfunction{summarize()} rather than the one returned by \Rfunction{sump()}.
+%
+%\begin{playground}
+%Look up the help page for operator \Roperator{\%\$\%} and write an example of its use.
+%\end{playground}
+%
+%\section{Extended examples}\label{sec:dataex}
+%
+%\subsection{Well-plate data}\label{sec:dataex:well:plate}
+%
+%Our first example attempts to simulate data arranged in rows and columns based on spatial position, such as in a well plate. We will use pseudo-random numbers for the fake data---i.e.\ the measured response.
+%
+%<<well-plate-data-01>>=
+%well_data.tb <-
+%  as.tibble(matrix(rnorm(50),
+%                   nrow = 5,
+%                   dimnames = list(as.character(1:5), LETTERS[1:10])))
+%# drops names of rows
+%well_data.tb <-
+%  add_column(well_data.tb, row_ids = 1:5, .before = 1)
+%@
+%
+%In addition, we create a matrix of fake treatment ids.
+%<<well-plate-data-02>>=
+%well_ids.tb <-
+%  as.tibble(matrix(sample(letters, size = 50, replace = TRUE),
+%                   nrow = 5,
+%                   dimnames = list(as.character(1:5), LETTERS[1:10])))
+%# drops names of rows
+%well_ids.tb <-
+%  add_column(well_ids.tb, row_ids = 1:5, .before = 1)
+%@
+%
+%As we will combine them, the coordinates should be encoded consistently in the two objects.
+%I will take the approach of first converting each tibble into a tidy tibble. We use function \Rfunction{gather()} from package \pkgname{tidyr}.
+%
+%<<well-plate-data-03>>=
+%well_data.ttb <- gather(well_data.tb,
+%                       key = col_ids, value = reading,
+%                       -row_ids)
+%well_ids.ttb <- gather(well_ids.tb,
+%                       key = col_ids, value = group,
+%                       -row_ids)
+%@
+%
+%Now we need to join the two tibbles into a single one. In this case, as we know that the row order in the two tibbles is matched, we could simply use \Rfunction{cbind()}. However, \Rfunction{full\_join()}, from package \pkgname{dplyr} provides a more general and less error prone alternative as it can do the matching based on the values of any variables common to both tibbles, by default all the variables in common, as needed here. We use a ``pipe'', through which, after the join, we remove the ids (assuming they are no longer needed), sort the rows by group, and finally save the result to a new ``tidy'' tibble.
+%
+%<<well-plate-data-04>>=
+%full_join(well_ids.ttb, well_data.ttb) %>%
+%  select(-row_ids, -col_ids) %>%
+%  arrange(group) -> well.tb
+%well.tb
+%@
+%
+%We finally calculate \emph{summaries} by group using function \Rfunction{summarise()}, and store the tibble containing the summaries to variable \code{well\_summaries.tb}.
+%
+%<<well-plate-data-05>>=
+%group_by(well.tb, group) %>%
+%  summarise(avg_read = mean(reading),
+%            var_read = var(reading),
+%            count = n()) -> well_summaries.tb
+%well_summaries.tb
+%@
+%
+%We now save the tibbles into an \Rlang data file with function \Rfunction{save()}.
+%
+%<<well-plate-data-06>>=
+%save(well.tb, well_summaries.tb, file = "data/well-data.rda")
+%@
+%
+%\subsection{Seedling morphology}\label{sec:dataex:birch}
+%
+%We use here data from an experiment on the effects of spacing in the nursery between silver birch seedlings on their morphology. We take one variable from a lager study \autocite{Aphalo2006}, the leaf area at different heights above the ground in 10~cm increments. Area was measured separately for leaves on the main stem and leaves on branches.
+%
+%In this case, as the columns are badly aligned in the original text file, we use \Rfunction{read.table()} from base R, rather than \Rfunction{read\_table()} from \pkgname{readr}. Afterwards we heavily massage the data into shape so as to obtain a tidy tibble with the total leaf area per height segment per plant. The file contains additional data that we discard for this example.
+%
+%<<birch-area-01>>=
+%as.tibble(read.table("extdata/areatable.dat", header = TRUE)) %>%
+%  filter(row %in% 4:8) %>%
+%  select(code, tray, row, starts_with("a.")) %>%
+%  gather(key = sample, value = area, -tray, -row, -code) %>%
+%  mutate(segment = str_extract(sample, "[0-9]{1,2}"),
+%         part = ifelse(str_extract(sample, "[bm]") == "b",
+%                       "branch", "main")) %>%
+%  group_by(tray, code, row, segment) %>%
+%  summarise(area_tot = sum(area)) -> birch.tb
+%birch.tb
+%@
+%
+%\begin{playground}
+%The previous chunk uses a long ``pipe'' to manipulate the data. I built this example interactively, starting at the top, and adding one line at a time. Repeat this process, line by line. If in a given line you do not understand why a certain bit of code is included, look at the help pages, and edit the code to experiment.
+%\end{playground}
+%
+%We now will calculate means per true replicate, the trays. Then use these means to calculate overall means, standard deviations and coefficients of variabilities (\%).
+%
+%<<birch-area-02>>=
+%group_by(birch.tb, tray, row, segment) %>%
+%  summarise(area = mean(area_tot)) %>%
+%  group_by(row, segment) %>%
+%  summarise(mean_area = mean(area),
+%            sd_area = sd(area),
+%            cv_area = sd_area / mean_area * 100) ->
+%  birch_summaries.tb
+%birch_summaries.tb
+%@
+%
+%We could be also interested in total leaf area per plant. The code is the same as above, but with no grouping for \code{segment}.
+%
+%<<birch-area-03>>=
+%group_by(birch.tb, tray, row) %>%
+%  summarise(area = mean(area_tot)) %>%
+%  group_by(row) %>%
+%  summarise(mean_area = mean(area),
+%            sd_area = sd(area),
+%            cv_area = sd_area / mean_area * 100) ->
+%  birch_plant_summaries.tb
+%birch_plant_summaries.tb
+%@
+%
+%We now save the tibbles into an \Rlang data file.
+%
+%<<birch-area-04>>=
+%save(birch.tb, birch_summaries.tb, birch_plant_summaries.tb,
+%     file = "data/birch-data.rda")
+%@
+%
+%\begin{playground}
+%Repeat the same calculations for all the rows as I originally did. I eliminated the data from the borders of the trays, as those plants apparently did not really experience as crowded a space as that corresponding to the nominal spacing.
+%\end{playground}
+%
+\begin{infobox}
+It is always good to clean up, and in the case of the book, the best way to test that the examples
+can be run in a ``clean'' system.
+
+<<clear-up-data-folders>>=
+unlink("./data", recursive = TRUE)
+unlink("./extdata", recursive = TRUE)
+@
+\end{infobox}
+
+<<eco=FALSE>>=
+try(detach(package:jsonlite))
+try(detach(package:lubridate))
+try(detach(package:ncdf4))
+try(detach(package:RNetCDF))
+try(detach(package:xml2))
+try(detach(package:haven))
+try(detach(package:foreign))
+try(detach(package:pdftools))
+try(detach(package:xlsx))
+try(detach(package:readxl))
+try(detach(package:readr))
+try(detach(package:tidyr))
+try(detach(package:dplyr))
+try(detach(package:stringr))
+try(detach(package:wrapr))
+try(detach(package:magrittr))
+try(detach(package:tibble))
+try(detach(package:learnrbook))
+@
+
+<<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
+knitter_diag()
+R_diag()
+other_diag()
+@
