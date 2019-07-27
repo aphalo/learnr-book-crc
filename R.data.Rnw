@@ -180,6 +180,7 @@ The two viewpoints on conversion functions are as follows. 1) The conversion fun
 \end{explainbox}
 
 There are additional important differences between the constructors \Rfunction{tibble()} and \Rfunction{data.frame()}. One of them is that in a call to \Rfunction{tibble()}, member variables (``columns'')  being defined can be used in the definition of subsequent member variables.
+
 <<tibble-07>>=
 tibble(a = 1:5, b = 5:1, c = a + b, d = letters[a + 1])
 @
@@ -189,11 +190,13 @@ What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.fra
 \end{playground}
 
 While data frame columns can be factors, vectors or matrices (with the same number of rows as the data frame), columns of tibbles can be factors, vectors or lists (with the same number of members as rows the tibble has).
+
 <<tibble-08>>=
 tibble(a = 1:5, b = 5:1, c = list("a", 2, 3, 4, 5))
 @
 
 Which even allows a list of lists as a variable, or a list of vectors.
+
 <<tibble-09>>=
 tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
 @
@@ -214,6 +217,7 @@ What do pipes achieve in \Rlang scripts? They relieve the user from the responsi
 
 The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages.
 We start with a toy example first written using separate steps and normal \Rlang syntax
+
 <<pipes-x02>>=
 data.in <- 1:10
 data.tmp <- sqrt(data.in)
@@ -222,11 +226,13 @@ rm(data.tmp) # clean up!
 @
 
 next using nested function calls still using normal \Rlang syntax
+
 <<pipes-x03>>=
 data.out <- sum(sqrt(data.in))
 @
 
 written as a pipe using the chaining operator from package \pkgname{magrittr}.
+
 <<pipes-x04>>=
 data.in %>% sqrt() %>% sum() -> data.out
 @
@@ -242,16 +248,19 @@ Some base \Rlang functions like \code{subset()} have a signature that is suitabl
 The \Roperator{\%.>\%} or ``dot-pipe'' operator from pakage \pkgname{wrapr} adds more ``sugar'' by allowing expressions both on rhs and lhs, and any position in the rhs for the piped value.
 
 Rewritten using the dot-pipe operator the pipe in the previous chunk becomes
+
 <<pipes-x05>>=
 data.in %.>% sqrt(.) %.>% sum(.) -> data.out
 @
 
 This operator allows us to do things like, which \Roperator{\%>\%} does not allow.
+
 <<pipes-x06>>=
 data.in %.>% (2 + .^2) %.>% assign("data.out", .)
 @
 
 If needed or desired named arguments are supported.
+
 <<pipes-x07>>=
 data.in %.>% (2 + .^2) %.>% assign(value = ., x = "data.out")
 @
@@ -274,28 +283,32 @@ Real-world data is frequently stored in wide format or even ad-hoc formats, so f
 
 %% replace iris with an example that is really ``wide''
 Some operations on \Rlang \code{data.frame} objects with \pkgname{tidyverse} packages will return \code{data.frame} objects and others tibbles---i.e.\ \code{tb} objects. Consequently it is safer to convert into tibbles the objects we will work with.
+
 <<tidy-tibble-00>>=
 iris.tb <- as_tibble(iris)
 @
 
 Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use as an example the \Rdata{iris.tb} data set included in base \Rlang. We use \code{gather} to obtain a long-form tibble. By comparing \code{iris.tb} with \code{long\_iris.tb} we can appreciate how \Rfunction{gather()} reshaped its input.
+
 <<tidy-tibble-01>>=
 head(iris.tb, 2)
 iris.tb %.>%
   gather(., key = part, value = dimension, -Species) -> long_iris.tb
 head(long_iris.tb, 2)
 @
+
 In this statement we can see the convenience of dispensing with quotation marks for the new (\code{part} and \code{dimension} and existing \code{Species} column names.
 
 \begin{warningbox}
 However, altering the normal interpretation of the name passed as argument to \code{key} and \code{value} prevents these arguments to be recognised as the name of a variable. We need to use a new operator \code{!!} to restore the normal \Rlang behaviour.
+
 <<tidy-tibble-01a>>=
 part <- "not part"
 long_iris.tb_2 <- gather(iris.tb, key = !!part, value = dimension, -Species)
 head(long_iris.tb_2)
 @
 
-This syntax has been recently subject to debate and lead to John Mount developing package \pkgname{seplyr} which provides wrappers on functions and methods from \pkgname{dplyr} that respect standard evaluation. At the time of writing \pkgname{seplyr} could considered as experimental. 
+This syntax has been recently subject to debate and lead to John Mount developing package \pkgname{seplyr} which provides wrappers on functions and methods from \pkgname{dplyr} that respect standard evaluation. At the time of writing \pkgname{seplyr} could considered as experimental.
 \end{warningbox}
 
 \begin{playground}
@@ -303,6 +316,7 @@ To better understand why I added \code{-Species} as an argument, edit the code r
 \end{playground}
 
 For the reverse operation, converting from long form to wide form we use \Rfunction{spread()}.
+
 <<tidy-tibble-01b, eval=FALSE>>=
 spread(long_iris.tb, key = c(!!part, Species), value = dimension) # does not work!!
 @
@@ -379,8 +393,6 @@ It is important to be aware that grouping is persistent, and may affect also oth
 
 The first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}. Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
 
-
-
 <<tibble-grouped-01>>=
 tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %.>%
   group_by(., letters) %.>%
@@ -392,7 +404,6 @@ tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %.>%
 
 \begin{warningbox}
 \textbf{How is grouping implemented for data frames and tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members. To demonstrate this, we need to make an exception to our recomendation above and save a grouped tibble to a variable.
-
 
 <<tibble-grouped-box-01>>=
 my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
@@ -442,6 +453,7 @@ second.tb <- tibble(idx = c(1:4, 6), values2 = "b")
 Bellow we apply the \emph{mutating join} functions exported by \pkgname{dplyr}: \Rfunction{full\_join()}, \Rfunction{left\_join()}, \Rfunction{right\_join()} and \Rfunction{inner\_join()}. These functions always retain all columns, and in case of multiple matches keep a row for each matching combination of rows. We repeat each example with the arguments passed to \code{x} and \code{y} swapped to more clearly show their different behaviour.
 
 A full join retains all unmatched rows filling missing values with \code{NA}. By default the match is done on columns with the same name in \code{x} and \code{y}, but this can be changed by passing an argument to parameter \code{by}. Using \code{by} one can base the match on columns that have different names in \code{x} and \code{y}, or prevent matching of columns with the same name in \code{x} and \code{y} (example at end of the section).
+
 <<joins-01>>=
 full_join(x = first.tb, y = second.tb)
 @
@@ -451,6 +463,7 @@ full_join(x = second.tb, y = first.tb)
 @
 
 Left and right joins retain rows not matched from only one of the two data sources, \code{x} and \code{y}, respectively.
+
 <<joins-02>>=
 left_join(x = first.tb, y = second.tb)
 @
@@ -468,6 +481,7 @@ right_join(x = second.tb, y = first.tb)
 @
 
 An inner join discards all rows in \code{x} that do not have a matching row in \code{y} and vice versa.
+
 <<joins-04>>=
 inner_join(x = first.tb, y = second.tb)
 @
@@ -479,6 +493,7 @@ inner_join(x = second.tb, y = first.tb)
 Next we apply the \emph{filtering join} functions exported by \pkgname{dplyr}: \Rfunction{semi\_join()} and \Rfunction{anti\_join()}. These functions only return a tibble always containing only the columns from \code{x}, but with retaining rows based on their match to rows in \code{y}.
 
 A semi join retains rows from \code{x} that have a match in \code{y}.
+
 <<joins-05>>=
 semi_join(x = first.tb, y = second.tb)
 @
@@ -488,6 +503,7 @@ semi_join(x = second.tb, y = first.tb)
 @
 
 A anti join retains rows from \code{x} that do not have a match in \code{y}.
+
 <<joins-06>>=
 anti_join(x = first.tb, y = second.tb)
 @
@@ -497,6 +513,7 @@ anti_join(x = second.tb, y = first.tb)
 @
 
 We here rename column \code{idx} in \code{first.tb} to demonstrate the use of \code{by}.
+
 <<joins-01b>>=
 first2.tb <- rename(first.tb, idx2 = idx)
 full_join(x = first2.tb, y = second.tb, by = c("idx2" = "idx"))

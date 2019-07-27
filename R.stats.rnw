@@ -66,6 +66,7 @@ Density, distribution functions, quantile functions and generation of pseudo-ran
 Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} controlling location and \emph(standard deviation) (or its square, the \emph{variance}) controlling the spread around the centre of the distribution.
 
 To obtain a single point from the distribution curve we pass a vector of length one as argument for \code{x}.
+
 <<distrib-01>>=
 dnorm(x = 1.5, mean = 1, sd = 0.5)
 @
@@ -297,6 +298,7 @@ plot(fm1, which = 2)
 @
 
 In the case of a regression, calling \Rfunction{summary()} with the fitted model object as argument is most useful as it provides a table of coefficient estimates and their errors. Remember that as is the case for most \Rlang functions the value returned by \Rfunction{summary()} is printed when we call this method at the \Rlang prompt.
+
 <<models-1b>>=
 summary(fm1)
 @
@@ -400,6 +402,7 @@ As an example we test if the slope from a linear regression fit deviates signifi
 The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with null hypothesis of slope = 1. The procedure is applicable to any constant value as null hypothesis for any of the fitted parameter estimates for hypotheses set \emph{a priori}. The examples use a two-sided test, in some cases, a single-sided test should be used (e.g.\ if its known a priori that deviation is because of physical reasons possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
 
 To estimate the \emph{t}-value we need an estimate for the parameter and an estimate of the standard error for this estimate and its degrees of freedom.
+
 <<models-EB5>>=
 est.slope.value <- summary(fm1)$coef["speed", "Estimate"]
 est.slope.se <- summary(fm1)$coef["speed", "Std. Error"]
@@ -536,6 +539,7 @@ plot(fm10, which = 3)
 @
 
 We can extract different components similarly as described for linear models (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
+
 <<model-12>>=
 class(fm10)
 summary(fm10)
@@ -585,6 +589,7 @@ fm21 <- nls(rate ~ SSmicmen(conc, Vm, K), data = Puromycin,
 @
 
 We can extract different components similarly as described for linear models (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
+
 <<nls-03>>=
 class(fm21)
 summary(fm21)
@@ -713,21 +718,23 @@ Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base \Rla
 
   Fitting models like those below to three-way ANOVA should be avoided. In both cases simpler terms are missing, while interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
 
-  <<mformulas-W01,eval=FALSE>>=
-  y ~ A + B + A * C + B * C + A * B
-  y ~ A + B + C + A * B * C
-  @
+<<mformulas-W01,eval=FALSE>>=
+y ~ A + B + A * C + B * C + A * B
+y ~ A + B + C + A * B * C
+@
 
   Models such as those below are interpretable, even though ``incomplete'' (not including all possible interactions).
-  <<mformulas-W02,eval=FALSE>>=
-  y ~ A + B + C + A * C + B * C + A * B
-  y ~ A + B + C + A * B
-  @
+
+<<mformulas-W02,eval=FALSE>>=
+y ~ A + B + C + A * C + B * C + A * B
+y ~ A + B + C + A * B
+@
 
   The full three-way factorial models includes all possible combinations of factors.
-  <<mformulas-W03,eval=FALSE>>=
-  y ~ A + B + C + A * C + B * C + A * B + A * B * C
-  @
+
+<<mformulas-W03,eval=FALSE>>=
+y ~ A + B + C + A * C + B * C + A * B + A * B * C
+@
 
 \end{warningbox}
 
@@ -766,6 +773,7 @@ It can be seen that it calls \Rfunction{inherits()} with \code{"formula"} as its
 \index{model formulas!manipulation}\textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. Formulas as any other \Rlang objects can be saved in variables including lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a \code{for} loop that walks through a list of model formulas. Or we can write a function that accepts one or more formulas as arguments.
 
 The use of \code{for} \emph{loops} for iteration is described in section \ref{sec:script:flow:control} on page \pageref{sec:script:flow:control}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
+
 <<mformulas-EB02>>=
 my.data <- data.frame(x = 1:10, y = (1:10) / 2 + rnorm(10))
 anovas <- list()
@@ -812,6 +820,7 @@ update(my.formula, . + z ~ .)
 R provides high level functions for model selection. Consequently many \Rlang users will rarely need to edit model formulas in their scripts. For example, step wise model selection is possible with \Rlang method \code{step()}.
 
 A matrix of dummy coefficients can be derived from a model formula, a type of contrast and the data for the explanatory variables.
+
 <<mformulas-EB07>>=
 treats.df <- data.frame(A = rep(c("yes", "no"), c(4, 4)),
                         B = rep(c("white", "black"), 4))
@@ -819,16 +828,19 @@ treats.df
 @
 
 The default contrasts types currently in use.
+
 <<mformulas-EB08>>=
 options("contrasts")
 @
 
 A model matrix for a model for a two-way factorial design with no interaction term.
+
 <<mformulas-EB09>>=
 model.matrix(~ A + B, treats.df)
 @
 
 A model matrix for a model for a two-way factorial design with interaction term.
+
 <<mformulas-EB10>>=
 model.matrix(~ A * B, treats.df)
 @
@@ -846,6 +858,7 @@ Time series data are data collected in such a way that there is only one observa
 We start by creating a time series from a numeric vector. By now, you surely guessed that you need to use a constructor called \Rfunction{ts()} or a conversion constructor called \Rfunction{as.ts()} and that you can look up the arguments they accept by reading the corresponding help pages.
 
 For example for a time series of monthly values we could use.
+
 <<ts-00>>=
 my.ts <- ts(1:10, start = 2018, deltat = 1/12)
 class(my.ts)
@@ -853,6 +866,7 @@ str(my.ts)
 @
 
 We next use a data set included in R.
+
 <<ts-01>>=
 class(austres)
 is.ts(austres)
@@ -863,11 +877,13 @@ opts_chunk$set(opts_fig_wide)
 @
 
 This time series of the number of Australian residents is dominated by the increasing trend.
+
 <<ts-02>>=
 plot(austres)
 @
 
 A different example, in this case meteorological data, shows an important cyclic component. The annual cycle of mean air temperatures is clearly seen in the plot.
+
 <<ts-03>>=
 data(nottem)
 is.ts(nottem)
@@ -875,6 +891,7 @@ plot(nottem)
 @
 
 In\index{time series!decomposition} the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use loess for the decomposition, a method for which the acronym STL is used. LOESS is a local-regression-based smoothing method.\qRfunction{decompose()}\qRfunction{stl()}
+
 <<ts-04>>=
 nottem.celcius <- (nottem - 32) * 5/9
 nottem.decomp <- decompose(nottem.celcius)
@@ -906,11 +923,13 @@ str(nottem.stl)
 Multivariate methods take into account several response variables simultaneously, as part of a single analysis. In practice it is usual to use contributed packages for multivariate data analysis in \Rlang, except for simple cases. We will look first at \emph{multivariate} ANOVA or MANOVA. In the same way as \Rfunction{aov()} is a wrapper that uses internally \Rfunction{lm()}, \Rfunction{manova()} is a wrapper that uses internally \Rfunction{aov()}.
 
 Multivariate model formulas in some cases use the same syntax as univariate ones, but contain more than one response variable on their left hand side (lhs).
+
 <<manova-01>>=
 y1 + y2 + y3 ~ x1 * x2
 @
 
 In other cases, a special syntax is used. In the case of function \Rfunction{manova()} we use function \code{cbind()} (column bind) to assemble the lhs of the formula.
+
 <<manova-02>>=
 data(iris)
 m.fit <- manova(cbind(Petal.Length, Petal.Width) ~  Species, data = iris)
@@ -941,6 +960,7 @@ pc
 @
 
 The rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
+
 <<pca-03>>=
 summary(pc)
 @
@@ -950,6 +970,7 @@ opts_chunk$set(opts_fig_wide_square)
 @
 
 Method \Rfunction{biplot()} produces a plot with one principal component (PC) on each axis, plus arrows for the loadings.
+
 <<pca-05>>=
 biplot(pc)
 @
@@ -959,6 +980,7 @@ opts_chunk$set(opts_fig_narrow)
 @
 
 Method \code{plot()} generates a bar plot of variances corresponding to the different components.
+
 <<pca-04>>=
 plot(pc)
 @
@@ -993,6 +1015,7 @@ loc <- cmdscale(eurodist)
 @
 
 We can see that the returned object \code{loc} is a \code{matrix}, with names for one of the dimensions.
+
 <<mds-02>>=
 class(loc)
 head(loc)
