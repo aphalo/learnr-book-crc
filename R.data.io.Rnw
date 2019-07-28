@@ -210,12 +210,12 @@ data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
 
 In some cases the import may result in very odd looking values stored in \Rlang variables, for example when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit encoded file.
 
-The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. One function in \Rlang \pkgname{tools} package, which is not-exported, can at the time of writing be used to test files for the presence on non-ASCII characters: \Rfunction{tools:::showNonASCIIfile()}. This function takes as argument the path to a file.
+The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. One function in \Rlang \pkgname{tools} package, which is not-exported, can at the time of writing be used to test files for the presence on non-ASCII characters: \Rfunction{tools:::showNonASCIIfile()}. This function takes as argument the path to a file. We first discuss base \Rlang functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
 \end{explainbox}
 
 \subsection[Base R and `utils']{Base \Rlang and \pkgname{utils}}
 
-Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL}, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. We first discuss base \Rlang functions and starting from page \pageref{sec:files:readr} we discuss the functions defined in package \pkgname{readr}.
+Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL}, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. Although in this section we exemplify the use of functions by passing a file name as argument, URLs, and open file descriptors are also accepted (see section \ref{sec:???} on page \pageref{sec:???}).
 
 In the first example we will read a file with fields solely delimited by ``,''. This is what is called comma-separated-values format (CSV) which can be read and written with \Rfunction{read.csv()} and \Rfunction{write.csv()}, respectively.
 
@@ -329,7 +329,7 @@ Next we give one example of the use of a \emph{write} function matching one of t
 my.df <- data.frame(x = 1:5, y = 5:1 / 10, z = letters[1:5])
 @
 
-We write \code{my.df} to a CSV file suitable for an English language locale, and then display its contents. 
+We write \code{my.df} to a CSV file suitable for an English language locale, and then display its contents.
 \pageref{sec:calc:attributes} for details.)
 
 <<file-io-txt-04>>=
@@ -353,12 +353,12 @@ Function \Rfunction{cat()} takes \Rlang objects and writes them after conversion
 
 <<file-io-txt-11>>=
 my.lines <- c("abcd", "hello world", "123.45")
-cat(my.lines, file = "my-file4.txt", sep = "\n")
-file.show("my-file4.txt", pager = "console")
+cat(my.lines, file = "my-file2.txt", sep = "\n")
+file.show("my-file2.txt", pager = "console")
 @
 
 <<file-io-txt-12, comment='', echo=FALSE>>=
-cat(readLines('my-file4.txt'), sep = '\n')
+cat(readLines('my-file2.txt'), sep = '\n')
 @
 
 \subsection[readr]{\pkgname{readr}}\label{sec:files:readr}
@@ -367,59 +367,69 @@ cat(readLines('my-file4.txt'), sep = '\n')
 citation(package = "readr")
 @
 
-Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow much faster input and output, and have different default behaviour. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and sometimes silently do this even for some CSV files that are correctly decoded by the base functions. Base \Rlang functions are dumb, the file format or delimiters must be supplied as arguments. The \pkgname{readr} functions use ``magic'' to guess the format, in most cases they succeed, which is very handy, but occasionally the power of the magic is not strong enough. The ``magic'' can be overridden by passing arguments. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{datetime}.
+Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow faster input and output, and have different default behaviour. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and sometimes silently do this. Base \Rlang functions do less \emph{guessing}, the delimiters must be supplied as arguments. The \pkgname{readr} functions guess more properties of the format, in most cases they succeed, which is very handy, but occasionally they fail. Defaults can be overridden by passing arguments. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
 
-All \code{write} functions defined in this package have an \code{append} parameter, which can be used to change the default behaviour of overwriting an existing file with the same name, to appending the output at its end.
-
-Although in this section we exemplify the use of these functions by passing a file name as argument, URLs, and open file descriptors are also accepted. Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
+Although in this section we exemplify the use of these functions by passing a file name as argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:???} on page \pageref{sec:???}). Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
 
 \begin{warningbox}
-The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a different behaviour to \Rfunction{read.table()}, although they both read fields separated by white space, \Rfunction{read\_table()} expects the fields in successive records (usually lines) to be vertically aligned while \Rfunction{read.table()} tolerates vertical misalignment. Other aspects of the default behaviour are also different, for example these functions do not convert columns of character strings into factors and row names are not set in the returned data frame (truly a \Rclass{tibble} which inherits from \Rclass{data.frame}).
+The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.\ \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. Function \code{read\_table()} has a slightly different behaviour to \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behaviour are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors and row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame} but has somehow different behaviour (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
 \end{warningbox}
 
+As we can see in this first example, these functions also report to the console the specifications of the columns, which is important when these are guessed from the file contents, or part of it.
+
 <<readr-01>>=
-read_csv(file = "my-file1.csv")
+read_csv(file = "extdata/aligned-ASCII-UK.csv")
 @
 
 <<readr-02>>=
-read_csv2(file = "my-file2.csv")
+read_csv(file = "extdata/not-aligned-ASCII-UK.csv")
 @
 
-Because of the vertically misaligned fields in file \code{my-file3.txt}, we need to use \Rfunction{read\_delim()} instead of \Rfunction{read\_table()}.
+Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()} retains quotes as part of read character strings.
 
 <<readr-03>>=
-read_delim(file = "my-file3.txt", " ")
+read_table(file = "extdata/aligned-ASCII.txt")
 @
 
-\begin{playground}
-See what happens when you modify the code to use \code{read} functions to read files that are not matched to them---i.e.\ mix and match functions and files from the three code chunks above. As mentioned earlier forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes.
-\end{playground}
-
-We demonstrate here the use of \Rfunction{write\_tsv()} to produce a text file with tab-separated fields.
+Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"}, we need to use \Rfunction{read\_table2()}, which allows missalignment of fields, like \Rfunction{read.table()}, instead of \Rfunction{read\_table()} that expects vertically aligned fields across rows. However, in this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
 
 <<readr-04>>=
-write_tsv(my.df, path = "my-file5.tsv")
-file.show("my-file5.tsv", pager = "console")
+read_table2(file = "extdata/not-aligned-ASCII.txt")
 @
 
-<<readr-04a, comment='', echo=FALSE>>=
-cat(readLines('my-file5.tsv'), sep = '\n')
-@
-
-<<readr-04b>>=
-my_read4.df <- read_tsv(file = "my-file5.tsv")
-my_read4.df
-all.equal(my.df, my_read4.df, check.attributes = FALSE)
-@
-
-We demonstrate here the use of \Rfunction{write\_excel\_csv()} to produce a text file with comma-separated fields suitable for reading with Excel.
+Function \Rfunction{read\_delim()} with space as delimiter needs to be used.
 
 <<readr-05>>=
+read_delim(file = "extdata/not-aligned-ASCII.txt", delim = " ")
+@
+
+Function \Rfunction{read\_tsv()} reads files with tab character as delimiter, and \Rfunction{read\_fwf())} reads files with fixed width fields. There is, however, no equivalent to \Rfunction{read.fortran()}, supporting implicit decimal points.
+
+\begin{playground}
+Use the "wrong" \code{read\_} functions to read the example files used above and/or your own files. As mentioned earlier forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes. In this case, as wrongly read data are not always accompanied by error or warning messages, carefully check the returned tibbles for missread data values.
+\end{playground}
+
+\begin{explainbox}
+The functions from R's \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for very large text files. The functions from \pkgname{readr} read only the top 1000 lines by default for guessing, and then rather blindly read the whole files assuming that the guessed at properties also apply to the remaining of the file. This is more efficient, but somehow risky. In earlier versions of \pkgname{readr} a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be at the time of writing correctly handled. It also means that in cases when an individual value after \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings, this value is encoded as a numeric \code{NA} with a warning and the column \code{numeric}. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an example file only a few lines in length.
+
+<<readr-06>>=
+read_table2(file = "extdata/miss-aligned-ASCII.txt")
+@
+
+<<readr-07>>=
+read_table2(file = "extdata/miss-aligned-ASCII.txt", guess_max = 3L)
+@
+\end{explainbox}
+
+The \code{write\_} functions from \pkgname{readr} are the counterpart to the \code{read\_} funtions above and the \code{write.} functions from \pkgname{utils}. In addition to the expected \Rfunction{write\_csv()}, \Rfunction{write\_csv2()}, \Rfunction{write\_tsv()}, \Rfunction{write\_delim()} and \code{read\_fwf()} functions, \pkgname{readr} provides functions that write \pgrmname{MS-Excel}-friendly CSV files. We demonstrate here the use of \Rfunction{write\_excel\_csv()} to produce a text file with comma-separated fields suitable for import into \pgrmname{MS-Excel}.
+
+<<readr-10>>=
 write_excel_csv(my.df, path = "my-file6.csv")
 file.show("my-file6.csv", pager = "console")
 @
 
-<<readr-05a, comment='', echo=FALSE>>=
+That saves a file containing the following text.
+<<readr-11, comment='', echo=FALSE>>=
 cat(readLines('my-file6.csv'), sep = '\n')
 @
 
@@ -427,22 +437,7 @@ cat(readLines('my-file6.csv'), sep = '\n')
 Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer).
 \end{playground}
 
-<<readr-06>>=
-write_lines(my.lines, path = "my-file7.txt")
-file.show("my-file7.txt", pager = "console")
-@
-
-<<readr-06a, comment='', echo=FALSE>>=
-cat(read_lines("my-file7.txt"), sep = '\n')
-@
-
-<<readr-06b>>=
-my_read.lines <- read_lines("my-file7.txt")
-my_read.lines
-all.equal(my.lines, my_read.lines, check.attributes = FALSE)
-@
-
-Additional write and read functions not mentioned are also provided by the package: \Rfunction{write\_csv()}, \Rfunction{write\_delim()}, \Rfunction{write\_file()}, and \code{read\_fwf()}.
+The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} read and write character vectors without conversion. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} read and write a single object such as a character vector of length one.
 
 \begin{advplayground}
 Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{read\_csv()}.
