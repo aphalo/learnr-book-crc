@@ -56,6 +56,7 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(readxl)
+library(readODS)
 library(xlsx)
 library(pdftools)
 library(foreign)
@@ -443,13 +444,40 @@ The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} r
 Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{read\_csv()}.
 \end{advplayground}
 
+\section{XML and HTML files}
+
+XML files contain text with special markup. Several modern data exchange formats are based on the \langname{XML} standard (see \url{https://www.w3.org/TR/xml/}) which uses schemas for flexibility. Schemas define specific formats, allowing reading of formats not specifically target during development of the read functions. Even the modern \langname{XHTML} standard used for web pages is based on such schemas, while \langname{HTML} only differs slightly in its syntax.
+
+\subsection['xml2']{\pkgname{xml2}}
+
+<<xml2-00>>=
+citation(package = "xml2")
+@
+
+Package \pkgname{xml2} provides functions for reading and parsing \langname{XTML} and \langname{HTML} files. This is a vast subject, of which I will only give a brief example.
+
+We first read a web page with function \Rfunction{read\_html()}, and explore its structure.
+
+<<xml2-01>>=
+web_page <- read_html("http://r4photobiology.info/R/index.html")
+html_structure(web_page)
+@
+
+Next we extract the text from its \code{title} attribute, using functions \Rfunction{xml\_find\_all()} and \Rfunction{xml\_text()}.
+
+<<xml2-02>>=
+xml_text(xml_find_all(web_page, ".//title"))
+@
+
+The functions defined in this package can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through \langname{XML} schemas.
+
 \section{Worksheets}\label{sec:files:worksheets}
 
-Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Work sheets contain code as equations in addition to the actual data. In all cases only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
 
-\subsection{Exporting CSV files}
+\subsection{CSV files as middlemen}
 
-If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into \Rlang using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a workable solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, to import the data directly from the workbook or worksheets into R.
+If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing these it into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
 
@@ -457,7 +485,7 @@ If you have access to the original software used, then exporting a worksheet to 
 citation(package = "readxl")
 @
 
-This package exports only two functions for reading Excel workbooks in xlsx format. The interface is simple, and the package easy to instal. We will import a file that in Excel looks as in the screen capture below.
+Package \pkgname{readxl} supports reading of \pgrmname{MS-Excel} workbooks, selecting worksheets and regions within worksheets specified in ways similar to those used by \pgrmname{MS-Excel} itself. The interface is simple, and the package easy to instal. We will import a file that in \pgrmname{MS-Excel} looks as in the screen capture below.
 
 \begin{center}
 \includegraphics[width=0.75\textwidth]{figures/Book1-xlsx.png}
@@ -470,14 +498,21 @@ sheets <- excel_sheets("extdata/Book1.xlsx")
 sheets
 @
 
-In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet.
+In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet. Being part of the \pkgname{tidyverse} the returned value is a tibble and character columns returned as such.
 
 <<readxl-02>>=
 Book1.df <- read_excel("extdata/Book1.xlsx", sheet = "my data")
 Book1.df
 @
 
-Of the remaining arguments, \code{skip} is useful when we need to skip the top row of a worksheet.
+We can also read a region instead of the whole worksheet.
+
+<<readxl-03>>=
+Book1_region.df <- read_excel("extdata/Book1.xlsx", sheet = "my data", range = "A1:B8")
+Book1_region.df
+@
+
+Of the remaining arguments, the most useful ones have the same names and play similar roles as in \pkgname{readr} (see section \ref{sec:files:readr} on page \pageref{sec:files:readr}).
 
 \subsection['xlsx']{\pkgname{xlsx}}
 
@@ -485,82 +520,47 @@ Of the remaining arguments, \code{skip} is useful when we need to skip the top r
 citation(package = "xlsx")
 @
 
-Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing Excel worksheet and workbooks, in different formats. It also allows selecting regions of a worksheet to be imported.
+Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing \pgrmname{MS-Excel} worksheet and workbooks, in different formats including the older binary ones. Similarly to \pkgname{readr} it allows selecting regions of a worksheet to be imported.
 
-Here we use function \Rfunction{read.xlsx()}, idexing the worksheet by name.
+Here we use function \Rfunction{read.xlsx()}, indexing the worksheet by name. The returned value is a data frame, and following the expectations of \Rlang \pkgnameNI{utils} character columns are converted in factors by default.
 
 <<xlsx-01>>=
 Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx", sheetName = "my data")
 Book1_xlsx.df
 @
 
-As above, but indexing by a numeric index.
-
-<<xlsx-02>>=
-Book1_xlsx2.df <- read.xlsx2("extdata/Book1.xlsx", sheetIndex = 1)
-Book1_xlsx2.df
-@
-
-With the three different functions we get a data frame or a tibble, which is compatible with data frames.
-
-<<xlsx-03>>=
-class(Book1.df)
-class(Book1_xlsx.df)
-class(Book1_xlsx2.df)
-@
-
-However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as such, while base \Rlang functions convert them to factors. The third function, \Rfunction{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \Rfunction{read.xlsx()}.
-
-<<xlsx-04>>=
-sapply(Book1.df, class)
-sapply(Book1_xlsx.df, class)
-sapply(Book1_xlsx2.df, class)
-@
-
-With function \Rfunction{write.xlsx()} we can also write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
+With function \Rfunction{write.xlsx()} we can write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
 
 <<xlsx-05>>=
 set.seed(456321)
-my.data <- data.frame(x = 1:10, y = 1:10 + rnorm(10))
+my.data <- data.frame(x = 1:10, y = letters[1:10])
 write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "first copy")
 write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "second copy", append = TRUE)
 @
 
 When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
+% screen capture to be replaced!!
 \begin{center}
 \includegraphics[width=0.75\textwidth]{figures/my-data-xlsx.png}
 \end{center}
 
 \begin{playground}
-If you have some worksheet files available, import them into R, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to read the data from them.
+If you have some worksheet files available, import them into \Rlang, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to import them into \Rlang.
 \end{playground}
 
-\subsubsection['xml2']{\pkgname{xml2}}
+\subsection['readODS']{\pkgname{readODS}}
 
-<<xml2-00>>=
-citation(package = "xml2")
+Package \pkgname{readODS} provides functions for reading data saved in files that follow the \emph{Open Documents Standard}. Function \Rfunction{read\_ods()} has a similar but simpler user interface to that of \code{read\_excel()} and reads one worksheet at a time, with support only for skipping top rows. The value returned is a data frame.
+
+<<readODS-01>>=
+read_ods("extdata/Book1.ods", sheet = 1)
 @
 
-Several modern data exchange formats are based on the XML standard format which uses schema for flexibility. Package \pkgname{xml2} provides functions for reading and parsing such files, as well as HTML files. This is a vast subject, of which I will only give a brief introduction.
-
-We first read a very simple web page with function \Rfunction{read\_html()}.
-
-<<xml2-01>>=
-web_page <- read_html("http://r4photobiology.info/R/index.html")
-html_structure(web_page)
-@
-
-And we extract the text from its \code{title} attribute, using functions \Rfunction{xml\_find\_all()} and \Rfunction{xml\_text()}.
-
-<<xml2-02>>=
-xml_text(xml_find_all(web_page, ".//title"))
-@
-
-The functions defined in this package and in package \pkgname{XML} can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through XML schemas.
+Function \Rfunction{write\_ods()} writes a data frame into an ODS file.
 
 \section{Statistical software}\label{sec:files:stat}
 
-There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more more robust than those from \pkgname{haven}.
+There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more robust than those from \pkgname{haven}.
 
 \subsection[foreign]{\pkgname{foreign}}
 
@@ -568,14 +568,12 @@ There are two different comprehensive packages for importing data saved from oth
 citation(package = "foreign")
 @
 
-Functions in this package allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPPS} among others, and a function for writing data into files with formats native to these three programs. Documentation is included with \Rlang describing them in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved with a recent version of \pgrmname{SPSS}.
+Functions in package \pkgname{foreign} allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata}, \pgrmname{SPPS}, \pgrmname{Systat}, \pgrmname{Octave} among others, and a function for writing data into files with formats native to \pgrmname{SAS}, \pgrmname{Stata}, and \pgrmname{SPPS}. \Rlang documents them in detail in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved a few years ago with the then current version of \pgrmname{SPSS}. We display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
 
 <<foreign-01>>=
 my_spss.df <- read.spss(file = "extdata/my-data.sav", to.data.frame = TRUE)
-head(my_spss.df)
+my_spss.df[1:6, c(1:6, 17)]
 @
-
-Dates were not converted into \Rlang datetime objects, but instead into numbers.
 
 A second example, this time with a simple \code{.sav} file saved 15 years ago.
 
@@ -584,7 +582,7 @@ thiamin.df <- read.spss(file = "extdata/thiamin.sav", to.data.frame = TRUE)
 head(thiamin.df)
 @
 
-Another example, for a Systat file saved on an PC more than 20 years ago, and rea.
+Another example, for a \pgrmname{Systat} file saved on an PC more than 20 years ago, and read with \Rfunction{read.systat()}.
 
 <<foreign-03>>=
 my_systat.df <- read.systat(file = "extdata/BIRCH1.SYS")
@@ -599,14 +597,13 @@ The functions in \pkgname{foreign} can return data frames, but not always this i
 citation(package = "haven")
 @
 
-The recently released package \pkgname{haven} is less ambitious in scope, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. The returned \Rclass{tibble} objects in cases when the imported file contained labelled values needs some further work from the user before obtaining `normal' data-frame-compatible \Rclass{tibble} objects.
+Package \pkgname{haven} is less ambitious with respect to the number of formats supported, or their vintages, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. In cases when the imported file contains labelled values the returned \Rclass{tibble} object needs some additional attention from the user before obtaining `normal' data-frame-compatible \Rclass{tibble} objects.
 
-We here use function \Rfunction{read\_sav()} to import here a \code{.sav} file saved by a recent version of \pgrmname{SPSS}.
+We can use function \Rfunction{read\_sav()} to import a \code{.sav} file saved by a recent version of \pgrmname{SPSS}. As in the previous section, we display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
 
 <<haven-01>>=
 my_spss.tb <- read_sav(file = "extdata/my-data.sav")
-my_spss.tb
-head(my_spss.tb$harvest_date)
+my_spss.tb[1:6, c(1:6, 17)]
 @
 
 In this case the dates are correctly decoded.

@@ -247,6 +247,7 @@ For executing the examples listed in this chapter you need first to load the fol
 \hlkwd{library}\hlstd{(tidyr)}
 \hlkwd{library}\hlstd{(readr)}
 \hlkwd{library}\hlstd{(readxl)}
+\hlkwd{library}\hlstd{(readODS)}
 \hlkwd{library}\hlstd{(xlsx)}
 \hlkwd{library}\hlstd{(pdftools)}
 \hlkwd{library}\hlstd{(foreign)}
@@ -447,9 +448,9 @@ Base \Rlang provides several functions for portably working with files, they are
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2019-07-28 13:13:19 2019-07-28 13:13:19
+## xxx.txt    0 FALSE  666 2019-07-28 18:36:50 2019-07-28 18:36:50
 ##                       atime exe
-## xxx.txt 2019-07-28 13:13:19  no
+## xxx.txt 2019-07-28 18:36:50  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
@@ -1073,248 +1074,11 @@ The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} r
 Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{read\_csv()}.
 \end{advplayground}
 
-\section{Worksheets}\label{sec:files:worksheets}
+\section{XML and HTML files}
 
-Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering MS-Excel. The file format used by Excel has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with Excel itself before import into R. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Consequently for the format currently in use, there are alternatives.
+XML files contain text with special markup. Several modern data exchange formats are based on the \langname{XML} standard (see \url{https://www.w3.org/TR/xml/}) which uses schemas for flexibility. Schemas define specific formats, allowing reading of formats not specifically target during development of the read functions. Even the modern \langname{XHTML} standard used for web pages is based on such schemas, while \langname{HTML} only differs slightly in its syntax.
 
-\subsection{Exporting CSV files}
-
-If you have access to the original software used, then exporting a worksheet to a text file in CSV format and importing it into \Rlang using the functions described in section \ref{sec:files:txt} starting on page \pageref{sec:files:txt} is a workable solution. It is not ideal from the perspective of storing the same data set repeatedly, which, can lead to these versions diverging when updated. A better approach is to, when feasible, to import the data directly from the workbook or worksheets into R.
-
-\subsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"readxl"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## 
-## To cite package 'readxl' in publications use:
-## 
-##   Hadley Wickham and Jennifer Bryan (2019). readxl: Read Excel
-##   Files. R package version 1.3.1.
-##   https://CRAN.R-project.org/package=readxl
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Manual{,
-##     title = {readxl: Read Excel Files},
-##     author = {Hadley Wickham and Jennifer Bryan},
-##     year = {2019},
-##     note = {R package version 1.3.1},
-##     url = {https://CRAN.R-project.org/package=readxl},
-##   }
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-This package exports only two functions for reading Excel workbooks in xlsx format. The interface is simple, and the package easy to instal. We will import a file that in Excel looks as in the screen capture below.
-
-\begin{center}
-\includegraphics[width=0.75\textwidth]{figures/Book1-xlsx.png}
-\end{center}
-
-We first list the sheets contained in the workbook file with \Rfunction{excel\_sheets()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{sheets} \hlkwb{<-} \hlkwd{excel_sheets}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{)}
-\hlstd{sheets}
-\end{alltt}
-\begin{verbatim}
-## [1] "my data"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{Book1.df} \hlkwb{<-} \hlkwd{read_excel}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheet} \hlstd{=} \hlstr{"my data"}\hlstd{)}
-\hlstd{Book1.df}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 10 x 3
-##    sample group observation
-##     <dbl> <chr>       <dbl>
-##  1      1 a             1  
-##  2      2 a             5  
-##  3      3 a             7  
-##  4      4 a             2  
-##  5      5 a             5  
-##  6      6 b             0  
-##  7      7 b             2  
-##  8      8 b             3  
-##  9      9 b             1  
-## 10     10 b             1.5
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Of the remaining arguments, \code{skip} is useful when we need to skip the top row of a worksheet.
-
-\subsection['xlsx']{\pkgname{xlsx}}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"xlsx"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## 
-## To cite package 'xlsx' in publications use:
-## 
-##   Adrian A. Dragulescu and Cole Arendt (2018). xlsx: Read, Write,
-##   Format Excel 2007 and Excel 97/2000/XP/2003 Files. R package
-##   version 0.6.1. https://CRAN.R-project.org/package=xlsx
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Manual{,
-##     title = {xlsx: Read, Write, Format Excel 2007 and Excel 97/2000/XP/2003 Files},
-##     author = {Adrian A. Dragulescu and Cole Arendt},
-##     year = {2018},
-##     note = {R package version 0.6.1},
-##     url = {https://CRAN.R-project.org/package=xlsx},
-##   }
-## 
-## ATTENTION: This citation information has been auto-generated from
-## the package DESCRIPTION file and may need manual editing, see
-## 'help("citation")'.
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing Excel worksheet and workbooks, in different formats. It also allows selecting regions of a worksheet to be imported.
-
-Here we use function \Rfunction{read.xlsx()}, idexing the worksheet by name.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{Book1_xlsx.df} \hlkwb{<-} \hlkwd{read.xlsx}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"my data"}\hlstd{)}
-\hlstd{Book1_xlsx.df}
-\end{alltt}
-\begin{verbatim}
-##    sample group observation
-## 1       1     a         1.0
-## 2       2     a         5.0
-## 3       3     a         7.0
-## 4       4     a         2.0
-## 5       5     a         5.0
-## 6       6     b         0.0
-## 7       7     b         2.0
-## 8       8     b         3.0
-## 9       9     b         1.0
-## 10     10     b         1.5
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-As above, but indexing by a numeric index.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{Book1_xlsx2.df} \hlkwb{<-} \hlkwd{read.xlsx2}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheetIndex} \hlstd{=} \hlnum{1}\hlstd{)}
-\hlstd{Book1_xlsx2.df}
-\end{alltt}
-\begin{verbatim}
-##    sample group observation
-## 1       1     a           1
-## 2       2     a           5
-## 3       3     a           7
-## 4       4     a           2
-## 5       5     a           5
-## 6       6     b           0
-## 7       7     b           2
-## 8       8     b           3
-## 9       9     b           1
-## 10     10     b         1.5
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-With the three different functions we get a data frame or a tibble, which is compatible with data frames.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{class}\hlstd{(Book1.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] "tbl_df"     "tbl"        "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{class}\hlstd{(Book1_xlsx.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] "data.frame"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{class}\hlstd{(Book1_xlsx2.df)}
-\end{alltt}
-\begin{verbatim}
-## [1] "data.frame"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-However, the columns are imported differently. Both \code{Book1.df} and \code{Book1\_xlsx.df} differ only in that the second column, a character variable, has been converted into a factor or not. This is to be expected as packages in the \pkgname{tidyverse} suite default to preserving character variables as such, while base \Rlang functions convert them to factors. The third function, \Rfunction{read.xlsx2()}, did not decode numeric values correctly, and converted everything into factors. This function is reported as being much faster than \Rfunction{read.xlsx()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{sapply}\hlstd{(Book1.df, class)}
-\end{alltt}
-\begin{verbatim}
-##      sample       group observation 
-##   "numeric" "character"   "numeric"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{sapply}\hlstd{(Book1_xlsx.df, class)}
-\end{alltt}
-\begin{verbatim}
-##      sample       group observation 
-##   "numeric"    "factor"   "numeric"
-\end{verbatim}
-\begin{alltt}
-\hlkwd{sapply}\hlstd{(Book1_xlsx2.df, class)}
-\end{alltt}
-\begin{verbatim}
-##      sample       group observation 
-##    "factor"    "factor"    "factor"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-With function \Rfunction{write.xlsx()} we can also write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{set.seed}\hlstd{(}\hlnum{456321}\hlstd{)}
-\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{y} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10} \hlopt{+} \hlkwd{rnorm}\hlstd{(}\hlnum{10}\hlstd{))}
-\hlkwd{write.xlsx}\hlstd{(my.data,} \hlkwc{file} \hlstd{=} \hlstr{"extdata/my-data.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"first copy"}\hlstd{)}
-\hlkwd{write.xlsx}\hlstd{(my.data,} \hlkwc{file} \hlstd{=} \hlstr{"extdata/my-data.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"second copy"}\hlstd{,} \hlkwc{append} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
-\begin{center}
-\includegraphics[width=0.75\textwidth]{figures/my-data-xlsx.png}
-\end{center}
-
-\begin{playground}
-If you have some worksheet files available, import them into R, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to read the data from them.
-\end{playground}
-
-\subsubsection['xml2']{\pkgname{xml2}}
+\subsection['xml2']{\pkgname{xml2}}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1342,9 +1106,9 @@ If you have some worksheet files available, import them into R, to get a feel of
 \end{kframe}
 \end{knitrout}
 
-Several modern data exchange formats are based on the XML standard format which uses schema for flexibility. Package \pkgname{xml2} provides functions for reading and parsing such files, as well as HTML files. This is a vast subject, of which I will only give a brief introduction.
+Package \pkgname{xml2} provides functions for reading and parsing \langname{XTML} and \langname{HTML} files. This is a vast subject, of which I will only give a brief example.
 
-We first read a very simple web page with function \Rfunction{read\_html()}.
+We first read a web page with function \Rfunction{read\_html()}, and explore its structure.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1380,7 +1144,7 @@ We first read a very simple web page with function \Rfunction{read\_html()}.
 \end{kframe}
 \end{knitrout}
 
-And we extract the text from its \code{title} attribute, using functions \Rfunction{xml\_find\_all()} and \Rfunction{xml\_text()}.
+Next we extract the text from its \code{title} attribute, using functions \Rfunction{xml\_find\_all()} and \Rfunction{xml\_text()}.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1393,11 +1157,228 @@ And we extract the text from its \code{title} attribute, using functions \Rfunct
 \end{kframe}
 \end{knitrout}
 
-The functions defined in this package and in package \pkgname{XML} can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through XML schemas.
+The functions defined in this package can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through \langname{XML} schemas.
+
+\section{Worksheets}\label{sec:files:worksheets}
+
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Work sheets contain code as equations in addition to the actual data. In all cases only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
+
+\subsection{CSV files as middlemen}
+
+If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing these it into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
+
+\subsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"readxl"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## To cite package 'readxl' in publications use:
+## 
+##   Hadley Wickham and Jennifer Bryan (2019). readxl: Read Excel
+##   Files. R package version 1.3.1.
+##   https://CRAN.R-project.org/package=readxl
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {readxl: Read Excel Files},
+##     author = {Hadley Wickham and Jennifer Bryan},
+##     year = {2019},
+##     note = {R package version 1.3.1},
+##     url = {https://CRAN.R-project.org/package=readxl},
+##   }
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Package \pkgname{readxl} supports reading of \pgrmname{MS-Excel} workbooks, selecting worksheets and regions within worksheets specified in ways similar to those used by \pgrmname{MS-Excel} itself. The interface is simple, and the package easy to instal. We will import a file that in \pgrmname{MS-Excel} looks as in the screen capture below.
+
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/Book1-xlsx.png}
+\end{center}
+
+We first list the sheets contained in the workbook file with \Rfunction{excel\_sheets()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{sheets} \hlkwb{<-} \hlkwd{excel_sheets}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{)}
+\hlstd{sheets}
+\end{alltt}
+\begin{verbatim}
+## [1] "my data"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In this case the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet. Being part of the \pkgname{tidyverse} the returned value is a tibble and character columns returned as such.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{Book1.df} \hlkwb{<-} \hlkwd{read_excel}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheet} \hlstd{=} \hlstr{"my data"}\hlstd{)}
+\hlstd{Book1.df}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 10 x 3
+##    sample group observation
+##     <dbl> <chr>       <dbl>
+##  1      1 a             1  
+##  2      2 a             5  
+##  3      3 a             7  
+##  4      4 a             2  
+##  5      5 a             5  
+##  6      6 b             0  
+##  7      7 b             2  
+##  8      8 b             3  
+##  9      9 b             1  
+## 10     10 b             1.5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We can also read a region instead of the whole worksheet.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{Book1_region.df} \hlkwb{<-} \hlkwd{read_excel}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheet} \hlstd{=} \hlstr{"my data"}\hlstd{,} \hlkwc{range} \hlstd{=} \hlstr{"A1:B8"}\hlstd{)}
+\hlstd{Book1_region.df}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 7 x 2
+##   sample group
+##    <dbl> <chr>
+## 1      1 a    
+## 2      2 a    
+## 3      3 a    
+## 4      4 a    
+## 5      5 a    
+## 6      6 b    
+## 7      7 b
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Of the remaining arguments, the most useful ones have the same names and play similar roles as in \pkgname{readr} (see section \ref{sec:files:readr} on page \pageref{sec:files:readr}).
+
+\subsection['xlsx']{\pkgname{xlsx}}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"xlsx"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## To cite package 'xlsx' in publications use:
+## 
+##   Adrian A. Dragulescu and Cole Arendt (2018). xlsx: Read, Write,
+##   Format Excel 2007 and Excel 97/2000/XP/2003 Files. R package
+##   version 0.6.1. https://CRAN.R-project.org/package=xlsx
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {xlsx: Read, Write, Format Excel 2007 and Excel 97/2000/XP/2003 Files},
+##     author = {Adrian A. Dragulescu and Cole Arendt},
+##     year = {2018},
+##     note = {R package version 0.6.1},
+##     url = {https://CRAN.R-project.org/package=xlsx},
+##   }
+## 
+## ATTENTION: This citation information has been auto-generated from
+## the package DESCRIPTION file and may need manual editing, see
+## 'help("citation")'.
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing \pgrmname{MS-Excel} worksheet and workbooks, in different formats including the older binary ones. Similarly to \pkgname{readr} it allows selecting regions of a worksheet to be imported.
+
+Here we use function \Rfunction{read.xlsx()}, indexing the worksheet by name. The returned value is a data frame, and following the expectations of \Rlang \pkgnameNI{utils} character columns are converted in factors by default.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{Book1_xlsx.df} \hlkwb{<-} \hlkwd{read.xlsx}\hlstd{(}\hlstr{"extdata/Book1.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"my data"}\hlstd{)}
+\hlstd{Book1_xlsx.df}
+\end{alltt}
+\begin{verbatim}
+##    sample group observation
+## 1       1     a         1.0
+## 2       2     a         5.0
+## 3       3     a         7.0
+## 4       4     a         2.0
+## 5       5     a         5.0
+## 6       6     b         0.0
+## 7       7     b         2.0
+## 8       8     b         3.0
+## 9       9     b         1.0
+## 10     10     b         1.5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+With function \Rfunction{write.xlsx()} we can write data frames out to Excel worksheets and even append new worksheets to an existing workbook.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{set.seed}\hlstd{(}\hlnum{456321}\hlstd{)}
+\hlstd{my.data} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{y} \hlstd{= letters[}\hlnum{1}\hlopt{:}\hlnum{10}\hlstd{])}
+\hlkwd{write.xlsx}\hlstd{(my.data,} \hlkwc{file} \hlstd{=} \hlstr{"extdata/my-data.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"first copy"}\hlstd{)}
+\hlkwd{write.xlsx}\hlstd{(my.data,} \hlkwc{file} \hlstd{=} \hlstr{"extdata/my-data.xlsx"}\hlstd{,} \hlkwc{sheetName} \hlstd{=} \hlstr{"second copy"}\hlstd{,} \hlkwc{append} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
+% screen capture to be replaced!!
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/my-data-xlsx.png}
+\end{center}
+
+\begin{playground}
+If you have some worksheet files available, import them into \Rlang, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to import them into \Rlang.
+\end{playground}
+
+\subsection['readODS']{\pkgname{readODS}}
+
+Package \pkgname{readODS} provides functions for reading data saved in files that follow the \emph{Open Documents Standard}. Function \Rfunction{read\_ods()} has a similar but simpler user interface to that of \code{read\_excel()} and reads one worksheet at a time, with support only for skipping top rows. The value returned is a data frame.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{read_ods}\hlstd{(}\hlstr{"extdata/Book1.ods"}\hlstd{,} \hlkwc{sheet} \hlstd{=} \hlnum{1}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Parsed with column specification:\\\#\# cols(\\\#\#\ \  sample = col\_double(),\\\#\#\ \  group = col\_character(),\\\#\#\ \  observation = col\_double()\\\#\# )}}\begin{verbatim}
+##    sample group observation
+## 1       1     a         1.0
+## 2       2     a         5.0
+## 3       3     a         7.0
+## 4       4     a         2.0
+## 5       5     a         5.0
+## 6       6     b         0.0
+## 7       7     b         2.0
+## 8       8     b         3.0
+## 9       9     b         1.0
+## 10     10     b         1.5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{write\_ods()} writes a data frame into an ODS file.
 
 \section{Statistical software}\label{sec:files:stat}
 
-There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more more robust than those from \pkgname{haven}.
+There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more robust than those from \pkgname{haven}.
 
 \subsection[foreign]{\pkgname{foreign}}
 
@@ -1429,7 +1410,7 @@ There are two different comprehensive packages for importing data saved from oth
 \end{kframe}
 \end{knitrout}
 
-Functions in this package allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPPS} among others, and a function for writing data into files with formats native to these three programs. Documentation is included with \Rlang describing them in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved with a recent version of \pgrmname{SPSS}.
+Functions in package \pkgname{foreign} allow to import data from files saved by several foreign statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata}, \pgrmname{SPPS}, \pgrmname{Systat}, \pgrmname{Octave} among others, and a function for writing data into files with formats native to \pgrmname{SAS}, \pgrmname{Stata}, and \pgrmname{SPPS}. \Rlang documents them in detail in \emph{R Data Import/Export}. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved a few years ago with the then current version of \pgrmname{SPSS}. We display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1439,42 +1420,19 @@ Functions in this package allow to import data from files saved by several forei
 
 
 {\ttfamily\noindent\itshape\color{messagecolor}{\#\# re-encoding from UTF-8}}\begin{alltt}
-\hlkwd{head}\hlstd{(my_spss.df)}
+\hlstd{my_spss.df[}\hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlnum{17}\hlstd{)]}
 \end{alltt}
 \begin{verbatim}
-##   block       treat mycotreat water1 pot harvest meas_order spad psi H_mm
-## 1     0 Watered, EM         1      1  14       1         NA   NA  NA   67
-## 2     0 Watered, EM         1      1  52       1         NA   NA  NA   44
-## 3     0 Watered, EM         1      1 111       1         NA   NA  NA   65
-## 4     0 Watered, EM         1      1 127       1         NA   NA  NA   78
-## 5     0 Watered, EM         1      1 230       1         NA   NA  NA   71
-## 6     0 Watered, EM         1      1 258       1         NA   NA  NA  100
-##    d_mm pot_plant_g plant_g tag_g pot_g leaf_area harvest_date stem_g
-## 1 2.115          NA      NA    NA    NA    35.883  13653705600 0.0372
-## 2 1.285          NA      NA    NA    NA    16.938  13653705600 0.0139
-## 3 1.685          NA      NA    NA    NA    38.056  13653705600 0.0279
-## 4 1.870          NA      NA    NA    NA    38.469  13653705600 0.0389
-## 5 1.900          NA      NA    NA    NA    39.917  13653705600 0.0446
-## 6 1.810          NA      NA    NA    NA    45.968  13653705600 0.0513
-##   leaves_g green_leaves save_order waterprcnt height_1 height_2 height_3
-## 1   0.1685       0.0542          1         NA       23       34       55
-## 2   0.0626       0.0443          2         NA       10       21       37
-## 3   0.1522       0.0511          3         NA       12       27       48
-## 4   0.1462       0.0500          4         NA       30       40       64
-## 5   0.1696       0.0677          5         NA       28       37       60
-## 6   0.1959       0.0741          6         NA       42       60       84
-##   height_4 diam_1 height_5 diam_2
-## 1       NA     NA       NA     NA
-## 2       NA     NA       NA     NA
-## 3       NA     NA       NA     NA
-## 4       NA     NA       NA     NA
-## 5       NA     NA       NA     NA
-## 6       NA     NA       NA     NA
+##   block       treat mycotreat water1 pot harvest harvest_date
+## 1     0 Watered, EM         1      1  14       1  13653705600
+## 2     0 Watered, EM         1      1  52       1  13653705600
+## 3     0 Watered, EM         1      1 111       1  13653705600
+## 4     0 Watered, EM         1      1 127       1  13653705600
+## 5     0 Watered, EM         1      1 230       1  13653705600
+## 6     0 Watered, EM         1      1 258       1  13653705600
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
-Dates were not converted into \Rlang datetime objects, but instead into numbers.
 
 A second example, this time with a simple \code{.sav} file saved 15 years ago.
 
@@ -1496,7 +1454,7 @@ A second example, this time with a simple \code{.sav} file saved 15 years ago.
 \end{kframe}
 \end{knitrout}
 
-Another example, for a Systat file saved on an PC more than 20 years ago, and rea.
+Another example, for a \pgrmname{Systat} file saved on an PC more than 20 years ago, and read with \Rfunction{read.systat()}.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1546,43 +1504,26 @@ The functions in \pkgname{foreign} can return data frames, but not always this i
 \end{kframe}
 \end{knitrout}
 
-The recently released package \pkgname{haven} is less ambitious in scope, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. The returned \Rclass{tibble} objects in cases when the imported file contained labelled values needs some further work from the user before obtaining `normal' data-frame-compatible \Rclass{tibble} objects.
+Package \pkgname{haven} is less ambitious with respect to the number of formats supported, or their vintages, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to normal \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. In cases when the imported file contains labelled values the returned \Rclass{tibble} object needs some additional attention from the user before obtaining `normal' data-frame-compatible \Rclass{tibble} objects.
 
-We here use function \Rfunction{read\_sav()} to import here a \code{.sav} file saved by a recent version of \pgrmname{SPSS}.
+We can use function \Rfunction{read\_sav()} to import a \code{.sav} file saved by a recent version of \pgrmname{SPSS}. As in the previous section, we display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{my_spss.tb} \hlkwb{<-} \hlkwd{read_sav}\hlstd{(}\hlkwc{file} \hlstd{=} \hlstr{"extdata/my-data.sav"}\hlstd{)}
-\hlstd{my_spss.tb}
+\hlstd{my_spss.tb[}\hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{6}\hlstd{,} \hlnum{17}\hlstd{)]}
 \end{alltt}
 \begin{verbatim}
-## # A tibble: 372 x 29
-##    block   treat mycotreat water1   pot harvest meas_order  spad   psi
-##    <dbl> <dbl+l>     <dbl>  <dbl> <dbl>   <dbl>      <dbl> <dbl> <dbl>
-##  1     0 1 [Wat~         1      1    14       1         NA    NA    NA
-##  2     0 1 [Wat~         1      1    52       1         NA    NA    NA
-##  3     0 1 [Wat~         1      1   111       1         NA    NA    NA
-##  4     0 1 [Wat~         1      1   127       1         NA    NA    NA
-##  5     0 1 [Wat~         1      1   230       1         NA    NA    NA
-##  6     0 1 [Wat~         1      1   258       1         NA    NA    NA
-##  7     0 1 [Wat~         1      1   363       1         NA    NA    NA
-##  8     0 1 [Wat~         1      1   400       1         NA    NA    NA
-##  9     0 1 [Wat~         1      1   424       1         NA    NA    NA
-## 10     0 1 [Wat~         1      1   443       1         NA    NA    NA
-## # ... with 362 more rows, and 20 more variables: H_mm <dbl>, d_mm <dbl>,
-## #   pot_plant_g <dbl>, plant_g <dbl>, tag_g <dbl>, pot_g <dbl>,
-## #   leaf_area <dbl>, harvest_date <date>, stem_g <dbl>, leaves_g <dbl>,
-## #   green_leaves <dbl>, save_order <dbl>, waterprcnt <dbl>,
-## #   height_1 <dbl>, height_2 <dbl>, height_3 <dbl>, height_4 <dbl>,
-## #   diam_1 <dbl>, height_5 <dbl>, diam_2 <dbl>
-\end{verbatim}
-\begin{alltt}
-\hlkwd{head}\hlstd{(my_spss.tb}\hlopt{$}\hlstd{harvest_date)}
-\end{alltt}
-\begin{verbatim}
-## [1] "2015-06-15" "2015-06-15" "2015-06-15" "2015-06-15" "2015-06-15"
-## [6] "2015-06-15"
+## # A tibble: 6 x 7
+##   block           treat mycotreat water1   pot harvest harvest_date
+##   <dbl>       <dbl+lbl>     <dbl>  <dbl> <dbl>   <dbl> <date>      
+## 1     0 1 [Watered, EM]         1      1    14       1 2015-06-15  
+## 2     0 1 [Watered, EM]         1      1    52       1 2015-06-15  
+## 3     0 1 [Watered, EM]         1      1   111       1 2015-06-15  
+## 4     0 1 [Watered, EM]         1      1   127       1 2015-06-15  
+## 5     0 1 [Watered, EM]         1      1   230       1 2015-06-15  
+## 6     0 1 [Watered, EM]         1      1   258       1 2015-06-15
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -2514,12 +2455,12 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [8] base     
 ## 
 ## other attached packages:
-## [1] svglite_1.2.2 knitr_1.23   
+## [1] readODS_1.6.7 svglite_1.2.2 knitr_1.23   
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] Rcpp_1.0.1            pillar_1.4.2          compiler_3.6.1       
 ##  [4] cellranger_1.1.0      highr_0.8             forcats_0.4.0        
-##  [7] pdftools_2.2          zeallot_0.1.0         ncdf4_1.16.1         
+##  [7] pdftools_2.2          ncdf4_1.16.1          zeallot_0.1.0        
 ## [10] jsonlite_1.6          lubridate_1.7.4       evaluate_0.14        
 ## [13] tibble_2.1.3          RNetCDF_1.9-1         pkgconfig_2.0.2      
 ## [16] rlang_0.4.0           cli_1.1.0             curl_4.0             
@@ -2528,12 +2469,12 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [25] gdtools_0.1.9         vctrs_0.2.0           xlsxjars_0.6.1       
 ## [28] askpass_1.1           hms_0.5.0             tidyselect_0.2.5     
 ## [31] glue_1.3.1            qpdf_1.1              R6_2.4.0             
-## [34] fansi_0.4.0           readxl_1.3.1          foreign_0.8-71       
-## [37] tidyr_0.8.3           wrapr_1.8.9           readr_1.3.1          
-## [40] purrr_0.3.2           magrittr_1.5          ellipsis_0.2.0.1     
-## [43] backports_1.1.4       assertthat_0.2.1      utf8_1.1.4           
-## [46] xlsx_0.6.1            stringi_1.4.3         learnrbook_0.0.2.9001
-## [49] crayon_1.3.4
+## [34] rematch_1.0.1         fansi_0.4.0           readxl_1.3.1         
+## [37] foreign_0.8-71        tidyr_0.8.3           wrapr_1.8.9          
+## [40] readr_1.3.1           purrr_0.3.2           magrittr_1.5         
+## [43] ellipsis_0.2.0.1      backports_1.1.4       assertthat_0.2.1     
+## [46] utf8_1.1.4            xlsx_0.6.1            stringi_1.4.3        
+## [49] learnrbook_0.0.2.9001 crayon_1.3.4
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
