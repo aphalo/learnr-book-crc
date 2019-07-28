@@ -56,14 +56,14 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(readxl)
-library(readODS)
 library(xlsx)
+library(readODS)
 library(pdftools)
 library(foreign)
 library(haven)
 library(xml2)
-library(RNetCDF)
 library(ncdf4)
+library(tidync)
 library(lubridate)
 library(jsonlite)
 @
@@ -627,14 +627,14 @@ If you use or have used in the past other statistical software or a general purp
 
 \section{NetCDF files}
 
-In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to an array of locations, like with data read from Affymetrix micro arrays used to study gene expression. The NetCDF format allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
+In some fields including geophysics and meteorology \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to a grid of locations, like with data read from Affymetrix micro arrays used to study gene expression. Files \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
 
 Officially described as
 \begin{quote}
-NetCDF is a set of software libraries and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
+\pgrmname{NetCDF} is a set of software libraries [from Unidata] and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
 \end{quote}
 
-As sometimes NetCDF files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in two or more steps.
+As sometimes \pgrmname{NetCDF} files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a \pgrmname{NetCDF} file is done in two or more steps---i.e.\ opening the file, reading metadata describing the variables and spatial grid and finally reading the variables of interest.
 
 \subsection[ncdf4]{\pkgname{ncdf4}}
 
@@ -642,7 +642,9 @@ As sometimes NetCDF files are large, it is good that it is possible to selective
 citation(package = "ncdf4")
 @
 
-We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
+Package \pkgname{ncdf4} supports reading of files using \pgrmname{netCDF} version 4 or earlier formats. Functions in \pkgname{ncdf4} not only allow reading and writing of these files, but also their modification.
+
+We first read metadata to obtain an index into the file contents and in additional steps read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
 
 We first open a connection to the file with function \Rfunction{nc\_open()}.
 
@@ -653,7 +655,7 @@ meteo_data.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
 @
 
 \begin{playground}
-Uncomment the \Rfunction{print()} statement above and study the metadata available for the data set as a whole, and for each variable.
+Uncomment the \Rfunction{print()} statement above and study the metadata available for the data set as a whole, and for each variable. This will show a detailed definition for each variable and dimension in the file.
 \end{playground}
 The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get here the variables one at a time with function \Rfunction{ncvar\_get()}.
 
@@ -666,13 +668,14 @@ latitude <- ncvar_get(meteo_data.nc, "lat")
 head(latitude)
 @
 
-The \code{time} vector is rather odd, as it contains only month data as these are long-term averages. From the metadata we can infer that they correspond to the months of the year, and we directly generate these, instead of attempting a conversion.
+The \code{time} vector is rather odd, as it contains only monthly data as these are long-term averages, but expressed as days from 1800-01-01 corresponding to the first day of each month of year 1. We use package \pkgname{lubridate} for the conversion.
 
 We construct a \Rclass{tibble} object with PET values for one grid point, we can take advantage of \emph{recycling} or short vectors.
 
 <<ncdf4-03>>=
 pet.tb <-
-    tibble(moth = month.abb[1:12],
+    tibble(time = ncvar_get(meteo_data.nc, "time"),
+           month = month(ymd("1800-01-01") + days(time)),
            lon = longitude[6],
            lat = latitude[2],
            pet = ncvar_get(meteo_data.nc, "pevpr")[6, 2, ]
@@ -680,72 +683,59 @@ pet.tb <-
 pet.tb
 @
 
-If we want to read in several grid points, we can use several different approaches. In this example we take all latitudes along one longitude. Here we avoid using loops altogether when creating a \emph{tidy} \Rclass{tibble} object. However, because of how the data is stored, we needed to transpose the intermediate array before conversion into a vector.
+If we want to read in several grid points, we can use several different approaches. However, the order of nesting of dimensions can make adding the dimensions as columns error prone. It is much simpler to use package \pkgnameNI{tidync} described next. 
 
-<<ncdf4-04>>=
-pet2.tb <-
-    tibble(moth = rep(month.abb[1:12], length(latitude)),
-           lon = longitude[6],
-           lat = rep(latitude, each = 12),
-           pet = as.vector(t(ncvar_get(meteo_data.nc, "pevpr")[6, , ]))
-           )
-pet2.tb
-subset(pet2.tb, lat == latitude[2])
+\subsection[tidync]{\pkgname{tidync}}
+
+<<tidync-00>>=
+citation(package = "tidync")
 @
 
-\begin{playground}
-Play with \code{as.vector(t(ncvar\_get(meteo\_data.nc, "pevpr")[6, , ]))} until you understand what is the effect of each of the nested function calls, starting from \code{ncvar\_get(meteo\_data.nc, "pevpr")}. You will also want to use \Rfunction{str()} to see the structure of the objects returned at each stage.
-\end{playground}
+Pakage \pkgname{tidync} provides functions that make it easier to extract subsets of the data from an \pgrmname{NetCDF} file. We start by doing the same operations as in the examples for \pkgnameNI{ncdf4}.
+
+We open the file creating an object and simulateously activating the first grid.
+
+<<tidync-01>>=
+meteo_data.tnc <- tidync("extdata/pevpr.sfc.mon.ltm.nc")
+meteo_data.tnc
+@
+
+<<tidync-01a>>=
+hyper_dims(meteo_data.tnc)
+@
+
+<<tidync-01b>>=
+hyper_vars(meteo_data.tnc)
+@
+
+We extract a subset of the data into a tibble in long (or tidy) format, and add
+the months using a pipe operator from \pkgname{wrapr} and methods from \pkgname{dplyr}.
+
+<<tidync-02>>=
+hyper_tibble(meteo_data.tnc,
+             lon = signif(lon, 1) == 9,
+             lat = signif(lat, 2) == 87) %.>%
+  mutate(., month = month(ymd("1800-01-01") + days(time))) %.>%
+  select(., -time)
+@
+
+In this second example, we extract data for all grid points along latitudes. To achieve this we need only to omit the test for \code{lat} from the chuck above. The tibble is assembled automatically and columns for the active dimensions added. The decoding of the months remains unchanged.
+
+<<tidync-03>>=
+hyper_tibble(meteo_data.tnc,
+             lon = signif(lon, 1) == 9) %.>%
+  mutate(., month = month(ymd("1800-01-01") + days(time))) %.>%
+  select(., -time)
+@
 
 \begin{playground}
 Instead of extracting data for one longitude across latitudes, extract data across longitudes for one latitude near the Equator.
 \end{playground}
 
-\subsection[RNetCDF]{\pkgname{RNetCDF}}
-
-\begin{warningbox}
-Package RNetCDF supports NetCDF3 files, but not those saved using the current NetCDF4 format.
-\end{warningbox}
-
-<<netcdf-00>>=
-citation(package = "RNetCDF")
-@
-
-We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print.nc()} we can find out the names and characteristics of the variables and attributes. We open the connection with function \Rfunction{open.nc()}.
-
-<<netcdf-01>>=
-meteo_data.nc <- open.nc("extdata/meteo-data.nc")
-str(meteo_data.nc)
-# very long output
-# print.nc(meteo_data.nc)
-@
-
-The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get variables, one at a time, with function \Rfunction{var.get.nc()}.
-
-<<netcdf-02>>=
-time.vec <- var.get.nc(meteo_data.nc, "time")
-head(time.vec)
-longitude <-  var.get.nc(meteo_data.nc, "lon")
-head(longitude)
-latitude <-  var.get.nc(meteo_data.nc, "lat")
-head(latitude)
-@
-
-We construct a \Rclass{tibble} object with values for midday UV Index for 26 days. For convenience, we convert the strings into \Rlang datetime objects.
-
-<<netcdf-03>>=
-uvi.tb <-
-    tibble(date = ymd(time.vec, tz="EET"),
-           lon = longitude[6],
-           lat = latitude[2],
-           uvi = var.get.nc(meteo_data.nc, "UVindex")[6,2,]
-           )
-uvi.tb
-@
 
 \section{Remotely located data}\label{sec:files:remote}
 
-Many of the functions described above accept am URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
+Many of the functions described above accept an URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
 
 <<url-01, eval=eval_online_data>>=
 logger.df <-
@@ -764,7 +754,12 @@ sapply(logger.tb, class)
 sapply(logger.tb, mode)
 @
 
-While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}.
+While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}. Function \Rfunction{download.file()} in \Rlang \pkgname{utils} package can be used to download files using URLs. It supports different modes such as binary or text, and write or append, and different methods such as \code{"internal"}, \code{"wget"} and \code{"libcurl" }.
+
+\begin{warningbox}
+For portability \pgrmname{MS-Excel} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+\end{warningbox}
+
 
 <<url-11, eval=eval_online_data>>=
 download.file("http://r4photobiology.info/learnr/my-data.xlsx",
@@ -772,7 +767,7 @@ download.file("http://r4photobiology.info/learnr/my-data.xlsx",
               mode = "wb")
 @
 
-Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into R.
+Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into \Rlang.
 
 <<url-03, eval=eval_online_data>>=
 remote_thiamin.df <-
@@ -787,8 +782,6 @@ remote_my_spss.tb <-
 remote_my_spss.tb
 @
 
-Function \Rfunction{download.file()} in \Rlang default \pkgname{utils} package can be used to download files using URLs. It supports differemt modes such as binary or text, and write or append, and different methods such as internal, wget and libcurl.
-
 In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it (commented out code, as we have a local copy), and then we open the local file.
 
 <<url-05, eval=eval_online_data>>=
@@ -802,7 +795,8 @@ pet_ltm.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
 @
 
 \begin{warningbox}
-For portability NetCDF files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required at least under MS-Windows.
+For portability \pgrmname{NetCDF} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+.
 \end{warningbox}
 
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
@@ -1147,12 +1141,11 @@ unlink("./extdata", recursive = TRUE)
 <<eco=FALSE>>=
 try(detach(package:jsonlite))
 try(detach(package:lubridate))
+try(detach(package:tidync))
 try(detach(package:ncdf4))
-try(detach(package:RNetCDF))
 try(detach(package:xml2))
 try(detach(package:haven))
 try(detach(package:foreign))
-try(detach(package:pdftools))
 try(detach(package:xlsx))
 try(detach(package:readxl))
 try(detach(package:readr))

@@ -247,14 +247,14 @@ For executing the examples listed in this chapter you need first to load the fol
 \hlkwd{library}\hlstd{(tidyr)}
 \hlkwd{library}\hlstd{(readr)}
 \hlkwd{library}\hlstd{(readxl)}
-\hlkwd{library}\hlstd{(readODS)}
 \hlkwd{library}\hlstd{(xlsx)}
+\hlkwd{library}\hlstd{(readODS)}
 \hlkwd{library}\hlstd{(pdftools)}
 \hlkwd{library}\hlstd{(foreign)}
 \hlkwd{library}\hlstd{(haven)}
 \hlkwd{library}\hlstd{(xml2)}
-\hlkwd{library}\hlstd{(RNetCDF)}
 \hlkwd{library}\hlstd{(ncdf4)}
+\hlkwd{library}\hlstd{(tidync)}
 \hlkwd{library}\hlstd{(lubridate)}
 \hlkwd{library}\hlstd{(jsonlite)}
 \end{alltt}
@@ -448,9 +448,9 @@ Base \Rlang provides several functions for portably working with files, they are
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2019-07-28 18:36:50 2019-07-28 18:36:50
+## xxx.txt    0 FALSE  666 2019-07-29 00:23:30 2019-07-29 00:23:30
 ##                       atime exe
-## xxx.txt 2019-07-28 18:36:50  no
+## xxx.txt 2019-07-29 00:23:30  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
@@ -1587,14 +1587,14 @@ If you use or have used in the past other statistical software or a general purp
 
 \section{NetCDF files}
 
-In some fields including geophysics and meteorology NetCDF is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to an array of locations, like with data read from Affymetrix micro arrays used to study gene expression. The NetCDF format allows the storage of metadata together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets.
+In some fields including geophysics and meteorology \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to a grid of locations, like with data read from Affymetrix micro arrays used to study gene expression. Files \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
 
 Officially described as
 \begin{quote}
-NetCDF is a set of software libraries and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
+\pgrmname{NetCDF} is a set of software libraries [from Unidata] and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
 \end{quote}
 
-As sometimes NetCDF files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a NetCDF file is done in two or more steps.
+As sometimes \pgrmname{NetCDF} files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a \pgrmname{NetCDF} file is done in two or more steps---i.e.\ opening the file, reading metadata describing the variables and spatial grid and finally reading the variables of interest.
 
 \subsection[ncdf4]{\pkgname{ncdf4}}
 
@@ -1629,7 +1629,9 @@ As sometimes NetCDF files are large, it is good that it is possible to selective
 \end{kframe}
 \end{knitrout}
 
-We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
+Package \pkgname{ncdf4} supports reading of files using \pgrmname{netCDF} version 4 or earlier formats. Functions in \pkgname{ncdf4} not only allow reading and writing of these files, but also their modification.
+
+We first read metadata to obtain an index into the file contents and in additional steps read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
 
 We first open a connection to the file with function \Rfunction{nc\_open()}.
 
@@ -1644,7 +1646,7 @@ We first open a connection to the file with function \Rfunction{nc\_open()}.
 \end{knitrout}
 
 \begin{playground}
-Uncomment the \Rfunction{print()} statement above and study the metadata available for the data set as a whole, and for each variable.
+Uncomment the \Rfunction{print()} statement above and study the metadata available for the data set as a whole, and for each variable. This will show a detailed definition for each variable and dimension in the file.
 \end{playground}
 The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get here the variables one at a time with function \Rfunction{ncvar\_get()}.
 
@@ -1674,7 +1676,7 @@ The dimensions of the array data are described with metadata, mapping indexes to
 \end{kframe}
 \end{knitrout}
 
-The \code{time} vector is rather odd, as it contains only month data as these are long-term averages. From the metadata we can infer that they correspond to the months of the year, and we directly generate these, instead of attempting a conversion.
+The \code{time} vector is rather odd, as it contains only monthly data as these are long-term averages, but expressed as days from 1800-01-01 corresponding to the first day of each month of year 1. We use package \pkgname{lubridate} for the conversion.
 
 We construct a \Rclass{tibble} object with PET values for one grid point, we can take advantage of \emph{recycling} or short vectors.
 
@@ -1682,7 +1684,8 @@ We construct a \Rclass{tibble} object with PET values for one grid point, we can
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{pet.tb} \hlkwb{<-}
-    \hlkwd{tibble}\hlstd{(}\hlkwc{moth} \hlstd{= month.abb[}\hlnum{1}\hlopt{:}\hlnum{12}\hlstd{],}
+    \hlkwd{tibble}\hlstd{(}\hlkwc{time} \hlstd{=} \hlkwd{ncvar_get}\hlstd{(meteo_data.nc,} \hlstr{"time"}\hlstd{),}
+           \hlkwc{month} \hlstd{=} \hlkwd{month}\hlstd{(}\hlkwd{ymd}\hlstd{(}\hlstr{"1800-01-01"}\hlstd{)} \hlopt{+} \hlkwd{days}\hlstd{(time)),}
            \hlkwc{lon} \hlstd{= longitude[}\hlnum{6}\hlstd{],}
            \hlkwc{lat} \hlstd{= latitude[}\hlnum{2}\hlstd{],}
            \hlkwc{pet} \hlstd{=} \hlkwd{ncvar_get}\hlstd{(meteo_data.nc,} \hlstr{"pevpr"}\hlstd{)[}\hlnum{6}\hlstd{,} \hlnum{2}\hlstd{, ]}
@@ -1690,202 +1693,195 @@ We construct a \Rclass{tibble} object with PET values for one grid point, we can
 \hlstd{pet.tb}
 \end{alltt}
 \begin{verbatim}
-## # A tibble: 12 x 4
-##    moth    lon   lat   pet
-##    <chr> <dbl> <dbl> <dbl>
-##  1 Jan    9.38  86.7  4.28
-##  2 Feb    9.38  86.7  5.72
-##  3 Mar    9.38  86.7  4.38
-##  4 Apr    9.38  86.7  6.76
-##  5 May    9.38  86.7 16.6 
-##  6 Jun    9.38  86.7 28.9 
-##  7 Jul    9.38  86.7 22.8 
-##  8 Aug    9.38  86.7 12.7 
-##  9 Sep    9.38  86.7  4.09
-## 10 Oct    9.38  86.7  3.35
-## 11 Nov    9.38  86.7  5.08
-## 12 Dec    9.38  86.7  5.17
+## # A tibble: 12 x 5
+##       time month   lon   lat   pet
+##      <dbl> <dbl> <dbl> <dbl> <dbl>
+##  1 -657073    12  9.38  86.7  4.28
+##  2 -657042     1  9.38  86.7  5.72
+##  3 -657014     2  9.38  86.7  4.38
+##  4 -656983     3  9.38  86.7  6.76
+##  5 -656953     4  9.38  86.7 16.6 
+##  6 -656922     5  9.38  86.7 28.9 
+##  7 -656892     6  9.38  86.7 22.8 
+##  8 -656861     7  9.38  86.7 12.7 
+##  9 -656830     8  9.38  86.7  4.09
+## 10 -656800     9  9.38  86.7  3.35
+## 11 -656769    10  9.38  86.7  5.08
+## 12 -656739    11  9.38  86.7  5.17
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-If we want to read in several grid points, we can use several different approaches. In this example we take all latitudes along one longitude. Here we avoid using loops altogether when creating a \emph{tidy} \Rclass{tibble} object. However, because of how the data is stored, we needed to transpose the intermediate array before conversion into a vector.
+If we want to read in several grid points, we can use several different approaches. However, the order of nesting of dimensions can make adding the dimensions as columns error prone. It is much simpler to use package \pkgnameNI{tidync} described next. 
+
+\subsection[tidync]{\pkgname{tidync}}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{pet2.tb} \hlkwb{<-}
-    \hlkwd{tibble}\hlstd{(}\hlkwc{moth} \hlstd{=} \hlkwd{rep}\hlstd{(month.abb[}\hlnum{1}\hlopt{:}\hlnum{12}\hlstd{],} \hlkwd{length}\hlstd{(latitude)),}
-           \hlkwc{lon} \hlstd{= longitude[}\hlnum{6}\hlstd{],}
-           \hlkwc{lat} \hlstd{=} \hlkwd{rep}\hlstd{(latitude,} \hlkwc{each} \hlstd{=} \hlnum{12}\hlstd{),}
-           \hlkwc{pet} \hlstd{=} \hlkwd{as.vector}\hlstd{(}\hlkwd{t}\hlstd{(}\hlkwd{ncvar_get}\hlstd{(meteo_data.nc,} \hlstr{"pevpr"}\hlstd{)[}\hlnum{6}\hlstd{, , ]))}
-           \hlstd{)}
-\hlstd{pet2.tb}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"tidync"}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## # A tibble: 1,128 x 4
-##    moth    lon   lat    pet
-##    <chr> <dbl> <dbl>  <dbl>
-##  1 Jan    9.38  88.5  1.02 
-##  2 Feb    9.38  88.5  1.57 
-##  3 Mar    9.38  88.5  0.883
-##  4 Apr    9.38  88.5  3.55 
-##  5 May    9.38  88.5 12.4  
-##  6 Jun    9.38  88.5 27.1  
-##  7 Jul    9.38  88.5 21.7  
-##  8 Aug    9.38  88.5 11.0  
-##  9 Sep    9.38  88.5  0.356
-## 10 Oct    9.38  88.5 -1.19 
-## # ... with 1,118 more rows
-\end{verbatim}
-\begin{alltt}
-\hlkwd{subset}\hlstd{(pet2.tb, lat} \hlopt{==} \hlstd{latitude[}\hlnum{2}\hlstd{])}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 12 x 4
-##    moth    lon   lat   pet
-##    <chr> <dbl> <dbl> <dbl>
-##  1 Jan    9.38  86.7  4.28
-##  2 Feb    9.38  86.7  5.72
-##  3 Mar    9.38  86.7  4.38
-##  4 Apr    9.38  86.7  6.76
-##  5 May    9.38  86.7 16.6 
-##  6 Jun    9.38  86.7 28.9 
-##  7 Jul    9.38  86.7 22.8 
-##  8 Aug    9.38  86.7 12.7 
-##  9 Sep    9.38  86.7  4.09
-## 10 Oct    9.38  86.7  3.35
-## 11 Nov    9.38  86.7  5.08
-## 12 Dec    9.38  86.7  5.17
+## 
+## To cite package 'tidync' in publications use:
+## 
+##   Michael Sumner (2019). tidync: A Tidy Approach to 'NetCDF' Data
+##   Exploration and Extraction. R package version 0.2.1.
+##   https://CRAN.R-project.org/package=tidync
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {tidync: A Tidy Approach to 'NetCDF' Data Exploration and Extraction},
+##     author = {Michael Sumner},
+##     year = {2019},
+##     note = {R package version 0.2.1},
+##     url = {https://CRAN.R-project.org/package=tidync},
+##   }
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-\begin{playground}
-Play with \code{as.vector(t(ncvar\_get(meteo\_data.nc, "pevpr")[6, , ]))} until you understand what is the effect of each of the nested function calls, starting from \code{ncvar\_get(meteo\_data.nc, "pevpr")}. You will also want to use \Rfunction{str()} to see the structure of the objects returned at each stage.
-\end{playground}
+Pakage \pkgname{tidync} provides functions that make it easier to extract subsets of the data from an \pgrmname{NetCDF} file. We start by doing the same operations as in the examples for \pkgnameNI{ncdf4}.
+
+We open the file creating an object and simulateously activating the first grid.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{meteo_data.tnc} \hlkwb{<-} \hlkwd{tidync}\hlstd{(}\hlstr{"extdata/pevpr.sfc.mon.ltm.nc"}\hlstd{)}
+\hlstd{meteo_data.tnc}
+\end{alltt}
+\begin{verbatim}
+## 
+## Data Source (1): pevpr.sfc.mon.ltm.nc ...
+## 
+## Grids (5) <dimension family> : <associated variables> 
+## 
+## [1]   D0,D1,D2 : pevpr, valid_yr_count    **ACTIVE GRID** ( 216576  values per variable)
+## [2]   D3,D2    : climatology_bounds
+## [3]   D0       : lon
+## [4]   D1       : lat
+## [5]   D2       : time
+## 
+## Dimensions 4 (3 active): 
+##   
+##   dim   name  length     min     max start count    dmin    dmax unlim 
+##   <chr> <chr>  <dbl>   <dbl>   <dbl> <int> <int>   <dbl>   <dbl> <lgl> 
+## 1 D0    lon      192  0.      3.58e2     1   192  0.      3.58e2 FALSE 
+## 2 D1    lat       94 -8.85e1  8.85e1     1    94 -8.85e1  8.85e1 FALSE 
+## 3 D2    time      12 -6.57e5 -6.57e5     1    12 -6.57e5 -6.57e5 FALSE 
+## # ... with 1 more variable: coord_dim <lgl> 
+##   
+## Inactive dimensions:
+##   
+##   dim   name  length   min   max unlim coord_dim 
+##   <chr> <chr>  <dbl> <dbl> <dbl> <lgl> <lgl>     
+## 1 D3    nbnds      2     1     2 FALSE FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{hyper_dims}\hlstd{(meteo_data.tnc)}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 3 x 7
+##   name  length start count    id unlim coord_dim
+##   <chr>  <dbl> <int> <int> <dbl> <lgl> <lgl>    
+## 1 lon      192     1   192     0 FALSE TRUE     
+## 2 lat       94     1    94     1 FALSE TRUE     
+## 3 time      12     1    12     2 FALSE TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{hyper_vars}\hlstd{(meteo_data.tnc)}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 2 x 6
+##      id name           type     ndims natts dim_coord
+##   <dbl> <chr>          <chr>    <dbl> <dbl> <lgl>    
+## 1     4 pevpr          NC_FLOAT     3    14 FALSE    
+## 2     5 valid_yr_count NC_FLOAT     3     4 FALSE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+We extract a subset of the data into a tibble in long (or tidy) format, and add
+the months using a pipe operator from \pkgname{wrapr} and methods from \pkgname{dplyr}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{hyper_tibble}\hlstd{(meteo_data.tnc,}
+             \hlkwc{lon} \hlstd{=} \hlkwd{signif}\hlstd{(lon,} \hlnum{1}\hlstd{)} \hlopt{==} \hlnum{9}\hlstd{,}
+             \hlkwc{lat} \hlstd{=} \hlkwd{signif}\hlstd{(lat,} \hlnum{2}\hlstd{)} \hlopt{==} \hlnum{87}\hlstd{)} \hlopt{%.>%}
+  \hlkwd{mutate}\hlstd{(.,} \hlkwc{month} \hlstd{=} \hlkwd{month}\hlstd{(}\hlkwd{ymd}\hlstd{(}\hlstr{"1800-01-01"}\hlstd{)} \hlopt{+} \hlkwd{days}\hlstd{(time)))} \hlopt{%.>%}
+  \hlkwd{select}\hlstd{(.,} \hlopt{-}\hlstd{time)}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 12 x 5
+##    pevpr valid_yr_count   lon   lat month
+##    <dbl>          <dbl> <dbl> <dbl> <dbl>
+##  1  4.28       1.19e-39  9.38  86.7    12
+##  2  5.72       1.19e-39  9.38  86.7     1
+##  3  4.38       1.29e-39  9.38  86.7     2
+##  4  6.76       1.29e-39  9.38  86.7     3
+##  5 16.6        1.29e-39  9.38  86.7     4
+##  6 28.9        1.29e-39  9.38  86.7     5
+##  7 22.8        1.29e-39  9.38  86.7     6
+##  8 12.7        1.29e-39  9.38  86.7     7
+##  9  4.09       1.29e-39  9.38  86.7     8
+## 10  3.35       1.29e-39  9.38  86.7     9
+## 11  5.08       1.29e-39  9.38  86.7    10
+## 12  5.17       1.29e-39  9.38  86.7    11
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In this second example, we extract data for all grid points along latitudes. To achieve this we need only to omit the test for \code{lat} from the chuck above. The tibble is assembled automatically and columns for the active dimensions added. The decoding of the months remains unchanged.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{hyper_tibble}\hlstd{(meteo_data.tnc,}
+             \hlkwc{lon} \hlstd{=} \hlkwd{signif}\hlstd{(lon,} \hlnum{1}\hlstd{)} \hlopt{==} \hlnum{9}\hlstd{)} \hlopt{%.>%}
+  \hlkwd{mutate}\hlstd{(.,} \hlkwc{month} \hlstd{=} \hlkwd{month}\hlstd{(}\hlkwd{ymd}\hlstd{(}\hlstr{"1800-01-01"}\hlstd{)} \hlopt{+} \hlkwd{days}\hlstd{(time)))} \hlopt{%.>%}
+  \hlkwd{select}\hlstd{(.,} \hlopt{-}\hlstd{time)}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 1,128 x 5
+##     pevpr valid_yr_count   lon   lat month
+##     <dbl>          <dbl> <dbl> <dbl> <dbl>
+##  1  1.02        1.19e-39  9.38  88.5    12
+##  2  4.28        1.19e-39  9.38  86.7    12
+##  3  3.03        9.18e-40  9.38  84.8    12
+##  4 -1.72        1.10e-39  9.38  82.9    12
+##  5 -1.06        0.        9.38  80.9    12
+##  6  0.144       2.76e-39  9.38  79.0    12
+##  7 NA           2.76e-39  9.38  77.1    12
+##  8 NA           9.18e-41  9.38  75.2    12
+##  9 NA           0.        9.38  73.3    12
+## 10 NA           2.76e-39  9.38  71.4    12
+## # ... with 1,118 more rows
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 \begin{playground}
 Instead of extracting data for one longitude across latitudes, extract data across longitudes for one latitude near the Equator.
 \end{playground}
 
-\subsection[RNetCDF]{\pkgname{RNetCDF}}
-
-\begin{warningbox}
-Package RNetCDF supports NetCDF3 files, but not those saved using the current NetCDF4 format.
-\end{warningbox}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"RNetCDF"}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-## 
-## To cite package 'RNetCDF' in publications use:
-## 
-##   Pavel Michna and with contributions from Milton Woods (2017).
-##   RNetCDF: Interface to NetCDF Datasets. R package version 1.9-1.
-##   https://CRAN.R-project.org/package=RNetCDF
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Manual{,
-##     title = {RNetCDF: Interface to NetCDF Datasets},
-##     author = {Pavel Michna and with contributions from Milton Woods},
-##     year = {2017},
-##     note = {R package version 1.9-1},
-##     url = {https://CRAN.R-project.org/package=RNetCDF},
-##   }
-## 
-## ATTENTION: This citation information has been auto-generated from
-## the package DESCRIPTION file and may need manual editing, see
-## 'help("citation")'.
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-We first need to read an index into the file contents, and in additional steps we read a subset of the data. With \Rfunction{print.nc()} we can find out the names and characteristics of the variables and attributes. We open the connection with function \Rfunction{open.nc()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{meteo_data.nc} \hlkwb{<-} \hlkwd{open.nc}\hlstd{(}\hlstr{"extdata/meteo-data.nc"}\hlstd{)}
-\hlkwd{str}\hlstd{(meteo_data.nc)}
-\end{alltt}
-\begin{verbatim}
-##  'NetCDF' num 65536
-\end{verbatim}
-\begin{alltt}
-\hlcom{# very long output}
-\hlcom{# print.nc(meteo_data.nc)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-The dimensions of the array data are described with metadata, mapping indexes to in our examples a grid of latitudes and longitudes and a time vector as a third dimension. The dates are returned as character strings. We get variables, one at a time, with function \Rfunction{var.get.nc()}.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{time.vec} \hlkwb{<-} \hlkwd{var.get.nc}\hlstd{(meteo_data.nc,} \hlstr{"time"}\hlstd{)}
-\hlkwd{head}\hlstd{(time.vec)}
-\end{alltt}
-\begin{verbatim}
-## [1] 20080902 20080903 20080904 20080905 20080906 20080907
-\end{verbatim}
-\begin{alltt}
-\hlstd{longitude} \hlkwb{<-}  \hlkwd{var.get.nc}\hlstd{(meteo_data.nc,} \hlstr{"lon"}\hlstd{)}
-\hlkwd{head}\hlstd{(longitude)}
-\end{alltt}
-\begin{verbatim}
-## [1] 19.5 20.5 21.5 22.5 23.5 24.5
-\end{verbatim}
-\begin{alltt}
-\hlstd{latitude} \hlkwb{<-}  \hlkwd{var.get.nc}\hlstd{(meteo_data.nc,} \hlstr{"lat"}\hlstd{)}
-\hlkwd{head}\hlstd{(latitude)}
-\end{alltt}
-\begin{verbatim}
-## [1] 59.5 60.5 61.5 62.5 63.5 64.5
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-We construct a \Rclass{tibble} object with values for midday UV Index for 26 days. For convenience, we convert the strings into \Rlang datetime objects.
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{uvi.tb} \hlkwb{<-}
-    \hlkwd{tibble}\hlstd{(}\hlkwc{date} \hlstd{=} \hlkwd{ymd}\hlstd{(time.vec,} \hlkwc{tz}\hlstd{=}\hlstr{"EET"}\hlstd{),}
-           \hlkwc{lon} \hlstd{= longitude[}\hlnum{6}\hlstd{],}
-           \hlkwc{lat} \hlstd{= latitude[}\hlnum{2}\hlstd{],}
-           \hlkwc{uvi} \hlstd{=} \hlkwd{var.get.nc}\hlstd{(meteo_data.nc,} \hlstr{"UVindex"}\hlstd{)[}\hlnum{6}\hlstd{,}\hlnum{2}\hlstd{,]}
-           \hlstd{)}
-\hlstd{uvi.tb}
-\end{alltt}
-\begin{verbatim}
-## # A tibble: 26 x 4
-##    date                  lon   lat   uvi
-##    <dttm>              <dbl> <dbl> <dbl>
-##  1 2008-09-02 00:00:00  24.5  60.5 2.36 
-##  2 2008-09-03 00:00:00  24.5  60.5 1.19 
-##  3 2008-09-04 00:00:00  24.5  60.5 1.29 
-##  4 2008-09-05 00:00:00  24.5  60.5 3.24 
-##  5 2008-09-06 00:00:00  24.5  60.5 2.36 
-##  6 2008-09-07 00:00:00  24.5  60.5 2.69 
-##  7 2008-09-08 00:00:00  24.5  60.5 1.46 
-##  8 2008-09-09 00:00:00  24.5  60.5 1.87 
-##  9 2008-09-10 00:00:00  24.5  60.5 0.900
-## 10 2008-09-11 00:00:00  24.5  60.5 2.50 
-## # ... with 16 more rows
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
 
 \section{Remotely located data}\label{sec:files:remote}
 
-Many of the functions described above accept am URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
+Many of the functions described above accept an URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1912,7 +1908,12 @@ Many of the functions described above accept am URL address in place of file nam
 \end{kframe}
 \end{knitrout}
 
-While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}.
+While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file writing a file locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}. Function \Rfunction{download.file()} in \Rlang \pkgname{utils} package can be used to download files using URLs. It supports different modes such as binary or text, and write or append, and different methods such as \code{"internal"}, \code{"wget"} and \code{"libcurl" }.
+
+\begin{warningbox}
+For portability \pgrmname{MS-Excel} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+\end{warningbox}
+
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1924,7 +1925,7 @@ While functions in package \pkgname{readr} support the use of URLs, those in pac
 \end{kframe}
 \end{knitrout}
 
-Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into R.
+Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into \Rlang.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1947,8 +1948,6 @@ Functions in package \pkgname{foreign}, as well as those in package \pkgname{hav
 \end{kframe}
 \end{knitrout}
 
-Function \Rfunction{download.file()} in \Rlang default \pkgname{utils} package can be used to download files using URLs. It supports differemt modes such as binary or text, and write or append, and different methods such as internal, wget and libcurl.
-
 In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it (commented out code, as we have a local copy), and then we open the local file.
 
 \begin{knitrout}\footnotesize
@@ -1966,7 +1965,8 @@ In this example we use a downloaded NetCDF file of long-term means for potential
 \end{knitrout}
 
 \begin{warningbox}
-For portability NetCDF files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required at least under MS-Windows.
+For portability \pgrmname{NetCDF} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+.
 \end{warningbox}
 
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
@@ -2347,12 +2347,11 @@ can be run in a ``clean'' system.
 \begin{alltt}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{jsonlite))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{lubridate))}
+\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{tidync))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{ncdf4))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{RNetCDF))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{xml2))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{haven))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{foreign))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{pdftools))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{xlsx))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{readxl))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{readr))}
@@ -2455,26 +2454,26 @@ Before you become too entranced with gorgeous gadgets and mesmerizing video disp
 ## [8] base     
 ## 
 ## other attached packages:
-## [1] readODS_1.6.7 svglite_1.2.2 knitr_1.23   
+## [1] pdftools_2.2  readODS_1.6.7 svglite_1.2.2 knitr_1.23   
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] Rcpp_1.0.1            pillar_1.4.2          compiler_3.6.1       
-##  [4] cellranger_1.1.0      highr_0.8             forcats_0.4.0        
-##  [7] pdftools_2.2          ncdf4_1.16.1          zeallot_0.1.0        
+##  [4] cellranger_1.1.0      highr_0.8             tidync_0.2.1         
+##  [7] forcats_0.4.0         zeallot_0.1.0         ncdf4_1.16.1         
 ## [10] jsonlite_1.6          lubridate_1.7.4       evaluate_0.14        
 ## [13] tibble_2.1.3          RNetCDF_1.9-1         pkgconfig_2.0.2      
 ## [16] rlang_0.4.0           cli_1.1.0             curl_4.0             
-## [19] haven_2.1.1           xfun_0.8              rJava_0.9-11         
-## [22] dplyr_0.8.3           stringr_1.4.0         xml2_1.2.0           
-## [25] gdtools_0.1.9         vctrs_0.2.0           xlsxjars_0.6.1       
-## [28] askpass_1.1           hms_0.5.0             tidyselect_0.2.5     
-## [31] glue_1.3.1            qpdf_1.1              R6_2.4.0             
-## [34] rematch_1.0.1         fansi_0.4.0           readxl_1.3.1         
-## [37] foreign_0.8-71        tidyr_0.8.3           wrapr_1.8.9          
-## [40] readr_1.3.1           purrr_0.3.2           magrittr_1.5         
-## [43] ellipsis_0.2.0.1      backports_1.1.4       assertthat_0.2.1     
-## [46] utf8_1.1.4            xlsx_0.6.1            stringi_1.4.3        
-## [49] learnrbook_0.0.2.9001 crayon_1.3.4
+## [19] haven_2.1.1           xfun_0.8              ncmeta_0.0.4         
+## [22] rJava_0.9-11          dplyr_0.8.3           stringr_1.4.0        
+## [25] xml2_1.2.0            gdtools_0.1.9         vctrs_0.2.0          
+## [28] xlsxjars_0.6.1        askpass_1.1           hms_0.5.0            
+## [31] tidyselect_0.2.5      glue_1.3.1            qpdf_1.1             
+## [34] R6_2.4.0              rematch_1.0.1         fansi_0.4.0          
+## [37] readxl_1.3.1          foreign_0.8-71        tidyr_0.8.3          
+## [40] wrapr_1.8.9           readr_1.3.1           purrr_0.3.2          
+## [43] magrittr_1.5          ellipsis_0.2.0.1      backports_1.1.4      
+## [46] assertthat_0.2.1      utf8_1.1.4            xlsx_0.6.1           
+## [49] stringi_1.4.3         learnrbook_0.0.2.9001 crayon_1.3.4
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
