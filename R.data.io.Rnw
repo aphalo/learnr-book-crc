@@ -801,7 +801,7 @@ For portability \pgrmname{NetCDF} files should be downloaded in binary mode, set
 
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
 
-Numerous modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or looged data. Formats based on XML schemas or in JSON format are commonly used.
+Numerous modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or in JSON format are commonly used.
 
 \subsection[jsonlite]{\pkgname{jsonlite}}
 
@@ -818,7 +818,7 @@ This example is not run, and needs setting the configuration of the YoctoPuce mo
 Here we use function \Rfunction{fromJSON()} to retrieve logged data from one sensor.
 
 <<iot-01, eval=eval_yoctopuce>>=
-hub.url <- "http://127.0.0.1:4444/"
+hub.url <- "http://localhost:4444/"
 Meteo01.lst <-
     fromJSON(paste(hub.url, "byName/Meteo01/dataLogger.json",
                    sep = ""))
@@ -826,7 +826,7 @@ names(Meteo01.lst)
 Meteo01.lst
 @
 
-The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is \emph{tidy} with respect to the variables, with quantity names and units also returned by the module, as well as the time.
+The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
 
 <<iot-02, eval=eval_yoctopuce>>=
     val.vector <- unlist(Meteo01.lst[["val"]])
@@ -843,291 +843,10 @@ The minimum, mean and maximum values for each logging interval, need to be split
 
 \section{Databases}\label{sec:data:db}
 
-One of the advantages of using databases is that subsets of cases and variables can be retrieved from databases, even remotely, making it possible to work both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work.
+One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM). This is an important subject, but extensive enough to be outside the scope of this book. We a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
 
-\begin{infobox}
-The contents of this section is still missing, but will in any case be basic. I recommend the book \citebooktitle{Wickham2017} \autocite{Wickham2017} for learning how to use the packages in the \pkgname{tidyverse} suite, especially in the case of connecting to databases.
-\end{infobox}
+The additional steps compared to using \pkgname{dplyr} start with the need to establish a connection to a local or remote database. We will use \pgrmname{SQLite} for the examples, but backends supporting other database systems also exist. 
 
-%\section[Grammar of data manipulation]{The grammar of data manipulation of the \pkgname{tidyverse}}
-%
-%Packages in \code{tidyverse}, define more user-friendly \emph{apply} functions, which I describe in the next sections. These packages, do much more than providing replacements for \Rlang \emph{apply} functions. They define a ``grammar of data'' for data manipulations like transformations and summaries, based on the same philosophy as that behind the grammar of graphics on which package \pkgname{ggplot2} is based (see Chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}).
-%
-%To make the problem of manipulating data, tractable and consistent, the first step is to settle on a certain way of storing data. In \Rlang data frames, variables are most frequently in columns and cases are in rows. This is a good start and also frequently used in other software. The first major inconsistency across programs, and to some extent among \Rlang packages, is how to store data for sequential or repeated measurements. Do the rows represent measuring events, or measured objects? In R, data from individual measuring events are in most cases stored as rows, and if those that correspond to the same object or individual encoded with an index variable. Furthermore, say in a time sequence, the times or dates are stored in an additional variable. \Rlang approach is much more flexible in that it does not assume that observations on different individuals are synchronized. \citeauthor{Wickham2014a} \cite{Wickham2014a} has coined the name ``tidy data'' organized in this manner.
-%
-%Hadley Wickham, together with collaborators, has developed a set of \Rlang tools for the manipulation, plotting and analysis of \emph{tidy data}, thoroughly described in the recently published book \citebooktitle{Wickham2017} \autocite{Wickham2017}. The book \citebooktitle{Peng2017} \autocite{Peng2017} covers data manipulaiton in the first chapters before moving on to programming. Here we give an overview of the components of the \pkgname{tidyverse} grammar of data manipulation. The book \citebooktitle{Wickham2017} and the documentation included with the various packages should be consulted for a deeper and more detailed discussion. Aspects of the \pkgname{tidyverse} related to reading and writing data files (\pkgname{readr}, \pkgname{readxl}, and \pkgname{xml2}) have been discussed in earlier sections of this chapter, while the use of (\pkgname{ggplot2}) for plotting is described in later chapters.
-%
-%\subsection{Better data frames}
-%
-%\section{Grammar for manipulation of character strings}\label{sec:data:strings}
-%
-%\begin{warningbox}
-%  This section will contain an introduction to character-string manipulation with methods from packages \pkgname{stringr} and \pkgname{stringi}.
-%\end{warningbox}
-%
-%\section{Pipes and tees}\label{sec:data:pipes}
-%
-%Pipes have been part of Unix shells already starting from the early days of Unix in 1973. By the early 1980's the idea had led to the development of many \emph{tools} to be used in \pgrmname{sh} connected by pipes \autocite{Kernigham1981}. Shells developed more recently like the Korn shell, \pgrmname{ksh}, and \pgrmname{bash} maintained support for this approach \autocite{Rosenblatt1993}. The idea behind the concept of data pipe, is that one can directly use the output from one tool as input for the tool doing the next stage in the processing. These tools are simple programs that do a defined operation, such as \pgrmname{ls} or \pgrmname{cat}---from where the names of equivalent functions in \langname{R} were coined.
-%
-%Apple's OS X is based on Unix, and allows the use of pipes at the command prompt and in shell scripts. Linux uses the tools from the Gnu project that to a large extent replicate and extend the capabilities  by the and also natively supports \emph{pipes} equivalent to those in Unix. In Windows support for pipes was initially partial at the command prompt. Currently, Window's PowerShell supports the use of pipes, as well as some Linux shells are available in versions that can be used under MS-Windows.
-%
-%Within \Rlang code, the support for pipes is not native, but instead implemented by some recent packages. Most of the packages in the \code{tidyverse} support this new syntax through the use of package \pkgname{magrittr}. The use of pipes has advantages and disadvantages. They are at their best when connecting small functions with rather simple inputs and outputs. They tend, yet, to be difficult to debug, a problem that counterbalances the advantages of the clear and consice notation achieved.
-%
-%\subsection{Pipes and tees}
-%
-%The \emph{pipe} operator \Roperator{\%>\%} is defined in package \pkgname{magrittr}, but imported and re-exported by other packages in the \pkgname{tidyverse}. The idea is that the value returned by a function is passed by the pipe operator as the first argument to the next function in the ``pipeline''.
-%
-%We can chain some of the examples in the previous section into a ``pipe''.
-%
-%<<pipes-01>>=
-%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n())
-%@
-%
-%I we want to save the returned value, to me it feels more natural to use a left to right assignment, although the usual right to left one can also be used.
-%
-%<<pipes-02>>=
-%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n()) -> summary.tb
-%summary.tb
-%@
-%
-%<<pipes-03>>=
-%summary.tb <-
-%    tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
-%      group_by(letters) %>%
-%      summarise(mean_numbers = mean(numbers),
-%                var_numbers = var(numbers),
-%                n = n())
-%summary.tb
-%@
-%
-%As \Rfunction{print()} returns its input, we can also include it in the middle of a pipe as a simple way of visualizing what takes place at each step.
-%
-%<<pipes-04>>=
-%tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %>%
-%  print() %>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n())  %>%
-%            print() -> summary.tb
-%@
-%
-%\begin{explainbox}
-%\textbf{Why and how we can insert a call to \Rfunction{print()} in the middle of a pipe?} An extremely simple example, with a twist, follows.
-%
-%<<pipes-expl-01>>=
-%print("a") %>% print()
-%@
-%
-%The example above is equivalent to.
-%
-%<<pipes-expl-02>>=
-%print(print("a"))
-%@
-%
-%The examples above are somehow surprising but instructive. Function \Rfunction{print()} returns a value, its first argument, but \emph{invisibly}---see help for \Rfunction{invisible()}. Otherwise default printing would result in the value being printed twice at the \Rlang prompt. We can demonstrate this by saving the value returned by print.
-%
-%<<pipes-expl-03>>=
-%a <- print("a")
-%class(a)
-%a
-%b <- print(2)
-%class(b)
-%b
-%@
-%
-%\end{explainbox}
-%
-%\begin{playground}
-%Assemble different pipes, predict what will be the output, and check your prediction by executing the code.
-%\end{playground}
-%
-%Although \Roperator{\%>\%} is the most frequently used pipe operator, there are some additional ones available. We start by creating a tibble.
-%
-%<<pipes-11>>=
-%my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
-%@
-%
-%We first demonstrate that the pipe can have at its head a variable with the same operator as we used above, in this case a tibble.
-%
-%<<pipes-12>>=
-%my.tb %>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n())
-%my.tb
-%@
-%
-%We could save the output of the pipe to the same variable at the head of the pipe by explicitly using the same name, but operator \Roperator{\%<>\%} does this directly.
-%
-%<<pipes-13>>=
-%my.tb %<>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n())
-%my.tb
-%@
-%
-%A few additional operators defined in \pkgname{magrittr} are not re-exported by packages in the \pkgname{tidyverse}, so their use requires \pkgname{magrittr} to be loaded.
-%
-%When functions have a side-effect like \Rfunction{print()} displaying its input and passing it unchanged as the returned value, we do not need to split flow of processing through a pipe. In real house plumbing, when a split is needed a ``tee'' shaped pipe joint is used. This is where the name tee as used in programming originates. Operator \Roperator{\%T>\%} passes along not the value returned by a function, but instead the value passed to it as input.
-%
-%As in the previous chunk we assigned the summaries to \code{my.tb}, we need to re-create it to run the next example.
-%
-%<<pipes-14>>=
-%my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
-%@
-%
-%<<pipes-15>>=
-%sump <- function(x) {print("hello"); return(NULL)}
-%my.tb %>%
-%  group_by(letters) %>%
-%  summarise(mean_numbers = mean(numbers),
-%            var_numbers = var(numbers),
-%            n = n()) %T>%
-%  sump() -> summary.tb
-%@
-%
-%We can see that the value saved in \code{summary.tb} is the one returned by \Rfunction{summarize()} rather than the one returned by \Rfunction{sump()}.
-%
-%\begin{playground}
-%Look up the help page for operator \Roperator{\%\$\%} and write an example of its use.
-%\end{playground}
-%
-%\section{Extended examples}\label{sec:dataex}
-%
-%\subsection{Well-plate data}\label{sec:dataex:well:plate}
-%
-%Our first example attempts to simulate data arranged in rows and columns based on spatial position, such as in a well plate. We will use pseudo-random numbers for the fake data---i.e.\ the measured response.
-%
-%<<well-plate-data-01>>=
-%well_data.tb <-
-%  as.tibble(matrix(rnorm(50),
-%                   nrow = 5,
-%                   dimnames = list(as.character(1:5), LETTERS[1:10])))
-%# drops names of rows
-%well_data.tb <-
-%  add_column(well_data.tb, row_ids = 1:5, .before = 1)
-%@
-%
-%In addition, we create a matrix of fake treatment ids.
-%<<well-plate-data-02>>=
-%well_ids.tb <-
-%  as.tibble(matrix(sample(letters, size = 50, replace = TRUE),
-%                   nrow = 5,
-%                   dimnames = list(as.character(1:5), LETTERS[1:10])))
-%# drops names of rows
-%well_ids.tb <-
-%  add_column(well_ids.tb, row_ids = 1:5, .before = 1)
-%@
-%
-%As we will combine them, the coordinates should be encoded consistently in the two objects.
-%I will take the approach of first converting each tibble into a tidy tibble. We use function \Rfunction{gather()} from package \pkgname{tidyr}.
-%
-%<<well-plate-data-03>>=
-%well_data.ttb <- gather(well_data.tb,
-%                       key = col_ids, value = reading,
-%                       -row_ids)
-%well_ids.ttb <- gather(well_ids.tb,
-%                       key = col_ids, value = group,
-%                       -row_ids)
-%@
-%
-%Now we need to join the two tibbles into a single one. In this case, as we know that the row order in the two tibbles is matched, we could simply use \Rfunction{cbind()}. However, \Rfunction{full\_join()}, from package \pkgname{dplyr} provides a more general and less error prone alternative as it can do the matching based on the values of any variables common to both tibbles, by default all the variables in common, as needed here. We use a ``pipe'', through which, after the join, we remove the ids (assuming they are no longer needed), sort the rows by group, and finally save the result to a new ``tidy'' tibble.
-%
-%<<well-plate-data-04>>=
-%full_join(well_ids.ttb, well_data.ttb) %>%
-%  select(-row_ids, -col_ids) %>%
-%  arrange(group) -> well.tb
-%well.tb
-%@
-%
-%We finally calculate \emph{summaries} by group using function \Rfunction{summarise()}, and store the tibble containing the summaries to variable \code{well\_summaries.tb}.
-%
-%<<well-plate-data-05>>=
-%group_by(well.tb, group) %>%
-%  summarise(avg_read = mean(reading),
-%            var_read = var(reading),
-%            count = n()) -> well_summaries.tb
-%well_summaries.tb
-%@
-%
-%We now save the tibbles into an \Rlang data file with function \Rfunction{save()}.
-%
-%<<well-plate-data-06>>=
-%save(well.tb, well_summaries.tb, file = "data/well-data.rda")
-%@
-%
-%\subsection{Seedling morphology}\label{sec:dataex:birch}
-%
-%We use here data from an experiment on the effects of spacing in the nursery between silver birch seedlings on their morphology. We take one variable from a lager study \autocite{Aphalo2006}, the leaf area at different heights above the ground in 10~cm increments. Area was measured separately for leaves on the main stem and leaves on branches.
-%
-%In this case, as the columns are badly aligned in the original text file, we use \Rfunction{read.table()} from base R, rather than \Rfunction{read\_table()} from \pkgname{readr}. Afterwards we heavily massage the data into shape so as to obtain a tidy tibble with the total leaf area per height segment per plant. The file contains additional data that we discard for this example.
-%
-%<<birch-area-01>>=
-%as.tibble(read.table("extdata/areatable.dat", header = TRUE)) %>%
-%  filter(row %in% 4:8) %>%
-%  select(code, tray, row, starts_with("a.")) %>%
-%  gather(key = sample, value = area, -tray, -row, -code) %>%
-%  mutate(segment = str_extract(sample, "[0-9]{1,2}"),
-%         part = ifelse(str_extract(sample, "[bm]") == "b",
-%                       "branch", "main")) %>%
-%  group_by(tray, code, row, segment) %>%
-%  summarise(area_tot = sum(area)) -> birch.tb
-%birch.tb
-%@
-%
-%\begin{playground}
-%The previous chunk uses a long ``pipe'' to manipulate the data. I built this example interactively, starting at the top, and adding one line at a time. Repeat this process, line by line. If in a given line you do not understand why a certain bit of code is included, look at the help pages, and edit the code to experiment.
-%\end{playground}
-%
-%We now will calculate means per true replicate, the trays. Then use these means to calculate overall means, standard deviations and coefficients of variabilities (\%).
-%
-%<<birch-area-02>>=
-%group_by(birch.tb, tray, row, segment) %>%
-%  summarise(area = mean(area_tot)) %>%
-%  group_by(row, segment) %>%
-%  summarise(mean_area = mean(area),
-%            sd_area = sd(area),
-%            cv_area = sd_area / mean_area * 100) ->
-%  birch_summaries.tb
-%birch_summaries.tb
-%@
-%
-%We could be also interested in total leaf area per plant. The code is the same as above, but with no grouping for \code{segment}.
-%
-%<<birch-area-03>>=
-%group_by(birch.tb, tray, row) %>%
-%  summarise(area = mean(area_tot)) %>%
-%  group_by(row) %>%
-%  summarise(mean_area = mean(area),
-%            sd_area = sd(area),
-%            cv_area = sd_area / mean_area * 100) ->
-%  birch_plant_summaries.tb
-%birch_plant_summaries.tb
-%@
-%
-%We now save the tibbles into an \Rlang data file.
-%
-%<<birch-area-04>>=
-%save(birch.tb, birch_summaries.tb, birch_plant_summaries.tb,
-%     file = "data/birch-data.rda")
-%@
-%
-%\begin{playground}
-%Repeat the same calculations for all the rows as I originally did. I eliminated the data from the borders of the trays, as those plants apparently did not really experience as crowded a space as that corresponding to the nominal spacing.
-%\end{playground}
-%
 \begin{infobox}
 It is always good to clean up, and in the case of the book, the best way to test that the examples
 can be run in a ``clean'' system.

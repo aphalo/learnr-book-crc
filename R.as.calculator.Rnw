@@ -93,16 +93,16 @@ b
 3e-2 * 2.0
 @
 
-Entering the name of a variable \emph{at the R console} implicitly calls function \code{print()} displaying the stored value on the console. Unless assigned to a variable, the result of entering a statement \emph{at the R console} is displayed on the console as \code{print()} is implicitly called with the result of the statement as its argument.
+Entering the name of a variable \emph{at the R console} implicitly calls function \code{print()} displaying the stored value on the console. The same applies to any other statement entered \emph{at the R console}: \code{print()} is implicitly called with the result of executing the statement as its argument.
 
 <<numbers-2a>>=
 a
 print(a)
-a +1
-print(a +1)
+a + 1
+print(a + 1)
 @
 \begin{playground}
-There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The `backwards' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is generally discouraged as this redundant use was not part of the \Rlang language as originally defined. Chaining\index{assignment!chaining} assignments as in the first line below is sometimes used, and signals to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
+There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The `backwards' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
 
 <<numbers-3, tidy=FALSE, eval=eval_playground>>=
 a <- b <- c <- 0.0
@@ -327,6 +327,41 @@ Study the variations of the previous example shown below, and explain why the tw
 @
 \end{advplayground}
 
+Both when displaying numbers or as part of computations, we may want to decrease the number of significant digits or the number of digits after the decimal marker. Be aware that in the examples below even if printing is being done by default, these functions return \code{numeric} values that are different from their input and can be stored and used in computations. Function \Rfunction{round()} is used to round numbers to a certain number of decimal places after or before the decimal marker, while \Rfunction{signif()} rounds to the requested number of significant digits.
+
+<<convert-3, tidy=FALSE>>=
+round(0.0124567, digits = 3)
+signif(0.0124567, digits = 3)
+round(1789.1234, digits = 3)
+signif(1789.1234, digits = 3)
+round(1789.1234, digits = -1)
+a <- 0.12345
+b <- round(a, digits = 2)
+a == b
+a - b
+b
+@
+
+\begin{explainbox}
+Being \code{digits} the second parameter of these functions, the argument can be also passed by position. However, code is usually easier to understand for humans when parameter names are made explicit.
+
+<<convert-3a, tidy=FALSE>>=
+round(0.0124567, digits = 3)
+round(0.0124567, 3)
+@
+\end{explainbox}
+
+Functions \Rfunction{trunc()} and \Rfunction{ceiling()} return the non-fractional part of a numeric value as a new numeric value. They differ in how they handle negative values, and neither of them rounds the returned value to the nearest whole number.
+
+\begin{playground}
+What does value truncation mean? Function \Rfunction{trunc()} truncates a numeric value, but it does not return an \code{integer}.
+\begin{itemize}
+  \item Explore how \Rfunction{trunc()} and \Rfunction{ceiling()} differ. Test them both with positive and negative values.
+  \item \textbf{Advanced} Use function \Rfunction{abs()} and operators \Roperator{+} and \Roperator{-} to recreate the output of \Rfunction{trunc()} and \Rfunction{ceiling()} for the different inputs.
+  \item Can \Rfunction{trunc()} and \Rfunction{ceiling()} be considered type conversion functions in \Rlang?
+\end{itemize}
+\end{playground}
+
 \index{classes and modes!numeric, integer, double|)}\index{numbers and their arithmetic|)}
 
 \section{Logical values and Boolean algebra}\label{sec:calc:boolean}
@@ -341,6 +376,7 @@ a
 !a # negation
 a && b # logical AND
 a || b # logical OR
+xor(a, b) # exclusive OR
 @
 
 %%%% index operators using verb!!
@@ -472,7 +508,7 @@ any(c > 20, na.rm=TRUE)
 \index{EPS ($\epsilon$)|see{machine arithmetic precision}}%
 You may skip this box on first reading. See also page \pageref{par:float}. Here I give some examples for which the finite resolution of computer machine floats, as compared to Real numbers as defined in mathematics makes an important difference.
 
-In \Rpgrm the usual numbers are stored as \emph{double-precision floats}, which have limits to the largest and smallest numbers that can be represented, and the number of significant digits that can be stored (usually described as $\epsilon$ (epsilon, abbreviated \emph{eps}, defined as the largest number for which $ 1 + \epsilon = 1$)). This can be important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1 due to insufficient resolution.
+In \Rpgrm the usual numbers are stored as \emph{double-precision floats}, which have limits to the largest and smallest numbers that can be represented, and the number of significant digits that can be stored, usually described by $\epsilon$, abbreviated \emph{eps}, and defined as the largest number for which $1 + \epsilon = 1$. This can be important, and can generate unexpected results in some cases, especially when testing for equality. In the example below, the result of the subtraction is still exactly 1 due to insufficient resolution.
 
 <<numbers-EB9>>=
 0 - 1e-20
@@ -487,7 +523,7 @@ The finiteness of floats also affects tests of equality, which is more likely to
 0 == 1e-20
 @
 
-As \Rpgrm can run on different types of computer hardware, the actual machine limits for storing numbers in memory may vary depending on the type of processor and even compiler used to build the \Rpgrm program executable itself. However, it is possible to obtain these values at run time from the variable \code{.Machine}, which is part of the \Rlang language. Please, see the help page for \code{.Machine} for a detailed, and up-to-date, description of the available constants.\qRconst{.Machine\$double.eps}\qRconst{.Machine\$double.neg.eps}\qRconst{.Machine\$double.max}\qRconst{.Machine\$double.min}
+As \Rpgrm can run on different types of computer hardware, the actual machine limits for storing numbers in memory may vary depending on the type of processor and even compiler used to build the \Rpgrm program executable. However, it is possible to obtain these values at run time from the variable \code{.Machine}, which is part of the \Rlang language. Please, see the help page for \code{.Machine} for a detailed, and up-to-date, description of the available constants.\qRconst{.Machine\$double.eps}\qRconst{.Machine\$double.neg.eps}\qRconst{.Machine\$double.max}\qRconst{.Machine\$double.min}
 
 <<machine-eps-01>>=
 .Machine$double.eps
@@ -512,7 +548,7 @@ As \Rclass{integer} values are stored in machine memory without loss of precisio
 2147483699L
 @
 
-In those statements in the chunk below where at least one operand is \Rclass{double} the \Rclass{integer} operands are \emph{promoted} to \Rclass{double} before computation. A similar promotion does not take place when operations are among \Rclass{integer} values, resulting in \emph{overflow}\index{arithmetic overflow}\index{overflow!see{arithmetic overflow}}, or numbers that are too big to be represented as \Rclass{integer} values.
+In those statements in the chunk below where at least one operand is \Rclass{double} the \Rclass{integer} operands are \emph{promoted} to \Rclass{double} before computation. A similar promotion does not take place when operations are among \Rclass{integer} values, resulting in \emph{overflow}\index{arithmetic overflow}\index{overflow!see{arithmetic overflow}}, meaning numbers that are too big to be represented as \Rclass{integer} values.
 
 <<machine-eps-04>>=
 2147483600L + 99L
@@ -573,14 +609,14 @@ And continue with abstract (symbolic) examples.
 my.set <- c("a", "b", "c", "b")
 @
 
-To test if a given value belongs to a set, we use operator \Roperator{\%in\%}. In the algebra of sets notation this is written $a \in A$, where $A$ is a set and $a$ a member. The second statement shows, that the \code{\%in\%} operator is vectorized on its left operand, returning a logical vector.
+To test if a given value belongs to a set, we use operator \Roperator{\%in\%}. In the algebra of sets notation this is written $a \in A$, where $A$ is a set and $a$ a member. The second statement shows, that the \code{\%in\%} operator is vectorized on its left-hand-side (lhs) operand, returning a logical vector.
 
 <<sets-02>>=
 "a" %in% my.set
 c("a", "a", "z") %in% my.set
 @
 
-The negation of inclusion is $a \not\in A$, and coded in \Rlang by adding the negation operator \Roperator{!} to the result of the test done with \Roperator{\%in\%}.
+The negation of inclusion is $a \not\in A$, and coded in \Rlang by applying the negation operator \Roperator{!} to the result of the test done with \Roperator{\%in\%}.
 
 <<sets-02a>>=
 !"a" %in% my.set
@@ -631,7 +667,7 @@ In the algebra of sets notation $A \subseteq B$ where $A$ and $B$ are sets indic
 \end{playground}
 
 \begin{explainbox}
-  All set algebra examples above use character vectors and character constants. This is just the most frequent use case. Sets operations are valid on vectors of any atomic class, including \code{integer}, and computed values can be part of the code statements. In the second and third statements in the next chunk, we need to use additional parentheses to alter the default order of precedence between arithmetic and set operators.
+All set algebra examples above use character vectors and character constants. This is just the most frequent use case. Sets operations are valid on vectors of any atomic class, including \code{integer}, and computed values can be part of statements. In the second and third statements in the next chunk, we need to use additional parentheses to alter the default order of precedence between arithmetic and set operators.
 
 <<sets-EB01>>=
 9L %in% 2L:4L
@@ -688,7 +724,7 @@ try(h + 2)
 @
 
 \begin{explainbox}
-In many computer languages vectors of characters are distinct from vectors of character strings. In character vectors each position in the vector is occupied by a single character, while in a vector of character strings, strings of characters of various lengths, like words or sentences are stored at each position of the vector. \Rlang's \code{character} vectors are vectors of character strings, and there is no predefined class for vectors of individual characters. In \Rlang character string constants can be enclosed either in double or single quotes. If you are familiar with \Clang or \Cpplang you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are totally different.
+In many computer languages vectors of characters are distinct from vectors of character strings. In these languages, character vectors store at each index position a single character, while vectors of character strings store at each index position strings of characters of various lengths, such as words or sentences. \Rlang's \code{character} vectors are vectors of character strings, and there is no predefined class for vectors of individual characters. In \Rlang character string constants can be enclosed either in double or single quotes. If you are familiar with \Clang or \Cpplang you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are not equivalent.
 \end{explainbox}
 
 One can use the `other' type of quotes as delimiter when one wants to include quotes within a string.
@@ -700,15 +736,15 @@ b <- 'He said "hello" when he came in'
 b
 @
 
-The\index{character string delimiters} outer quotes are not part of the string, they are `delimiters' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using `escape sequences'. There are several of them, and here we will show just two, new line (\verb|\n|) and tab (\verb|\t|), in addition to \verb|\"| the escape code for a quotation mark within a string. We also show here the different behaviour of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences for new-line and tab and \Rfunction{print()} displaying them as entered.
+The\index{character string delimiters} outer quotes are not part of the string, they are `delimiters' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using `escape sequences'. There are several of them, and here we will show just four, new line (\verb|\n|) and tab (\verb|\t|), \verb|\"| the escape code for a quotation mark within a string and \verb|\\| the escape code for a single backslash \verb|\|. We also show here the different behaviour of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences and \Rfunction{print()} displaying them as entered.
 
 <<char-4>>=
-c <- "abc\ndef\txyz"
+c <- "abc\ndef\tx\"yz\"\\\tm"
 print(c)
 cat(c)
 @
 
-The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. They are also very useful when one wants to split an axis-label, title or label in a plot into two or more lines as they can be embedded in any string.
+The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. For example, the new-line escape (\verb|\n|) can be embedded in strings used for axis-label, title or label in a plot to split them over two or more lines.
 \index{classes and modes!character|)}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
@@ -771,6 +807,10 @@ as.logical(-1)
 
 \end{playground}
 
+\begin{playground}
+Compare the values returned by \Rfunction{trunc()} and \Rfunction{as.integer()} when applied to a floating point number, such as \code{12.34}. Check for the equality of values, and for the \emph{class} of the returned objects.
+\end{playground}
+
 \begin{explainbox}
 With conversions, it becomes obvious the difference between the length of a \code{character} vector and the number of characters composing each member ``string'' within a vector.\qRfunction{length()}\qRfunction{as.numeric()}
 
@@ -783,43 +823,6 @@ as.numeric(f)
 as.numeric(g)
 @
 \end{explainbox}
-
-Some tricks useful when dealing with \code{numeric} results from calculations. Be aware that in the examples below printing is being done by default, these functions return \code{numeric} values that are different from their input. Look at the help pages for further details. Very briefly \Rfunction{round()} is used to round numbers to a certain number of decimal places after or before the decimal point, while \Rfunction{signif()} keeps the requested number of significant digits.
-
-<<convert-3, tidy=FALSE>>=
-round(0.0124567, digits = 3)
-signif(0.0124567, digits = 3)
-round(1789.1234, digits = 3)
-signif(1789.1234, digits = 3)
-a <- 0.12345
-b <- round(a, digits = 2)
-a == b
-a - b
-b
-@
-
-Being \code{digits} the second parameter of these functions, the argument can be also passed by position. However, code is usually easier to understand for humans when parameter names are made explicit.
-
-<<convert-3a, tidy=FALSE>>=
-round(0.0124567, digits = 3)
-round(0.0124567, 3)
-@
-
-When applied to vectors, \Rfunction{signif()} behaves slightly differently, it ensures that the value of smallest magnitude retains \code{digits} significant digits.
-
-<<convert-4>>=
-signif(c(123, 0.123), digits = 3)
-@
-
-\begin{playground}
-What does value truncation mean? Function \Rfunction{trunc()} truncates a numeric value, but it does not return an \code{integer}.
-\begin{itemize}
-  \item Compare the values returned by \Rfunction{trunc()} and \Rfunction{as.integer()} when applied to a floating point number, such as \code{12.34}. Check for the equality of values, and for the \emph{class} of the returned objects.
-  \item Explore how \Rfunction{trunc()} and \Rfunction{ceiling()} differ. Test them both with positive and negative values.
-  \item \textbf{Advanced} Use function \Rfunction{abs()} and operators \Roperator{+} and \Roperator{-} to recreate the output of \Rfunction{trunc()} and \Rfunction{ceiling()} for the different inputs.
-  \item Can \Rfunction{trunc()} and \Rfunction{ceiling()} be considered type conversion functions in \Rlang?
-\end{itemize}
-\end{playground}
 
 \sloppy
 Other\index{formatted character strings from numbers} functions relevant to the ``conversion'' of numbers and other values are \Rfunction{format()}, and \Rfunction{sprintf()}. These two functions return \Rclass{character} strings, instead of \code{numeric} or other values, and are useful for printing output. One could think of these functions as advanced conversion functions returning formatted, and possibly combined and annotated, character strings. However, they are usually not considered normal conversion functions, as they are very rarely used in a way that preserves the original precision of the input values. We show here the use of \Rfunction{format()} and \Rfunction{sprintf()} with \code{numeric} values, but they can be used also with values of other types.
@@ -1218,7 +1221,7 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Factors}\label{sec:calc:factors}
 \index{factors|(}
 \index{categorical variables|see{factors}}\qRclass{factor}
-Factors are used to indicate categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \Rfunction{factor()} are unordered or categorical. \Rlang also defines ordered factors that can be created with function \Rfunction{ordered()}.\index{factors!ordered}
+Factors are used to indicate categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \Rfunction{factor()} are unordered or categorical. \Rlang also supports ordered factors that can be created with function \Rfunction{ordered()}.\index{factors!ordered}
 
 <<factors-1>>=
 my.vector <- c("treated", "treated", "control", "control", "control", "treated")
@@ -1269,6 +1272,11 @@ as.numeric(as.character(my.factor2))
 
 \begin{explainbox}
 \textbf{Why is a double conversion needed?}\index{factors!convert to numeric} Internally factor levels are stored as running integers starting from one, and those are the numbers returned by \Rfunction{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels. If these character strings represent numbers, they can be converted, in a second step, using \Rfunction{as.numeric()} into the original numeric values.
+
+<<factors-eb2>>=
+class(my.factor2)
+mode(my.factor2)
+@
 \end{explainbox}
 
 \begin{playground}
