@@ -68,9 +68,9 @@ source("my.first.script.r")
 
 The results of executing the statements contained in the file will appear in the console. The commands themselves are not shown (by default the sourced file is not \emph{echoed} to the console) and the results will not be printed unless you include explicit \Rfunction{print()} commands in the script. This applies in many cases also to plots---e.g.\ A figure created with \Rfunction{ggplot()} needs to be printed if we want it to be included in the output when the script is run. Adding a redundant \Rfunction{print()} is harmless.
 
-From within \RStudio, if you have an \Rpgrm script open in the editor, there will be a ``source'' drop box ($\neq$ DropBox) visible from where you can choose ``source'' as described above, or ``source with echo'' for the currently open file.
+From within \RStudio, if you have an \Rpgrm script open in the editor, there will be a ``source'' icon visible with an attached drop-down menu from where you can choose ``Source'' as described above, or ``Source with echo'', or ``Source as local job'' for the script in the currently active editor tab.
 
-When a script is \emph{sourced}, the output can be saved to a text file instead of being shown in the console. It is also easy to call \Rpgrm with the script file as argument directly at the command prompt of the operating system.
+When a script is \emph{sourced}, the output can be saved to a text file instead of being shown in the console. It is also easy to call \Rpgrm with the script file as argument directly at the operating system shell or command-interpreter prompt---and obviously also shell scripts.
 \begin{shaded}
 \footnotesize
 \begin{verbatim}
@@ -206,9 +206,9 @@ The grouping of the last two statements above is of no consequence by itself, bu
 \subsection{Conditional execution}
 \index{conditional execution}
 
-Conditional execution allows handling different values, such as negative and non-negative values, differently in a script. It also allows switching ON and OFF parts of a script using a so-called \emph{flag} that can be manually set, preferable near the top of the script. Use of flags is specially important when switching between two ``modes'' affects multiple sections of code. I frequent use is enabling and disabling printing of output from multiple statements scattered in over long script. Below I start by giving simple examples demonstrating how \emph{if} and \emph{if-else} statements work. Only afterwards I provide examples closer to how these statements are profitably used in \Rlang scripts.
+Conditional execution allows handling different values, such as negative and non-negative values, differently in a script. It also allows switching ON and OFF parts of a script using a so-called \emph{flag} that can be manually set, preferable near the top of the script. Use of flags is specially important when switching between two ``modes'' affects multiple sections of code. A frequent use case is enabling and disabling printing of output from multiple statements scattered in over long script. Below I start by giving simple examples demonstrating how \emph{if} and \emph{if-else} statements work. Only afterwards I provide examples closer to how these statements are profitably used in \Rlang scripts.
 
-\subsubsection{Non-vectorized}
+\subsubsection[Non-vectorized \texttt{if}, \texttt{else} and \texttt{switch}]{Non-vectorized \code{if}, \code{else} and \code{switch}}
 \qRcontrol{if()}\qRcontrol{if()\ldots else}%
 
 The \code{if} construct ``decides'' depending on a \code{logical} value whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}).
@@ -240,7 +240,7 @@ if (printing) {
 }
 @
 
-The condition passed as argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is not vectorized, only the first element will be used. Play with this example by changing the value assigned to \code{a}.
+The condition passed as argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is \emph{not} vectorized, only the first element will be used and a warning issued if longer than one.
 
 <<if-3>>=
 a <- 10.0
@@ -248,28 +248,31 @@ if (a < 0.0) print("'a' is negative") else print("'a' is not negative")
 print("This is always printed")
 @
 
-As you can see above the statement immediately following \code{else} is executed if the condition is false. Later statements are executed independently of the condition.
+As can be seen above, the statement immediately following \code{if} is executed if the condition returns \code{TRUE} and that following \code{else} is executed if the condition returns \code{FALSE}. Statements after the conditionally executed \code{if} and \code{else} statements are always executed, independently of the value returned by the condition.
 
-Do you still remember the rules about continuation lines?
+\begin{playground}
+Play with the code in the chunk above by assigning different numeric vectors to \code{a}.
+\end{playground}
 
-<<auxiliary, echo=FALSE, eval=TRUE>>=
+<<auxiliary, echo=FALSE, include = FALSE, eval=TRUE>>=
 show.results <- TRUE
 if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
-eval.if.4
+# eval.if.4
 show.results <- FALSE
 if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
-eval.if.4
+#eval.if.4
 @
+
+\begin{explainbox}
+Do you still remember the rules about continuation lines?
 
 <<if-4>>=
 # 1
 a <- 1
-if (a < 0.0)
-  print("'a' is negative") else
-    print("'a' is not negative")
+if (a < 0.0) print("'a' is negative") else print("'a' is not negative")
 @
 
-Why does the statement below (not evaluated here) trigger an error?
+Why does the statement below (not evaluated here) trigger an error while the one above does not?
 
 <<if-4a, eval=FALSE>>=
 # 2 (not evaluated here)
@@ -277,15 +280,39 @@ if (a < 0.0) print("'a' is negative")
 else print("'a' is not negative")
 @
 
+How do the continuation line rules apply when we add curly braces as shown below.
+
+<<if-4b>>=
+# 1
+a <- 1
+if (a < 0.0) {
+    print("'a' is negative")
+  } else {
+    print("'a' is not negative")
+  }
+@
+
+In the example above we enclosed a single statement between each pair of curly braces, but as these braces create compound statements, multiple statements could have been enclosed between each pair.
+\end{explainbox}
+
 \begin{playground}
 Play with the use conditional execution, with both simple and compound statements, and also think how to combine \code{if} and \code{else} to select among more than two options.
 \end{playground}
 
+The value returned by any compound statement is in \Rlang the value returned by the last simple statement executed within the compound one. This means that we can assign the value returned by an \code{if} and \code{else} statement to a variable. This style is less frequently used, but occasionally can result in easier to understand scripts.
+
+<<if-4c>>=
+a <- 1
+my.message <- 
+  if (a < 0.0) "'a' is negative" else "'a' is not negative"
+print(my.message)
+@
+
 \begin{playground}
-Study the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics:
+Study the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics.
 
 % chunk contains intentional error-triggering examples
-<<eval=FALSE>>=
+<<if-PG-01, eval=eval_playground>>=
 if (0) print("hello")
 if (-1) print("hello")
 if (0.01) print("hello")
@@ -299,6 +326,7 @@ if (as.logical("1")) print("hello")
 if ("1") print("hello")
 @
 
+Hint: If you need to refresh your understanding of the type conversion rules, see section \ref{sec:calc:type:conversion} on page \pageref{sec:calc:type:conversion}.
 \end{playground}
 
 In addition to \Rcontrol{if()} there is in \langname{R} a \Rcontrol{switch()} statement, that we describe here. It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one. The switch statement returns a value, the value returned by the statement corresponding to the matching switch value, or the default if there is no match and a default return value has been defined in the code. Both character values or numeric values can used.
@@ -320,10 +348,10 @@ b
 
 The \Rcontrol{switch()} statement can substitute for chained \code{if else} statements when all the conditions are comparisons against different constant values, resulting in more concise and clear code.
 
-\subsubsection{Vectorized}
-\index{vectorized if-else}
-Vectorized \emph{if} is a peculiarity of the \Rlang language, but very useful for writing concise code that executes a lot faster than logically equivalent but not vectorized code.
-Vectorized conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector to parameter (\code{test}), a result vector for TRUE (\code{yes}), a result vector for FALSE (\code{no}). All three can be any \Rlang statement supplying the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will take place if they are shorter than the logical vector passed as argument to \code{test}. No recycling ever applies to \code{test}, even if \code{yes} and/or \code{no} are longer than \code{test}. It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
+\subsubsection[Vectorized \texttt{ifelse()}]{Vectorized \code{ifelse()}}
+\index{vectorized ifelse}
+Vectorized \emph{if} is a peculiarity of the \Rlang language, but very useful for writing concise code that may execute faster than logically equivalent but not vectorized code.
+Vectorized conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector to parameter (\code{test}), a result vector for TRUE cases (\code{yes}), a result vector for FALSE false (\code{no}). All three can be any \Rlang statement supplying the necessary argument as their return value. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will take place if they are shorter than the logical vector passed as argument to \code{test}. No recycling ever applies to \code{test}, even if \code{yes} and/or \code{no} are longer than \code{test}. It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
 
 <<ifelse-0>>=
 my.test <- c(TRUE, FALSE, TRUE, TRUE)
@@ -338,7 +366,7 @@ ifelse(nums < 0, -nums, nums)
 @
 
 \begin{playground}
-Some additional examples to play with, with a few surprises. Hint: if needed read again section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean} where \code{logical} values and Boolean algebra are discussed.
+Some additional examples to play with, with a few surprises. Study the examples below until understand why returned values are what they are. In addition create your own examples to test other possible cases. In other words, play with the code until you fully understand how \code{ifelse} works.
 
 <<ifelse-1, eval=eval_playground>>=
 a <- 1:10
@@ -348,7 +376,7 @@ ifelse(any(a > 5), a + 1, a - 1) # tricky
 ifelse(logical(0), a + 1, a - 1) # even more tricky
 ifelse(NA, a + 1, a - 1) # as expected
 @
-Try to understand what is going on in the previous examples. Create your own examples to test how \Rcontrol{ifelse()} works. In other words, play with the code until you fully understand how \code{ifelse} works.
+Hint: If you need to refresh your understanding of \code{logical} values and Boolean algebra see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}.
 \end{playground}
 
 \begin{warningbox}
