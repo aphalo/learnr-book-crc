@@ -749,7 +749,7 @@ The \textit{escape codes}\index{character escape codes} work only in some contex
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
 \index{objects!mode}
-Variables have a \emph{mode} that depends on what is stored in them. But differently to other languages, assignment to a variable of a different mode is allowed and in most cases its mode changes together with its contents. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode. While this is not required for lists, which can be heterogenous. In practice this means that we can assign an object, such as a vector, with a different \code{mode} to a name already in use, but, we cannot use indexing to assign an object of a different mode, to certain members of a vector, matrix or array. Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}. Function \Rfunction{mode()} returns the mode of an object, as a character string.
+Variables have a \emph{mode} that depends on what is stored in them. But differently to other languages, assignment to a variable of a different mode is allowed and in most cases its mode changes together with its contents. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode. While this is not required for lists, which can be heterogenous. In practice this means that we can assign an object, such as a vector, with a different \code{mode} to a name already in use, but, we cannot use indexing to assign an object of a different mode, to certain members of a vector, matrix or array. Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}. Function \Rfunction{mode()} returns the mode of an object, as a character string.\qRfunction{is.character()}\qRfunction{is.numeric()}\qRfunction{is.logical()}
 
 <<mode-1>>=
 my_var <- 1:5
@@ -771,7 +771,7 @@ inherits(my_var, "numeric")
 
 \section{`Type' conversions}
 \index{type conversion|(}
-The least intuitive ones are those related to logical values. All others are as one would expect. By convention, functions used to convert objects from one mode to a different one have names starting with \code{as.}.
+The least intuitive type conversiosn are those related to logical values. All others are as one would expect. By convention, functions used to convert objects from one mode to a different one have names starting with \code{as.}\footnote{Except for some packages in the \pkgnameNI{tidyverse} that use names starting with \code{as\_} instead of \code{as.}.}.\qRfunction{as.character()}\qRfunction{as.numeric()}\qRfunction{as.logical()}
 
 <<convert-1>>=
 as.character(1)
@@ -780,7 +780,7 @@ as.logical("TRUE")
 as.logical("NA")
 @
 
-Conversion can also take place automatically.
+Conversion takes place automatically in arithmetic and logical expressions.
 
 <<convert-1a>>=
 TRUE + 10
@@ -789,7 +789,7 @@ FALSE | -2:2
 @
 
 \begin{playground}
-There is some flexibility in the conversion from character strings into \code{numeric} and \code{logical} values. Use the examples below plus your own variations to get an idea of what strings are acceptable and correctly converted and which are not. Do also pay attention at the conversion between \code{numeric} and \code{logical} values.
+There is some flexibility in the conversion from character strings into \code{numeric} and \code{logical} values. Use the examples below plus your own variations to get an idea of what strings are acceptable and correctly converted and which are not. Do also pay attention at the conversion between \code{numeric} and \code{logical} values.\qRfunction{as.character()}\qRfunction{as.numeric()}\qRfunction{as.logical()}
 
 <<convert-PG1, eval=eval_playground>>=
 as.character(3.0e10)
@@ -854,7 +854,7 @@ Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunctio
 \end{playground}
 
 \begin{explainbox}
-  We have above described \Rconst{NA} as a single value ignoring modes, but in reality \Rconst{NA}s come in various flavours. \Rconst{NA\_real\_}, \Rconst{NA\_character\_}, etc. and \Rconst{NA} defaults to an \Rconst{NA} of class \Rclass{logical}. Frequently on-the-fly conversion does what one expects when entering \Rconst{NA}.
+We have above described \Rconst{NA} as a single value ignoring modes, but in reality \Rconst{NA}s come in various flavours. \Rconst{NA\_real\_}, \Rconst{NA\_character\_}, etc. and \Rconst{NA} defaults to an \Rconst{NA} of class \Rclass{logical}. Frequently on-the-fly conversion does what one expects when entering \Rconst{NA}.
 
 <<nas-01>>=
 a <- c(1, NA)
@@ -902,8 +902,12 @@ a[2]
 @
 
 \begin{explainbox}
-In \Rlang indexes always start from one, while in some other programming languages such as \Clang and \Cpplang, indexes start from zero. It is important to be aware of this difference, as many computation algorithms are valid only under a given indexing convention.
+Four constant vectors are available in \Rlang: \Rconst{letters}, \Rconst{LETTERS}, \Rconst{month.name} and  \Rconst{month.abb}, of which we used \code{letters} in the example above. These vectors are always for English, irrespective of the locale.
 \end{explainbox}
+
+\begin{warningbox}
+In \Rlang indexes always start from one, while in some other programming languages such as \Clang and \Cpplang, indexes start from zero. It is important to be aware of this difference, as many computation algorithms are valid only under a given indexing convention.
+\end{warningbox}
 
 It is possible to extract a subset of the elements of a vector in a single operation, using a vector of indexes. The positions of the extracted elements in the result (``returned value'') are determined by the ordering of the members of the vector of indexes---easier to demonstrate than to explain.
 
@@ -1065,7 +1069,7 @@ sort(my.letters)
 rle(sort(my.letters))
 @
 
-The second and third statements are only to demonstrate what is the effect of each step. The last statement used nested function calls to compute the number of copies of each value in the vector.
+The second and third statements are only to demonstrate what is the effect of each step. The last statement uses nested function calls to compute the number of copies of each value in the vector.
 \end{explainbox}
 
 <<vector-cleanup, include=FALSE>>=
@@ -1356,7 +1360,7 @@ my.factor3rev <- reorder(my.factor3, -my.vector3) # a simple trick
 levels(my.factor3rev)
 @
 
-in the last example, using the unary negation operator, which is vectorized, allows us to easily reverse the ordering of the levels, while still using the default function, \code{mean()}, to summarize the data.
+In the last statement, using the unary negation operator, which is vectorized, allows us to easily reverse the ordering of the levels, while still using the default function, \code{mean()}, to summarize the data.
 
 \end{explainbox}
 
@@ -1421,7 +1425,7 @@ To investigate the returned values, function \Rfunction{str()} for \emph{structu
 str(a.list)
 @
 
-Using\qRoperator{[[]]} double square brackets for indexing a list gives the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, while \code{a.list[[c(1,3)]]} is an error.
+Using\qRoperator{[[]]} double square brackets for indexing a list extracts the element stored in the list, in its original mode, in the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. While \code{a.list[c(1,3)]} returns a list of length two, while \code{a.list[[c(1,3)]]} is an error.
 \index{lists!member extraction|)}
 
 In other languages the two most common operations on lists are insertions and deletions.\index{lists!insert into}\index{lists!append to} In \Rlang function \Rfunction{append()} can be used both to append elements at the end of a list and insert elements into the head or any position in the middle of a list. To delete a member from a list we assign \code{NULL} to it.
@@ -1436,21 +1440,17 @@ a.list$y <- NULL
 a.list
 @
 
-Lists can be also nested.\index{lists!nested}
+Lists can be also nested---i.e.\ lists of lists.\index{lists!nested}
 
 <<lists-2>>=
 a.list <- list("a", "aa", "aaa")
 b.list <- list("b", "bb")
 nested.list <- list(A = a.list, B = b.list)
-nested.list
+str(nested.list)
 @
 
 \begin{explainbox}\index{lists!structure}
 When dealing with deep lists, it is sometimes useful to limit the number of levels of nesting returned by \Rfunction{str()} by means of a \code{numeric} argument passed to parameter \code{max.levels}.
-
-<<lists-EB1a>>=
-str(nested.list)
-@
 
 <<lists-EB1b>>=
 str(nested.list, max.level = 1)
@@ -1458,10 +1458,11 @@ str(nested.list, max.level = 1)
 
 \end{explainbox}
 
-The nesting\index{lists!nested} can be also done within a single statement in which several lists are defined. Here we combine the first three statements in the earlier chunk into a single one.
+The nested\index{lists!nested} can be also contructed within a single statement in which several member lists are created. Here we combine the first three statements in the earlier chunk into a single one.
 
 <<lists-3>>=
-list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
+nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
+str(nested.list)
 @
 
 \begin{playground}
@@ -1471,9 +1472,6 @@ What\index{lists!nested} do you expect each of the statements below to return? \
 nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
 str(nested.list)
 nested.list[2:1]
-@
-
-<<lists-PG4a, eval=eval_playground>>=
 nested.list[1]
 nested.list[[1]][2]
 nested.list[[1]][[2]]
@@ -1539,24 +1537,24 @@ a.df[[1]]
 class(a.df)
 @
 
-\Rlang is an object oriented language, and objects belong to classes. With function \Rfunction{class()} we can query the class of an object. As we saw in the two previous chunks, lists and data frames objects belong to two different classes. However, their relationship is based on a hierarchy of classes. We say that class \Rclass{data.frame} is derived from class \code{list}. Consequently, data frames inherit the methods and characteristics of lists, which have not been modified for data frames.
+With function \Rfunction{class()} we can query the class of an \Rlang object (see section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). As we saw in the two previous chunks, \code{list} and \code{data.frame} objects belong to two different classes. However, their relationship is based on a hierarchy of classes. We say that class \Rclass{data.frame} is derived from class \code{list}. Consequently, data frames inherit the methods and characteristics of lists, as long as they have not been hideen by new ones defined for data frames.
 
 In the same way as with vectors, we can add members to lists and data frames.
 
 <<data-frames-2>>=
 a.df$x2 <- 6:1
 a.df$x3 <- "b"
-a.df
+str(a.df)
 @
 
 We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behaviour. In a data frame, although class and mode can be different for different variables (columns), they are required to be vectors or factors of the same length. In the case of lists, there is no such requirement, and recycling never takes place when adding a node. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
 
 <<data-frames-2a>>=
 a.ls <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
-a.ls
+str(a.ls)
 a.ls$x2 <- 6:1
 a.ls$x3 <- "b"
-a.ls
+str(a.ls)
 @
 
 Data frames are extremely important to anyone analysing or plotting data using \Rlang. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there are several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can be treated as members in a list, and can be accessed both by name or index (position). When accessed by name, using \Roperator{\$} or double square brackets a single column is returned as a vector or factor. In contrast to lists, data frames are `rectangular' and for this reason the values stored can be also accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors, indexes can be vectors of integer numbers or vectors of logical values. For columns they can in addition be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
@@ -1586,7 +1584,7 @@ If the length of the column indexing vector is one, the returned value is a vect
 a.df[2:3, 1]
 @
 
-In contrast, indexing of \code{tibble}s---defined in package \pkgname{tibble}---is always consistent, independently of the length of the second indexing vector (See chapter \ref{chap:R:data} for details).
+In contrast, indexing of tibbles---defined in package \pkgname{tibble}---is always consistent, independently of the length of the second indexing vector (see chapter \ref{chap:R:data}).
 \end{explainbox}
 
 
@@ -1605,8 +1603,8 @@ a.df[a.df$z , ]
 a.df[a.df$x > 3, -3]
 @
 
-As earlier explained for vectors, indexing can be present both on the right-hand side and left-hand-side of an assignment.
-The next few examples do assignments to ``cells'' of \code{a.df}, either to one whole column, or individual values. The last statement in the chunk below copies a number from one location to another by using indexing of the same data frame both on the `right side' and `left side' of the assignment.
+As earlier explained for vectors (see section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing}), indexing can be present both on the right-hand side and left-hand-side of an assignment.
+The next few examples do assignments to ``cells'' of \code{a.df}, either to one whole column, or individual values. The last statement in the chunk below copies a number from one location to another by using indexing of the same data frame both on the `right side' and `left side' of the assignment.\qRoperator{[[]]}\qRoperator{[]}
 
 <<data-frames-3a>>=
 a.df[1, 1] <- 99
@@ -1721,7 +1719,7 @@ detach(my_data_frame.df)
 head(my_data_frame.df, 2)
 @
 
-In the case of \Rscoping{with()} only one, possibly compound, code statement is affected and this statement is passed as an argument. As before, we need to fully specify the left hand side of the assignment. The value returned is the one returned by the statement passed as argument, in the case of compound statements, the value returned by the last contained simple code statement. Consequently, if the intent is to modify the container, assignment to an individual member variable (column in this case) is required.
+In the case of \Rscoping{with()} only one, possibly compound, code statement is affected and this statement is passed as an argument. As before, we need to fully specify the left hand side of the assignment. The value returned is the one returned by the statement passed as argument, in the case of compound statements, the value returned by the last contained simple code statement to be executed. Consequently, if the intent is to modify the container, assignment to an individual member variable (column in this case) is required.
 
 <<data-frames-EB-12>>=
 my_data_frame.df$C <- NULL
@@ -1755,22 +1753,24 @@ Use of \Rscoping{attach()} and \Rscoping{detach()}, which function as a pair of 
 \index{data frames!ordering rows}\index{data frames!ordering columns}
 The most direct way of changing the order of columns and/or rows in data frames (and matrices and arrays) is to use subscripting as described above. Once we know the original position and target position we can use numerical indexes on both right hand side and left hand side of an assignment.
 
+\begin{warningbox}
+When using the extraction operator \Roperator{[]} on both the left-hand-side and right-hand-side to swap columns, the vectors or factors are swapped, while the names of the columns are not! The same applies to rownames, which makes storing important information in them inconvenient and error prone.
+\end{warningbox}
+
+To retain the correct naming after the column swap, we need to separately swap the names of the columns.
 <<data-frames-8>>=
-my_data_frame.df
-my_data_frame.df[ , 1:5] <- my_data_frame.df[ , 5:1]
-my_data_frame.df
+my_data_frame.df <- data.frame(A = 1:10, B = 3)
+head(my_data_frame.df, 2)
+my_data_frame.df[ , 1:2] <- my_data_frame.df[ , 2:1]
+head(my_data_frame.df, 2)
+colnames(my_data_frame.df)[1:2] <- colnames(my_data_frame.df)[2:1]
+head(my_data_frame.df, 2)
 @
 
-<<data-frames-9>>=
-my_data_frame.df
-my_data_frame.df[c(1, 4, 10), ] <- my_data_frame.df[c(4, 10, 1), ]
-my_data_frame.df
-@
-
-Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector, we can use order to generate the indexes to use through subscripting. The argument to \Rfunction{order()} is usually a column of the data frame being arranged, but this is not required. Order can be applied to any vector of suitable length, including the result of applying a function to one or more columns. (The use of \code{order()} for sorting vectors is described on page \pageref{box:vec:sort}.)
+Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector, we can use order to generate the indexes to use through subscripting. When we want to sort rows the argument to \Rfunction{order()} is usually a column of the data frame being arranged. Order can be applied to any vector of suitable length, including the result of applying a function to one or more columns. (The use of \code{order()} for sorting vectors is described on page \pageref{box:vec:sort}.)
 
 \begin{playground}\index{data frames!ordering rows}
-The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with there different haphazard sequences of values. Call these columns A, B and C. 1) Sort the rows of the data frame so that the values in A are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of A and B without adding a new column to the data frame or storing the sums in a vector. In other words do the sorting based on sums calculated ``on-the-fly''.
+The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with three different haphazard sequences of values. Call these columns A, B and C. 1) Sort the rows of the data frame so that the values in A are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of A and B without adding a new column to the data frame or storing the sums in a vector. In other words do the sorting based on sums calculated ``on-the-fly''.
 \end{playground}
 
 \begin{advplayground}\index{data frames!ordering rows}
@@ -1815,6 +1815,9 @@ Even the class of S3 objects is stored as an attribute that is accessible as any
 numbers <- 1:10
 class(numbers)
 attributes(numbers)
+@
+
+<<attributes_WB1a>>=
 a.factor <- factor(numbers)
 class(a.factor)
 attributes(a.factor)
@@ -1831,25 +1834,25 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 
 \subsection{Data sets in R and packages}
 \index{data!loading data sets|(}
-To be able to present more meaningful examples, we need some data. Here we use \code{cars}, one of the many data sets included in base \Rpgrm. How to read or import ``foreign'' data is discussed in \Rlang documentation in \emph{R Data Import/Export}, and in this book, in Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}. In general \Rfunction{data()} is used load \Rlang objects saved in a file format used by R. Text files con be read with functions \Rfunction{scan()}, \Rfunction{read.table()}, \Rfunction{read.csv()} and their variants. It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Packages such as 'foreign', 'readr', 'readxl', 'RNetCDF', 'jsonlite', etc.\ allow importing data from other statistic and data analysis applications and from standard data exchange formats. It is also good to keep in mind that in \Rlang urls are accepted as arguments to the \code{file} or \code{path} argument of many functions (see Chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details and examples on how to import data from different ``foreign'' formats and sources).
+To be able to present more meaningful examples, we need some data. Here we use \code{cars}, one of the many data sets included in base \Rpgrm. Function \Rfunction{data()} is used load data objects saved in a file format used by \Rlang. It is also possible to `import' data saved in files of \textit{foreign} formats, defined by other programs. Several contributed packages allow importing data from other statistic and data analysis applications and from standard data exchange formats. How to read or import ``foreign'' data is discussed in \Rlang documentation in \emph{R Data Import/Export}, and in this book, in chapter \ref{chap:R:data:io} starting on page \pageref{chap:R:data:io}. It is also good to keep in mind that in \Rlang urls are accepted as arguments to the \code{file} or \code{path} argument of many functions (see section \ref{sec:files:remote} starting on page \pageref{sec:files:remote}).
 
-In the next example we use data included in R, as \Rlang objects, which can be loaded with function \qRfunction{data()}. \code{cars} is a data frame.
+In the next example we use data included in R, as \Rlang objects, which can be loaded with function \Rfunction{data()}. Object \code{cars} is a data frame.
 
 <<data-1>>=
 data(cars)
 @
 
-Once we have a data set available, the first step is usually to explore it, and we do this with \code{cars} in the next section.
+Once we have a data set available, the first step is usually to explore it, and we do this with \code{cars} in section \ref{sec:calc:looking:at:data} on page \pageref{sec:calc:looking:at:data}.
 \index{data!loading data sets|)}
 
-\subsection{.Rda files}\label{sec:data:rda}
+\subsection{.rda files}\label{sec:data:rda}
 
-Until now, at the end of a session, you have in many cases the current workspace containing the results of your work into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format. One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace. These files are portable across most \Rlang versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters---allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
+By default, at the end of a session, the current workspace containing the results of your work has been saved into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format (with file name tag \code{.rda} or \code{.Rda}). One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace with their original names. These files are portable across most \Rlang versions---i.e.\ old formats can be read and written by newer versions of R, although the newer, default format may be not readable with earlier version. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters---allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
 
 We create data frame object and then save it to a file.
 
 <<rda-01>>=
-my.df <- data.frame(x = 1:10, y = 10:1)
+my.df <- data.frame(x = 1:5, y = 5:1)
 my.df
 save(my.df, file = "my-df.rda")
 @
@@ -1892,19 +1895,33 @@ save(list = ls(pattern = "*.df"), file = "my-df1.rda")
 Practice using different patterns with \Rfunction{ls()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
 \end{playground}
 
-As a coda, we show how to cleanup by deleting the two files we created. Function \Rfunction{comment()}{unlink()} can also be used to delete folders.
+As a coda, we show how to cleanup by deleting the two files we created. Function \Rfunction{unlink()} can also be used to delete files.
 
 <<rda-06>>=
 unlink(c("my-df.rda", "my-df1.rda"))
 @
 
-\begin{infobox}
-The reading of \emph{foreign} data into \Rlang is discussed in chapter \ref{chap:R:data} starting on page \pageref{chap:R:data}.
-\end{infobox}
+\subsection{.rds files}\label{sec:data:rds}
+
+The RDS format can be used to save individual objects instead of multiple objects (usually using file name tag \code{.rds}). They are read and saved with functions \Rfunction{readRDS()} and \Rfunction{saveRDS()}, respectively. Contrary to with RDA format, which restore objects to the working environment using their original names, in this case we have to assign a name, possibly different from the original one.
+
+<<rds-1>>=
+saveRDS(my.df, "my-df.rds")
+@
+
+We assign the read object to a different name for this example, and check that the object read is identical to the one saved.
+<<rds-2>>=
+my_read.df <- readRDS("my-df.rds")
+identical(my.df, my_read.df)
+@
+
+<<rds-03>>=
+unlink("my-df.rds")
+@
 
 \section{Looking at data}\label{sec:calc:looking:at:data}
 \index{data!exploration at the R console|(}
-There are several functions in \Rlang that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (but are not applicable to lists). As earlier mentioned, \Rfunction{str()}, output is abbreviated but in a way that preserves the structure of the object.
+There are several functions in \Rlang that let us obtain different `views' into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names, with \Rfunction{colnames()}, \Rfunction{rownames()} and \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (also applicable to matrices but are not to lists or vectors with which we use \Rfunction{length()}). As earlier mentioned, function \Rfunction{str()} concisely displays the structure of \Rlang objects.
 
 <<exploring-dfs-1>>=
 class(cars)
@@ -1920,35 +1937,35 @@ str(cars)
 Look up the help pages for \Rfunction{head()} and \Rfunction{tail()}, and edit the code above to print only the first line, or only the last line of \code{cars}, respectively. As a second exercise print the 25 topmost rows of \code{cars}.
 \end{playground}
 
-Data frames consist in columns of equal length (see section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}). The different columns of a data frame can contain data of different modes (e.g.\ numeric, factor and/or character).
+Data frames consist in columns of equal length (see section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}). The different columns of a data frame be factors or vectors of different classes (e.g.\ numeric, logical, character, etc.).
 
-To explore the mode of the columns of \code{cars}, we can use an \emph{apply} function. In the present case, we want to apply function \code{mode()} to each column of the data frame \code{cars}. (Apply functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}.)
+To explore the class of the columns of \code{cars}, we can use an \emph{apply} function. In the present case, we want to apply function \code{class()} to each column of the data frame \code{cars}. (Apply functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}.)
 \qRloop{sapply}
 
 <<exploring-dfs-2>>=
-sapply(X = cars, FUN = mode)
+sapply(X = cars, FUN = class)
 @
 
-The statement above returns a vector of character strings, with the mode of each column. Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the argument to the first parameter called \code{X}, to the one of current interest.
+The statement above returns a vector of character strings, with the class of each column. Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the argument to the first parameter called \code{X}, to the one of current interest.
 
 \begin{playground}
-Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables are included, their modes, the number of rows, etc.
+Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables are included, their classes, the number of rows, etc.
 \end{playground}
 
-Function \Rfunction{summary()} can be used to obtain a summary from objects of most \Rlang classes, including data frames. We can also use \Rloop{sapply()} or \Rloop{lapply()} to apply any suitable function to individual columns.
+Function \Rfunction{summary()} can be used to obtain a summary from objects of most \Rlang classes, including data frames. We can also use \Rloop{sapply()}, \Rloop{lapply()} or \Rloop{vapply()} to apply any suitable function to individual columns.
 
 <<exploring-dfs-3>>=
 summary(cars)
 sapply(cars, range)
 @
 
-\begin{playground}
+\begin{advplayground}
 Obtain the summary of \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column. Hint: using \code{sum()} on a \code{logical} vector returns the count of \code{TRUE} values as \code{TRUE} is converted to numeric 1.
-\end{playground}
+\end{advplayground}
 
 \section{Plotting}
 \index{plots!base R graphics}
-Base \Rlang generic method \Rfunction{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citebooktitle{Murrell2011} \autocite{Murrell2011}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{grammar of graphics} and plotting with package \ggplot in Chapter \ref{chap:R:plotting} from page \pageref{chap:R:plotting} onwards.
+Base \Rlang generic method \Rfunction{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base \langname{R}'s graphics functions. They are well described in the book \citebooktitle{Murrell2011} \autocite{Murrell2011}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{grammar of graphics} and plotting with package \ggplot in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}.
 
 It is possible to pass two variables (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of \Rfunction{plot()}.
 
@@ -1957,10 +1974,10 @@ opts_chunk$set(opts_fig_narrow_square)
 @
 
 <<plot-1>>=
-plot(cars$speed, cars$dist)
+plot(x = cars$speed, y = cars$dist)
 @
 
-It is also possible, and usually more convenient, to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing additionally as argument to  parameter \code{data} the name of the data frame containing these variables. The formula \code{dist ~ speed}, is read as \code{dist} explained by \code{speed}---i.e.\ \code{dist} is mapped to the $y$-axis as the dependent variable and \code{speed} to the $x$-axis as the independent variable.
+It is also possible, and usually more convenient, to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing additionally as argument to  parameter \code{data} the name of the data frame containing these variables. The formula \code{dist \textasciitilde\ speed}, is read as \code{dist} explained by \code{speed}---i.e.\ \code{dist} is mapped to the $y$-axis as the dependent variable and \code{speed} to the $x$-axis as the independent variable.
 
 <<plot-2>>=
 plot(dist ~ speed, data = cars)
@@ -1991,7 +2008,7 @@ plot(weight ~ feed, data = chickwts)
 dev.off()
 @
 
-When \Rlang is used interactively, a device to output the graphical output to a display device is open automatically. The name of the device may depend on the operating system used (e.g.\ MS-Windows or Linux) or the IDE---e.g.\ \RStudio defines its own graphic device for output to the "Plots" pane of its user interface.
+When \Rlang is used interactively, a device to output the graphical output to a display device is open automatically. The name of the device may depend on the operating system used (e.g.\ \osname{MS-Windows} or \osname{Linux}) or an IDE---e.g.\ \RStudio defines its own graphic device for output to the Plots pane of its user interface.
 
 \begin{warningbox}
 This approach of direct output to a device, and addition of plot components as show below directly on the output device itself is not the only approach available. As we will see in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting} an alternative approach is to built a \emph{plot object} as a list of member components that is later rendered as a whole on a graphical device by calling \code{print()} once.
