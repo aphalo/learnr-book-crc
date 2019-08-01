@@ -4894,7 +4894,7 @@ Even the class of S3 objects is stored as an attribute that is accessible as any
 
 \index{attributes|)}
 
-\section{Loading data}
+\section{Saving and loading data}
 
 \subsection{Data sets in R and packages}
 \index{data!loading data sets|(}
@@ -6103,7 +6103,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.22    0.01    0.23
+##    0.25    0.00    0.25
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8597,7 +8597,7 @@ To see how \Rfunction{is.formula()} has been defined, we can print it, simply by
 \begin{verbatim}
 ## function (x) 
 ## inherits(x, "formula")
-## <bytecode: 0x0000000015c62d00>
+## <bytecode: 0x0000000015c75720>
 ## <environment: namespace:plyr>
 \end{verbatim}
 \end{kframe}
@@ -9513,7 +9513,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x0000000019819a48>
+## <bytecode: 0x0000000018c57280>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9598,7 +9598,7 @@ Next we print the definition of \Rlang linear model fitting function \code{lm()}
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x0000000019061090>
+## <bytecode: 0x0000000019179878>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -9733,7 +9733,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000000001792b508>
+## <bytecode: 0x000000001791dd78>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -15311,7 +15311,7 @@ There are Graphics devices for\index{plots!bitmap output} BMP, JPEG, PNG and TIF
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-\index{plots!rendering)}
+\index{plots!rendering|)}
 \index{graphic output devices|)}
 
 \section{Further reading}
@@ -15358,7 +15358,7 @@ Base \Rlang and the recommended packages (installed by default) include several 
 
 Developing software to read and write files with data stored in a format one does not have control on, or possibly a format one even needs to guess, can easily result in long, messy, ugly \Rlang scripts. It is also easy to end with functions that usually work but that fail with specific files, or even worse, occasionally silently corrupt the read data. Our aim is to provide guidance for finding available \Rlang functions and in contributed packages that well tested or validated.
 
-In this chapter you will familiarise with how to exchange data between \Rlang and other systems. The functions \code{save()} and \code{load()} that save and read data in \Rlang's native format are described in section \ref{}.
+In this chapter you will familiarise with how to exchange data between \Rlang and other systems. The functions \code{save()} and \code{load()}, and \code{saveRDS()} and  \code{readRDS()} all of which save and read data in \Rlang's native format are described in sections \ref{sec:data:rda} and \ref{sec:data:rds} starting on page \pageref{sec:data:rda}.
 
 \section{Introduction}
 
@@ -15387,7 +15387,6 @@ For executing the examples listed in this chapter you need first to load the fol
 \begin{alltt}
 \hlkwd{library}\hlstd{(learnrbook)}
 \hlkwd{library}\hlstd{(tibble)}
-\hlkwd{library}\hlstd{(magrittr)}
 \hlkwd{library}\hlstd{(wrapr)}
 \hlkwd{library}\hlstd{(stringr)}
 \hlkwd{library}\hlstd{(dplyr)}
@@ -15441,11 +15440,13 @@ We also make sure the folder used to save data read from the internet, exists.
 \end{knitrout}
 \end{infobox}
 
-\section{File names}\label{sec:files:filenames}
-
+\section{File names and operations}\label{sec:files:filenames}
+\index{file names!potable}
+\index{file operations|(}
 We start with the naming of files as it affects data sharing irrespective of the format used for its storage. The main difficulty is that different operating systems have different rules governing file names and file paths. In many cases like when publishing data files, we need to ensure that file names are valid in multiple operating system (OS). If the script used to create the files is itself expected to be OS agnostic, we need to be also careful to query the OS for file names and paths without making assumptions on the naming rules. This is specially important when developing \Rlang packages.
 
 \begin{warningbox}
+\index{file names!script portability}
 For maximum portability, file names should never contain white-space characters and contain at most one dot. For widest possible portability, underscores should be avoided using dashes instead. As an example instead of \code{my data.2019.csv} use \code{my-data-2019.csv}.
 \end{warningbox}
 
@@ -15463,6 +15464,9 @@ For maximum portability, file names should never contain white-space characters 
 \end{knitrout}
 
 \begin{warningbox}
+\index{file paths!script portability}
+\index{folders|see{file paths}}
+\index{file paths!parsing|(}
 While in \pgrmname{Unix} and \pgrmname{Linux} folder nesting in file paths is marked with a forward slash characters (\verb|/|), under \pgrmname{MS-Windows} it is marked with backslash characters (\verb|\|). Backslash (\verb|\|) is a scape characters in \Rlang and interpreted as the start of an embedded special sequence of characters (see section \ref{sec:calc:character} on page \pageref{sec:calc:character}). While in \Rlang forward slash (\verb|/|) can be used for file paths under any OS, and escaped backslash (\verb|\\|) is valid only under MS-Windows. Consequently \verb|/| should be always preferred to \verb|\\| to ensure portability, and is the approach used in this book.
 
 \begin{knitrout}\footnotesize
@@ -15495,7 +15499,8 @@ The complementary function to \code{basename()} is \Rfunction{dirname()} and ext
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
+\index{file paths!parsing|)}
+\index{working directory|(}
 Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the path to the current working directory and to set a directory as current, respectively.
 
 \begin{knitrout}\footnotesize
@@ -15531,7 +15536,9 @@ The returned value is always an absolute full path, so it remains valid even if 
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+\index{working directory|)}
 
+\index{listing files or directories|(}
 We can also obtain lists of files and/or directories (= disk folders) portably across OSs.
 
 \begin{knitrout}\footnotesize
@@ -15571,6 +15578,7 @@ Use parameter \code{full.names} with \Rfunction{list.files()} to obtain either a
 \begin{playground}
 Compare the behaviour of functions \Rfunction{dir()} and \Rfunction{list.dirs()}, and try by overriding the default arguments of \Rfunction{list.dirs()}, to get the call to return the same output as \Rfunction{dir()} does by default.
 \end{playground}
+\index{listing files or directories|)}
 
 Base \Rlang provides several functions for portably working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for this ``family'' of functions.
 
@@ -15595,9 +15603,9 @@ Base \Rlang provides several functions for portably working with files, they are
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2019-08-01 22:13:52 2019-08-01 22:13:52
+## xxx.txt    0 FALSE  666 2019-08-02 01:11:33 2019-08-02 01:11:33
 ##                       atime exe
-## xxx.txt 2019-08-01 22:13:52  no
+## xxx.txt 2019-08-02 01:11:33  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
@@ -15629,9 +15637,10 @@ Base \Rlang provides several functions for portably working with files, they are
 \begin{playground}
 Function \Rfunction{file.path()} can be used to construct a file path from its components in a way that is portable across OSs. Look at the help page and play with the function to assemble some paths that exist in the computer you are using.
 \end{playground}
+\index{file operations|)}
 
-\section{Text files}\label{sec:files:txt}
-
+\section{Plain-text files}\label{sec:files:txt}
+\index{importing data!text files|(}
 In general text files are the most portable approach to data storage but usually also the least efficient with respect to the size of the file. Text files are composed of encoded characters. This makes them easily readable with text editors and easy to use functions in any programming language. On the other hand, how the data encoded as characters is arranged can be based on two different approaches: positional and using a specific character as separator. The positional approach is more concise but almost unreadable to humans as the values run into each other. Reading of data stored using a positional approach requires access to a format definition and was common in FORTRAN and COBOL at the times when perforated cards were used to store data. In the case of separators, different separators are in common use. Comma separated encodings (CSV) use either comma or semicolon to separate the fields or columns. Tabulator, or tab, separated values (TSV) use the tab character as column separator. Sometimes white space is used as separator, but it is not common to use white space to separate columns that are vertically aligned. White space embedded in values can be a source of problems during decoding.
 
 \begin{explainbox}
@@ -15686,7 +15695,7 @@ The hardest part of all these problems is to diagnose their origin, as function 
 \end{explainbox}
 
 \subsection[Base R and `utils']{Base \Rlang and \pkgname{utils}}
-
+\index{text files!with field markers}
 Text files come in many different sizes and formats, but can be divided into two broad groups. Those with fixed format fields, and those with delimited fields. Fixed format fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL}, and computers with very limited resources. They are usually capable of encoding information using fewer characters than with delimited fields. The best way of understanding the differences is with examples. Although in this section we exemplify the use of functions by passing a file name as argument, URLs, and open file descriptors are also accepted (see section \ref{sec:???} on page \pageref{sec:???}).
 
 In the first example we will read a file with fields solely delimited by ``,''. This is what is called comma-separated-values format (CSV) which can be read and written with \Rfunction{read.csv()} and \Rfunction{write.csv()}, respectively.
@@ -15887,6 +15896,7 @@ col1 col2 col3 col4
 \end{kframe}
 \end{knitrout}
 
+\index{text files!fixed width fields}
 With a fixed-width format no delimiters are needed. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in \emph{fixed width format} can be read with function \Rfunction{read.fwf()}. Records for a single observation, can be stored in a single- or multiple lines. In either case each line with fields of different but fixed known widths.
 
 Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in \langname{FORTRAN}. One particularity of \langname{FORTRAN} \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. A trick used to make text files (or stacks of punch cards!) smaller. Modern versions of \langname{FORTRAN} support reading from and writing to other formats like those based field delimiters described above.
@@ -15939,7 +15949,9 @@ In reality  \Rfunction{read.csv()}, \code{read.csv2()} and \Rfunction{read.table
 \begin{explainbox}
 We can read a text files as character strings, without attempting to decode them. This is occasionally useful, such as when we do the decoding as part of our own script. In this case the function to use is \code{readLines()}.
 \end{explainbox}
+\index{importing data!text files|)}
 
+\index{exporting data!text files|(}
 Next we give one example of the use of a \emph{write} function matching one of the \emph{read} functions described above. The \Rfunction{write.csv()} function takes as argument a data frame or an object that can be coerced into a data frame converts it to character strings and saves it to a file. We first create the data frame that we will write to disk.
 
 \begin{knitrout}\footnotesize
@@ -16004,8 +16016,10 @@ hello world
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
+\index{exporting data!text files|)}
 
 \subsection[readr]{\pkgname{readr}}\label{sec:files:readr}
+\index{importing data!text files|(}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -16185,7 +16199,9 @@ The functions from R's \pkgname{utils} read the whole file as text before attemp
 \end{kframe}
 \end{knitrout}
 \end{explainbox}
+\index{importing data!text files|)}
 
+\index{exporting data!text files|(}
 The \code{write\_} functions from \pkgname{readr} are the counterpart to the \code{read\_} funtions above and the \code{write.} functions from \pkgname{utils}. In addition to the expected \Rfunction{write\_csv()}, \Rfunction{write\_csv2()}, \Rfunction{write\_tsv()}, \Rfunction{write\_delim()} and \code{read\_fwf()} functions, \pkgname{readr} provides functions that write \pgrmname{MS-Excel}-friendly CSV files. We demonstrate here the use of \Rfunction{write\_excel\_csv()} to produce a text file with comma-separated fields suitable for import into \pgrmname{MS-Excel}.
 
 \begin{knitrout}\footnotesize
@@ -16220,8 +16236,10 @@ The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} r
 \begin{advplayground}
 Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{read\_csv()}.
 \end{advplayground}
+\index{exporting data!text files|)}
 
 \section{XML and HTML files}
+\index{importing data!XML and HTML files|(}
 
 XML files contain text with special markup. Several modern data exchange formats are based on the \langname{XML} standard (see \url{https://www.w3.org/TR/xml/}) which uses schemas for flexibility. Schemas define specific formats, allowing reading of formats not specifically target during development of the read functions. Even the modern \langname{XHTML} standard used for web pages is based on such schemas, while \langname{HTML} only differs slightly in its syntax.
 
@@ -16305,8 +16323,10 @@ Next we extract the text from its \code{title} attribute, using functions \Rfunc
 \end{knitrout}
 
 The functions defined in this package can be used to ``harvest'' data from web pages, but also to read data from files using formats that are defined through \langname{XML} schemas.
+\index{importing data!XML and HTML files|)}
 
 \section{Worksheets}\label{sec:files:worksheets}
+\index{importing data!worksheets and workbooks|(}
 
 Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Work sheets contain code as equations in addition to the actual data. In all cases only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
 
@@ -16315,6 +16335,7 @@ Microsoft Office, Open Office and Libre Office are the most frequently used suit
 If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing these it into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection['readxl']{\pkgname{readxl}}\label{sec:files:excel}
+\index{importing data!.xlsx files|(}
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -16493,8 +16514,10 @@ When opened in Excel we get a workbook, containing two worksheets, named using t
 \begin{playground}
 If you have some worksheet files available, import them into \Rlang, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to import them into \Rlang.
 \end{playground}
+\index{importing data!.xlsx files|)}
 
 \subsection['readODS']{\pkgname{readODS}}
+\index{importing data!.ods files|(}
 
 Package \pkgname{readODS} provides functions for reading data saved in files that follow the \emph{Open Documents Standard}. Function \Rfunction{read\_ods()} has a similar but simpler user interface to that of \code{read\_excel()} and reads one worksheet at a time, with support only for skipping top rows. The value returned is a data frame.
 
@@ -16522,8 +16545,11 @@ Package \pkgname{readODS} provides functions for reading data saved in files tha
 \end{knitrout}
 
 Function \Rfunction{write\_ods()} writes a data frame into an ODS file.
+\index{importing data!.ods files|)}
+\index{importing data!worksheets and workbooks|)}
 
 \section{Statistical software}\label{sec:files:stat}
+\index{importing data!other statistical software|(}
 
 There are two different comprehensive packages for importing data saved from other statistical such as SAS, Statistica, SPSS, etc. The long time ``standard'' the \pkgname{foreign} package and the much newer \pkgname{haven}. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more robust than those from \pkgname{haven}.
 
@@ -16731,8 +16757,10 @@ Compare the values returned by different \code{read} functions when applied to t
 \begin{playground}
 If you use or have used in the past other statistical software or a general purpose language like \langname{Python}, look up some files, and import them into R.
 \end{playground}
+\index{importing data!other statistical software|)}
 
 \section{NetCDF files}
+\index{importing data!NeCDF files|(}
 
 In some fields including geophysics and meteorology \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to a grid of locations, like with data read from Affymetrix micro arrays used to study gene expression. Files \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
 
@@ -17024,9 +17052,10 @@ In this second example, we extract data for all grid points along latitudes. To 
 \begin{playground}
 Instead of extracting data for one longitude across latitudes, extract data across longitudes for one latitude near the Equator.
 \end{playground}
-
+\index{importing data!NeCDF files|)}
 
 \section{Remotely located data}\label{sec:files:remote}
+\index{importing data!remote connections|(}
 
 Many of the functions described above accept an URL address in place of file name. Consequently files can be read remotely, without a separate step. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, not to generate unnecessary load on server and/or network traffic by repeatedly downloading the same file. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
 
@@ -17115,10 +17144,12 @@ In this example we use a downloaded NetCDF file of long-term means for potential
 For portability \pgrmname{NetCDF} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
 .
 \end{warningbox}
+\index{importing data!remote connections|)}
 
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
+\index{importing data!physical devices|(}
 
-Numerous modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or in JSON format are commonly used.
+Numerous\index{internet-of-things} modern data acquisition devices based on microcontrolers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or in JSON format are commonly used.
 
 \subsection[jsonlite]{\pkgname{jsonlite}}
 
@@ -17148,6 +17179,7 @@ Numerous modern data acquisition devices based on microcontrolers, including int
 \end{kframe}
 \end{knitrout}
 
+\index{importing data!jsonlite}\index{YoctoPuce modules}
 We give here a simple example using a module from the \href{http://www.yoctopuce.com/}{YoctoPuce} family using a software hub running locally. We retrieve logged data from a YoctoMeteo module.
 
 \begin{infobox}
@@ -17187,12 +17219,143 @@ The minimum, mean and maximum values for each logging interval, need to be split
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+\index{importing data!physical devices|)}
 
 \section{Databases}\label{sec:data:db}
+\index{importing data!databases|(}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"dbplyr"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## To cite package 'dbplyr' in publications use:
+## 
+##   Hadley Wickham and Edgar Ruiz (2019). dbplyr: A 'dplyr' Back End
+##   for Databases. R package version 1.4.2.
+##   https://CRAN.R-project.org/package=dbplyr
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {dbplyr: A 'dplyr' Back End for Databases},
+##     author = {Hadley Wickham and Edgar Ruiz},
+##     year = {2019},
+##     note = {R package version 1.4.2},
+##     url = {https://CRAN.R-project.org/package=dbplyr},
+##   }
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"DBI"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## To cite package 'DBI' in publications use:
+## 
+##   R Special Interest Group on Databases (R-SIG-DB), Hadley Wickham
+##   and Kirill Müller (2018). DBI: R Database Interface. R package
+##   version 1.0.0. https://CRAN.R-project.org/package=DBI
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {DBI: R Database Interface},
+##     author = {{R Special Interest Group on Databases (R-SIG-DB)} and Hadley Wickham and Kirill Müller},
+##     year = {2018},
+##     note = {R package version 1.0.0},
+##     url = {https://CRAN.R-project.org/package=DBI},
+##   }
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{citation}\hlstd{(}\hlkwc{package} \hlstd{=} \hlstr{"RSQLite"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## 
+## To cite package 'RSQLite' in publications use:
+## 
+##   Kirill Müller, Hadley Wickham, David A. James and Seth Falcon
+##   (2019). RSQLite: 'SQLite' Interface for R. R package version
+##   2.1.2. https://CRAN.R-project.org/package=RSQLite
+## 
+## A BibTeX entry for LaTeX users is
+## 
+##   @Manual{,
+##     title = {RSQLite: 'SQLite' Interface for R},
+##     author = {Kirill Müller and Hadley Wickham and David A. James and Seth Falcon},
+##     year = {2019},
+##     note = {R package version 2.1.2},
+##     url = {https://CRAN.R-project.org/package=RSQLite},
+##   }
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
-One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM). This is an important subject, but extensive enough to be outside the scope of this book. We a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
+One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM) (see chapter \ref{chap:R:data}). This is an important subject, but extensive enough to be outside the scope of this book. We a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
 
-The additional steps compared to using \pkgname{dplyr} start with the need to establish a connection to a local or remote database. We will use \pgrmname{SQLite} for the examples, but backends supporting other database systems also exist.
+The additional steps compared to using \pkgname{dplyr} start with the need to establish a connection to a local or remote database. We will use \pkgname{RSQLite} to create a local temporary \pgrmname{SQLite} database. \pkgname{dbplyr} backends supporting other database systems are available. We will use meteorological data from \pkgname{learnrbook} for this example.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(dplyr)}
+\hlstd{con} \hlkwb{<-} \hlstd{DBI}\hlopt{::}\hlkwd{dbConnect}\hlstd{(RSQLite}\hlopt{::}\hlkwd{SQLite}\hlstd{(),} \hlkwc{dbname} \hlstd{=} \hlstr{":memory:"}\hlstd{)}
+\hlkwd{copy_to}\hlstd{(con, weather_wk_25_2019.tb,} \hlstr{"weather"}\hlstd{,}
+        \hlkwc{temporary} \hlstd{=} \hlnum{FALSE}\hlstd{,}
+        \hlkwc{indexes} \hlstd{=} \hlkwd{list}\hlstd{(}
+          \hlkwd{c}\hlstd{(}\hlstr{"month_name"}\hlstd{,} \hlstr{"calendar_year"}\hlstd{,} \hlstr{"solar_time"}\hlstd{),}
+          \hlstr{"time"}\hlstd{,}
+          \hlstr{"sun_elevation"}\hlstd{,}
+          \hlstr{"was_sunny"}\hlstd{,}
+          \hlstr{"day_of_year"}\hlstd{,}
+          \hlstr{"month_of_year"}
+        \hlstd{)}
+\hlstd{)}
+\hlstd{weather.db} \hlkwb{<-} \hlkwd{tbl}\hlstd{(con,} \hlstr{"weather"}\hlstd{)}
+\hlkwd{colnames}\hlstd{(weather.db)}
+\end{alltt}
+\begin{verbatim}
+##  [1] "time"           "PAR_umol"       "PAR_diff_fr"    "global_watt"   
+##  [5] "day_of_year"    "month_of_year"  "month_name"     "calendar_year" 
+##  [9] "solar_time"     "sun_elevation"  "sun_azimuth"    "was_sunny"     
+## [13] "wind_speed"     "wind_direction" "air_temp_C"     "air_RH"        
+## [17] "air_DP"         "air_pressure"   "red_umol"       "far_red_umol"  
+## [21] "red_far_red"
+\end{verbatim}
+\begin{alltt}
+\hlstd{weather.db} \hlopt{%.>%}
+  \hlkwd{filter}\hlstd{(., sun_elevation} \hlopt{>} \hlnum{5}\hlstd{)} \hlopt{%.>%}
+  \hlkwd{group_by}\hlstd{(., day_of_year)} \hlopt{%.>%}
+  \hlkwd{summarise}\hlstd{(.,} \hlkwc{energy_Wh} \hlstd{=} \hlkwd{sum}\hlstd{(global_watt,} \hlkwc{na.rm} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{*} \hlnum{60} \hlopt{/} \hlnum{3600}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## # Source:   lazy query [?? x 2]
+## # Database: sqlite 3.29.0 [:memory:]
+##   day_of_year energy_Wh
+##         <dbl>     <dbl>
+## 1         162     7500.
+## 2         163     6660.
+## 3         164     3958.
+## 4         165     1961.
+## 5         166     6382.
+## 6         167     7886.
+## 7         168     6743.
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{explainbox}
+Package \pkgname{dbplyr} translates data pipes that use \pkgname{dplyr} syntax into SQL queries to databases, either local or remote. As long as there are no problems with the backend, the use of a database is almost transparent to the \Rlang user.
+\end{explainbox}
+\index{importing data!databases|)}
 
 \begin{infobox}
 It is always good to clean up, and in the case of the book, the best way to test that the examples
@@ -17228,7 +17391,6 @@ Being\index{further reading} this the end of the book, I recommend as further re
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{dplyr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{stringr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{wrapr))}
-\hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{magrittr))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{tibble))}
 \hlkwd{try}\hlstd{(}\hlkwd{detach}\hlstd{(package}\hlopt{:}\hlstd{learnrbook))}
 \end{alltt}
@@ -17299,36 +17461,38 @@ Being\index{further reading} this the end of the book, I recommend as further re
 ## [10] ggplot2_3.2.0      svglite_1.2.2      knitr_1.23        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] nlme_3.1-140          sf_0.7-7              lubridate_1.7.4      
-##  [4] RColorBrewer_1.1-2    httr_1.4.0            backports_1.1.4      
-##  [7] utf8_1.1.4            R6_2.4.0              KernSmooth_2.23-15   
-## [10] vipor_0.4.5           DBI_1.0.0             lazyeval_0.2.2       
-## [13] colorspace_1.4-1      withr_2.1.2           tidyselect_0.2.5     
-## [16] gridExtra_2.3         rematch_1.0.1         curl_4.0             
-## [19] compiler_3.6.1        cli_1.1.0             rvest_0.3.4          
-## [22] RNetCDF_1.9-1         xml2_1.2.1            labeling_0.3         
-## [25] scales_1.0.0          classInt_0.3-3        hexbin_1.27.3        
-## [28] readr_1.3.1           askpass_1.1           stringr_1.4.0        
-## [31] digest_0.6.20         foreign_0.8-71        wrapr_1.8.9          
-## [34] pkgconfig_2.0.2       highr_0.8             tidync_0.2.1         
-## [37] rlang_0.4.0           readxl_1.3.1          rstudioapi_0.10      
-## [40] farver_1.1.0          generics_0.0.2        tikzDevice_0.12      
-## [43] jsonlite_1.6          dplyr_0.8.3           xlsx_0.6.1           
-## [46] magrittr_1.5          ncmeta_0.0.4          polynom_1.4-0        
-## [49] Rcpp_1.0.2            munsell_0.5.0         fansi_0.4.0          
-## [52] gdtools_0.1.9         stringi_1.4.3         MASS_7.3-51.4        
-## [55] plyr_1.8.4            grid_3.6.1            crayon_1.3.4         
-## [58] lattice_0.20-38       haven_2.1.1           xlsxjars_0.6.1       
-## [61] hms_0.5.0             magick_2.1            zeallot_0.1.0        
-## [64] pillar_1.4.2          reshape2_1.4.3        glue_1.3.1           
-## [67] evaluate_0.14         qpdf_1.1              modelr_0.1.4         
-## [70] vctrs_0.2.0           tweenr_1.0.1          cellranger_1.1.0     
-## [73] gtable_0.3.0          polyclip_1.10-0       tidyr_0.8.3          
-## [76] assertthat_0.2.1      xfun_0.8              broom_0.5.2          
-## [79] tidyverse_1.2.1       e1071_1.7-2           ncdf4_1.16.1         
-## [82] filehash_2.4-2        class_7.3-15          viridisLite_0.3.0    
-## [85] tibble_2.1.3          rJava_0.9-11          beeswarm_0.2.3       
-## [88] units_0.6-3           ellipsis_0.2.0.1      learnrbook_0.0.2.9001
+##  [1] nlme_3.1-140          sf_0.7-7              bit64_0.9-7          
+##  [4] lubridate_1.7.4       RColorBrewer_1.1-2    httr_1.4.0           
+##  [7] backports_1.1.4       utf8_1.1.4            R6_2.4.0             
+## [10] KernSmooth_2.23-15    vipor_0.4.5           DBI_1.0.0            
+## [13] lazyeval_0.2.2        colorspace_1.4-1      withr_2.1.2          
+## [16] tidyselect_0.2.5      gridExtra_2.3         rematch_1.0.1        
+## [19] bit_1.1-14            curl_4.0              compiler_3.6.1       
+## [22] cli_1.1.0             rvest_0.3.4           RNetCDF_1.9-1        
+## [25] xml2_1.2.1            labeling_0.3          scales_1.0.0         
+## [28] classInt_0.3-3        hexbin_1.27.3         readr_1.3.1          
+## [31] askpass_1.1           stringr_1.4.0         digest_0.6.20        
+## [34] foreign_0.8-71        wrapr_1.8.9           pkgconfig_2.0.2      
+## [37] dbplyr_1.4.2          highr_0.8             tidync_0.2.1         
+## [40] rlang_0.4.0           readxl_1.3.1          RSQLite_2.1.2        
+## [43] rstudioapi_0.10       farver_1.1.0          generics_0.0.2       
+## [46] tikzDevice_0.12       jsonlite_1.6          dplyr_0.8.3          
+## [49] xlsx_0.6.1            magrittr_1.5          ncmeta_0.0.4         
+## [52] polynom_1.4-0         Rcpp_1.0.2            munsell_0.5.0        
+## [55] fansi_0.4.0           gdtools_0.1.9         stringi_1.4.3        
+## [58] MASS_7.3-51.4         plyr_1.8.4            blob_1.2.0           
+## [61] grid_3.6.1            crayon_1.3.4          lattice_0.20-38      
+## [64] haven_2.1.1           xlsxjars_0.6.1        hms_0.5.0            
+## [67] magick_2.1            zeallot_0.1.0         pillar_1.4.2         
+## [70] reshape2_1.4.3        glue_1.3.1            evaluate_0.14        
+## [73] qpdf_1.1              modelr_0.1.4          vctrs_0.2.0          
+## [76] tweenr_1.0.1          cellranger_1.1.0      gtable_0.3.0         
+## [79] polyclip_1.10-0       tidyr_0.8.3           assertthat_0.2.1     
+## [82] xfun_0.8              broom_0.5.2           tidyverse_1.2.1      
+## [85] e1071_1.7-2           ncdf4_1.16.1          filehash_2.4-2       
+## [88] class_7.3-15          viridisLite_0.3.0     tibble_2.1.3         
+## [91] rJava_0.9-11          memoise_1.1.0         beeswarm_0.2.3       
+## [94] units_0.6-3           ellipsis_0.2.0.1      learnrbook_0.0.2.9001
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
