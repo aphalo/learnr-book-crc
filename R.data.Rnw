@@ -38,7 +38,7 @@ A different aspect of the \Rlang syntax is extraction of members from lists and 
 
 Base \Rlang function \Rfunction{subset()} has an unusual syntax, as it evaluates the expression passed as second argument within the data frame passed as its first argument (see \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}). This saves typing at the expense of increasing the risk of bugs as by reading the call to subset it is not obvious which names are resolved in the environment of the function and which ones within its first argument. In addition, changes elsewhere in a script can change how a call to subset is interpreted. In reality, subset is a wrapper function built on top of the extraction operator \code{[]}. It is a convenience function, mostly intended to be used at the console, rather than in scripts. To extract rows from a data frame it is always best to use the \code{[ , ]} operator.
 
-Package \pkgname{dplyr} provides convenience functions that work in a similar way as base \Rlang \code{subset()} although in latest versions more safely. This package has suffered quite drastic changes during its development with respect of how to handle the dilemma caused by ``guessing'' of the environment where names should be looked up. There is no easy answer, a simplified syntax leads to ambiguity, and a fully specified syntax is verbose. Recent versions of the package introduced a terse syntax to achieve a concise way of specifying where to lookup for names. My opinion is that for code that needs to highly reliable and produce reproducible results in the future we should for the time being use base \Rlang. For code that is to be used once, or for which reproducibility can depend on the use of a specific (old or soon to be old) version of \pkgname{dplyr}, or which it is not a burden to update, the conciseness of the new syntax will be an advantage.
+Package \pkgname{dplyr} provides convenience functions that work in a similar way as base \Rlang \code{subset()} although in latest versions more safely. This package has suffered quite drastic changes during its development with respect of how to handle the dilemma caused by ``guessing'' of the environment where names should be looked up. There is no easy answer, a simplified syntax leads to ambiguity, and a fully specified syntax is verbose. Recent versions of the package introduced a terse syntax to achieve a concise way of specifying where to lookup for names. My opinion is that for code that needs to highly reliable and produce reproducible results in the future we should for the time being prefer base \Rlang. For code that is to be used once, or for which reproducibility can depend on the use of a specific (old or soon to be old) version of \pkgname{dplyr}, or which it is not a burden to update, the conciseness and power of the new syntax will be an advantage.
 
 In this chapter you will familiarise with alternative ``grammars of data'' as implemented in some of the packages that enable new approaches to manipulating data in \Rlang. As in previous chapters I will focus more on the available tools and how to use them than on their role in the analysis of data. The books \citebooktitle{Wickham2017} \autocite{Wickham2017} and \citebooktitle{Peng2016} \autocite{Peng2016} cover partly the same subjects from the perspective of data analysis.
 
@@ -69,10 +69,11 @@ The function call semantics of the \Rlang language is that arguments are passed 
 Package \pkgname{data.table} passes arguments to functions by reference, avoiding making any copies, but any assignments within a function affect the variable passed as argument. This simplifies the needed tests for delayed copying and also by avoiding the need to make a copy of arguments achieves the best possible performance. This is a specialized package but extremely useful when dealing with very large data sets. Writing user code, such as scripts, requires a good understanding of the pass-by-reference semantics. Package \pkgname{data.table} makes no attempt at backwards compatibility with base \Rlang \code{data.frame}.
 
 \subsection{\pkgname{tibble}}\label{sec:data:tibble}
+\index{tibble!differences with data frames|(}
 
-The authors of package \pkgname{tibble} describe their \Rclass{tbl} class as backwards compatible with \Rclass{data.frame} and make them a derived class. This backwards compatibility is only partial so in some situations they are not equivalent.
+The authors of package \pkgname{tibble} describe their \Rclass{tbl} class as backwards compatible with \Rclass{data.frame} and make it a derived class. This backwards compatibility is only partial so in some situations they are not equivalent.
 
-The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed by the design of base \Rlang data frames at the cost of creating some incompatibilities due to changed (improved) syntax for member extraction and by adding support for ``columns'' of class \Rclass{list} and removing support for columns of class \Rclass{matrix} (???). Handling of attributes is also different, with no row names added by default. There are also differences in default behaviour of both constructors and methods. Although, objects of class \Rclass{tbl} can be passed as arguments to most functions that expect data frames as input, not all of them are guaranteed to work correctly because of the change in syntax.
+The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed by the design of base \Rlang data frames at the cost of creating some incompatibilities due to changed (improved) syntax for member extraction and by adding support for ``columns'' of class \Rclass{list} and removing support for columns of class \Rclass{matrix} (???). Handling of attributes is also different, with no row names added by default. There are also differences in default behaviour of both constructors and methods. Although, objects of class \Rclass{tbl} can be passed as arguments to functions that expect data frames as input, not all of these functions are guaranteed to work correctly as a result of the differences in syntax.
 
 \begin{warningbox}
 It is easy to write code that will work correctly both with data frames and tibbles. However, code that is syntactically correct according to the \Rlang language may fail if a tibble is used in place of a data frame.
@@ -84,13 +85,14 @@ In their first incarnation, the name for \Rclass{tibble} was \code{data\_frame} 
 <<tibble-info-01>>=
 my.tb <- tibble(numbers = 1:3)
 is_tibble(my.tb)
+inherits(my.tb, "tibble")
 class(my.tb)
 @
 
 Furthermore, by necessity, to support tibbles based on different underlying data sources a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \Rclass{tbl\_df}.
 \end{infobox}
 
-We start with the constructor and conversion methods. For this we will define our own diagnosis function.
+We start with the constructor and conversion methods. For this we will define our own diagnosis function (\emph{apply} functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
 
 <<tibble-01>>=
 show_classes <- function(x) {
@@ -133,10 +135,10 @@ print(my.tb)
 An aesthetic difference is in how tibbles and data frames are printed when they have many rows. Construct a data frame and an equivalent tibble with at least 50 rows, and then test how the output looks when they are printed.
 \end{playground}
 
-Data frames can be converted into tibbles with \code{as.tibble()}.
+Data frames can be converted into tibbles with \code{as\_tibble()}.
 
 <<tibble-05>>=
-my_conv.tb <- as.tibble(my.df)
+my_conv.tb <- as_tibble(my.df)
 is.data.frame(my_conv.tb)
 is_tibble(my_conv.tb)
 show_classes(my_conv.tb)
@@ -201,11 +203,12 @@ Which even allows a list of lists as a variable, or a list of vectors.
 <<tibble-09>>=
 tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
 @
+\index{tibble!differences with data frames|)}
 \index{data frame!replacements|)}
 
 \section{Data pipes}
-
-The first obvious difference between scripts using some of the new grammars is the use of \emph{pipes}. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS, pipes are chains of small programs that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is usually implemented by means of temporary files.
+\index{chaining statements with \emph{pipes}|(}
+The first obvious difference between scripts using some of the new grammars is the frequent use of \emph{pipes}. This is, however, mostly a question of preferences as pipes can be used equally well with any \Rlang functions. Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \cite{Kernigham1981}. Within an OS, pipes are chains of small programs or ``tools'' that carry out a single well defined task (e.g.\ \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformation takes place. In \osname{Unix} sinks and sources are files, but files as an abstraction include all devices and connections for input or output, including physical ones as terminals and printers. The connection between steps in the pipe is usually implemented by means of temporary files.
 
 <<pipes-x01,engine="bash",eval=FALSE>>=
 stdin | grep("abc") | more
@@ -215,9 +218,13 @@ How can \emph{pipes} exist within a single \Rlang script? Within \Rlang data sou
 
 What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Once a bug-free script is developed, pipes by allowing more concise code, usually improve readability (for humans).
 
-\subsection{\pkgname{magrittr}}
+Currently two main implementations of pipes are available as \Rlang extensions, in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}.
 
-The operators needed to build pipes of \Rlang functions are implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} packages.
+\subsection{\pkgname{magrittr}}
+\index{pipes!tidyverse|(}
+\index{pipe operator}
+One set of operators needed to build pipes of \Rlang functions is implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} and the pipe operator re-exported by package \pkgname{dplyr}.
+
 We start with a toy example first written using separate steps and normal \Rlang syntax
 
 <<pipes-x02>>=
@@ -240,13 +247,17 @@ data.in %>% sqrt() %>% sum() -> data.out
 @
 
 \begin{explainbox}
-The \Roperator{\%>\%} from package \pkgname{magrittr} takes two operands. The value returned by the \emph{lhs} (left hand side) operand, which can be any \Rlang expression, is passed as first argument to the \emph{rhs} operand, which must be must be a function accepting at least one argument. Consequently, the function in the \emph{rhs} must have a suitable signature for the pipe to work and it is impossible to pass piped arguments by name or to any other parameter than the first one.
+The \Roperator{\%>\%} from package \pkgname{magrittr} takes two operands. The value returned by the \emph{lhs} (left hand side) operand, which can be any \Rlang expression, is passed as first argument to the \emph{rhs} operand, which must be must be a function accepting at least one argument. Consequently, in this implementation the function in the \emph{rhs} must have a suitable signature for the pipe to work and it is impossible to pass piped arguments by name or to any other parameter than the first one.
 
-Some base \Rlang functions like \code{subset()} have a signature that is suitable for use in pipes, while using \code{assign()} in a pipe will in most cases require defining a wrapper function to change the order of the formal parameters.
+Some base \Rlang functions like \code{subset()} have a signature that is suitable for use in \pkgname{magrittr} pipes, while using \code{assign()} in such a pipe will in most cases require defining a wrapper function to change the order of the formal parameters.
 \end{explainbox}
 
-\subsection{\pkgname{wrapr}}
+Package \pkgname{magrittr} provides additional pipe operators, such as tee \code{\%T>\%}, and for applying the pipe by reference \code{\%<>\%} but these are seldom used.
+\index{pipes!tidyverse|)}
 
+\subsection{\pkgname{wrapr}}
+\index{pipes!wrapr|(}
+\index{dot-pipe operator}
 The \Roperator{\%.>\%} or ``dot-pipe'' operator from pakage \pkgname{wrapr} adds more ``sugar'' by allowing expressions both on rhs and lhs, and any position in the rhs for the piped value.
 
 Rewritten using the dot-pipe operator the pipe in the previous chunk becomes
@@ -255,7 +266,7 @@ Rewritten using the dot-pipe operator the pipe in the previous chunk becomes
 data.in %.>% sqrt(.) %.>% sum(.) -> data.out
 @
 
-This operator allows us to do things like, which \Roperator{\%>\%} does not allow.
+This operator allows us to do things like shown below, which \Roperator{\%>\%} does not allow.
 
 <<pipes-x06>>=
 data.in %.>% (2 + .^2) %.>% assign("data.out", .)
@@ -271,12 +282,15 @@ data.in %.>% (2 + .^2) %.>% assign(value = ., x = "data.out")
 \Rlang syntax for expressions is preserved, with the only caveat that because of the low precedence of the \Roperator{\%.>\%} operator we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses.
 \end{warningbox}
 
-In the rest of the chapter we will exclusively use dot pipes in examples to ensure readability.
+In the rest of the book we will exclusively use \emph{dot pipes} in examples to ensure easier understanding as they avoid implicit (''invisible'') passing of arguments. 
 
 Although pipes are what make the scripts visually very different, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions and methods defined in package \pkgname{dplyr} and other \pkgname{tidyverse} packages.
+\index{pipes!wrapr|)}
+\index{chaining statements with \emph{pipes}|)}
 
 \section{Reshaping with \pkgname{tidyr}}
-
+\index{reshaping tibbles|(}
+\index{long-form- and wide-form tabular data} 
 Data stored in table-like formats can be arranged in different ways. In base \Rlang most model fitting functions and the \Rfunction{plot()} using (model) formulas and accepting data frames, expect data to be arranged in ``long form'' so that each row in a data frame corresponds to a single observation (or measurement) event on a subject. Each column corresponds to a different measured feature, time of measurement or a factor describing a classification of subjects according to treatments or features of the experimental design (e.g.\ blocks). Covariates measured on the same subject at an earlier point in time may be also stored in a column. Data arranged in long form has been nicknamed as ``tidy'' and this is reflected in the name given to the \pkgname{tidyverse} suite of packages. Data in which columns correspond to measurement events is described as being in a ``wide form''.
 
 Although long-form data is and has been the most commonly used arrangement of data in \Rlang, not always manipulation of such data has been possible with concise \Rlang statements. The packages in the \pkgname{tidyverse} provide convenience functions to simplify coding of data manipulation, which in some cases have in addition improved performance compared to base \Rlang---i.e.\ it is possible to code the same operations using only base \Rlang, but may require more and longer statements.
@@ -302,7 +316,8 @@ head(long_iris.tb, 2)
 In this statement we can see the convenience of dispensing with quotation marks for the new (\code{part} and \code{dimension} and existing \code{Species} column names.
 
 \begin{warningbox}
-However, altering the normal interpretation of the name passed as argument to \code{key} and \code{value} prevents these arguments to be recognised as the name of a variable. We need to use a new operator \code{!!} to restore the normal \Rlang behaviour.
+\index{function arguments in the tidyverse}
+However, altering the normal interpretation of the name passed as argument to \code{key} and \code{value} prevents these arguments to be recognised as the name of a variable. We need to use a new operator \Roperator{!!} to restore the normal \Rlang behaviour.
 
 <<tidy-tibble-01a>>=
 part <- "not part"
@@ -322,14 +337,16 @@ For the reverse operation, converting from long form to wide form we use \Rfunct
 <<tidy-tibble-01b, eval=FALSE>>=
 spread(long_iris.tb, key = c(!!part, Species), value = dimension) # does not work!!
 @
+\index{reshaping tibbles|)}
 
 \section{Data manipulation with \pkgname{dplyr}}
-
+\index{data manipulation in the tidyverse|(}
 \begin{warningbox}
-The first advantage a user of the \pkgname{dplyr} functions and methods sees is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} and for SQL databases, with consistent syntax (See packages \pkgname{dtplyr} and \pkgname{dbplyr}). A further variant exists in package \pkgname{seplyr}, supporting a different syntax stemming from the use ``standard evaluation'' (SE) instead of non-standard evaluation (NSE). A downside of \pkgname{dplyr} and much of the \pkgname{tidyverse} is that the syntax is not yet stable, and additionally, some function and method names either override those in base \Rlang or clash with names used in other packages. \Rlang itself is much more stable and expected to remain forward and backward compatible for a long time. For code intended to remain in use for years, the fewer packages it depends on, the less maintenance it will need. When using the \pkgname{tidyverse} we need to be prepared to revise our own dependent code after any major revision to any of the packages used.
+The first advantage a user of the \pkgname{dplyr} functions and methods sees is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} (packages \pkgname{dtplyr}) and for SQL databases (\pkgname{dbplyr}), with consistent syntax (see also section \ref{sec:data:db} on page \pageref{sec:data:db}). A further variant exists in package \pkgname{seplyr}, supporting a different syntax stemming from the use ``standard evaluation'' (SE) instead of non-standard evaluation (NSE). A downside of \pkgname{dplyr} and much of the \pkgname{tidyverse} is that the syntax is not yet stable, and additionally, some function and method names either override those in base \Rlang or clash with names used in other packages. \Rlang itself is extremely stable and expected to remain forward and backward compatible for a long time. For code intended to remain in use for years, the fewer packages it depends on, the less maintenance it will need. When using the \pkgname{tidyverse} we need to be prepared to revise our own dependent code after any major revision to the \pkgname{tidyverse} packages imported from.
 \end{warningbox}
 
 \subsection{Row-wise manipulations}
+\index{row-wise operations on data|(}
 
 Assuming that the data is stored in long form, row-wise operations consist in operations combining values from the same observation event and unit---i.e.\ calculations within a single row of a data frame or tibble. Using functions \Rfunction{mutate()} and \Rfunction{transmute()} we can obtain derived quantities by combining different variables, or variables and constants, or applying a mathematical transformation. We add new variables (columns) retaining existing ones using \Rfunction{mutate()} or we assemble a new tibble containing only the columns we explicitly specify using \Rfunction{transmute()}. Differently to usual \Rlang syntax, we can use values calculated in previous arguments in later ones.
 
@@ -384,8 +401,10 @@ Function \Rfunction{rename()} can be used to rename columns---while base \Rlang 
 <<tidy-tibble-07>>=
 rename(long_iris.tb, dim = dimension)
 @
+\index{row-wise operations on data|)}
 
 \subsection{Group-wise manipulations}
+\index{group-wise operations on data|(}
 
 Another important operation is to summarize quantities by group of rows. Contrary to base \Rlang, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable when using pipes compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
 
@@ -405,7 +424,7 @@ tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) %.>%
 @
 
 \begin{warningbox}
-\textbf{How is grouping implemented for data frames and tibbles?} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members. To demonstrate this, we need to make an exception to our recomendation above and save a grouped tibble to a variable.
+\textbf{How is grouping implemented for data frames and tibbles?}\index{grouping!implementation in tidyverse} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members. To demonstrate this, we need to make an exception to our recomendation above and save a grouped tibble to a variable.
 
 <<tibble-grouped-box-01>>=
 my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
@@ -419,6 +438,7 @@ my_gr.tb <- group_by(.data = my.tb, letters)
 is.grouped_df(my_gr.tb)
 class(my_gr.tb)
 names(attributes(my_gr.tb))
+setdiff(attributes(my.tb), attributes(my_gr.tb))
 @
 
 <<tibble-grouped-box-03>>=
@@ -436,13 +456,13 @@ identical(my.tb, my_ugr.tb)
 
 The tests above show that members are in all cases the same as operator \Roperator{==} tests for equality at each position, while attributes, including \code{class} differ between normal tibbles and grouped ones and so not \emph{identical} objects.
 
-If we replace \code{tibble} by \code{data.frame} in the first statement, and rerun the chunk we result of the last statement in the chunk in \code{FALSE} instead of \code{TRUE}. At the time of writing starting with a \code{data.frame} object, applying grouping with \Rfunction{group\_by()} followed by ungrouping with \Rfunction{ungroup()} has the side effect of converting the data frame into a tibble. This is something to be very much aware of, as there are differences in how the extraction operator \Roperator{[ , ]} behaves in the two cases. The safe way to write \pkgname{tidyverse} code is to always use tibbles instead of data frames.
-
-Use function \Rfunction{attributes()} to compare the attributes of  \code{my.tb} and \code{my\_gr.tb}.
+If we replace \code{tibble} by \code{data.frame} in the first statement, and rerun the chunk we result of the last statement in the chunk is \code{FALSE} instead of \code{TRUE}. At the time of writing starting with a \code{data.frame} object, applying grouping with \Rfunction{group\_by()} followed by ungrouping with \Rfunction{ungroup()} has the side effect of converting the data frame into a tibble. This is something to be very much aware of, as there are differences in how the extraction operator \Roperator{[ , ]} behaves in the two cases. The safe way to write \pkgname{tidyverse} code is to always use tibbles instead of data frames.
 \end{warningbox}
+\index{group-wise operations on data|)}
 
 \subsection{Joins}
-
+\index{joins between data sources|(}
+\index{merging data from two tibbles|(}
 Joins allow us to combine two data sources which share some variables. Variables in common are used to match the corresponding rows before ``joining'' variables (i.e.\ columns) from both sources together. There are several \emph{join} functions in \pkgname{dplyr}. They differ mainly in how they handle rows that do not have a match between data sources.
 
 We create here some artificial data to demonstrate the use of these functions. We will create two small tibbles, with one column in common and one mismatched row in each.
@@ -452,7 +472,7 @@ first.tb <- tibble(idx = c(1:4, 5), values1 = "a")
 second.tb <- tibble(idx = c(1:4, 6), values2 = "b")
 @
 
-Bellow we apply the \emph{mutating join} functions exported by \pkgname{dplyr}: \Rfunction{full\_join()}, \Rfunction{left\_join()}, \Rfunction{right\_join()} and \Rfunction{inner\_join()}. These functions always retain all columns, and in case of multiple matches keep a row for each matching combination of rows. We repeat each example with the arguments passed to \code{x} and \code{y} swapped to more clearly show their different behaviour.
+Bellow we apply the \emph{}\index{joins between data sources!mutating} functions exported by \pkgname{dplyr}: \Rfunction{full\_join()}, \Rfunction{left\_join()}, \Rfunction{right\_join()} and \Rfunction{inner\_join()}. These functions always retain all columns, and in case of multiple matches keep a row for each matching combination of rows. We repeat each example with the arguments passed to \code{x} and \code{y} swapped to more clearly show their different behaviour.
 
 A full join retains all unmatched rows filling missing values with \code{NA}. By default the match is done on columns with the same name in \code{x} and \code{y}, but this can be changed by passing an argument to parameter \code{by}. Using \code{by} one can base the match on columns that have different names in \code{x} and \code{y}, or prevent matching of columns with the same name in \code{x} and \code{y} (example at end of the section).
 
@@ -492,7 +512,7 @@ inner_join(x = first.tb, y = second.tb)
 inner_join(x = second.tb, y = first.tb)
 @
 
-Next we apply the \emph{filtering join} functions exported by \pkgname{dplyr}: \Rfunction{semi\_join()} and \Rfunction{anti\_join()}. These functions only return a tibble always containing only the columns from \code{x}, but with retaining rows based on their match to rows in \code{y}.
+Next we apply the \emph{filtering join}\index{joins between data sources!filtering} functions exported by \pkgname{dplyr}: \Rfunction{semi\_join()} and \Rfunction{anti\_join()}. These functions only return a tibble always containing only the columns from \code{x}, but with retaining rows based on their match to rows in \code{y}.
 
 A semi join retains rows from \code{x} that have a match in \code{y}.
 
@@ -520,6 +540,9 @@ We here rename column \code{idx} in \code{first.tb} to demonstrate the use of \c
 first2.tb <- rename(first.tb, idx2 = idx)
 full_join(x = first2.tb, y = second.tb, by = c("idx2" = "idx"))
 @
+\index{merging data from two tibbles|)}
+\index{joins between data sources|)}
+\index{data manipulation in the tidyverse|)}
 
 \section{Further reading}
 An\index{further reading} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of the packages these packages. As several of these packages are under active development the recent book \citebooktitle{Wickham2017} \autocite{Wickham2017} is most useful.
