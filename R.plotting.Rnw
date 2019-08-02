@@ -57,6 +57,7 @@ For executing the examples listed in this chapter you need first to load the fol
 
 <<message=FALSE>>=
 library(learnrbook)
+library(wrapr)
 library(scales)
 library(ggplot2)
 library(ggrepel)
@@ -860,9 +861,10 @@ The plotting of tables by mapping a list of data frames to the \code{label} \emp
 We first generate a \code{tibble} containing summaries from the data, formatted as character strings, wrap this tibble in a list and store this list as column in another \code{tibble}. To accomplish this we use functions from the tidyverse described in Chapter \ref{chap:R:data}.
 
 <<table-plot-01>>=
-mtcars %>%
-  group_by(cyl) %>%
-  summarize("mean wt" = format(mean(wt), digits = 2),
+mtcars %.>%
+  group_by(., cyl) %.>%
+  summarize(.,
+            "mean wt" = format(mean(wt), digits = 2),
             "mean disp" = format(mean(disp), digits = 0),
             "mean mpg" = format(mean(mpg), digits = 0)) -> my.table
 table.tb <- tibble(x = 500, y = 35, table.inset = list(my.table))
@@ -916,10 +918,11 @@ Geometry \gggeom{geom\_plot()} works very similarly to \code{geom\_table()} but 
 In the first example of inset plots we include one of the summaries shown above as an inset table. We first create a tibble containing the plot to be inset.
 
 <<plot-plot-01>>=
-mtcars %>%
-  group_by(cyl) %>%
-  summarize(mean.mpg = mean(mpg)) %>%
-  ggplot(aes(factor(cyl), mean.mpg, fill = factor(cyl))) +
+mtcars %.>%
+  group_by(., cyl) %.>%
+  summarize(., mean.mpg = mean(mpg)) %.>%
+  ggplot(data = ., 
+         aes(factor(cyl), mean.mpg, fill = factor(cyl))) +
   scale_fill_discrete(guide = FALSE) +
   labs(y = NULL) +
     geom_col() +
@@ -1846,15 +1849,45 @@ ggplot(data = mtcars, aes(wt, mpg)) +
 
 \subsection{Time and date scales for $x$ and $y$}\label{sec:plot:scales:time:date}
 \index{grammar of graphics!time and date scales|(}
-In \Rlang and many other computing languages time is stored as integer or numeric values subject to special interpretation. Times stored as objects of class \code{POSIXct} can be mapped to continues \emph{aesthetics} such as $x$ and $y$. Special scales are available for these quantiites.
+In \Rlang and many other computing languages time is stored as integer or numeric values subject to special interpretation. Times stored as objects of class \code{POSIXct} can be mapped to continuous \emph{aesthetics} such as $x$ and $y$. Special scales are available for these quantiites.
 
 We can set limits and breaks using constants as time or dates. These are most easily input with the functions in packages \pkgname{lubridate} or \pkgname{anytime}.
 
-%%%% ADD Example
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+\begin{warningbox}
+Warnings are issued in the next two chunks as we are using scale limits to subset a part of the observations present in \code{data}.
+\end{warningbox}
+
+<<scale-datetime-01>>=
+ggplot(data = weather_wk_25_2019.tb,
+       aes(with_tz(time, tzone = "EET"), air_temp_C)) +
+  geom_line() +
+  scale_x_datetime(name = NULL,
+                   breaks = ymd_hm("2019-06-11 12:00", tz = "EET") + days(0:1),
+                   limits = ymd_hm("2019-06-11 00:00", tz = "EET") + days(c(0, 2))) +
+  scale_y_continuous(name = "Air temperature (C)") +
+  expand_limits(y = 0)
+@
 
 By\index{plots!scales!time!axis labels} default the tick labels produced and their formatting is automatically selected based on the extent of the time data. For example, if we have all data collected within a single day, then the tick labels will show hours and minutes. If we plot data for several years, the labels will show the date portion of the time instant. The default is frequently good enough, but it is possible, as for numbers to use different formatter functions to generate the tick labels.
 
-%%%% ADD Example
+<<scale-datetime-02>>=
+ggplot(data = weather_wk_25_2019.tb,
+       aes(with_tz(time, tzone = "EET"), air_temp_C)) +
+  geom_line() +
+  scale_x_datetime(name = NULL,
+                   date_breaks = "1 hour",
+                   limits = ymd_hm("2019-06-16 00:00", tz = "EET") + hours(c(6, 18)),
+                   date_labels = "%H:%M") +
+  scale_y_continuous(name = "Air temperature (C)") +
+  expand_limits(y = 0)
+@
+
+\begin{playground}
+The formatting strings used are those supported by \Rfunction{strptime()} and \code{help(strptime)} lists them. Change in the two examples above the $y$-axis labels used and the the limits---e.g.\ include a single hour or a whole week of data, check which tick labels are produced by default and then pass as argument to \code{date\_labels} different format strings, taking into account that in addition to the \emph{conversion specification} codes format strings can include text.
+\end{playground}
 \index{grammar of graphics!time and date scales|)}
 
 \subsection{Discrete scales for $x$ and $y$}
@@ -1864,6 +1897,9 @@ In\index{plots!scales!limits} the case of ordered or unordered factors, the tick
 
 We can use \ggscale{scale\_x\_discrete()} to reorder and select the columns without altering the data. If we use this approach to subset the data, then to avoid warnings we need to add \code{na.rm = TRUE}. We additionally use \code{scale\_x\_discrete} to convert level names to uppercase.
 
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
 <<scale-discrete-10>>=
 ggplot(mpg, aes(class, hwy)) +
   stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
@@ -1887,6 +1923,9 @@ ggplot(mpg, aes(reorder(x = factor(class), X = hwy, FUN = mean), hwy)) +
   stat_summary(geom = "col", fun.y = mean)
 @
 \index{grammar of graphics!discrete scales|)}
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_wide)
+@
 
 \subsection{Size}
 \index{grammar of graphics!size scales|(}
@@ -2607,6 +2646,7 @@ try(detach(package:lubridate))
 try(detach(package:tikzDevice))
 try(detach(package:ggplot2))
 try(detach(package:scales))
+try(detach(package:wrapr))
 try(detach(package:learnrbook))
 @
 
