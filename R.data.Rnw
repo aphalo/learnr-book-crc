@@ -64,7 +64,7 @@ library(lubridate)
 \section[Replacements for \texttt{data.frame}]{Replacements for \code{data.frame}}
 \index{data frame!replacements|(}
 \subsection{\pkgname{data.table}}
-The function call semantics of the \Rlang language is that arguments are passed to functions by copy. If the arguments are modified within the code of a function, these changes are local to the function. If implemented näively this semantic would impose a huge toll on performance, however, \Rlang in most situations only makes a copy if and when the value changes. Consequently, for modern versions of \Rlang which are very good at avoiding unnecessary copying of objects, the normal \Rlang semantics has only a moderate negative impact on performance. However, this impact can be still a problem as modification is detected at the object level, and consequently \Rlang may make copies of a whole data frame when only values in a single column or even just an attribute have changed.
+The function call semantics of the \Rlang language is that arguments are passed to functions by copy. If the arguments are modified within the code of a function, these changes are local to the function. If implemented naively this semantic would impose a huge toll on performance, however, \Rlang in most situations only makes a copy if and when the value changes. Consequently, for modern versions of \Rlang which are very good at avoiding unnecessary copying of objects, the normal \Rlang semantics has only a moderate negative impact on performance. However, this impact can be still a problem as modification is detected at the object level, and consequently \Rlang may make copies of a whole data frame when only values in a single column or even just an attribute have changed.
 
 Package \pkgname{data.table} passes arguments to functions by reference, avoiding making any copies, but any assignments within a function affect the variable passed as argument. This simplifies the needed tests for delayed copying and also by avoiding the need to make a copy of arguments achieves the best possible performance. This is a specialized package but extremely useful when dealing with very large data sets. Writing user code, such as scripts, requires a good understanding of the pass-by-reference semantics. Package \pkgname{data.table} makes no attempt at backwards compatibility with base \Rlang \code{data.frame}.
 
@@ -307,7 +307,8 @@ data.in %.>% (2 + .^2) %.>% assign("data1.out", .)
 @
 
 \begin{explainbox}
-In conclusion, \Rlang syntax for expressions is preserved when using the dot-pipe operator, with the only caveat that because of the low precedence of the \Roperator{\%.>\%} operator we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses. \end{explainbox}
+In conclusion, \Rlang syntax for expressions is preserved when using the dot-pipe operator, with the only caveat that because of the higher precedence of the \Roperator{\%.>\%} operator we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses. 
+\end{explainbox}
 
 Under-the-hood the implementations of \Roperator{\%>\%} and \Roperator{\%.>\%} are very different, with \Roperator{\%.>\%} usually having better performance.
 
@@ -327,13 +328,13 @@ Although long-form data is and has been the most commonly used arrangement of da
 Real-world data is rather frequently stored in wide format or even ad-hoc formats, so in many cases the first task in data analysis is to reshape the data. Package \pkgname{tidyr} provides functions for ``reshaping'' data from wide- to long form and \emph{vice versa} (replacing the older packages \pkgname{reshape} and \pkgname{reshape2}).
 
 %% replace iris with an example that is really ``wide''
-Some operations on \Rlang \code{data.frame} objects with \pkgname{tidyverse} packages will return \code{data.frame} objects while others will return tibbles---i.e.\ \code{tb} objects. Consequently it is safer to first convert into tibbles the data frames we will work with.
+We use in examples below the \Rdata{iris} data set included in base \Rlang. Some operations on \Rlang \code{data.frame} objects with \pkgname{tidyverse} packages will return \code{data.frame} objects while others will return tibbles---i.e.\ \Rclass{"tb"} objects. Consequently it is safer to first convert into tibbles the data frames we will work with.
 
 <<tidy-tibble-00>>=
 iris.tb <- as_tibble(iris)
 @
 
-Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use as an example the \Rdata{iris.tb} data set included in base \Rlang. We use \code{gather} to obtain a long-form tibble. By comparing \code{iris.tb} with \code{long\_iris.tb} we can appreciate how \Rfunction{gather()} reshaped its input.
+Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use \code{gather} to obtain a long-form tibble. By comparing \code{iris.tb} with \code{long\_iris.tb} we can appreciate how \Rfunction{gather()} reshaped its input.
 
 <<tidy-tibble-01>>=
 head(iris.tb, 2)
@@ -374,7 +375,7 @@ spread(long_iris.tb, key = c(!!part, Species), value = dimension) # does not wor
 @
 
 \begin{warningbox}
-  Starting from version 1.0.0 of \pkgname{tidyr} \Rfunction{gather()} and \Rfunction{spread()} are deprecated and replaced by \Rfunction{pivot\_longer()} and \Rfunction{pivot\_wider()}. These new functions are not yet fully stable.
+  Starting from version 1.0.0 of \pkgname{tidyr} \Rfunction{gather()} and \Rfunction{spread()} are deprecated and replaced by \Rfunction{pivot\_longer()} and \Rfunction{pivot\_wider()}. These new functions use a different syntax but are not yet fully stable.
 \end{warningbox}
 
 \index{reshaping tibbles|)}
@@ -593,7 +594,7 @@ options(tibble.print_max = 3, tibble.print_min = 3)
 @
 
 \section{Further reading}
-An\index{further reading} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2017} \autocite{Wickham2017} are the most useful.
+An\index{further reading!new grammars of data} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2017} \autocite{Wickham2017} are the most useful.
 
 <<eco=FALSE>>=
 try(detach(package:lubridate))

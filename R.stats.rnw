@@ -1,6 +1,6 @@
 % !Rnw root = appendix.main.Rnw
 <<echo=FALSE, include=FALSE>>=
-opts_chunk$set(opts_fig_wide)
+opts_chunk$set(opts_fig_narrow_square)
 opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 rm(plot)
@@ -16,18 +16,14 @@ The purpose of computing is insight, not numbers.
 
 \section{Aims of this chapter}
 
-In this chapter you will learn the approach used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding functions.
-
-This chapter is designed to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Three good examples of books with a broad scope and of moderate size are \citebooktitle{Dalgaard2008} \autocite{Dalgaard2008}, \citebooktitle{Everitt2009} \autocite{Everitt2009} and \citebooktitle{Zuur2009} \autocite{Zuur2009}. The book \citebooktitle{Crawley2012} \autocite{Crawley2012} is comprehensive in the scope of statistical procedures described. Furthermore, many of base \R's functions are specific to different statistical procedures and transcend the description of \Rlang as a programming language.
-
-Along the chapter, I will show occasionally the equivalent of \Rlang code in mathematical notation. If you are not familiar with the mathematical notation, you can safely ignore it, as long as you understand the \Rlang code.
+This chapter aims to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Although, many of base \R's functions are specific to given statistical procedures, they use a particular approach to model specification and for returning the computed values that can be considered a part of the \Rlang language. Here you will learn the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding fit and summary functions.
 
 \emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
 
 \section{Statistical summaries}
 \index{functions!built-in|see@{functions, base-R}}%
 \index{functions!base R}\index{summaries!statistical}
-Being \Rlang main focus in statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of the frequently used data summaries mean or average (\Rfunction{mean()}), variance (\Rfunction{var()}), standard deviation (\Rfunction{sd()}), median (\Rfunction{median()}), mean absolute deviation (\Rfunction{mad()}), mode (\Rfunction{mode()}), maximum (\Rfunction{max()}), minimum (\Rfunction{min()}), range (\Rfunction{range()}), quantiles (\Rfunction{quantile()}), length (\Rfunction{length()}), and all-encompassing summaries (\Rfunction{summary()}). All these methods accept numeric vectors and matrices as argument. Some of them also have definitions for other, more complex objects such as data frames in the case of \Rfunction{summary()}. (The \Rlang language does not define a function for calculation of the standard error of the mean. Please, see section \ref{sec:functions:sem} on page \pageref{sec:functions:sem} for instructions on how to define your own.)
+Being the main focus of the \Rlang language in data analysis and statistics, it provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of the frequently used data summaries mean or average (\Rfunction{mean()}), variance (\Rfunction{var()}), standard deviation (\Rfunction{sd()}), median (\Rfunction{median()}), mean absolute deviation (\Rfunction{mad()}), mode (\Rfunction{mode()}), maximum (\Rfunction{max()}), minimum (\Rfunction{min()}), range (\Rfunction{range()}), quantiles (\Rfunction{quantile()}), length (\Rfunction{length()}), and all-encompassing summaries (\Rfunction{summary()}). All these methods accept numeric vectors and matrices as argument. Some of them also have definitions for other classes such as data frames in the case of \Rfunction{summary()}. (The \Rlang language does not define a function for calculation of the standard error of the mean. Please, see section \ref{sec:functions:sem} on page \pageref{sec:functions:sem} for how to define your own.)
 
 <<stat-fun-1, eval=eval_playground>>=
 x <- 1:20
@@ -49,7 +45,7 @@ summary(x)
   In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
 \end{playground}
 
-By default if the argument contains \code{NAs} these functions return \code{NA}, The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown. However, an additional parameter called \code{na.omit} allows us to override this default behaviour by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
+By default if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on §the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.omit} allows us to override this default behaviour by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
 
 <<stat-fun-2>>=
 x <- c(1:20, NA)
@@ -71,29 +67,20 @@ To obtain a single point from the distribution curve we pass a vector of length 
 dnorm(x = 1.5, mean = 1, sd = 0.5)
 @
 
-To obtain multiple values we can pass a longer vector as argument. As perusing a long vector of numbers is difficult, we plot the result of the computation. We plot both lines and points (\code{type = "b"}) to illustrate that in this cases 50 generated points can give the illusion of a continuous curve.
+To obtain multiple values we can pass a longer vector as argument. As perusing a long vector of numbers is difficult, we plot the result of the computation as a line (\code{type = "l"}) that shows that the 50 generated data points give the illusion of a continuous curve.
 
 <<distrib-01a>>=
 my.x <- seq(from = -1, to = 3, length.out = 50)
 
 my.data <- data.frame(x = my.x,
                       y = dnorm(x = my.x, mean = 1, sd = 0.5))
-plot(y~x, data = my.data, type = "b")
+plot(y~x, data = my.data, type = "l")
 @
-
-\begin{explainbox}
-As described in chapter \ref{chap:R:functions} starting on page \pageref{chap:R:functions}, it is possible to define functions. An alternative way of obtaining the same plot as above is shown below using an anonymous (without name) function. (A function like the one used here that only changes the interface to an existing function is usually called a \emph{wrapper}. In this case we use it to pass arguments to \code{dnorm()}).
-
-<<distrib-EB01>>=
-plot(x = function(z) dnorm(z, mean = 1, sd = 0.5),
-     from = -1, to = 3, n = 50)
-@
-\end{explainbox}
 
 \subsection{Probabilities from parameters and quantile}\label{sec:prob:quant}
 \index{distributions!probabilities from quantiles}
 
-If we have a calculated quantile we can look up the corresponding $P$-value from the Normal distribution. The mean and standard deviation would in such a case be also computed from the same observations under the null hypothesis. In the example below we use invented values for all parameters including \code{q}, the quantile.
+If we have a calculated quantile we can look up the corresponding $P$-value from the Normal distribution. The mean and standard deviation would in such a case be also computed from the same observations under the null hypothesis. In the example below we use invented values for all parameters \code{q}, the quantile, \code{mean}, and \code{sd}, the standard deviation. Use 
 
 <<distrib-02>>=
 pnorm(q = 4, mean = 0, sd = 1)
@@ -104,7 +91,7 @@ pnorm(q = 4, mean = 0, sd = c(1, 4), lower.tail = FALSE)
 @
 
 \begin{explainbox}
-  In tests of significance empirical $z$-values and $t$-values are computed by subtracting the mean from the raw quantile and then dividing by the standard deviation, and consequently the corresponding $P$-values need to be looked up using \code{mean = 0} and \code{sd = 1} when calling \Rfunction{pnorm()} or \Rfunction{pt()} respectively. These arguments are the defaults.
+  In tests of significance empirical $z$-values and $t$-values are computed by subtracting from the observed mean for one group or raw quantile, the ``expected'' mean (possibly an hypothesized theoretical value, the mean of a control condition used as reference, or the mean computed over all treatments under the assumption of no effect of treatments) and then dividing by the standard deviation. Consequently, the $P$-values corresponding to these empirical $z$-values and $t$-values need to be looked up using \code{mean = 0} and \code{sd = 1} when calling \Rfunction{pnorm()} or \Rfunction{pt()} respectively. These frequently used values are the defaults.
 \end{explainbox}
 
 \subsection{Quantiles from parameters and probabilities}\label{sec:quant:prob}
@@ -126,7 +113,7 @@ qnorm(p = 0.025, mean = 0, sd = 1)
 qnorm(p = 0.025, mean = 0, sd = 1, lower.tail = FALSE)
 @
 
-We see above than in the case of a symmetric distribution like the Normal, the quantiles in the two tails differ only in sign. This is not the case for asymmetric distributions.
+We see above that in the case of a symmetric distribution like the Normal, the quantiles in the two tails differ only in sign. This is not the case for asymmetric distributions.
 
 When calculating a $P$-value from a quantile in a test of significance, we need to first decide whether a two sided or single sided test is relevant, and in the case of a single sided test, which tail is of interest. For a double sided test we need to multiply the returned value by 2.
 
@@ -139,7 +126,7 @@ pnorm(q = 4, mean = 0, sd = 1) * 2
 \subsection{``Random'' draws from a distribution}\label{sec:stat:random}
 \index{distributions!pseudo-random draws}
 
-True random sequences can only be generated by physical processes. All so-called ``random'' sequences of numbers generated by computation are really deterministic although they share some properties with true random sequences (e.g.\ in relation to autocorrelation). It possible to compute not only pseudo-random draws from a uniform distribution but also from the Normal, $t$, $F$ and other distributions. Parameter \code{n} indicates the number of values to be drawn or its equivalent the length of the vector returned.
+True random sequences can only be generated by physical processes. All so-called ``random'' sequences of numbers generated by computation are really deterministic although they share some properties with true random sequences (e.g.\ in relation to autocorrelation). It possible to compute not only pseudo-random draws from a uniform distribution but also from the Normal, $t$, $F$ and other distributions. Parameter \code{n} indicates the number of values to be drawn or its equivalent the length of the vector returned.\qRfunction{rnorm()}\qRfunction{runif()}
 
 <<distrib-04,echo=2:3>>=
 set.seed(12234)
@@ -148,7 +135,7 @@ rnorm(n = 10, mean = 10, sd = 2)
 @
 
 \begin{playground}
-Edit the examples in sections \ref{sec:prob:quant}, \ref{sec:quant:prob} and \ref{sec:stat:random} to do computations based on different distributions, such at Students' t, F or uniform.
+Edit the examples in sections \ref{sec:prob:quant}, \ref{sec:quant:prob} and \ref{sec:stat:random} to do computations based on different distributions, such at Students' \emph{t}, \emph{F} or uniform.
 \end{playground}
 
 \begin{explainbox}
@@ -157,7 +144,7 @@ It is impossible to generate truly random sequences of number by means of a dete
 \end{explainbox}
 
 \begin{advplayground}
-Execute the statement \code{rnorm(5)} by itself several times, paying attention to the values obtained. Repeat the exercise but now executing \code{set.seed(98765); rnorm(5)} several times, paying attention to the values now obtained, then try again using a different argument in the call to \code{set.seed()}.
+Execute the statement \code{rnorm(3)}\qRfunction{rnorm()} by itself several times, paying attention to the values obtained. Repeat the exercise but now executing \code{set.seed(98765)}\qRfunction{setseed()} immediately before each call to \code{rnorm(3)}, paying again attention to the values obtained. Next execute \code{set.seed(98765)}, followed by \code{c(rnorm(3), rnorm(3))}, and then execute \code{set.seed(98765)}, followed by \code{rnorm(6)} and compare the output. Repeat the exercise using a different argument in the call to \code{set.seed()}. Analyse the results and explain how \code{setseed()} affects the generation of pseudo-random numbers in \Rlang.
 \end{advplayground}
 
 \section{``Random'' sampling}
@@ -179,7 +166,7 @@ In practice, pseudo-random sampling is useful when we need to select subsets of 
 \index{correlation|(}
 Both parametric (Pearson's) and non-parametric robust (Spearman's and Kendall's) methods for the estimation of the (linear) correlation between pairs of variables are available in base \Rlang. The different methods are selected by passing arguments to a single function. While Pearson's method is based on the actual values of the observations, non-parametric methods are based on the ordering or rank of the observations, and consequently less affected by observations with extreme values.
 
-We first load and explore the data to which we will fit a linear model, data that is included in \Rpgrm. These data consist in stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
+We first load and explore the data set \Rdata{cars} from \Rlang which we will use in the example. These data consist in stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
 
 <<cor-00>>=
 data(cars)
@@ -215,16 +202,16 @@ cor(my.mat)
 Modify the code in the chunk immediately above constructing a matrix with six columns and then computing the correlations.
 \end{playground}
 
-While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient, \Rfunction{cor.test()} also computes $t$-value, $P$-value, and confidence interval for the estimate.
+While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient, \Rfunction{cor.test()} also computes the $t$-value, $P$-value, and confidence interval for the estimate.
 
 <<cor-03>>=
 cor.test(x = cars$speed, y = cars$dist)
 @
 
-As described below for model fitting and $t$-test, \Rfunction{cor,test()} also accepts a \code{formula} plus \code{data} as arguments.
+As described below for model fitting and $t$-test, \Rfunction{cor.test()} also accepts a \code{formula} plus \code{data} as arguments.
 
 \begin{playground}
-Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \ref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
+Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
 
 <<cor-PG01, eval=eval_playground>>=
 a <- cor(cars)
@@ -233,7 +220,7 @@ attributes(a)
 str(a)
 @
 
-Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt of the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data directly from the object when the base \Rlang or packages do not provide predefined extractor methods.
+Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt of the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data members directly from the object when predefined extractor methods are not available.
 \end{playground}
 
 \subsection{Kendall's $\tau$ and Spearman's $\rho$}
@@ -248,7 +235,7 @@ cor(x = cars$speed, y = cars$dist, method = "kendall")
 cor(x = cars$speed, y = cars$dist, method = "spearman")
 @
 
-Function \code{cor.test()} allows the choice of the method using the same syntax as for \code{cor()}.
+Function \Rfunction{cor.test()}, described above, also allows the choice of method with the same syntax as shown for \Rfunction{cor()}.
 
 \begin{playground}
 Repeat the exercise in the playground immediately above, but now using non-parametric methods. How does the information stored in the returned \code{matrix} differ depending on the method, and how can we extract information about the method used for calculation of the correlation from the returned object.
@@ -262,7 +249,7 @@ Repeat the exercise in the playground immediately above, but now using non-param
 
 In \Rlang, the models to be fitted are described by ``model formulas'' such as \verb|y ~ x| which we read as $y$ is explained by $x$. Model `formulas' are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models.
 
-As most things in \Rlang model formulas can be stored in variables. In addition, contrary to the usual behaviour of other statistical software, the result of a model fit is returned as an object, containing the different components of the fit. Once the model has been fitted, different methods allow us to extract parts and/or further manipulate the results obtained by fitting a model. Most of these methods have implementations for model fit objects for many different types of statistical models. Consequently what is described in this chapter using linear models as examples, also applies in many respects to the fit of classes of models not described here.
+As most things in \Rlang model formulas can be stored in variables. In addition, contrary to the usual behaviour of other statistical software, the result of a model fit is returned as an object, containing the different components of the fit. Once the model has been fitted, different methods allow us to extract parts and/or further manipulate the results obtained by fitting a model. Most of these methods have implementations for model fit objects for different types of statistical models. Consequently what is described in this chapter using linear models as examples, also applies in many respects to the fit of models not described here.
 
 The \Rlang function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
 
@@ -273,9 +260,9 @@ If you do not clearly remember the difference between numeric vectors and factor
 \subsection{Regression}
 \index{linear regression}
 \index{linear regression|seealso{linear models}}\index{linear models!linear regression}
-In \index{linear models!ANOVA table} the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df) for the denominator.
+In \index{linear models!ANOVA table} the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df).
 
-In the next example we continue using the stopping distance for cars data set included in \Rpgrm. Please see the plot on page \pageref{chunk:plot:cars}.
+In the next example we continue using the stopping distance for \Rdata{cars} data set included in \Rpgrm. Please see the plot on page \pageref{chunk:plot:cars}.
 \label{xmpl:fun:lm:fm1}
 
 <<models-1z>>=
@@ -310,7 +297,7 @@ If we return to the model formulation, we can now replace $\alpha$ and $\beta$ b
 However, in \Rlang models the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e.\ a missing \code{+ 1} does not change the model. To `remove' the intercept from the earlier model we need to use \verb|dist ~ speed - 1|, resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
 
 <<models-2>>=
-fm2 <- lm(dist ~ speed - 1, data=cars)
+fm2 <- lm(dist ~ speed - 1, data = cars)
 summary(fm2)
 @
 
@@ -333,7 +320,7 @@ anova(fm3)
 The ``same'' fit using an orthogonal polynomial can be specified using function \Rfunction{poly()}. Polynomials of different degrees can be obtained by supplying as second argument to \Rfunction{poly()} the corresponding positive integer value. In this case the different terms of the polynomial are bulked together in the summary.
 
 <<models-3a, eval=eval_playground>>=
-fm3a <- lm(dist ~ poly(speed, 2), data=cars)
+fm3a <- lm(dist ~ poly(speed, 2), data = cars)
 summary(fm3a)
 anova(fm3a)
 @
@@ -347,11 +334,11 @@ anova(fm2, fm1)
 Three or more models can also be compared in a single call to \Rfunction{anova()}. However, be careful, as the order of the arguments matters.
 
 <<models-5, eval=eval_playground>>=
-anova(fm2,fm3, fm3a)
+anova(fm2, fm3, fm3a)
 anova(fm2, fm3a, fm3)
 @
 
-We can use different criteria to choose the best model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for BIC and AIC are also returned by \Rfunction{anova()} \qRfunction{BIC()}\qRfunction{AIC()}
+We can use different criteria to choose the ``best'' model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for both BIC and AIC are returned by \Rfunction{anova()}, and on their own by \Rfunction{BIC()} and \Rfunction{AIC()}
 
 <<models-5a, eval=eval_playground>>=
 BIC(fm2, fm1, fm3, fm3a)
@@ -362,10 +349,16 @@ Once you have run the code in the chunks above, you will be able see that these 
 
 \end{playground}
 
-Additional methods provide access to different components of fitted models: \Rfunction{vcov()} returns the variance-covariance matrix, \Rfunction{coef()} and its alias \Rfunction{coefficients()} return the estimates for the fitted model coefficients, \Rfunction{fitted()} and its alias \Rfunction{fitted.values()} extract the fitted values, and \Rfunction{residuals()} the corresponding residuals (or deviations). The method \Rfunction{predict()} uses the fitted model to compute predictions and confidence bands based from new data for the independent variables. In contrast to \Rfunction{fitted()}, \Rfunction{predict()} can take ``new data'' as input, allowing predictions at values of the independent variables not present in the original data. In the case of linear- and some other models \Rfunction{predict()} can also return values for confidence bands around the fitted lime.
+Additional methods give easy access to different components of fitted models: \Rfunction{vcov()} returns the variance-covariance matrix, \Rfunction{coef()} and its alias \Rfunction{coefficients()} return the estimates for the fitted model coefficients, \Rfunction{fitted()} and its alias \Rfunction{fitted.values()} extract the fitted values, and \Rfunction{resid()} and its alias \Rfunction{residuals()} the corresponding residuals (or deviations).
+
+\begin{playground}
+Familiarize yourself with these extraction and summary methods by reading their documentation and use them to explore \code{fm1} fitted above or model fits to other data of your interest.
+\end{playground}
+
+Method \Rfunction{predict()} uses the fitted model together with new data for the independent variables to compute predictions. As \Rfunction{predict()} accepts new data as input, it allows interpolation and extrapolation to values of the independent variables not present in the original data. In the case of linear- and some other models \Rfunction{predict()} also estimates of confidence around the prediction are returned. The new data must be stored in a data frame with columns using the same names for the explanatory variables as in the data used for the fit, a response variable is not needed and additional columns are ignored. (The explanatory variables in the new data can be either continuous or factors, but they must match in this respect those in the original data.)
 
 \begin{advplayground}
-Task: familiarize yourself with these methods by reading the documentation and using them with the models fitted above or model fits to other data of your interest.
+Predict using both \code{fm1} and \code{fm2} the distance required to stop cars moving at 0, 5, 10, 20, 30, and 40~mph. Study the help page for the predict method for linear models (using \code{help(predict.lm)}). Explore the difference between \code{"prediction"} and \code{"confidence"} bands: why are they so different?
 \end{advplayground}
 
 \begin{explainbox}
@@ -375,13 +368,13 @@ The objects returned by model fitting functions are rather complex and contain t
 class(fm1)
 @
 
-We rarely need to manually explore the structure of these objects, but it is rather frequently good to have an idea of what is going on in the background. We can use \Rfunction{str()} to explore some of the fitted models.
+We rarely need to manually explore the structure of these model-fit objects when using \Rlang interactively. In contrast, when including model fitting in scripts or package code, the need to efficiently extract specific members from them happens more frequently. As with any other \Rlang object we can use \Rfunction{str()} to explore them.
 
 <<models-EB1, eval=FALSE>>=
 str(fm1, max.level = 1) # not evaluated
 @
 
-We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing different members with data. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them. Once again we use \Rfunction{str()}.
+We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, both \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing members with data not displayed by the matching \code{print()} methods. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them for use in additional tests or computations. Once again we use \Rfunction{str()} to look at the structure.
 
 <<models-EB2>>=
 str(anova(fm1))
@@ -391,7 +384,7 @@ str(anova(fm1))
 str(summary(fm1))
 @
 
-Once we learn the nesting and the names of components we can simply extract them using the usual \Rlang rules for indexing.
+Once we know the structure of the object and the names of members we can simply extract them using the usual \Rlang rules for member extraction.
 
 <<models-EB4>>=
 summary(fm1)$adj.r.squared
@@ -421,14 +414,14 @@ p.value <- dt(t.value, df = degrees.of.freedom)
 \begin{advplayground}
 Check that the procedure above agrees with the output of \code{summary()} when we set \code{hyp.null <- 0} instead of \code{hyp.null <- 1}.
 
-Modify the example so as to test whether the intercept is significantly larger than 5 feet, a one sided test.
+Modify the example so as to test whether the intercept is significantly larger than 5 feet, doing a one sided test.
 \end{advplayground}
 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 \index{analysis of variance}
 \index{analysis of variance|seealso{linear models}}\index{linear models!analysis of variance}
 \index{ANOVA|see{analysis of variance}}
-We use as the \code{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
+We use here the \Rdata{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data \code{spray} is a factor with six levels.%
 \label{xmpl:fun:lm:fm4}
 
 The call is exactly the same as the one for linear regression, only the names of the variables and data frame are different. What determines that this is an ANOVA is that \code{spray}, the explanatory variable, is a \code{factor}.
@@ -452,7 +445,7 @@ Diagnostic plots are obtained in the same way as for linear regression.
 plot(fm4, which = 3)
 @
 
-In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract the estimates but in many cases the default contrasts and corresponding $P$-values are for hypotheses that have little or no direct interest in the case of an analysis of variance.
+In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract parameter estimates. The default contrasts and corresponding $P$-values returned by \Rfunction{summary()} test hypotheses that have little or no direct interest in an analysis of variance. Function \Rfunction{aov()} is a wrapper on \Rfunction{lm()} that returns an object that by default when printed displays the output of \Rfunction{anova()}.
 
 <<model-6b>>=
 anova(fm4)
@@ -464,52 +457,7 @@ anova(fm4)
 \index{linear models!analysis of covariance}
 \index{ANCOVA|see{analysis of covariance}}
 
-When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models, what determines the type of analysis is the nature of the explanatory variable(s). Conceptually a factor (an unordered categorical variable) is very different from a continuous variable.
-
-As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite{}.
-
-\begin{playground}
-There are additional methods for extracting information from model fits. As objects containing the results of model fitting belong to different classes reflecting the type of model, methods with the same name can co-exist and be selected automatically. The output will not be necessarily the same, and some the parameters accepted will differ.\qRfunction{coef()}\qRfunction{resid()}
-
-<<model-PG01,eval=eval_playground>>=
-class(fm1)
-coef(fm1)
-resid(fm1)
-@
-
-Do explore these methods if you know enough about statistics to recognize them. In the case of prediction with \Rfunction{predict()} new data needs to be supplied as argument as in the case of linear models no default is provided for this parameter, which in other cases are the data used in the fit. Be aware that the name of the variable (= column) within the new data frame needs to match the name of the explanatory variable in the data to which the model was fit, in our case \code{speed}.
-
-<<model-PG02a,eval=eval_playground>>=
-my.new.data <- data.frame(speed = 5:10)
-@
-
-<<model-PG02b,eval=eval_playground>>=
-predict(fm1, newdata = my.new.data)
-@
-
-<<model-PG02c,eval=eval_playground>>=
-predict(fm1, newdata = my.new.data, interval = "confidence", level = 0.9)
-@
-\end{playground}
-
-%\begin{explainbox}
-Some other components of the fitted model object can be extracted with the usual syntax for lists, once we discover the names of the components. As shown earlier, we can use \code{str()} or \code{names()} to this end.
-
-<<model-PG03a>>=
-names(fm1)
-@
-
-<<model-PG03c>>=
-fm1$df.residual
-@
-
-To see the whole structure of the fitted model object we can use \code{str()}, which reveals the nesting of members and all their \emph{attributes} (described in section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes}). In this case attributes contain very important information about the fit.
-
-<<model-PG04>>=
-str(fm1, max.level = 1)
-@
-%\end{explainbox}
-
+When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models and, as mentioned in previous sections, what determines the type of analysis is the nature of the explanatory variable(s). As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite[e.g.][]{Smith1957}.
 \index{linear models|)}
 
 \section{Generalized linear models}\label{sec:stat:GLM}
@@ -517,7 +465,7 @@ str(fm1, max.level = 1)
 \index{GLM|see{generalized linear models}}
 
 Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
-For the analysis of the \code{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
+For the analysis of the \Rdata{InsectSpray} data set, above (section \ref{sec:anova} on page \pageref{sec:anova}) the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
 
 For count data GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal. In addition to the model formula we need can pass an argument through \code{family} giving the error distribution to be assumed---the default for \code{family} is \code{gaussian} or Normal distribution.
 
@@ -548,7 +496,7 @@ head(fitted(fm10))
 @
 
 \begin{explainbox}
-If we use \code{str()} or \code{names()} we can see that there are some differences with respect to linear model fits. The returned object is of a different class and contains some members not present in linear models. Two of these have to do with the iterative approximation method used, one for settings and one for convergence outcome: \code{iter} and \code{converged}.
+If we use \code{str()} or \code{names()} we can see that there are some differences with respect to linear model fits. The returned object is of a different class and contains some members not present in linear models. Two of these have to do with the iterative approximation method used, \code{iter} contains the number of iterations used  and \code{converged} the success of not in finding a solution.
 
 <<model-13>>=
 names(fm10)
@@ -564,11 +512,11 @@ fm10$iter
 \index{models!non-linear|see{non-linear models}}%
 \index{NLS|see{non-linear models}}
 
-Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non linear \emph{in the parameters} whose values are being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of any degree are linear models. In contrast the Michaelis-Menten equation used in chemistry and the  Gompertz equation used to describe growth are non-linear model in their parameters.
+Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non linear \emph{in the parameters} whose values are being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e.\ polynomials of any degree are linear models. In contrast the Michaelis-Menten equation used in chemistry and the  Gompertz equation used to describe growth are non-linear models in their parameters.
 
-While analytical algorithms exist for finding estimates for the parameters of linear models, in the case of non-linear models the estimates are obtained by approximation. For analytical solutions estimates can always be obtained, except in infrequent pathological cases where reliance on floating point numbers with limited resolution introduces rounding errors that ``break'' mathematical algorithms that are valid for Real numbers. For approximations obtained through iteration, cases when the algorithm fails to \emph{converge} onto an answer are relatively common. Iterative algorithms attempt to improve an initial guess, a guess frequently supplied by the user. In each iteration the estimate obtained in the previous iteration is used as starting value, and this process is repeated one time after another. The expectation is that after a finite number of iterations the algorithm will converge into a solution that ``cannot'' be improved further. In real life we stop iteration when the improvement in the fit is smaller than a certain threshold, or when no convergence has been achieved after a certain maximum number of iterations. In the first case, we obtain usable estimates, in the second case, we do not obtain usable estimates and need to look for different ways of obtaining them. When convergence fails, the first thing to do is to try different starting values and if this also fails, switch to a different computational algorithm. These steps usually help, but not always.
+While analytical algorithms exist for finding estimates for the parameters of linear models, in the case of non-linear models the estimates are obtained by approximation. For analytical solutions estimates can always be obtained, except in infrequent pathological cases where reliance on floating point numbers with limited resolution introduces rounding errors that ``break'' mathematical algorithms that are valid for Real numbers. For approximations obtained through iteration, cases when the algorithm fails to \emph{converge} onto an answer are relatively common. Iterative algorithms attempt to improve an initial guess for the values of the parameters to be estimated, a guess frequently supplied by the user. In each iteration the estimate obtained in the previous iteration is used as starting value, and this process is repeated one time after another. The expectation is that after a finite number of iterations the algorithm will converge into a solution that ``cannot'' be improved further. In real life we stop iteration when the improvement in the fit is smaller than a certain threshold, or when no convergence has been achieved after a certain maximum number of iterations. In the first case, we usually obtain good estimates, in the second case, we do not obtain usable estimates and need to look for different ways of obtaining them. When convergence fails, the first thing to do is to try different starting values and if this also fails, switch to a different computational algorithm. These steps usually help, but not always. Good starting values are in many cases crucial and in some cases ``guesses'' can be obtained using either graphical or analytical approximations.
 
-For some functions analytical algorithms exist for ``guessing'' suitable starting values for the iterative procedure. \Rlang provides a mechanism for packaging the function to be fitted together with the function generating the starting estimate values for the parameters to be fitted with \Rfunction{nls()}. These functions go by the name of \emph{self-starting functions} and relieve the user from the burden of guessing and supplying suitable starting values. New self-starting functions can also be defined by users.
+For functions for which computational algorithms exist for ``guessing'' suitable starting values, \Rlang provides a mechanism for packaging the function to be fitted together with the function generating the starting values. These functions go by the name of \emph{self-starting functions} and relieve the user from the burden of guessing and supplying suitable starting values. The\index{self-starting functions} self-starting functions available in \Rlang are \code{SSasymp()}, \code{SSasympOff()}, \code{SSasympOrig()}, \code{SSbiexp()}, \code{SSfol()}, \code{SSfpl()}, \code{SSgompertz()}, \code{SSlogis()}, \code{SSmicmen()}, and \code{SSweibull()}. Function \code{selfStart()} can be used to define new ones. All these functions can be used when fitting models with \Rfunction{nls} or \Rfunction{nlme}. Please, check the respective help pages for details.
 
 In the case of \Rfunction{nls()} the specification of the model to be fitted differs from that used for linear models. We will use as example fitting the Michaelis-Menten equation\index{Michaelis-Menten equation} describing reaction kinetics\index{chemical reaction kinetics} in biochemistry and chemistry. The mathematical formulation is given by:
 
@@ -576,7 +524,7 @@ In the case of \Rfunction{nls()} the specification of the model to be fitted dif
 v = \frac{\mathrm{d} [P]}{\mathrm{d} t} = \frac{V_{\mathrm{max}} [S]}{K_{\mathrm{M}} + [S]}
 \end{equation}
 
-The function takes its name from Michaelis and Menten's paper from 1913 \autocite{Johnson2011}. A self-starting function implementing Michaelis-Menten equation is available in \Rlang under the name \Rfunction{SSmicmen()}\index{models!selfstart@{\texttt{selfStart}}}. We will use the Puromycin data set.
+The function takes its name from Michaelis and Menten's paper from 1913 \autocite{Johnson2011}. A self-starting function implementing Michaelis-Menten equation is available in \Rlang under the name \Rfunction{SSmicmen()}\index{models!selfstart@{\texttt{selfStart}}}. We will use the \Rdata{Puromycin} data set.
 
 <<nls-01>>=
 data(Puromycin)
@@ -598,20 +546,21 @@ fitted(fm21)
 @
 
 \begin{explainbox}
-If we use \code{str()} or \code{names()} we can see that there are some differences with respect to linear model fits. The returned object is of a different class and contains some members not present in linear models. Two of these have to do with the iterative approximation method used, one for iteration settings, \code{control}, and one for iteration outcome, \code{convInfo} (convergence information).
+If we use \code{str()} or \code{names()} we can see that there are differences with respect to linear model and generalized model fits. The returned object is of class \code{nls} and contains some new members and lacks others. Two members are related to the iterative approximation method used, \code{control} containing nested members holding iteration settings, and \code{convInfo} (convergence information) with nested members with information on the outcome of the iterative algorithm.
 
 <<nls-04>>=
 names(fm21)
 fm21$convInfo
 @
 \end{explainbox}
+
 \index{non-linear models|)}
 
 \section{Model formulas}
 \index{model formulas|(}
-In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of \code{*} and explicitly define all individual main effects and interactions. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to use grouping to exclude some interactions.
+In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all one can avoid use of operator \code{*} and explicitly define all individual main effects and interactions using operators \code{+} and \code{:}. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to exclude some interactions by combining the use of \code{*} and parentheses.
 
-The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two explanatory variables in the model. In the second case \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does its argument.
+The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two separate explanatory variables in the model. In the second case, \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does no require additional protection, neither does the expression passed as its argument.
 
 <<mformulas-000,eval=FALSE>>=
 y ~ I(x1 + x2)
@@ -652,7 +601,7 @@ y ~ x1 + x2 + x3 + x1:x2 + x1:x3
 terms(y ~ x1 * (x2 + x3))
 @
 
-The \code{\textasciicircum{}} operator can be used to limit the order of the interaction terms included in a formula.
+The \code{\textasciicircum{}} operator provides a concise notation to limit the order of the interaction terms included in a formula.
 
 <<mformulas-03,eval=FALSE>>=
 y ~ (x1 + x2 + x3)^2
@@ -663,17 +612,17 @@ y ~ x1 + x2 + x3 + x1:x2 + x1:x3 + x2:x3
 terms(y ~ (x1 + x2 + x3)^2)
 @
 
-\begin{playground}
-For operator \code{\textasciicircum{}} to behave as expected its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas.
+\begin{advplayground}
+For operator \code{\textasciicircum{}} to behave as expected its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas with \Rfunction{trems()}.
 
 <<mformulas-PG01, eval=eval_playground>>=
 y ~ (x1 + x2 + x3)^2
 y ~ (x1 * x2 * x3)^2
 @
 
-\end{playground}
+\end{advplayground}
 
-Operator \code{\%in\%} can also be used as a shortcut to including only some of all the possible interaction terms in a formula.
+Operator \code{\%in\%} can also be used as a shortcut for including only some of all the possible interaction terms in a formula.
 
 <<mformulas-04,eval=FALSE>>=
 y ~ x1 + x2 + x1 %in% x2
@@ -684,61 +633,42 @@ terms(y ~ x1 + x2 + x1 %in% x2)
 @
 
 \begin{playground}
-The following examples of the use of formulas in ANOVA\index{analysis of variance!model formula}, plus your own variations on the same theme will help understand the syntax of model formulas.
+Execute the examples below using the \Rdata{npk} data set from \Rlang. They demonstrate the use of different model formulas in ANOVA\index{analysis of variance!model formula}. Use these examples plus your own variations on the same theme to build your understanding of the syntax of model formulas. Based on the terms displayed in the ANOVA tables, first work out what models are being fitted in each case. In a second step, write each of the models using a mathematical formulation. Finally, think how model choice may affect the conclusions from an analysis of variance.
 
 <<mformulas-PG02, eval=eval_playground>>=
 data(npk)
 anova(lm(yield ~ N * P * K, data = npk))
-@
-
-<<mformulas-PG03, eval=eval_playground>>=
 anova(lm(yield ~ (N + P + K)^2, data = npk))
-@
-
-<<mformulas-PG04, eval=eval_playground>>=
 anova(lm(yield ~ N + P + K + P %in% N + K %in% N, data = npk))
-@
-
-<<mformulas-PG05, eval=eval_playground>>=
 anova(lm(yield ~ N + P + K + N %in% P + K %in% P, data = npk))
 @
 
 \end{playground}
 
-Nesting of factors results in the computation of additional error terms, with different degrees of freedom. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base \Rlang formulas the nesting needs to be accounted by explicit definition of error terms by means of \code{Error()} within the formula. The example below is just a demonstration of the consequences of using an invalid design. Of the two model formulas used, only one yields a valid data analysis!
-
-<<mformulas-05,eval=FALSE>>=
-y ~ x1 + x2 + Error(x1 * x2)
-@
-
-Packages \pkgname{nlme} and \pkgname{lme4} use their own extensions to base \Rlang model formula syntax to allow the description of nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These fall outside the scope of this book.
+Nesting of factors in experiments using hierarchical designs such as split-plots or repeated measures, results in the need to compute of additional error terms, differing in their degrees of freedom. In such a design different effects are tested based on different error terms. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base-\Rlang model-formulas nesting needs to be described by explicit definition of error terms by means of \code{Error()} within the formula. Nowadays, linear mixed-effects (LME) models are most frequently used with data from experiments and surveys using hierarchical designs, as implemented in packages \pkgname{nlme} and \pkgname{lme4}. These two packages use their own extensions to the model formula syntax to describe nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These extensions fall outside the scope of this book.
 
 \begin{warningbox}
-  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is the responsibility of the user to ensure that models are meaningful. The most common, and dangerous, mistake are missing simple interactions in factorial ANOVA.
+  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is \emph{the responsibility of the user to ensure that models are meaningful}. The most common, and dangerous, mistake is specificating models that are missing lower order interactions for factorial experiments.
 
-  Fitting models like those below to three-way ANOVA should be avoided. In both cases simpler terms are missing, while interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
+  Fitting models like those below to data from an experiment based on a three-way factorial design should be avoided. In both cases simpler terms are missing, while higher order interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
 
 <<mformulas-W01,eval=FALSE>>=
-y ~ A + B + A * C + B * C + A * B
-y ~ A + B + C + A * B * C
+y ~ A + B + A:B + A:C + B:C
+y ~ A + B + C + A:B + A:C + A:B:C
 @
 
-  Models such as those below are interpretable, even though ``incomplete'' (not including all possible interactions).
+  In contrast to those above, the models below are interpretable, even if not ``full'' models (not including all possible interactions).
 
 <<mformulas-W02,eval=FALSE>>=
-y ~ A + B + C + A * C + B * C + A * B
-y ~ A + B + C + A * B
-@
-
-  The full three-way factorial models includes all possible combinations of factors.
-
-<<mformulas-W03,eval=FALSE>>=
-y ~ A + B + C + A * C + B * C + A * B + A * B * C
+y ~ A + B + C + A:B + A:C + B:C
+y ~ (A + B + C)^2
+y ~ A + B + C + B:C
+y ~ A + B * C
 @
 
 \end{warningbox}
 
-As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \code{"formula"}.
+As seen in chapter \ref{chap:R:data} almost everything in the \Rlang language is an object that can be stored and manipulated. Model formulas are also objects, objects of class \Rclass{"formula"}.
 
 <<mformulas-W11>>=
 class(y ~ x)
@@ -747,32 +677,18 @@ class(y ~ x)
 <<mformulas-W12>>=
 a <- y ~ x
 class(a)
+@
+
+There is no method \code{is.formula()} in base \Rlang, but we can easily test the class of an object with \Rfunction{inherits()}.
+
+<<mformulas-W13>>=
 inherits(a, "formula")
 @
-
-\begin{warningbox}
-No method \Rfunction{is.formula()} is part of the \Rlang language, but instead methods \Rfunction{is.formula()} and \Rfunction{is\_formula()} are provided by packages \pkgname{plyr} and \pkgname{rlang}, respectively.
-
-<<mformulas-EB01c>>=
-plyr::is.formula(a)
-rlang::is_formula(a)
-@
-
-However, it would be unwise to add a dependency on either of these packages for such a trivial function. We could directly use \Rlang method \Rfunction{inherits()} as shown above.
-
-To see how \Rfunction{is.formula()} has been defined, we can print it, simply by not supplying the ``function-call'' parentheses.
-
-<<mformulas-EB01d>>=
-plyr::is.formula
-@
-
-It can be seen that it calls \Rfunction{inherits()} with \code{"formula"} as its second argument, demonstrating how trivial a useful function definitions can be. This is an example of how sometimes unnecessary dependencies on packages can creep into our own scripts and packages, as dependency on one package does not only introduce this direct dependency but also indirect dependencies. If needed or desired one can very easily define a \Rfunction{is.formula()} method that adds no external dependencies.
-\end{warningbox}
 
 \begin{explainbox}
 \index{model formulas!manipulation}\textbf{Manipulation of model formulas.} Being this a book about the \Rlang language, it is pertinent to describe how formulas can be manipulated. Formulas as any other \Rlang objects can be saved in variables including lists. Why is this useful? For example if we want to fit several different models to the same data, we can write a \code{for} loop that walks through a list of model formulas. Or we can write a function that accepts one or more formulas as arguments.
 
-The use of \code{for} \emph{loops} for iteration over a list of model formulas is described in section \ref{sec:R:faces:of:loops} on page \pageref{sec:R:faces:of:loops}. For now, you need only to know that the statement in the body of the loop is executed once for each member of the \code{formulas} list, with \code{formula} taking successively the value of each member of \code{formulas}.
+The use of \code{for} \emph{loops} for iteration over a list of model formulas is described in section \ref{sec:R:faces:of:loops} on page \pageref{sec:R:faces:of:loops}.
 
 <<mformulas-EB02>>=
 my.data <- data.frame(x = 1:10, y = (1:10) / 2 + rnorm(10))
@@ -784,14 +700,14 @@ for (formula in formulas) {
 str(anovas, max.level = 1)
 @
 
-As could be expected a conversion constructor is available with name \code{as.formula}. It becomes useful when formulas are input interactively by the user or read from text files. We can convert a character string into a formula.
+As could be expected, a conversion constructor is available with name \Rfunction{as.formula()}. It is useful when formulas are input interactively by the user or read from text files. With \Rfunction{as.formula()} we can convert a character string into a formula.
 
 <<mformulas-EB03>>=
 my.string <- "y ~ x"
 lm(as.formula(my.string), data = my.data)
 @
 
-As there are many functions available in base \Rlang and through packages for the manipulation of character strings, it is straightforward to build model formulas programmatically as strings. We can use functions like \code{paste()} to assemble a formula as text, and then use \code{as.formula()} to convert it to an object of class \code{formula}, usable for fitting a model.
+As there are many functions for the manipulation of character strings available in base \Rlang and through extension packages, it is straightforward to build model formulas programmatically as strings. We can use functions like \code{paste()} to assemble a formula as text, and then use \Rfunction{as.formula()} to convert it to an object of class \code{formula}, usable for fitting a model.
 
 <<mformulas-EB04>>=
 my.string <- paste("y", "x", sep = "~")
@@ -850,22 +766,21 @@ model.matrix(~ A * B, treats.df)
 
 \section{Time series}\label{sec:stat:time:series}
 \index{time series|(}
-Longitudinal data, when replicated is usually named repeated measurements, but when not replicated, is named time series.
-Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models.
+Longitudinal data consist in repeated measurements, usually done over time, on the same experimental units. Longitudinal data, when replicated on several experimental units at each time point are named repeated measurements, while when not replicated, they are called time series. Base \Rlang provides special support for the analysis of time series data, while repeated measurements can be analysed with nested linear models, mixed-effects models and additive models.
 
-Time series data are data collected in such a way that there is only one observation, possibly of multiple variables, available at each time step. This brief section introduces only the most basic aspects of time-series analysis. In most cases time steps are of uniform duration and occur regularly. It is possible to take advantage of this regularity to achieve more compact storage. \Rlang not only provides methods for the analysis and manipulation of this type of data, but also a specialized class for their storage, \Rclass{ts}. A regular \code{ts} object does not store time values for each observation: only a combination of two of start time, step size and end time needs to be stored.
+Time series data are data collected in such a way that there is only one observation, possibly of multiple variables, available at each point in time. This brief section introduces only the most basic aspects of time-series analysis. In most cases time steps are of uniform duration and occur regularly, which simplifies data handling and storage. \Rlang not only provides methods for the analysis and manipulation of time-series, but also a specialized class for their storage, \Rclass{"ts"}. Regular time steps allow more compact storage---e.g.\ a \code{ts} object does not need to store time values for each observation but instead a combination of two of start time, step size and end time.
 
 We start by creating a time series from a numeric vector. By now, you surely guessed that you need to use a constructor called \Rfunction{ts()} or a conversion constructor called \Rfunction{as.ts()} and that you can look up the arguments they accept by reading the corresponding help pages.
 
 For example for a time series of monthly values we could use.
 
 <<ts-00>>=
-my.ts <- ts(1:10, start = 2018, deltat = 1/12)
+my.ts <- ts(1:10, start = 2019, deltat = 1/12)
 class(my.ts)
 str(my.ts)
 @
 
-We next use a data set included in R.
+We next use data set \Rdata{austres} with data on the number of Australian residents and included in \Rlang.
 
 <<ts-01>>=
 class(austres)
@@ -876,13 +791,13 @@ is.ts(austres)
 opts_chunk$set(opts_fig_wide)
 @
 
-This time series of the number of Australian residents is dominated by the increasing trend.
+Time series \Rdata{austres} is dominated by the increasing trend.
 
 <<ts-02>>=
 plot(austres)
 @
 
-A different example, in this case meteorological data, shows an important cyclic component. The annual cycle of mean air temperatures is clearly seen in the plot.
+A different example, using data set  \Rdata{nottem} containing meteorological data for Nottingham, shows an clear cyclic component. The annual cycle of mean air temperatures (in degrees Fahrenheit) is clear when data are plotted.
 
 <<ts-03>>=
 data(nottem)
@@ -890,21 +805,24 @@ is.ts(nottem)
 plot(nottem)
 @
 
-In\index{time series!decomposition} the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use loess for the decomposition, a method for which the acronym STL is used. LOESS is a local-regression-based smoothing method.\qRfunction{decompose()}\qRfunction{stl()}
+In\index{time series!decomposition} the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use Loess (a smooth curve fitted by local weighted regression) for the decomposition, a method for which the acronym STL (Seasonal and Trend decomposition using Loess) is used.\qRfunction{decompose()}\qRfunction{stl()} Before decomposing the time-series we reexpress the temperatures in degrees Celsius. 
 
 <<ts-04>>=
 nottem.celcius <- (nottem - 32) * 5/9
-nottem.decomp <- decompose(nottem.celcius)
-plot(nottem.decomp)
+@
+
+We set the seasonal window to 7 months, the minimum accepted.
+<<echo=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
 @
 
 <<ts-05>>=
-nottem.stl <- stl(nottem.celcius, s.window = 6)
+nottem.stl <- stl(nottem.celcius, s.window = 7)
 plot(nottem.stl)
 @
 
 \begin{advplayground}
-It is interesting to explore the structure of the returned objects, as we may want to extract components. Run then statements bellow to find out, and then plot individual components from the time series decomposition.
+It is interesting to explore the class and structure of the object returned by \Rfunction{stl()}, as we may want to extract components. Run then statements bellow to find out, and then plot individual components from the time series decomposition.
 
 <<ts-APG01, eval=eval_playground>>=
 class(nottem.stl)
@@ -922,23 +840,24 @@ str(nottem.stl)
 \index{MANOVA|see{multivariate analysis of variance}}
 Multivariate methods take into account several response variables simultaneously, as part of a single analysis. In practice it is usual to use contributed packages for multivariate data analysis in \Rlang, except for simple cases. We will look first at \emph{multivariate} ANOVA or MANOVA. In the same way as \Rfunction{aov()} is a wrapper that uses internally \Rfunction{lm()}, \Rfunction{manova()} is a wrapper that uses internally \Rfunction{aov()}.
 
-Multivariate model formulas in some cases use the same syntax as univariate ones, but contain more than one response variable on their left hand side (lhs).
+Multivariate model formulas in base \Rlang require the use of column binding (\code{cbind()}) on the left-hand-side (lhs) of the model formula. For the next examples we use the well known \Rdata{iris} data set, containing size measurements for flowers of two species of \emph{Iris}.
 
 <<manova-01>>=
-y1 + y2 + y3 ~ x1 * x2
+data(iris)
+mmf1 <- lm(cbind(Petal.Length, Petal.Width) ~  Species, data = iris)
+anova(mmf1)
+summary(mmf1)
 @
 
-In other cases, a special syntax is used. In the case of function \Rfunction{manova()} we use function \code{cbind()} (column bind) to assemble the lhs of the formula.
-
 <<manova-02>>=
-data(iris)
-m.fit <- manova(cbind(Petal.Length, Petal.Width) ~  Species, data = iris)
-anova(m.fit)
-summary(m.fit)
+mmf2 <- manova(cbind(Petal.Length, Petal.Width) ~  Species, data = iris)
+anova(mmf2)
+summary(mmf2)
 @
 
 \begin{advplayground}
-Use \code{class()}, \code{names()}, \code{str()} and extraction of members to explore the returned object \code{m.fit}.
+Modify the example above to use \code{aov()} instead of \code{manova()} and save the result to a variable named \code{mmf3}.
+Use \code{class()}, \code{attributes()}, \code{names()}, \code{str()} and extraction of members to explore objects \code{mmf1}, \code{mmf2} and \code{mmf3}. Are they different?
 \end{advplayground}
 
 \index{multivariate analysis of variance|)}
@@ -946,20 +865,22 @@ Use \code{class()}, \code{names()}, \code{str()} and extraction of members to ex
 \subsection{Principal components analysis}\label{sec:stat:PCA}
 \index{principal components analysis|(}\index{PCA|see {principal components analysis}}
 
-Principal components analysis (PCA) is used to simplify a data set by combining variables with similar behaviour into ``principal components''. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base \Rlang's function \Rfunction{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
+Principal components analysis (PCA) is used to simplify a data set by combining variables with similar and ``mirror'' behaviour into principal components. At a later stage, we frequently try to interpret these components in relation to known and/or assumed independent variables. Base \Rlang's function \Rfunction{prcomp()} computes the principal components and accepts additional arguments for centering and scaling.
 
 <<pca-01>>=
 pc <- prcomp(iris[c("Sepal.Length", "Sepal.Width",
                     "Petal.Length", "Petal.Width")],
              center = TRUE,
-             scale. = TRUE)
+             scale = TRUE)
 @
 
+By printing the returned object we can see the loadings of each variable in the principal components \code{P1} to \code{P4}.
 <<pca-02>>=
+class(pc)
 pc
 @
 
-The rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
+In the summary, the rows ``Proportion of Variance'' and ``Cumulative Proportion'' are most informative of the contribution of each principal component (PC) to explaining the variation among observations.
 
 <<pca-03>>=
 summary(pc)
@@ -985,30 +906,27 @@ Method \code{plot()} generates a bar plot of variances corresponding to the diff
 plot(pc)
 @
 
-Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgnameNI{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}, package \pkgnameNI{ggfortify} and package \pkgnameNI{ggbiplot} extend \pkgnameNI{ggplot} so as to make it easy to plot principal components and their loadings.
-
-\begin{explainbox}
-As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components. Further computations and/or formatting can be applied.
-
-<<pca-EB-01>>=
-class(pc)
-names(pc)
-@
-
-<<pca-EB-01a>>=
-str(pc, max.level = 1)
-@
-\end{explainbox}
+Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgnameNI{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}. Package \pkgnameNI{ggfortify} and package \pkgnameNI{ggbiplot} extend \pkgnameNI{ggplot} so as to make it easy to plot principal components and their loadings.
 
 \begin{playground}
 For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
 \end{playground}
+
+\begin{advplayground}
+As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components.
+
+<<pca-EB-01, eval=eval_playground>>=
+str(pc, max.level = 1)
+@
+\end{advplayground}
+
 \index{principal components analysis|)}
 
 \subsection{Multidimensional scaling}\label{sec:stat:MDS}
 \index{multidimensional scaling|(}\index{MDS|see {multidimensional scaling}}
 
-In multidimensional scaling (MDS) we start with a matrix of distances among observations that will need to be calculated from the raw data. We use for the example distances between geographic locations in Europe.
+The aim of multidimensional scaling (MDS) is to visualize in 2D space the similarity between pairs of observations. The values for the observed variable(s) are used to compute a measure of distance among pairs of observations. The nature of the data will influence what distance metric is most informative.
+For MDS we start with a matrix of distances among observations. We will use for the example distances in kilometres between geographic locations in Europe from data set \Rdata{eurodist}.
 
 <<mds-01>>=
 loc <- cmdscale(eurodist)
@@ -1018,10 +936,12 @@ We can see that the returned object \code{loc} is a \code{matrix}, with names fo
 
 <<mds-02>>=
 class(loc)
+dim(loc)
+dimnames(loc)
 head(loc)
 @
 
-To make the code easier to read two vectors are first extracted from the matrix and named \code{x} and \code{y}. We force aspect to equality so that distances on both axes are comparable.
+To make the code easier to read, two vectors are first extracted from the matrix and named \code{x} and \code{y}. We force aspect to equality so that distances on both axes are comparable.
 
 <<include=FALSE, cache=FALSE>>=
 opts_chunk$set(opts_fig_wide_square)
@@ -1034,12 +954,17 @@ plot(x, y, type = "n", asp = 1,
      main = "cmdscale(eurodist)")
 text(x, y, rownames(loc), cex = 0.6)
 @
+
+\begin{advplayground}
+  Find data on the mean annual temperature, mean annual rainfall and mean number of sunny days at each of the locations in the \code{eurodist} data set. Next, compute suitable distance metrics, for example using with function \Rfunction{dist}. Finally, use MDS to visualize how similar the locations with respect to each of the three variables. Finally device a measure of distance that takes into account the three climate variables and use MDS to find how distant are the different locations.
+\end{advplayground}
+
 \index{multidimensional scaling|)}
 
 \subsection{Cluster analysis}\label{sec:stat:cluster}
 \index{cluster analysis|(}
 
-In clustering analysis the aim is to group observations into discrete groups with maximal internal homogeneity and maximum group to group differences. In the next example we use function \Rfunction{hclust()} from base \Rlang package \pkgname{stats}. We use, as above, the \code{eurodist} data which directly provides distances. In other cases a matrix of distances between pairs of observations needs to be first calculated with function \Rfunction{dist} which supports several methods.
+In cluster analysis the aim is to group observations into discrete groups with maximal internal homogeneity and maximum group to group differences. In the next example we use function \Rfunction{hclust()} from base \Rlang package \pkgname{stats}. We use, as above, the \Rdata{eurodist} data which directly provides distances. In other cases a matrix of distances between pairs of observations needs to be first calculated with function \Rfunction{dist} which supports several methods.
 
 <<cluster-01>>=
 hc <- hclust(eurodist)
@@ -1056,7 +981,7 @@ We can use \Rfunction{cutree()} to limit the number of clusters by directly pass
 cutree(hc, k = 5)
 @
 
-The object returned by \Rfunction{hclust()} contains details of the result of the clustering, which allows further manipulation and plotting. 
+The object returned by \Rfunction{hclust()} contains details of the result of the clustering, which allows further manipulation and plotting.
 <<cluster-04>>=
 str(hc)
 @
@@ -1072,9 +997,9 @@ str(hc)
 %\index{discriminant analysis|)}
 \index{multivariate methods|)}
 
-\subsection{Further reading}
+\section{Further reading}
 
-Other\index{further reading} books are available with detailed descriptions of how to do various types of analyses in \Rlang, included thorough descriptions of the methods briefly presented in this chapter and many other methods not mentioned here. Good examples of books with broad scope that can serve as references for the application of various statistical methods are \citebooktitle{Everitt2011} \autocite{Everitt2011} and \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. Subject specific books are also available from which some suggestions for further reading are \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
+Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
