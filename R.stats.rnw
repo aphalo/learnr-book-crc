@@ -18,7 +18,7 @@ The purpose of computing is insight, not numbers.
 
 This chapter aims to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Although, many of base \R's functions are specific to given statistical procedures, they use a particular approach to model specification and for returning the computed values that can be considered a part of the \Rlang language. Here you will learn the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding fit and summary functions.
 
-\emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
+%\emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
 
 \section{Statistical summaries}
 \index{functions!built-in|see@{functions, base-R}}%
@@ -80,7 +80,7 @@ plot(y~x, data = my.data, type = "l")
 \subsection{Probabilities from parameters and quantile}\label{sec:prob:quant}
 \index{distributions!probabilities from quantiles}
 
-If we have a calculated quantile we can look up the corresponding $P$-value from the Normal distribution. The mean and standard deviation would in such a case be also computed from the same observations under the null hypothesis. In the example below we use invented values for all parameters \code{q}, the quantile, \code{mean}, and \code{sd}, the standard deviation. Use 
+If we have a calculated quantile we can look up the corresponding $p$-value from the Normal distribution. The mean and standard deviation would in such a case be also computed from the same observations under the null hypothesis. In the example below we use invented values for all parameters \code{q}, the quantile, \code{mean}, and \code{sd}, the standard deviation. Use
 
 <<distrib-02>>=
 pnorm(q = 4, mean = 0, sd = 1)
@@ -91,13 +91,13 @@ pnorm(q = 4, mean = 0, sd = c(1, 4), lower.tail = FALSE)
 @
 
 \begin{explainbox}
-  In tests of significance empirical $z$-values and $t$-values are computed by subtracting from the observed mean for one group or raw quantile, the ``expected'' mean (possibly an hypothesized theoretical value, the mean of a control condition used as reference, or the mean computed over all treatments under the assumption of no effect of treatments) and then dividing by the standard deviation. Consequently, the $P$-values corresponding to these empirical $z$-values and $t$-values need to be looked up using \code{mean = 0} and \code{sd = 1} when calling \Rfunction{pnorm()} or \Rfunction{pt()} respectively. These frequently used values are the defaults.
+  In tests of significance empirical $z$-values and $t$-values are computed by subtracting from the observed mean for one group or raw quantile, the ``expected'' mean (possibly an hypothesized theoretical value, the mean of a control condition used as reference, or the mean computed over all treatments under the assumption of no effect of treatments) and then dividing by the standard deviation. Consequently, the $p$-values corresponding to these empirical $z$-values and $t$-values need to be looked up using \code{mean = 0} and \code{sd = 1} when calling \Rfunction{pnorm()} or \Rfunction{pt()} respectively. These frequently used values are the defaults.
 \end{explainbox}
 
 \subsection{Quantiles from parameters and probabilities}\label{sec:quant:prob}
 \index{distributions!quantiles from probabilities}
 
-The reverse computation from that in the previous section is to obtain the quantile corresponding to a known $P$-value. These quantiles are equivalent to the values in the tables earlier used to assess significance.
+The reverse computation from that in the previous section is to obtain the quantile corresponding to a known $p$-value. These quantiles are equivalent to the values in the tables earlier used to assess significance.
 
 <<distrib-03>>=
 qnorm(p = 0.01, mean = 0, sd = 1)
@@ -115,7 +115,7 @@ qnorm(p = 0.025, mean = 0, sd = 1, lower.tail = FALSE)
 
 We see above that in the case of a symmetric distribution like the Normal, the quantiles in the two tails differ only in sign. This is not the case for asymmetric distributions.
 
-When calculating a $P$-value from a quantile in a test of significance, we need to first decide whether a two sided or single sided test is relevant, and in the case of a single sided test, which tail is of interest. For a double sided test we need to multiply the returned value by 2.
+When calculating a $p$-value from a quantile in a test of significance, we need to first decide whether a two sided or single sided test is relevant, and in the case of a single sided test, which tail is of interest. For a double sided test we need to multiply the returned value by 2.
 
 <<distrib-WB02>>=
 pnorm(q = 4, mean = 0, sd = 1) * 2
@@ -202,7 +202,7 @@ cor(my.mat)
 Modify the code in the chunk immediately above constructing a matrix with six columns and then computing the correlations.
 \end{playground}
 
-While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient, \Rfunction{cor.test()} also computes the $t$-value, $P$-value, and confidence interval for the estimate.
+While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient, \Rfunction{cor.test()} also computes the $t$-value, $p$-value, and confidence interval for the estimate.
 
 <<cor-03>>=
 cor.test(x = cars$speed, y = cars$dist)
@@ -338,7 +338,7 @@ anova(fm2, fm3, fm3a)
 anova(fm2, fm3a, fm3)
 @
 
-We can use different criteria to choose the ``best'' model: significance based on $P$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for both BIC and AIC are returned by \Rfunction{anova()}, and on their own by \Rfunction{BIC()} and \Rfunction{AIC()}
+We can use different criteria to choose the ``best'' model: significance based on $p$-values or information criteria (AIC, BIC). AIC (Akaike's ‘An Information Criterion’) and BIC (= SBC, Schwarz's Bayesian criterion) that penalize the resulting `goodness' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for both BIC and AIC are returned by \Rfunction{anova()}, and on their own by \Rfunction{BIC()} and \Rfunction{AIC()}
 
 <<models-5a, eval=eval_playground>>=
 BIC(fm2, fm1, fm3, fm3a)
@@ -445,11 +445,42 @@ Diagnostic plots are obtained in the same way as for linear regression.
 plot(fm4, which = 3)
 @
 
-In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract parameter estimates. The default contrasts and corresponding $P$-values returned by \Rfunction{summary()} test hypotheses that have little or no direct interest in an analysis of variance. Function \Rfunction{aov()} is a wrapper on \Rfunction{lm()} that returns an object that by default when printed displays the output of \Rfunction{anova()}.
+In ANOVA we are mainly interested in testing hypotheses, and \Rfunction{anova()} provides the most interesting output. Function \Rfunction{summary()} can be used to extract parameter estimates. The default contrasts and corresponding $p$-values returned by \Rfunction{summary()} test hypotheses that have little or no direct interest in an analysis of variance. Function \Rfunction{aov()} is a wrapper on \Rfunction{lm()} that returns an object that by default when printed displays the output of \Rfunction{anova()}.
 
 <<model-6b>>=
 anova(fm4)
 @
+
+\begin{warningbox}
+The defaults used for model fits and ANOVA calculations vary among programs. There exist different so-called ``types'' of sums of squares, usually called I, II, and III. In orthogonal designs the choice has no consequences, but differences can be important for unbalanced designs, even leading to different conclusions. \Rlang's default, type~I, is usually considered to suffer milder problems than type~III, the default used by \pgrmname{SPSS} and \pgrmname{SAS}.
+
+The contrasts used affect the estimates returned by \Rfunction{coef()} and \Rfunction{summary()} applied to an ANOVA model fit. The default used in \Rlang is different to that used in some other programs (even different than in \Slang). The most straightforward way of setting a different default for a whole series of model fits is by setting \Rlang option \code{contrasts}, which we here only print.
+
+<<contrasts-01>>=
+options("contrasts")
+@
+
+It is also possible to select the contrast to be used in the call to \code{aov()} or \code{lm()}. The default, \code{contr.treatment} uses the first level of the factor (assumed to be a control) as reference for estimation of coefficients and their significance, while \code{contr.sum} uses as reference the mean of all levels, by using as condition that the sum of the coefficient estimates is equal to zero. Obviously this changes what the coefficients describe, and consequently also the estimated $p$-values.
+
+<<models-6c>>=
+fm4trea <- lm(count ~ spray, data = InsectSprays, 
+              contrasts = list(spray = contr.treatment))
+fm4sum  <- lm(count ~ spray, data = InsectSprays, 
+              contrasts = list(spray = contr.sum))
+@
+
+<<models-6d>>=
+summary(fm4trea)
+@
+
+<<models-6e>>=
+summary(fm4sum)
+@
+
+Interpretation of any analysis has to take into account these differences and users should not be surprised if ANOVA yields different results in base \Rlang and \pgrmname{SPSS} or \pgrmname{SAS} given the different types of sums of squares used. The interpretation of ANOVA on designs that are not orthogonal will depend on which type is used, so the different results are not necessarily contradictory even when different.
+
+In the case of contrasts, they always affect the parameter estimates independently of whether the experiment design is orthogonal or not. A different set of contrasts simply tests a different set of possible treatment effects. Contrasts, on the other hand do not affect the table returned by \Rfunction{anova()} as this table does not deal with the effects of individual factor levels.
+\end{warningbox}
 
 \subsection{Analysis of covariance, ANCOVA}
 \index{analysis of covariance}
@@ -549,7 +580,10 @@ fitted(fm21)
 If we use \code{str()} or \code{names()} we can see that there are differences with respect to linear model and generalized model fits. The returned object is of class \code{nls} and contains some new members and lacks others. Two members are related to the iterative approximation method used, \code{control} containing nested members holding iteration settings, and \code{convInfo} (convergence information) with nested members with information on the outcome of the iterative algorithm.
 
 <<nls-04>>=
-names(fm21)
+str(fm21, max.level = 1)
+@
+
+<<nls-04a>>=
 fm21$convInfo
 @
 \end{explainbox}
@@ -805,7 +839,7 @@ is.ts(nottem)
 plot(nottem)
 @
 
-In\index{time series!decomposition} the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use Loess (a smooth curve fitted by local weighted regression) for the decomposition, a method for which the acronym STL (Seasonal and Trend decomposition using Loess) is used.\qRfunction{decompose()}\qRfunction{stl()} Before decomposing the time-series we reexpress the temperatures in degrees Celsius. 
+In\index{time series!decomposition} the next two code chunks two different approaches to time series decomposition are used. In the first one we use a moving average to capture the trend, while in the second approach we use Loess (a smooth curve fitted by local weighted regression) for the decomposition, a method for which the acronym STL (Seasonal and Trend decomposition using Loess) is used.\qRfunction{decompose()}\qRfunction{stl()} Before decomposing the time-series we reexpress the temperatures in degrees Celsius.
 
 <<ts-04>>=
 nottem.celcius <- (nottem - 32) * 5/9
@@ -816,7 +850,7 @@ We set the seasonal window to 7 months, the minimum accepted.
 opts_chunk$set(opts_fig_wide_square)
 @
 
-<<ts-05>>=
+<<ts-05, fig.height=5>>=
 nottem.stl <- stl(nottem.celcius, s.window = 7)
 plot(nottem.stl)
 @
