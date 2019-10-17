@@ -16,8 +16,8 @@ Most programmers have seen them, and most good programmers realize they've writt
 
 <<echo=FALSE>>=
 # set to TRUE to test non-executed code chunks and rendering of plots
-eval_online_data <- FALSE
-eval_yoctopuce <- FALSE
+eval_online_data <- TRUE
+eval_yoctopuce <- TRUE
 @
 
 \section{Aims of this chapter}
@@ -630,7 +630,11 @@ If you have some worksheet files available, import them into \Rlang, to get a fe
 Package \pkgname{readODS} provides functions for reading data saved in files that follow the \emph{Open Documents Standard}. Function \Rfunction{read\_ods()} has a similar but simpler user interface to that of \code{read\_excel()} and reads one worksheet at a time, with support only for skipping top rows. The value returned is a data frame.
 
 <<readODS-01>>=
-read_ods("extdata/Book1.ods", sheet = 1)
+ods.df <- read_ods("extdata/Book1.ods", sheet = 1)
+@
+
+<<readODS-02>>=
+ods.df
 @
 
 Function \Rfunction{write\_ods()} writes a data frame into an ODS file.
@@ -900,34 +904,40 @@ We give here a simple example using a module from the \href{http://www.yoctopuce
 This example is not run, and needs setting the configuration of the YoctoPuce module beforehand. Fully reproducible examples, including configuration instructions, will be included in a future revision of the manuscript.
 \end{infobox}
 
-Here we use function \Rfunction{fromJSON()} to retrieve logged data from one sensor.
+Here we use function \Rfunction{fromJSON()} from package \pkgname{jsonlite} to retrieve logged data from one sensor.
 
 <<iot-01, eval=eval_yoctopuce>>=
 hub.url <- "http://localhost:4444/"
-Meteo01.lst <-
-    fromJSON(paste(hub.url, "byName/Meteo01/dataLogger.json",
-                   sep = ""))
-names(Meteo01.lst)
-Meteo01.lst
+Meteo01.df <-
+    fromJSON(paste(hub.url, "byName/METEO01/dataLogger.json",
+                   sep = ""), flatten = TRUE)
+str(Meteo01.df, max.level = 2)
 @
 
-The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
+The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time (use of the dot pipe operator is described in section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
 
 <<iot-02, eval=eval_yoctopuce>>=
-    val.vector <- unlist(Meteo01.lst[["val"]])
-    dplyr::transmute(Meteo01.lst,
-                     utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
-                     qty = qty.name,
-                     unit = qty.unit,
-                     minimum = val.vector[c(TRUE, FALSE, FALSE)],
-                     mean = val.vector[c(FALSE, TRUE, FALSE)],
-                     maximum = val.vector[c(FALSE, FALSE, TRUE)],
-                     dur,
-                     freq)
+Meteo01.df[["streams"]][[which(Meteo01.df$id == "temperature")]] %.>%
+  as_tibble(.) %.>%
+  dplyr::transmute(.,
+                   utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
+                   t_min = unlist(val)[c(TRUE, FALSE, FALSE)],
+                   t_mean = unlist(val)[c(FALSE, TRUE, FALSE)],
+                   t_max = unlist(val)[c(FALSE, FALSE, TRUE)]) -> temperature.df
+
+Meteo01.df[["streams"]][[which(Meteo01.df$id == "humidity")]] %.>%
+  as_tibble(.) %.>%
+  dplyr::transmute(.,
+                   utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
+                   hr_min = unlist(val)[c(TRUE, FALSE, FALSE)],
+                   hr_mean = unlist(val)[c(FALSE, TRUE, FALSE)],
+                   hr_max = unlist(val)[c(FALSE, FALSE, TRUE)]) -> humidity.df
+
+full_join(temperature.df, humidity.df)
 @
 
 \begin{explainbox}
-  Many YoctoPuce modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub.
+Most YoctoPuce input modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub. As shown above it is possible to control them through the HTML server in the physical or virtual hubs. Alternatively \Rlang package \pkgname{reticulate} can be used to control YoctoPuce modules by means of the Python library giving access to their API.
 \end{explainbox}
 \index{importing data!physical devices|)}
 
