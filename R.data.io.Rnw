@@ -526,7 +526,7 @@ The functions defined in this package can be used to ``harvest'' data from web p
 
 \section{GPX files}
 \index{importing data!GPX files|(}
-GPX (GPS Exchange Format) files use a XML scheme designed for saving and exchanging data from geographic positioning systems (GPS). There is some variation on the variables saved depending on the settings of the GPS receiver. The example data used here is from a Transmeta BT747 GPS logger. The example below reads the data into a \code{tibble} as character strings. For plotting, the character values representing numbers and dates would need to be converted to numeric and datetime (\code{POSIXct}) values, respectively. In the case of plotting tracks on a map, it is preferable to use package \pkgname{sf} to import the tracks directly from the \code{.gpx} file into a layer.
+GPX (GPS Exchange Format) files use a XML scheme designed for saving and exchanging data from geographic positioning systems (GPS). There is some variation on the variables saved depending on the settings of the GPS receiver. The example data used here is from a Transmeta BT747 GPS logger. The example below reads the data into a \code{tibble} as character strings. For plotting, the character values representing numbers and dates would need to be converted to numeric and datetime (\code{POSIXct}) values, respectively. In the case of plotting tracks on a map, it is preferable to use package \pkgname{sf} to import the tracks directly from the \code{.gpx} file into a layer (use of the dot pipe operator is described in section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
 
 <<gps-01>>=
 xmlTreeParse(file = "extdata/GPSDATA.gpx", useInternalNodes = TRUE) %.>%
@@ -800,8 +800,8 @@ the months using a pipe operator from \pkgname{wrapr} and methods from \pkgname{
 hyper_tibble(meteo_data.tnc,
              lon = signif(lon, 1) == 9,
              lat = signif(lat, 2) == 87) %.>%
-  mutate(., month = month(ymd("1800-01-01") + days(time))) %.>%
-  select(., -time)
+  mutate(.data = ., month = month(ymd("1800-01-01") + days(time))) %.>%
+  select(.data = ., -time)
 @
 
 In this second example, we extract data for all grid points along latitudes. To achieve this we need only to omit the test for \code{lat} from the chuck above. The tibble is assembled automatically and columns for the active dimensions added. The decoding of the months remains unchanged.
@@ -809,8 +809,8 @@ In this second example, we extract data for all grid points along latitudes. To 
 <<tidync-03>>=
 hyper_tibble(meteo_data.tnc,
              lon = signif(lon, 1) == 9) %.>%
-  mutate(., month = month(ymd("1800-01-01") + days(time))) %.>%
-  select(., -time)
+  mutate(.data = ., month = month(ymd("1800-01-01") + days(time))) %.>%
+  select(.data = ., -time)
 @
 
 \begin{playground}
@@ -914,20 +914,20 @@ Meteo01.df <-
 str(Meteo01.df, max.level = 2)
 @
 
-The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time (use of the dot pipe operator is described in section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
+The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
 
 <<iot-02, eval=eval_yoctopuce>>=
 Meteo01.df[["streams"]][[which(Meteo01.df$id == "temperature")]] %.>%
-  as_tibble(.) %.>%
-  dplyr::transmute(.,
+  as_tibble(x = .) %.>%
+  dplyr::transmute(.data = .,
                    utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
                    t_min = unlist(val)[c(TRUE, FALSE, FALSE)],
                    t_mean = unlist(val)[c(FALSE, TRUE, FALSE)],
                    t_max = unlist(val)[c(FALSE, FALSE, TRUE)]) -> temperature.df
 
 Meteo01.df[["streams"]][[which(Meteo01.df$id == "humidity")]] %.>%
-  as_tibble(.) %.>%
-  dplyr::transmute(.,
+  as_tibble(x = .) %.>%
+  dplyr::transmute(.data = .,
                    utc.time = as.POSIXct(utc, origin = "1970-01-01", tz = "UTC"),
                    hr_min = unlist(val)[c(TRUE, FALSE, FALSE)],
                    hr_mean = unlist(val)[c(FALSE, TRUE, FALSE)],
