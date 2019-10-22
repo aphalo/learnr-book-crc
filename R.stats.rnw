@@ -16,7 +16,7 @@ The purpose of computing is insight, not numbers.
 
 \section{Aims of this chapter}
 
-This chapter aims to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses. Although, many of base \R's functions are specific to given statistical procedures, they use a particular approach to model specification and for returning the computed values that can be considered a part of the \Rlang language. Here you will learn the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear model, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding fit and summary functions.
+This chapter aims to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses (see further reading on page \pageref{sec:stat:further:reading}). Although, many of base \R's functions are specific to given statistical procedures, they use a particular approach to model specification and for returning the computed values that can be considered a part of the \Rlang language. Here you will learn the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear models, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding fit and summary functions.
 
 %\emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
 
@@ -45,7 +45,7 @@ summary(x)
   In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
 \end{playground}
 
-By default if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on §the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.omit} allows us to override this default behaviour by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
+By default if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.omit} allows us to override this default behaviour by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
 
 <<stat-fun-2>>=
 x <- c(1:20, NA)
@@ -301,13 +301,15 @@ fm2 <- lm(dist ~ speed - 1, data = cars)
 summary(fm2)
 @
 
-Now there is no estimate for the intercept in the summary, only an estimate for the slope. The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
+Now there is no estimate for the intercept in the summary, only an estimate for the slope.
 
 <<models-2a>>=
 plot(fm2, which = 1)
 @
 
+The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
 \begin{playground}
+
 You will now fit a second degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.
 
 <<models-3, eval=eval_playground>>=
@@ -354,12 +356,6 @@ Additional methods give easy access to different components of fitted models: \R
 \begin{playground}
 Familiarize yourself with these extraction and summary methods by reading their documentation and use them to explore \code{fm1} fitted above or model fits to other data of your interest.
 \end{playground}
-
-Method \Rfunction{predict()} uses the fitted model together with new data for the independent variables to compute predictions. As \Rfunction{predict()} accepts new data as input, it allows interpolation and extrapolation to values of the independent variables not present in the original data. In the case of linear- and some other models \Rfunction{predict()} also estimates of confidence around the prediction are returned. The new data must be stored in a data frame with columns using the same names for the explanatory variables as in the data used for the fit, a response variable is not needed and additional columns are ignored. (The explanatory variables in the new data can be either continuous or factors, but they must match in this respect those in the original data.)
-
-\begin{advplayground}
-Predict using both \code{fm1} and \code{fm2} the distance required to stop cars moving at 0, 5, 10, 20, 30, and 40~mph. Study the help page for the predict method for linear models (using \code{help(predict.lm)}). Explore the difference between \code{"prediction"} and \code{"confidence"} bands: why are they so different?
-\end{advplayground}
 
 \begin{explainbox}
 The objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them. There are different specializations of these methods which are called depending on the class of the model fit object. (See section \ref{sec:methods} on page \pageref{sec:methods}.)
@@ -415,6 +411,12 @@ p.value <- dt(t.value, df = degrees.of.freedom)
 Check that the procedure above agrees with the output of \code{summary()} when we set \code{hyp.null <- 0} instead of \code{hyp.null <- 1}.
 
 Modify the example so as to test whether the intercept is significantly larger than 5 feet, doing a one sided test.
+\end{advplayground}
+
+Method \Rfunction{predict()} uses the fitted model together with new data for the independent variables to compute predictions. As \Rfunction{predict()} accepts new data as input, it allows interpolation and extrapolation to values of the independent variables not present in the original data. In the case of linear- and some other models \Rfunction{predict()} also estimates of confidence around the prediction are returned. The new data must be stored in a data frame with columns using the same names for the explanatory variables as in the data used for the fit, a response variable is not needed and additional columns are ignored. (The explanatory variables in the new data can be either continuous or factors, but they must match in this respect those in the original data.)
+
+\begin{advplayground}
+Predict using both \code{fm1} and \code{fm2} the distance required to stop cars moving at 0, 5, 10, 20, 30, and 40~mph. Study the help page for the predict method for linear models (using \code{help(predict.lm)}). Explore the difference between \code{"prediction"} and \code{"confidence"} bands: why are they so different?
 \end{advplayground}
 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
@@ -1032,7 +1034,7 @@ str(hc)
 %\index{discriminant analysis|)}
 \index{multivariate methods|)}
 
-\section{Further reading}
+\section{Further reading}\label{sec:stat:further:reading}
 
 Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
 
