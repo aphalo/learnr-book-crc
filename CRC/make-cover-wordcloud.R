@@ -20,7 +20,7 @@ get_words <- function(x) {
   gsub("\\\\$|\\$", "$", temp) -> temp
   gsub("\\\\&|\\&", "&", temp) -> temp
   gsub("\\\\^|\\^", "^", temp) -> temp
-  # remove index catagories
+  # remove index categories
   gsub("[{]functions and methods!|[{]classes and modes!|[{]data objects!|[{]operators!|[{]control of execution!|[{]names and their scope!|[{]constant and special values!", "", temp) -> temp
   # remove page numbers
   gsub("[{][0-9]*[}]", "", temp) -> temp
@@ -53,11 +53,79 @@ str_replace(rcatsidx.idx, "@", "") %.>%
 
 nrow(word_counts.tb)
 
-set.seed(42)
-ggplot(word_counts.tb[1:140, ], aes(label = values, size = lengths, color = lengths)) +
-  geom_text_wordcloud(family = "mono", fontface = "bold", area_corr = TRUE) +
+word_cloud.fig0 <-
+  ggplot(word_counts.tb[1:180, ], aes(label = values, size = lengths, color = lengths)) +
+  geom_text_wordcloud(family = "mono", fontface = "bold", area_corr = TRUE, grid_margin = 2, seed = 42) +
+  scale_size_area(max_size = 11) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  theme(aspect.ratio = 5/7)
+
+png("CRC/covers/learnrbook-cover-image-300-0.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig0)
+dev.off()
+
+word_cloud.fig1 <-
+  ggplot(word_counts.tb[1:80, ], aes(label = values, size = lengths, color = lengths)) +
+  geom_text_wordcloud(family = "mono", fontface = "bold", area_corr = TRUE, grid_margin = 2, seed = 42, shape = "square") +
+  scale_size_area(max_size = 14) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  theme(aspect.ratio = 5/7)
+
+png("CRC/covers/learnrbook-cover-image-300-1.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig1)
+dev.off()
+
+word_cloud.fig2 <-
+  ggplot(word_counts.tb[1:160, ], aes(label = values, size = lengths, color = lengths)) +
+  geom_text_wordcloud(family = "mono", fontface = "bold", area_corr = TRUE, grid_margin = 2, seed = 42) +
+  scale_size_area(max_size = 12) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  theme(aspect.ratio = 5/7)
+
+png("CRC/covers/learnrbook-cover-image-300-2.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig2)
+dev.off()
+
+word_cloud.fig3 <-
+  ggplot(word_counts.tb[1:480, ], aes(label = values, size = lengths, color = lengths)) +
+  geom_text_wordcloud(family = "mono", fontface = "bold", area_corr = TRUE, grid_margin = 3, seed = 42, shape = "square") +
   scale_size_area(max_size = 10) +
   scale_color_viridis_c() +
   theme_minimal() +
-  theme(aspect.ratio = 3/4,
-        panel.background = element_rect(fill = "black"))
+  theme(aspect.ratio = 5/7)
+
+png("CRC/covers/learnrbook-cover-image-300-3.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig3)
+dev.off()
+
+word_cloud.fig4 <-
+  word_cloud.fig3 %+% scale_color_viridis_c(option = "B")
+
+png("CRC/covers/learnrbook-cover-image-300-4.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig4)
+dev.off()
+
+word_cloud.fig5 <-
+  word_cloud.fig3 %+% scale_color_viridis_c(option = "C")
+
+png("CRC/covers/learnrbook-cover-image-300-5.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig5)
+dev.off()
+
+word_cloud.fig6 <-
+  word_cloud.fig3 %+% scale_color_viridis_c(option = "E")
+
+png("CRC/covers/learnrbook-cover-image-300-6.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig6)
+dev.off()
+
+word_cloud.fig7 <-
+  word_cloud.fig3 %+% scale_color_viridis_c(option = "A")
+
+png("CRC/covers/learnrbook-cover-image-300-7.png", width = 2100, height = 1500, res = 300, bg = "black")
+print(word_cloud.fig7)
+dev.off()
+
