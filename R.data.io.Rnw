@@ -22,19 +22,19 @@ eval_yoctopuce <- FALSE
 
 \section{Aims of this chapter}
 
-Base \Rlang and the recommended packages (installed by default) include several functions for importing and exporting data. Contributed packages provide both replacements for some of these functions and support for several additional file formats. In the present chapter I aim at describing both data input and output covering in detail only the most common ``foreign'' data formats (those not native to \Rlang).
+Base \Rlang and the recommended packages (installed by default) include several functions for importing and exporting data. Contributed packages provide both replacements for some of these functions and support for several additional file formats. In the present chapter, I aim at describing both data input and output covering in detail only the most common ``foreign'' data formats (those not native to \Rlang).
 
-Data file formats foreign to \Rlang are not always well defined, making it necessary to reverse-engineer the algorithms need to read them. These formats, even when clearly defined, may be updated by the developers of the foreign software that writes the files. Consequently, developing software to read and write files using foreign formats can easily result in long, messy, and ugly \Rlang scripts. We can also unwillingly write code that usually works but occasionally fails with specific files, or even worse, occasionally silently corrupts the imported data. The aim of this chapter is to provide guidance for finding functions for reading data encoded using foreign formats, covering both base \Rlang, including the \pkgname{foreign} package, and independently contributed packages. Such functions are well tested or validated.
+Data file formats that are foreign to \Rlang are not always well defined, making it necessary to reverse-engineer the algorithms needed to read them. These formats, even when clearly defined, may be updated by the developers of the foreign software that writes the files. Consequently, developing software to read and write files using foreign formats can easily result in long, messy, and ugly \Rlang scripts. We can also unwillingly write code that usually works but occasionally fails with specific files, or even worse, occasionally silently corrupts the imported data. The aim of this chapter is to provide guidance for finding functions for reading data encoded using foreign formats, covering both base \Rlang, including the \pkgname{foreign} package, and independently contributed packages. Such functions are well tested or validated.
 
-In this chapter you will familiarise with how to exchange data between \Rlang and other applications. The functions \code{save()} and \code{load()}, and \code{saveRDS()} and  \code{readRDS()} all of which save and read data in \Rlang's native format are described in sections \ref{sec:data:rda} and \ref{sec:data:rds} starting on page \pageref{sec:data:rda}.
+In this chapter you will familiarize yourself with how to exchange data between \Rlang and other applications. The functions \code{save()} and \code{load()}, and \code{saveRDS()} and  \code{readRDS()}, all of which save and read data in \Rlang's native formats, are described in sections \ref{sec:data:rda} and \ref{sec:data:rds} starting on page \pageref{sec:data:rda}.
 
 \section{Introduction}
 
 The first step in any data analysis with \Rlang is to input or read-in the data. Available sources of data are many and data can be stored or transmitted using various formats, both based on text or binary encodings. It is crucial that data is not altered (corrupted) when read and that in the eventual case of an error, errors are clearly reported. Most dangerous are silent non-catastrophic errors.
 
-The very welcome increase of awareness of the need for open availability of data, makes the output of data from \Rlang into well defined data-exchange formats another crucial step. Consequently, in many cases an important step in data analysis is to export the data for submission to a repository, in addition to publication of the results of the analysis.
+The very welcome increase of awareness of the need for open availability of data, makes the output of data from \Rlang into well-defined data-exchange formats another crucial step. Consequently, in many cases an important step in data analysis is to export the data for submission to a repository, in addition to publication of the results of the analysis.
 
-Faster internet access to data sources and cheaper random access memory (RAM) has made it possible to efficiently work with relatively large data sets in \Rlang. That \Rlang keeps all data in memory (RAM), imposes limits to the size of data \Rlang functions can operate on. For data sets large enough not to fit in computer RAM, one can use selective reading of data from flat files, or from databases outside of \Rlang.
+Faster internet access to data sources and cheaper random-access memory (RAM) has made it possible to efficiently work with relatively large data sets in \Rlang. That \Rlang keeps all data in memory (RAM), imposes limits to the size of data \Rlang functions can operate on. For data sets large enough not to fit in computer RAM, one can use selective reading of data from flat files, or from databases outside of \Rlang.
 
 Some \Rlang packages have made it faster to import data saved in the same formats already supported by base \Rlang, but in some cases providing weaker guarantees of not corrupting the data than base \Rlang. Other contributed packages make it possible to import and export data stored in file formats not supported by base \Rlang functions. Some of these formats are subject-area specific while others are in widespread use.
 
@@ -44,7 +44,7 @@ Some \Rlang packages have made it faster to import data saved in the same format
 install.packages(learnrbook::pkgs_ch_data)
 @
 
-To run the examples included in this chapter you need first to load some packages from the library (see section \ref{sec:script:packages} on page \pageref{sec:script:packages} for details on the use of packages).
+To run the examples included in this chapter, you need first to load some packages from the library (see section \ref{sec:script:packages} on page \pageref{sec:script:packages} for details on the use of packages).
 
 <<message=FALSE>>=
 library(learnrbook)
@@ -71,8 +71,7 @@ library(jsonlite)
 
 \begin{infobox}
 Some data sets used in this and other chapters are available in package \pkgname{learnrbook}. In addition to the
-R data objects, we provide files saved in \emph{foreign} formats, which we used in examples on how to import data. The files can be either read from the \Rlang library, or from a copy in a local folder. In this chapter we
-assume the user has copied the folder \code{"extdata"} from the package to his working folder.
+R data objects, we provide files saved in \emph{foreign} formats, which we used in examples on how to import data. The files can be either read from the \Rlang library, or from a copy in a local folder. In this chapter we assume the user has copied the folder \code{"extdata"} from the package to a working folder.
 
 Copy the files using:
 
@@ -94,14 +93,14 @@ if (!dir.exists(save.path)) {
 \section{File names and operations}\label{sec:files:filenames}
 \index{file names!portable}
 \index{file operations|(}
-We start with the naming of files as it affects data sharing irrespective of the format used for its encoding. The main difficulty is that different operating systems have different rules governing the syntax used for file names and file paths. In many cases, like when depositing data files in public repository, we need to ensure that file names are valid in multiple operating systems (OS). If the script used to create the files is itself expected to be OS agnostic, we need to be also careful to query the OS for file names and paths without making assumptions on the naming rules or available OS commands. This is specially important when developing \Rlang packages.
+We start with the naming of files as it affects data sharing irrespective of the format used for its encoding. The main difficulty is that different operating systems have different rules governing the syntax used for file names and file paths. In many cases, like when depositing data files in a public repository, we need to ensure that file names are valid in multiple operating systems (OSs). If the script used to create the files is itself expected to be OS agnostic, we also need to be careful to query the OS for file names and paths without making assumptions on the naming rules or available OS commands. This is especially important when developing \Rlang packages.
 
 \begin{warningbox}
 \index{file names!script portability}
-For maximum portability, file names should never contain white-space characters and contain at most one dot. For widest possible portability, underscores should be avoided using dashes instead. As an example instead of \code{my data.2019.csv} use \code{my-data-2019.csv}.
+For maximum portability, file names should never contain white-space characters and contain at most one dot. For the widest possible portability, underscores should be avoided using dashes instead. As an example, instead of \code{my data.2019.csv}, use \code{my-data-2019.csv}.
 \end{warningbox}
 
-\Rlang provides functions which help with portability, by hiding the idiosyncracies of the different OSs from \Rlang code. In scripts these functions should be preferred over direct call to OS commands (i.e., using \Rfunction{shell()} or \Rfunction{system()}) whenever possible. As the algorithm needed to extract a file name from a file path, is OS specific, \Rlang provides functions such as \Rfunction{basename()} whose implementation is OS specific but from the side of \Rlang code behave identically---these functions hide the differences among OS from the user of \Rlang. The chunk below can be expected to work correctly under any OS for which \Rlang is available.
+\Rlang provides functions which help with portability, by hiding the idiosyncrasies of the different OSs from \Rlang code. In scripts these functions should be preferred over direct call to OS commands (i.e., using \Rfunction{shell()} or \Rfunction{system()}) whenever possible. As the algorithm needed to extract a file name from a file path is OS specific, \Rlang provides functions such as \Rfunction{basename()}, whose implementation is OS specific but from the side of \Rlang code behave identically---these functions hide the differences among OSs from the user of \Rlang. The chunk below can be expected to work correctly under any OS for which \Rlang is available.
 
 <<filenames-01>>=
 basename("extdata/my-file.txt")
@@ -111,7 +110,7 @@ basename("extdata/my-file.txt")
 \index{file paths!script portability}
 \index{folders|see{file paths}}
 \index{file paths!parsing|(}
-While in \pgrmname{Unix} and \pgrmname{Linux} folder nesting in file paths is marked with a forward slash characters (\verb|/|), under \pgrmname{MS-Windows} it is marked with backslash characters (\verb|\|). Backslash (\verb|\|) is a scape characters in \Rlang and interpreted as the start of an embedded special sequence of characters (see section \ref{sec:calc:character} on page \pageref{sec:calc:character}). While in \Rlang forward slash (\verb|/|) can be used for file paths under any OS, and escaped backslash (\verb|\\|) is valid only under MS-Windows. Consequently \verb|/| should be always preferred to \verb|\\| to ensure portability, and is the approach used in this book.
+While in \pgrmname{Unix} and \pgrmname{Linux} folder nesting in file paths is marked with a forward slash character (\verb|/|), under \pgrmname{MS-Windows} it is marked with a backslash character (\verb|\|). Backslash (\verb|\|) is an escape character in \Rlang and interpreted as the start of an embedded special sequence of characters (see section \ref{sec:calc:character} on page \pageref{sec:calc:character}), while in \Rlang a forward slash (\verb|/|) can be used for file paths under any OS, and escaped backslash (\verb|\\|) is valid only under MS-Windows. Consequently, \verb|/| should be always preferred to \verb|\\| to ensure portability, and is the approach used in this book.
 
 <<filenames-02>>=
 basename("extdata/my-file.txt")
@@ -133,7 +132,7 @@ Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the pat
 getwd()
 @
 
-Function \Rfunction{setwd()} returns the path to the current working directory, allowing us to portably set the working directory to the previous one. Both relative paths (relative to the current working directory), as in the example, or absolute paths (given in full) are accepted as argument. In mainstream OSs \code{"."} indicates the current directory and \code{".."} the directory above the current one.
+Function \Rfunction{setwd()} returns the path to the current working directory, allowing us to portably set the working directory to the previous one. Both relative paths (relative to the current working directory), as in the example, or absolute paths (given in full) are accepted as an argument. In mainstream OSs ``\code{.}'' indicates the current directory and ``\code{..}'' the directory above the current one.
 
 <<filenames-06,eval=FALSE>>=
 # not run
@@ -161,11 +160,11 @@ head(dir())
 @
 
 \begin{playground}
-The default argument for parameter \code{path} is the current working directory, under Windows, Unix and Linux indicated by \code{"."}. Convince yourself that this is indeed the default by calling the functions with an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
+The default argument for parameter \code{path} is the current working directory, under Windows, Unix, and Linux indicated by \code{"."}. Convince yourself that this is indeed the default by calling the functions with an explicit argument. After this, play with the functions trying other existing and non-existent paths in your computer.
 \end{playground}
 
 \begin{playground}
-Use parameter \code{full.names} with \Rfunction{list.files()} to obtain either a list of files paths or bare file names. Similarly investigate how the returned list of files is affected by the argument passed to \code{all.names}.
+Use parameter \code{full.names} with \Rfunction{list.files()} to obtain either a list of file paths or bare file names. Similarly, investigate how the returned list of files is affected by the argument passed to \code{all.names}.
 \end{playground}
 
 \begin{playground}
@@ -173,7 +172,7 @@ Compare the behavior of functions \Rfunction{dir()} and \Rfunction{list.dirs()},
 \end{playground}
 \index{listing files or directories|)}
 
-Base \Rlang provides several functions for portably working with files, they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for this ``family'' of functions.
+Base \Rlang provides several functions for portably working with files, and they are listed in the help page for \code{files} and in individual help pages. Use \code{help("files")} to access the help for this ``family'' of functions.
 
 <<filenames-08>>=
 if (!file.exists("xxx.txt")) {
@@ -194,7 +193,7 @@ Function \Rfunction{file.path()} can be used to construct a file path from its c
 
 \section{Opening and closing file connections}\label{sec:io:connections}
 
-Examples in the rest of this chapter use as argument for the \code{file} formal parameter literal paths or URLs, and complete the reading or writing operations within the call to a function. Sometimes it is necessary to read or write a text file sequentially, one row or record at a time. In such cases it is most efficient to keep the file open between reads and close the connection only when it is no longer needed. See \code{help(connections)} for details about the various functions available and their behavior in different OSs. In the next example we open a file connection, read two lines, first the top one with column headers, then in a separate call to \Rfunction{readLines()} the two lines or records with data, and finally closing the connection.
+Examples in the rest of this chapter use as an argument for the \code{file} formal parameter literal paths or URLs, and complete the reading or writing operations within the call to a function. Sometimes it is necessary to read or write a text file sequentially, one row or record at a time. In such cases it is most efficient to keep the file open between reads and close the connection only when it is no longer needed. See \code{help(connections)} for details about the various functions available and their behavior in different OSs. In the next example we open a file connection, read two lines, first the top one with column headers, then in a separate call to \Rfunction{readLines()}, the two lines or records with data, and finally close the connection.
 
 <<file-open-01>>=
 f1 <- file("extdata/not-aligned-ASCII-UK.csv", open = "r") # open for reading
@@ -206,11 +205,11 @@ readLines(f1, n = 2L)
 close(f1)
 @
 
-When \Rpgrm is used in batch mode, \code{stdin}, \code{stdout} and \code{stderror} can be opened, data read from or written to these \emph{standard} sources and sinks so familiar to \Clang programmers.
+When \Rpgrm is used in batch mode, the ``files'' \code{stdin}, \code{stdout} and \code{stderror} can be opened, and data read from, or written to. These \emph{standard} sources and sinks, so familiar to \Clang programmers, allow the use of \Rlang scripts as tools in data pipes coded as shell scripts under Unix and other OSs.
 
 \section{Plain-text files}\label{sec:files:txt}
 \index{importing data!text files|(}
-In general text files are the most portable approach to data storage but usually also the least efficient with respect to the size of the file. Text files are composed of encoded characters. This makes them easy to edit with text editors and easy to read from programs written in most programming languages. On the other hand, how the data encoded as characters is arranged can be based on two different approaches: positional or using a specific character as separator. The positional approach is more concise but almost unreadable to humans as the values run into each other. Reading of data stored using a positional approach requires access to a format definition and was common in FORTRAN and COBOL at the times when punch cards were used to store data. In the case of separators, different separators are in common use. Comma separated encodings (CSV) use either comma or semicolon to separate the fields or columns. Tabulator, or tab, separated values (TSV) use the tab character as column separator. Sometimes white space is used as separator, most commonly when all values are to be converted to \code{numeric}.
+In general, text files are the most portable approach to data storage but usually also the least efficient with respect to the size of the file. Text files are composed of encoded characters. This makes them easy to edit with text editors and easy to read from programs written in most programming languages. On the other hand, how the data encoded as characters is arranged can be based on two different approaches: positional or using a specific character as a separator. The positional approach is more concise but almost unreadable to humans as the values run into each other. Reading of data stored using a positional approach requires access to a format definition and was common in FORTRAN and COBOL at the time when punch cards were used to store data. In the case of separators, different separators are in common use. Comma-separated values (CSV) encodings use either a comma or semicolon to separate the fields or columns. Tabulator, or tab-separated values (TSV) use the tab character as a column separator. Sometimes white space is used as a separator, most commonly when all values are to be converted to \code{numeric}.
 
 \begin{explainbox}
 \textbf{Not all text files are born equal.} When reading text files, and \emph{foreign} binary files which may contain embedded text strings, there is potential for their misinterpretation during the import operation. One common source of problems, is that column headers are to be read as \Rlang names. As earlier discussed, there are strict rules, such as avoiding spaces or special characters if the names are to be used with the normal syntax. On import, some functions will attempt to sanitize the names, but others not. Most such names are still accessible in \Rlang statements, but a special syntax is needed to protect them from triggering syntax errors through their interpretation as something different than variable or function names---in \Rlang jargon we say that they need to be quoted.
@@ -223,7 +222,7 @@ Some of the things we need to be on the watch for are:
 
 If you encounter problems after import, such as failure of indexing of data frame columns by name, use function \code{names()} to get the names printed to the console as a character vector. This is useful because character vectors are always printed with each string delimited by quotation marks making leading and trailing spaces clearly visible. The same applies to use of \code{levels()} with factors created with data that might have contained mistakes.
 
-To demonstrate some of these problems I create a data frame with name sanitation disabled. And in the second statement with sanitation enabled. The first statement is equivalent to the default behavior of functions in package \pkgname{readr} and the second is equivalent to the behavior of base \Rlang functions. \pkgname{readr} prioritizes the integrity of the original data while \Rlang prioritizes compatibility with R's naming rules.
+To demonstrate some of these problems, I create a data frame with name sanitation disabled, and in the second statement with sanitation enabled. The first statement is equivalent to the default behavior of functions in package \pkgname{readr} and the second is equivalent to the behavior of base \Rlang functions. \pkgname{readr} prioritizes the integrity of the original data while \Rlang prioritizes compatibility with R's naming rules.
 
 <<file-io-txt-00a>>=
 data.frame(a = 1, "a " = 2, " a" = 3, check.names = FALSE)
@@ -236,14 +235,14 @@ An even more subtle case is when characters can be easily confused by the user r
 data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
 @
 
-Reading data from a text file can result in very odd looking values stored in \Rlang variables because of a mismatch in ecoding, e.g.,  when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit unicode encoded file.
+Reading data from a text file can result in very odd-looking values stored in \Rlang variables because of a mismatch in encoding, e.g., when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit unicode encoded file.
 
-The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. One function in \Rlang \pkgname{tools} package, which is not exported, can at the time of writing be used to test files for the presence on non-ASCII characters: \Rfunction{tools:::showNonASCIIfile()}. This function takes as argument the path to a file.
+The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. One function in the \Rlang \pkgname{tools} package, which is not exported, can at the time of writing be used to test files for the presence on non-ASCII characters: \Rfunction{tools:::showNonASCIIfile()}. This function takes as an argument the path to a file.
 \end{explainbox}
 
 \subsection[Base R and `utils']{Base \Rlang and \pkgname{utils}}
 \index{text files!with field markers}
-Text files containing data in columns can be divided into two broad groups. Those with fixed width fields and those with delimited fields. Fixed width fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL} when data storage capacity was very limited. These formats are frequently capable of encoding information using fewer characters than when delimited fields are used. The best way of understanding the differences is with examples. Although in this section we exemplify the use of functions by passing a file name as argument, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}).
+Text files containing data in columns can be divided into two broad groups. Those with fixed-width fields and those with delimited fields. Fixed-width fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL} when data storage capacity was very limited. These formats are frequently capable of encoding information using fewer characters than when delimited fields are used. The best way of understanding the differences is with examples. Although in this section we exemplify the use of functions by passing a file name as an argument, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}).
 
 In the first example we will read a file with fields solely delimited by ``,.'' This is what is called comma-separated-values (CSV) format which can be read and written with \Rfunction{read.csv()} and \Rfunction{write.csv()}, respectively.
 
@@ -264,7 +263,7 @@ levels(from_csv_a.df[["col4"]])
 @
 
 \begin{playground}
-Read the file \code{not-aligned-ASCII-UK.csv} with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look as a waste of time, the point of the exercise is for you to get familiar with \Rlang behavior in case of such a mistake. This will help you recognize similar errors when they happen accidentally, which is quite common when files are shared.
+Read the file \code{not-aligned-ASCII-UK.csv} with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look like a waste of time, the point of the exercise is for you to get familiar with \Rlang behavior in case of such a mistake. This will help you recognize similar errors when they happen accidentally, which is quite common when files are shared.
 \end{playground}
 
 Example file \code{aligned-ASCII-UK.csv} contains comma-separated-values with added white space to align the columns, to make it easier to read by humans. These aligned fields contain leading and trailing white spaces that are included in string values when the file is read.
@@ -273,7 +272,7 @@ Example file \code{aligned-ASCII-UK.csv} contains comma-separated-values with ad
 cat(readLines("extdata/aligned-ASCII-UK.csv"), sep = "\n")
 @
 
-Although space characters are read as part of the fields, they ignored when conversion to numeric takes place. The remaining leading and trailing spaces in character strings are difficult to see when data frames are printed.
+Although space characters are read as part of the fields, they are ignored when conversion to numeric takes place. The remaining leading and trailing spaces in character strings are difficult to see when data frames are printed.
 <<file-io-csv-03>>=
 from_csv_b.df <- read.csv("extdata/aligned-ASCII-UK.csv")
 @
@@ -294,7 +293,7 @@ from_csv_e.df[["col4"]]
 levels(from_csv_e.df[["col4"]])
 @
 
-The functions from \Rlang \pkgname{utils} package by default convert columns containing character strings into factors, as seen above. This default can be changed so that character strings remain as is.
+The functions from the \Rlang \pkgname{utils} package by default convert columns containing character strings into factors, as seen above. This default can be changed so that character strings remain as is.
 
 <<file-io-csv-06>>=
 from_csv_c.df <- read.csv("extdata/not-aligned-ASCII-UK.csv",
@@ -306,7 +305,7 @@ sapply(from_csv_c.df, class)
 from_csv_c.df[["col4"]]
 @
 
-Decimal points and exponential notation are allowed for floating point values. In English-speaking locales the decimal mark is a point, while in many other locales it is a comma. If comma is used as decimal marker, we can no longer use it as field separator and is usually substituted by semicolon (\verb|;|). In such a case we can use \Rfunction{read.csv2()} and \Rfunction{write.csv2}. Furthermore parameters \code{dec} and code{sep} allow setting them to arbitrary characters. Function \Rfunction{read.table()} does the actual work and functions like \Rfunction{read.csv()} only differ in the default arguments for the different parameters. By default \Rfunction{read.table()} expects fields to be separated by white space (one or more spaces, tabs, new lines, or carriage return). Strings with embedded spaces need to be quoted in the file as shown below.
+Decimal points and exponential notation are allowed for floating point values. In English-speaking locales, the decimal mark is a point, while in many other locales it is a comma. If a comma is used as decimal marker, we can no longer use it as field separator and is usually substituted by a semicolon (\verb|;|). In such a case we can use \Rfunction{read.csv2()} and \Rfunction{write.csv2}. Furthermore, parameters \code{dec} and \code{sep} allow setting them to arbitrary characters. Function \Rfunction{read.table()} does the actual work and functions like \Rfunction{read.csv()} only differ in the default arguments for the different parameters. By default, \Rfunction{read.table()} expects fields to be separated by white space (one or more spaces, tabs, new lines, or carriage return). Strings with embedded spaces need to be quoted in the file as shown below.
 
 <<file-io-txt-00, comment='', echo=FALSE>>=
 cat(readLines("extdata/aligned-ASCII.txt"), sep = "\n")
@@ -323,9 +322,9 @@ levels(from_txt_b.df[["col4"]])
 @
 
 \index{text files!fixed width fields}
-With a fixed-width format no delimiters are needed. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in \emph{fixed width format} can be read with function \Rfunction{read.fwf()}. Records for a single observation, can be stored in a single- or multiple lines. In either case each line with fields of different but fixed known widths.
+With a fixed-width format, no delimiters are needed. Decoding is based solely on the position of the characters in the line or record. A file like this cannot be interpreted without a description of the format used for saving the data. Files containing data stored in \emph{fixed width format} can be read with function \Rfunction{read.fwf()}. Records for a single observation can be stored in a single or multiple lines. In either case, each line has fields of different but fixed known widths.
 
-Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in \langname{FORTRAN}. One particularity of \langname{FORTRAN} \emph{formated data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition. A trick used to make text files (or stacks of punch cards!) smaller. Modern versions of \langname{FORTRAN} support reading from and writing to other formats like those using field delimiters described above.
+Function \Rfunction{read.fortran()} is a wrapper on \Rfunction{read.fwf()} that accepts format definitions similar to those used in \langname{FORTRAN}. One particularity of \langname{FORTRAN} \emph{formatted data transfer} is that the decimal marker can be omitted in the saved file and its position specified as part of the format definition, a trick used to make text files (or stacks of punch cards!) smaller. Modern versions of \langname{FORTRAN} support reading from and writing to other formats like those using field delimiters described above.
 
 <<file-io-fwf-00, comment='', echo=FALSE>>=
 cat(readLines("extdata/aligned-ASCII.fwf"), sep = "\n")
@@ -343,20 +342,20 @@ from_fwf_a.df[["col4"]]
 @
 
 \begin{explainbox}
-  The file reading functions described above share with \Rfunction{read.table()} the same parameters. In addition to those described above, other frequently useful parameters are \code{skip} and \code{n}, which can be used to skip lines at the top of a file and limit the number of lines (or records) to read; \code{header} that accepts a logical argument indicating if the fields in the first text line read should be decoded as column names rather than data; \code{na.strings} to which can be passed a character vector with strings to be interpreted as \code{NA}; \code{colClasses} that provides control of the conversion of the fields to \Rlang classes and possibly skipping some columns altogether. All these parameters are described in the corresponding help pages.
+  The file reading functions described above share with \Rfunction{read.table()} the same parameters. In addition to those described above, other frequently useful parameters are \code{skip} and \code{n}, which can be used to skip lines at the top of a file and limit the number of lines (or records) to read; \code{header}, which accepts a logical argument indicating if the fields in the first text line read should be decoded as column names rather than data; \code{na.strings}, to which can be passed a character vector with strings to be interpreted as \code{NA}; and \code{colClasses}, which provides control of the conversion of the fields to \Rlang classes and possibly skipping some columns altogether. All these parameters are described in the corresponding help pages.
 \end{explainbox}
 
 \begin{playground}
-In reality  \Rfunction{read.csv()}, \code{read.csv2()} and \Rfunction{read.table()} are the same function with different default arguments to several of their parameters. Study the help page, and make by passing suitable arguments \Rfunction{read.csv()} behave as \Rfunction{read.table()}, then make \Rfunction{read.table()} behave as \Rfunction{read.csv2()}.
+In reality  \Rfunction{read.csv()}, \code{read.csv2()} and \Rfunction{read.table()} are the same function with different default arguments to several of their parameters. Study the help page, and by passing suitable arguments, make \Rfunction{read.csv()} behave like \Rfunction{read.table()}, then make \Rfunction{read.table()} behave like \Rfunction{read.csv2()}.
 \end{playground}
 
 \begin{explainbox}
-We can read a text file as character strings, without attempting to decode them. This is occasionally useful, such as when we do the decoding as part of our own script. In this case the function to use is \code{readLines()}. The returned value is a character vector in which each member string corresponds to one line or record in the file, with the end-of-line markers stripped (see example in section \ref{sec:io:connections} on page \pageref{sec:io:connections}).
+We can read a text file as character strings, without attempting to decode them. This is occasionally useful, such as when we do the decoding as part of our own script. In this case, the function to use is \code{readLines()}. The returned value is a character vector in which each member string corresponds to one line or record in the file, with the end-of-line markers stripped (see example in section \ref{sec:io:connections} on page \pageref{sec:io:connections}).
 \end{explainbox}
 \index{importing data!text files|)}
 
 \index{exporting data!text files|(}
-Next we give one example of the use of a \emph{write} function matching one of the \emph{read} functions described above. The \Rfunction{write.csv()} function takes as argument a data frame, or an object that can be coerced into a data frame, converts it to character strings and saves them to a text file. We first create the data frame that we will write to disk.
+Next we give one example of the use of a \emph{write} function matching one of the \emph{read} functions described above. The \Rfunction{write.csv()} function takes as an argument a data frame, or an object that can be coerced into a data frame, converts it to character strings, and saves them to a text file. We first create the data frame that we will write to disk.
 
 <<file-io-txt-03>>=
 my.df <- data.frame(x = 1:5, y = 5:1 / 10, z = letters[1:5])
@@ -381,7 +380,7 @@ In most cases setting, as above, \code{row.names = FALSE} when writing a CSV fil
 Write the data frame \code{my.df} into text files with functions \Rfunction{write.csv2()} and \Rfunction{write.table()} instead of \Rfunction{read.csv()} and display the files.
 \end{playground}
 
-Function \Rfunction{cat()} takes \Rlang objects and writes them after conversion to character strings to the console or a file, inserting one or more characters as separators, by default a space. This separator can be set through parameter \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\textbackslash n"}.
+Function \Rfunction{cat()} takes \Rlang objects and writes them after conversion to character strings to the console or a file, inserting one or more characters as separators, by default, a space. This separator can be set through parameter \code{sep}. In our example we set \code{sep} to a new line (entered as the escape sequence \code{"\textbackslash n"}).
 
 <<file-io-txt-11>>=
 my.lines <- c("abcd", "hello world", "123.45")
@@ -401,12 +400,12 @@ cat(readLines('my-file2.txt'), sep = '\n')
 citation(package = "readr")
 @
 
-Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow faster input and output, and have different default behavior. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and rarely even silently do this. Base \Rlang functions do less \emph{guessing}, e.g.,  the delimiters must be supplied as arguments. The \pkgname{readr} functions guess more properties of the text file format, in most cases they succeed, which is very handy, but occasionally they fail. Automatic guessing can be overridden by passing arguments and this is recommended for scripts that may be reused to read different files in the future. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behavior of overwriting an existing file with the same name, to appending the output at its end.
+Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow faster input and output, and have different default behavior. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and rarely even silently do this. Base \Rlang functions do less \emph{guessing}, e.g., the delimiters must be supplied as arguments. The \pkgname{readr} functions guess more properties of the text file format; in most cases they succeed, which is very handy, but occasionally they fail. Automatic guessing can be overridden by passing arguments and this is recommended for scripts that may be reused to read different files in the future. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behavior of overwriting an existing file with the same name, to appending the output at its end.
 
-Although in this section we exemplify the use of these functions by passing a file name as argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}). Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on-the-fly.
+Although in this section we exemplify the use of these functions by passing a file name as an argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}). Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on the fly.
 
 \begin{warningbox}
-The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behavior are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors and row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame} but has somehow different behavior (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
+The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names, or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behavior are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors and row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame}, but is not fully compatible (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
 \end{warningbox}
 
 As we can see in this first example, these functions also report to the console the specifications of the columns, which is important when these are guessed from the file contents, or part of it.
@@ -419,32 +418,32 @@ read_csv(file = "extdata/aligned-ASCII-UK.csv")
 read_csv(file = "extdata/not-aligned-ASCII-UK.csv")
 @
 
-Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()} retains quotes as part of read character strings.
+Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()}, retains quotes as part of read character strings.
 
 <<readr-03>>=
 read_table(file = "extdata/aligned-ASCII.txt")
 @
 
-Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"}, we need to use \Rfunction{read\_table2()}, which allows misalignment of fields, like \Rfunction{read.table()}, instead of \Rfunction{read\_table()} that expects vertically aligned fields across rows. However, in this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
+Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"}, we need to use \Rfunction{read\_table2()}, which allows misalignment of fields, like \Rfunction{read.table()}, instead of \Rfunction{read\_table()}, which expects vertically aligned fields across rows. However, in this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
 
 <<readr-04>>=
 read_table2(file = "extdata/not-aligned-ASCII.txt")
 @
 
-Function \Rfunction{read\_delim()} with space as delimiter needs to be used.
+Function \Rfunction{read\_delim()} with space as the delimiter needs to be used.
 
 <<readr-05>>=
 read_delim(file = "extdata/not-aligned-ASCII.txt", delim = " ")
 @
 
-Function \Rfunction{read\_tsv()} reads files with tab character as delimiter, and \Rfunction{read\_fwf()} reads files with fixed width fields. There is, however, no equivalent to \Rfunction{read.fortran()}, supporting implicit decimal points.
+Function \Rfunction{read\_tsv()} reads files encoded with the tab character as the delimiter, and \Rfunction{read\_fwf()} reads files with fixed width fields. There is, however, no equivalent to \Rfunction{read.fortran()}, supporting implicit decimal points.
 
 \begin{playground}
-Use the "wrong" \code{read\_} functions to read the example files used above and/or your own files. As mentioned earlier forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes. In this case, as wrongly read data are not always accompanied by error or warning messages, carefully check the returned tibbles for misread data values.
+Use the "wrong" \code{read\_} functions to read the example files used above and/or your own files. As mentioned earlier, forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes. In this case, as wrongly read data are not always accompanied by error or warning messages, carefully check the returned tibbles for misread data values.
 \end{playground}
 
 \begin{explainbox}
-The functions from R's \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for very large text files. The functions from \pkgname{readr} read only the top 1000 lines by default for guessing, and then rather blindly read the whole files assuming that the guessed at properties also apply to the remaining of the file. This is more efficient, but somehow risky. In earlier versions of \pkgname{readr} a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be at the time of writing correctly handled. It also means that in cases when an individual value after \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings with base \Rpgrm functions, this value is encoded as a numeric \code{NA} with a warning. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an example file only a few lines in length.
+The functions from R's \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for very large text files. The functions from \pkgname{readr} read only the top 1000 lines by default for guessing, and then rather blindly read the whole files assuming that the guessed properties also apply to the remainder of the file. This is more efficient, but somehow risky. In earlier versions of \pkgname{readr}, a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be, at the time of writing correctly, handled. It also means that in cases when an individual value after \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings with base \Rpgrm functions, this value is encoded as a numeric \code{NA} with a warning. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an example file only a few lines in length.
 
 <<tibble-print-20, echo=FALSE>>=
 options(tibble.print_max = 6, tibble.print_min = 6)
@@ -478,12 +477,13 @@ cat(read_lines('my-file6.csv'), sep = '\n')
 @
 
 \begin{playground}
-Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer).
+Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer)?
 \end{playground}
 
-The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} read and write character vectors without conversion similarly to base \Rlang \code{readLines()} and \code{writeLines()}. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} read and write the contents of a whole text file into, and from, a single character string. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} can also be used with raw vectors to read and write binary files or text files of unknown encoding.
+The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} read and write character vectors without conversion, similarly to base \Rlang \code{readLines()} and \code{writeLines()}. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} read and write the contents of a whole text file into, and from, a single character string. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} can also be used with raw vectors to read and write binary files or text files of unknown encoding.
 
-The contents of the whole file is returned as a character vector of length one, with the embedded new-line markers. We use \code{cat()} to print it so these new lines characters force the start of a new print-out line.
+The contents of the whole file are returned as a character vector of length one, with the embedded new line markers. We use \code{cat()} to print it so these new line characters force the start of a new print-out line.
+
 <<readr-12>>=
 one.str <- read_file(file = "extdata/miss-aligned-ASCII.txt")
 length(one.str)
@@ -526,7 +526,7 @@ The functions defined in this package can be used to ``harvest'' data from web p
 
 \section{GPX files}
 \index{importing data!GPX files|(}
-GPX (GPS Exchange Format) files use a XML scheme designed for saving and exchanging data from geographic positioning systems (GPS). There is some variation on the variables saved depending on the settings of the GPS receiver. The example data used here is from a Transmeta BT747 GPS logger. The example below reads the data into a \code{tibble} as character strings. For plotting, the character values representing numbers and dates would need to be converted to numeric and datetime (\code{POSIXct}) values, respectively. In the case of plotting tracks on a map, it is preferable to use package \pkgname{sf} to import the tracks directly from the \code{.gpx} file into a layer (use of the dot pipe operator is described in section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
+GPX (GPS Exchange Format) files use an XML scheme designed for saving and exchanging data from geographic positioning systems (GPS). There is some variation on the variables saved depending on the settings of the GPS receiver. The example data used here is from a Transmeta BT747 GPS logger. The example below reads the data into a \code{tibble} as character strings. For plotting, the character values representing numbers and dates would need to be converted to numeric and datetime (\code{POSIXct}) values, respectively. In the case of plotting tracks on a map, it is preferable to use package \pkgname{sf} to import the tracks directly from the \code{.gpx} file into a layer (use of the dot pipe operator is described in section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
 
 <<gps-01>>=
 xmlTreeParse(file = "extdata/GPSDATA.gpx", useInternalNodes = TRUE) %.>%
@@ -539,7 +539,7 @@ map_df(.x = ., .f = function(x) as_tibble(x = t(x = unlist(x = x))))
 I have passed all arguments by name to make explicit how this pipe works. See section \ref{sec:data:pipes} on page \pageref{sec:data:pipes} for details on the use of the pipe and dot-pipe operators.
 
 \begin{playground}
-  To understand what data transformation takes places in each statement of this pipe, start by executing the first statement by itself, excluding the dot-pipe operator, and continue adding one statement at a time, and at each step check the returned value and look out for what has changed from the previous step.
+  To understand what data transformation takes place in each statement of this pipe, start by executing the first statement by itself, excluding the dot-pipe operator, and continue adding one statement at a time, and at each step check the returned value and look out for what has changed from the previous step.
 \end{playground}
 
 \index{importing data!GPX files|)}
@@ -547,11 +547,11 @@ I have passed all arguments by name to make explicit how this pipe works. See se
 \section{Worksheets}\label{sec:files:worksheets}
 \index{importing data!worksheets and workbooks|(}
 
-Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, older binary formats are more difficult. Work sheets contain code as equations in addition to the actual data. In all cases only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
+Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, whereas older binary formats are more difficult. Worksheets contain code as equations in addition to the actual data. In all cases, only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
 
 \subsection{CSV files as middlemen}
 
-If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing these it into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
+If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection[`readxl']{\pkgname{readxl}}\label{sec:files:excel}
 \index{importing data!.xlsx files|(}
@@ -560,7 +560,7 @@ If we have access to the original software used for creating a worksheet or work
 citation(package = "readxl")
 @
 
-Package \pkgname{readxl} supports reading of \pgrmname{MS-Excel} workbooks, selecting worksheets and regions within worksheets specified in ways similar to those used by \pgrmname{MS-Excel} itself. The interface is simple, and the package easy to instal. We will import a file that in \pgrmname{MS-Excel} looks as in the screen capture below.
+Package \pkgname{readxl} supports reading of \pgrmname{MS-Excel} workbooks, and selecting worksheets and regions within worksheets specified in ways similar to those used by \pgrmname{MS-Excel} itself. The interface is simple, and the package easy to install. We will import a file that in \pgrmname{MS-Excel} looks like the screen capture below.
 
 \begin{center}
 \includegraphics[width=0.75\textwidth]{figures/Book1-xlsx.png}
@@ -595,9 +595,9 @@ Of the remaining arguments, the most useful ones have the same names and play si
 citation(package = "xlsx")
 @
 
-Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing \pgrmname{MS-Excel} worksheets and workbooks, in different formats including the older binary ones. Similarly to \pkgname{readr} it allows selecting regions of a worksheet to be imported.
+Package \pkgname{xlsx} can be more difficult to install as it uses Java functions to do the actual work. However, it is more comprehensive, with functions both for reading and writing \pgrmname{MS-Excel} worksheets and workbooks, in different formats including the older binary ones. Similar to \pkgname{readr} it allows selected regions of a worksheet to be imported.
 
-Here we use function \Rfunction{read.xlsx()}, indexing the worksheet by name. The returned value is a data frame, and following the expectations of \Rlang \pkgnameNI{utils} character columns are converted in factors by default.
+Here we use function \Rfunction{read.xlsx()}, indexing the worksheet by name. The returned value is a data frame, and following the expectations of \Rlang package \pkgnameNI{utils}, character columns are converted into factors by default.
 
 <<xlsx-01>>=
 Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx", sheetName = "my data")
@@ -613,14 +613,14 @@ write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "first copy")
 write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "second copy", append = TRUE)
 @
 
-When opened in Excel we get a workbook, containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
+When opened in Excel, we get a workbook containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
 % screen capture to be replaced!!
 \begin{center}
 \includegraphics[width=0.75\textwidth]{figures/my-data-xlsx.png}
 \end{center}
 
 \begin{playground}
-If you have some worksheet files available, import them into \Rlang, to get a feel of how the way data is organized in the worksheets affects how easy or difficult it is to import them into \Rlang.
+If you have some worksheet files available, import them into \Rlang to get a feel for how the way in which data is organized in the worksheets affects how easy or difficult it is to import them into \Rlang.
 \end{playground}
 \index{importing data!.xlsx files|)}
 
@@ -644,7 +644,7 @@ Function \Rfunction{write\_ods()} writes a data frame into an ODS file.
 \section{Statistical software}\label{sec:files:stat}
 \index{importing data!other statistical software|(}
 
-There are two different comprehensive packages for importing data saved from other statistical programs such as SAS, Statistica, SPSS, etc. The long time ``standard'' is package \pkgname{foreign} included in base \Rlang, and package \pkgname{haven} is newer contributed extension. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more robust than those from \pkgname{haven}.
+There are two different comprehensive packages for importing data saved from other statistical programs such as SAS, Statistica, SPSS, etc. The longtime ``standard'' is package \pkgname{foreign} included in base \Rlang, and package \pkgname{haven} is a newer contributed extension. In the case of files saved with old versions of statistical programs, functions from \pkgname{foreign} tend to be more robust than those from \pkgname{haven}.
 
 \subsection[foreign]{\pkgname{foreign}}
 
@@ -652,7 +652,7 @@ There are two different comprehensive packages for importing data saved from oth
 citation(package = "foreign")
 @
 
-Functions in package \pkgname{foreign} allow to import data from files saved by several statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata}, \pgrmname{SPPS}, \pgrmname{Systat}, \pgrmname{Octave} among others, and a function for writing data into files with formats native to \pgrmname{SAS}, \pgrmname{Stata}, and \pgrmname{SPPS}. \Rlang documents the use of these functions in detail in the \emph{R Data Import/Export} manual. As a simple example we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved a few years ago with the then current version of \pgrmname{SPSS}. We display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
+Functions in package \pkgname{foreign} allow us to import data from files saved by several statistical analysis programs, including \pgrmname{SAS}, \pgrmname{Stata}, \pgrmname{SPPS}, \pgrmname{Systat}, \pgrmname{Octave} among others, and a function for writing data into files with formats native to \pgrmname{SAS}, \pgrmname{Stata}, and \pgrmname{SPPS}. \Rlang documents the use of these functions in detail in the \emph{R Data Import/Export} manual. As a simple example, we use function \Rfunction{read.spss()} to read a \texttt{.sav} file, saved a few years ago with the then current version of \pgrmname{SPSS}. We display only the first six rows and seven columns of the data frame, including a column with dates, which appears as numeric.
 
 <<foreign-01>>=
 my_spss.df <- read.spss(file = "extdata/my-data.sav", to.data.frame = TRUE)
@@ -673,7 +673,7 @@ my_systat.df <- read.systat(file = "extdata/BIRCH1.SYS")
 head(my_systat.df)
 @
 
-The functions in \pkgname{foreign} can return data frames, but not always this is the default.
+Not all functions in \pkgname{foreign} return data frames by default, but all of them can be coerced to do so.
 
 \subsection[haven]{\pkgname{haven}}
 
@@ -681,9 +681,9 @@ The functions in \pkgname{foreign} can return data frames, but not always this i
 citation(package = "haven")
 @
 
-Package \pkgname{haven} is less ambitious with respect to the number of formats supported, or their vintages, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand \pkgname{haven} provides flexible ways to convert the different labelled values that cannot be directly mapped to \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. In cases when the imported file contains labelled values the returned \Rclass{tibble} object needs some additional attention from the user. SPSS labeled numeric columns are not necessarily equivalent to factors, although they sometimes are. Consequently, conversion to factors cannot be automated and must be done manually in a separate step.
+Package \pkgname{haven} is less ambitious with respect to the number of formats supported, or their vintages, providing read and write functions for only three file formats: \pgrmname{SAS}, \pgrmname{Stata} and \pgrmname{SPSS}. On the other hand, \pkgname{haven} provides flexible ways to convert the different labeled values that cannot be directly mapped to \Rlang modes. They also decode dates and times according to the idiosyncrasies of each of these file formats. In cases when the imported file contains labeled values the returned \Rclass{tibble} object needs some additional attention from the user. Labeled numeric columns in \pgrmname{SPSS} are not necessarily equivalent to factors, although they sometimes are. Consequently, conversion to factors cannot be automated and must be done manually in a separate step.
 
-We can use function \Rfunction{read\_sav()} to import a \code{.sav} file saved by a recent version of \pgrmname{SPSS}. As in the previous section, we display only the first six rows and seven columns of the data frame, including a column \code{treat} containing a labelled numeric vector and \code{harvest\_date} with dates encoded as \Rlang date values.
+We can use function \Rfunction{read\_sav()} to import a \code{.sav} file saved by a recent version of \pgrmname{SPSS}. As in the previous section, we display only the first six rows and seven columns of the data frame, including a column \code{treat} containing a labeled numeric vector and \code{harvest\_date} with dates encoded as \Rlang date values.
 
 <<haven-01>>=
 my_spss.tb <- read_sav(file = "extdata/my-data.sav")
@@ -692,7 +692,7 @@ my_spss.tb[1:6, c(1:6, 17)]
 
 In this case the dates are correctly decoded.
 
-And an \pgrmname{SPSS}'s \code{.sav} file saved 15 years ago.
+Next, we import an \pgrmname{SPSS}'s \code{.sav} file saved 15 years ago.
 
 <<haven-02>>=
 thiamin.tb <- read_sav(file = "extdata/thiamin.sav")
@@ -706,21 +706,21 @@ Compare the values returned by different \code{read} functions when applied to t
 \end{playground}
 
 \begin{playground}
-If you use or have used in the past other statistical software or a general purpose language like \langname{Python}, look for some old files and import them into R.
+If you use or have in the past used other statistical software or a general-purpose language like \langname{Python}, look for some old files and import them into \Rlang.
 \end{playground}
 \index{importing data!other statistical software|)}
 
 \section{NetCDF files}
 \index{importing data!NeCDF files|(}
 
-In some fields including geophysics and meteorology \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to a grid of locations, like with data read from Affymetrix micro arrays used to study gene expression. \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
+In some fields, including geophysics and meteorology, \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data is referenced to a grid of locations, like with data read from Affymetrix microarrays used to study gene expression. \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well-organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
 
-Officially described as
+Officially described as follows:
 \begin{quote}
 \pgrmname{NetCDF} is a set of software libraries [from Unidata] and self-describing, machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data.
 \end{quote}
 
-As sometimes \pgrmname{NetCDF} files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a \pgrmname{NetCDF} file is done in two or more steps---i.e., opening the file, reading metadata describing the variables and spatial grid and finally reading the data of interest.
+As sometimes \pgrmname{NetCDF} files are large, it is good that it is possible to selectively read the data from individual variables with functions in packages \pkgname{ncdf4} or \pkgname{RNetCDF}. On the other hand, this implies that contrary to other data file reading operations, reading a \pgrmname{NetCDF} file is done in two or more steps---i.e., opening the file, reading metadata describing the variables and spatial grid, and finally reading the data of interest.
 
 \subsection[ncdf4]{\pkgname{ncdf4}}
 
@@ -730,7 +730,7 @@ citation(package = "ncdf4")
 
 Package \pkgname{ncdf4} supports reading of files using \pgrmname{netCDF} version 4 or earlier formats. Functions in \pkgname{ncdf4} not only allow reading and writing of these files, but also their modification.
 
-We first read metadata to obtain an index into the file contents and in additional steps read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example we use long term averages for potential evapotranspiration (PET).
+We first read metadata to obtain an index of the file contents, and in additional steps, read a subset of the data. With \Rfunction{print()} we can find out the names and characteristics of the variables and attributes. In this example, we read long-term averages for potential evapotranspiration (PET).
 
 We first open a connection to the file with function \Rfunction{nc\_open()}.
 
@@ -755,7 +755,7 @@ head(latitude)
 
 The \code{time} vector is rather odd, as it contains only monthly data as these are long-term averages, but expressed as days from 1800-01-01 corresponding to the first day of each month of year 1. We use package \pkgname{lubridate} for the conversion.
 
-We construct a \Rclass{tibble} object with PET values for one grid point, we can take advantage of \emph{recycling} or short vectors.
+We construct a \Rclass{tibble} object with PET values for one grid point, taking advantage of the \emph{recycling} of short vectors.
 
 <<ncdf4-03>>=
 pet.tb <-
@@ -821,7 +821,7 @@ Instead of extracting data for one longitude across latitudes, extract data acro
 \section{Remotely located data}\label{sec:files:remote}
 \index{importing data!remote connections|(}
 
-Many of the functions described above accept an URL address in place of file name. Consequently files can be read remotely without having first to download and save a copy in the local file system. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access to repeatedly downloading the same file as this unnecessarily increases network traffic and workload on the remote server. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details of the use of these and other functions for reading text files.
+Many of the functions described above accept an URL address in place of a file name. Consequently files can be read remotely without having to first download and save a copy in the local file system. This can be useful, especially when file names are generated within a script. However, one should avoid, especially in the case of servers open to public access, repeatedly downloading the same file as this unnecessarily increases network traffic and workload on the remote server. Because of this, our first example reads a small file from my own web site. See section \ref{sec:files:txt} on page \pageref{sec:files:txt} for details on the use of these and other functions for reading text files.
 
 <<url-01, eval=eval_online_data>>=
 logger.df <-
@@ -840,10 +840,10 @@ sapply(logger.tb, class)
 sapply(logger.tb, mode)
 @
 
-While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently we need to first download the file saving a copy locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}. Function \Rfunction{download.file()} in \Rlang \pkgname{utils} package can be used to download files using URLs. It supports different modes such as binary or text, and write or append, and different methods such as \code{"internal"}, \code{"wget"} and \code{"libcurl" }.
+While functions in package \pkgname{readr} support the use of URLs, those in packages \pkgname{readxl} and \pkgname{xlsx} do not. Consequently, we need to first download the file and save a copy locally, that we can read as described in section \ref{sec:files:excel} on page \pageref{sec:files:excel}. Function \Rfunction{download.file()} in the \Rlang \pkgname{utils} package can be used to download files using URLs. It supports different modes such as binary or text, and write or append, and different methods such as \code{"internal"}, \code{"wget"} and \code{"libcurl" }.
 
 \begin{warningbox}
-For portability \pgrmname{MS-Excel} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+For portability, \pgrmname{MS-Excel} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
 \end{warningbox}
 
 
@@ -853,7 +853,7 @@ download.file("http://r4photobiology.info/learnr/my-data.xlsx",
               mode = "wb")
 @
 
-Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven} support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into \Rlang.
+Functions in package \pkgname{foreign}, as well as those in package \pkgname{haven}, support URLs. See section \ref{sec:files:stat} on page \pageref{sec:files:stat} for more information about importing this kind of data into \Rlang.
 
 <<url-03, eval=eval_online_data>>=
 remote_thiamin.df <-
@@ -868,7 +868,7 @@ remote_my_spss.tb <-
 remote_my_spss.tb
 @
 
-In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, we first download it (commented out code, as we have a local copy), and then we open the local file.
+In this example we use a downloaded NetCDF file of long-term means for potential evapotranspiration from NOOA, the same used above in the \pkgname{ncdf4} example. This is a moderately large file at 444~KB. In this case we cannot directly open the connection to the NetCDF file, and we first download it (commented out code, as we have a local copy), and then we open the local file.
 
 <<url-05, eval=eval_online_data>>=
 my.url <- paste("ftp://ftp.cdc.noaa.gov/Datasets/ncep.reanalysis.derived/",
@@ -881,7 +881,7 @@ pet_ltm.nc <- nc_open("extdata/pevpr.sfc.mon.ltm.nc")
 @
 
 \begin{warningbox}
-For portability \pgrmname{NetCDF} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
+For portability, \pgrmname{NetCDF} files should be downloaded in binary mode, setting \code{mode = "wb"}, which is required under \osname{MS-Windows}.
 .
 \end{warningbox}
 \index{importing data!remote connections|)}
@@ -901,7 +901,7 @@ citation(package = "jsonlite")
 We give here a simple example using a module from the \href{http://www.yoctopuce.com/}{YoctoPuce} family using a software hub running locally. We retrieve logged data from a YoctoMeteo module.
 
 \begin{infobox}
-This example is not run, and needs setting the configuration of the YoctoPuce module beforehand. Fully reproducible examples, including configuration instructions, will be included in a future revision of the manuscript.
+This example needs setting the configuration of the YoctoPuce module beforehand. Fully reproducible examples, including configuration instructions, will be provided online.
 \end{infobox}
 
 Here we use function \Rfunction{fromJSON()} from package \pkgname{jsonlite} to retrieve logged data from one sensor.
@@ -914,7 +914,7 @@ Meteo01.df <-
 str(Meteo01.df, max.level = 2)
 @
 
-The minimum, mean and maximum values for each logging interval, need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
+The minimum, mean, and maximum values for each logging interval need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
 
 <<iot-02, eval=eval_yoctopuce>>=
 Meteo01.df[["streams"]][[which(Meteo01.df$id == "temperature")]] %.>%
@@ -937,7 +937,7 @@ full_join(temperature.df, humidity.df)
 @
 
 \begin{explainbox}
-Most YoctoPuce input modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub. As shown above it is possible to control them through the HTML server in the physical or virtual hubs. Alternatively \Rlang package \pkgname{reticulate} can be used to control YoctoPuce modules by means of the Python library giving access to their API.
+Most YoctoPuce input modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub. As shown above, it is possible to control them through the HTML server in the physical or virtual hubs. Alternatively the \Rlang package \pkgname{reticulate} can be used to control YoctoPuce modules by means of the \langname{Python} library giving access to their API.
 \end{explainbox}
 \index{importing data!physical devices|)}
 
@@ -953,7 +953,7 @@ citation(package = "DBI")
 citation(package = "RSQLite")
 @
 
-One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM) (see chapter \ref{chap:R:data}). This is an important subject, but extensive enough to be outside the scope of this book. We provide a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
+One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently, available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM) (see chapter \ref{chap:R:data}). This is an important subject, but extensive enough to be outside the scope of this book. We provide a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
 
 The additional steps compared to using \pkgname{dplyr} start with the need to establish a connection to a local or remote database. We will use \Rlang package \pkgname{RSQLite} to create a local temporary \pgrmname{SQLite} database. \pkgname{dbplyr} backends supporting other database systems are also available. We will use meteorological data from \pkgname{learnrbook} for this example.
 
@@ -995,7 +995,7 @@ unlink("./extdata", recursive = TRUE)
 \end{infobox}
 
 \section{Further reading}
-Being\index{further reading!elegant R code}\index{further reading!idiosyncracies or R} this the end of the book, I recommend as further reading the writings of \citeauthor{Burns1998} as they are full of insight. Having arrived at the end of \emph{Learn R \ldots as your mother tongue} you should read \citebooktitle{Burns1998} \autocite{Burns1998} and \citebooktitle{Burns2012} \autocite{Burns2012}. If you want to never get caught unaware by \Rlang's idiosyncracies, read also \citebooktitle{Burns2011} \autocite{Burns2011}.
+Since\index{further reading!elegant R code}\index{further reading!idiosyncracies or R} this is the end of the book, I recommend as further reading the writings of \citeauthor{Burns1998} as they are full of insight. Having arrived at the end of \emph{Learn R \ldots as your mother tongue} you should read \citebooktitle{Burns1998} \autocite{Burns1998} and \citebooktitle{Burns2012} \autocite{Burns2012}. If you want to never get caught unaware by \Rlang's idiosyncrasies, read also \citebooktitle{Burns2011} \autocite{Burns2011}.
 
 <<echo=FALSE>>=
 try(detach(package:jsonlite))
