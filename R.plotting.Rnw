@@ -192,7 +192,7 @@ While a geometry directly constructs a graphical representation of the observati
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
-  stat_smooth(geom = "line", method = "lm")
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x)
 @
 
 We haven't yet added some of the elements of the grammar described above: \emph{scales}, \emph{coordinates} and \emph{themes}. The plots were rendered anyway because these elements have defaults which are used when we do not set them explicitly. We next will see examples in which they are explicitly set. We start with a scale using a logarithmic transformation. This works like plotting by hand using graph paper with rulings spaced according to a logarithmic scale. Tick marks continue to be expressed in the original units, but statistics are applied to the transformed data. In other words, a transformed scale affects the values before they are passed to \emph{statistics}, and the linear regression will be fitted to \code{log10()} transformed $y$ values and the original $x$ values.
@@ -201,7 +201,7 @@ We haven't yet added some of the elements of the grammar described above: \emph{
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
-  stat_smooth(geom = "line", method = "lm") +
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x) +
   scale_y_log10()
 @
 
@@ -213,7 +213,7 @@ In contrast to \emph{scale limits}, \emph{coordinates}\index{grammar of graphics
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
-  stat_smooth(geom = "line", method = "lm") +
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x) +
   coord_cartesian(ylim = c(15, 25))
 @
 
@@ -223,7 +223,7 @@ The next example uses a coordinate system transformation. When the transformatio
 ggplot(data = mtcars,
        aes(x = disp, y = mpg)) +
   geom_point() +
-  stat_smooth(geom = "line", method = "lm") +
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x) +
   coord_trans(y = "log10")
 @
 
@@ -299,7 +299,7 @@ When we used in the previous section operator \code{+} to assemble the plots, we
 
 <<ggplot-objects-02>>=
 p +
-  stat_smooth(geom = "line", method = "lm")
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x)
 @
 
 \begin{playground}
@@ -311,7 +311,7 @@ p +
 
 <<ggplot-objects-info-01>>=
 my.layers <- list(
-  stat_smooth(geom = "line", method = "lm"),
+  stat_smooth(geom = "line", method = "lm", formula = y ~ x),
   scale_x_log10())
 @
 
@@ -834,7 +834,7 @@ Play with the arguments to the different parameters and with the \emph{aesthetic
 If\index{grammar of graphics!text and label geometries!repulsive} the parameter \code{check\_overlap} of \gggeom{geom\_text()} is set to \code{TRUE}, text overlap will be avoided by suppressing the text that would otherwise overlap other text.  \emph{Repulsive} versions of \gggeom{geom\_text()} and \gggeom{geom\_label()}, \gggeom{geom\_text\_repel()} and \gggeom{geom\_label\_repel()},  are available in package \pkgname{ggrepel}. These \emph{geometries} avoid overlaps by automatically repositioning the text or labels. Please read the package documentation for details of how to control the repulsion strength and direction, and the properties of the segments linking the labels to the position of their data coordinates. Nearly all aesthetics supported by \code{geom\_text()} and \code{geom\_label()} are supported by the repulsive versions. However, given that a segment connects the label or text to its anchor point, several properties of these segments can also be controlled with aesthetics or arguments.
 
 <<repel-plot-01>>=
-ggplot(data = mtcars, 
+ggplot(data = mtcars,
        aes(x = disp, y = mpg, color = factor(cyl), size = wt, label = cyl)) +
   scale_size() +
   geom_point(alpha = 1/3) +
@@ -1256,7 +1256,7 @@ As before, we generate suitable artificial data.
 
 <<histogram-plot-00>>=
 set.seed(12345)
-my.data <- 
+my.data <-
   data.frame(x = rnorm(200),
              y = c(rnorm(100, -1, 1), rnorm(100, 1, 1)),
              group = factor(rep(c("A", "B"), c(100, 100))) )
@@ -1830,7 +1830,7 @@ It is also possible to use different \code{breaks} and \code{labels} than for th
 <<axis-secondary-02, eval=eval_plots_all, echo=3:4>>=
 ggplot(data = mtcars, aes(wt, mpg)) +
   geom_point() +
-  scale_y_continuous(sec.axis = sec_axis(~ . / 2.3521458, name = expression(km / l), 
+  scale_y_continuous(sec.axis = sec_axis(~ . / 2.3521458, name = expression(km / l),
                                          breaks = c(5, 7.5, 10, 12.5)))
 @
 \index{grammar of graphics!continuous scales|)}
@@ -2100,14 +2100,14 @@ p <- ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
                      limits = c(0, 360),
                      expand = c(0, 0),
                      name = "Wind direction")
-p + stat_bin(color = "black", fill = "gray50", geom = "bar", 
+p + stat_bin(color = "black", fill = "gray50", geom = "bar",
              binwidth = 30, na.rm = TRUE) + labs(y = "Frequency")
 @
 
 For an equivalent plot, using an empirical density, we have to use \ggstat{stat\_density()} instead of \ggstat{stat\_bin()}, \gggeom{geom\_polygon()} instead of \gggeom{geom\_bar()} and change the \code{name} of the \code{y} scale.
 
 <<wind-06>>=
-p + stat_density(color = "black", fill = "gray50", 
+p + stat_density(color = "black", fill = "gray50",
                  geom = "polygon", size = 1) + labs(y = "Density")
 @
 
