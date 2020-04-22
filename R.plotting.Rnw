@@ -365,7 +365,7 @@ The argument passed to parameter \code{data} of a layer function, can be a funct
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg)) +
   geom_point(size = 4) +
-  geom_point(data = function(x){subset(x, cyl == 4)}, color = "yellow", 
+  geom_point(data = function(x){subset(x, cyl == 4)}, color = "yellow",
              size = 1.5)
 @
 
@@ -374,7 +374,7 @@ The plot default data can also be operated upon using the \pkgname{magritrr} pip
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg)) +
   geom_point(size = 4) +
-  geom_point(data = . %.>% subset(x = ., cyl == 4), color = "yellow", 
+  geom_point(data = . %.>% subset(x = ., cyl == 4), color = "yellow",
              size = 1.5)
 @
 
@@ -681,7 +681,7 @@ We here generate 100 random draws from the $F$ distribution with degrees of free
 
 <<tile-plot-01>>=
 set.seed(1234)
-randomf.df <- data.frame(F = rf(100, df1 = 5, df2 = 20),
+randomf.df <- data.frame(F.value = rf(100, df1 = 5, df2 = 20),
                          x = rep(letters[1:10], 10),
                          y = LETTERS[rep(1:10, rep(10, 10))])
 @
@@ -689,14 +689,14 @@ randomf.df <- data.frame(F = rf(100, df1 = 5, df2 = 20),
 \gggeom{geom\_tile()} requires aesthetics $x$ and $y$, with no defaults, and \code{width} and \code{height} with defaults that make all tiles of equal size filling the plotting area.
 
 <<tile-plot-02>>=
-ggplot(randomf.df, aes(x, y, fill = F)) +
+ggplot(randomf.df, aes(x, y, fill = F.value)) +
   geom_tile()
 @
 
 We can set \code{color = "gray75"} and \code{size = 1} to make the tile borders more visible as in the example below, or use a contrasting color, to better delineate the borders of the tiles. What to use will depend on whether the individual tiles add meaningful information. In cases like when rows of tiles correspond to individual genes and columns to discrete treatments, the use of contrasting tile borders is preferable. In contrast, in the case when the tiles are an approximation to a continuous surface such as measurements on a regular spatial grid, it is best to suppress the tile borders.
 
 <<tile-plot-03>>=
-ggplot(randomf.df, aes(x, y, fill = F)) +
+ggplot(randomf.df, aes(x, y, fill = F.value)) +
   geom_tile(color = "gray75", size = 1.33)
 @
 
@@ -707,7 +707,7 @@ Play with the arguments passed to parameters \code{color} and \code{size} in the
 Any continuous fill scale can be used to control the appearance. Here we show a tile plot using a gray gradient, with missing values in red.
 
 <<tile-plot-04, eval=eval_plots_all>>=
-ggplot(randomf.df, aes(x, y, fill = F) +
+ggplot(randomf.df, aes(x, y, fill = F.value) +
   geom_tile(color = "white") +
   scale_fill_gradient(low = "gray15", high = "gray85", na.value = "red")
 @
@@ -834,10 +834,8 @@ Play with the arguments to the different parameters and with the \emph{aesthetic
 If\index{grammar of graphics!text and label geometries!repulsive} the parameter \code{check\_overlap} of \gggeom{geom\_text()} is set to \code{TRUE}, text overlap will be avoided by suppressing the text that would otherwise overlap other text.  \emph{Repulsive} versions of \gggeom{geom\_text()} and \gggeom{geom\_label()}, \gggeom{geom\_text\_repel()} and \gggeom{geom\_label\_repel()},  are available in package \pkgname{ggrepel}. These \emph{geometries} avoid overlaps by automatically repositioning the text or labels. Please read the package documentation for details of how to control the repulsion strength and direction, and the properties of the segments linking the labels to the position of their data coordinates. Nearly all aesthetics supported by \code{geom\_text()} and \code{geom\_label()} are supported by the repulsive versions. However, given that a segment connects the label or text to its anchor point, several properties of these segments can also be controlled with aesthetics or arguments.
 
 <<repel-plot-01>>=
-ggplot(data = mtcars, aes(x = disp, y = mpg,
-                          color = factor(cyl),
-                          size = wt,
-                          label = cyl)) +
+ggplot(data = mtcars, 
+       aes(x = disp, y = mpg, color = factor(cyl), size = wt, label = cyl)) +
   scale_size() +
   geom_point(alpha = 1/3) +
   geom_text_repel(color = "black", size = 3,
@@ -1059,16 +1057,16 @@ fake.data <- data.frame(
   )
 @
 
-We will reuse a ``base'' scatter plot in a series of examples, so that the differences are easier to appreciate. We first add just the mean. In this case, we need to pass as an argument to \ggstat{stat\_summary()}, the \code{geom} to use, as the default one, \gggeom{geom\_pointrange()}, expects data for plotting error bars in addition to the mean. This example uses a hyphen character as the constant value of \code{shape} (see the example for \code{geom\_point()} on page \pageref{chunk:plot:point:char} on the use of digits as \code{shape}). Instead of passing \code{"mean"} as an argument to parameter \code{fun.y}, we can pass, if desired, other summary functions like \code{"median"}. In the case of these functions that return a single computed value, we pass them, or character strings with their names, as an argument to parameter \code{fun.y}.
+We will reuse a ``base'' scatter plot in a series of examples, so that the differences are easier to appreciate. We first add just the mean. In this case, we need to pass as an argument to \ggstat{stat\_summary()}, the \code{geom} to use, as the default one, \gggeom{geom\_pointrange()}, expects data for plotting error bars in addition to the mean. This example uses a hyphen character as the constant value of \code{shape} (see the example for \code{geom\_point()} on page \pageref{chunk:plot:point:char} on the use of digits as \code{shape}). Instead of passing \code{"mean"} as an argument to parameter \code{fun} (earlier called \code{fun.y}), we can pass, if desired, other summary functions like \code{"median"}. In the case of these functions that return a single computed value, we pass them, or character strings with their names, as an argument to parameter \code{fun}.
 
 <<summary-plot-02>>=
 ggplot(data = fake.data, aes(y = y, x = group)) +
   geom_point(shape = 21) +
-  stat_summary(fun.y = "mean", geom = "point", 
+  stat_summary(fun = "mean", geom = "point",
                color = "red", shape = "-", size = 10)
 @
 
-To pass as an argument a function that returns a central value like the mean plus confidence or other limits, we use parameter \code{fun.data} instead of \code{fun.y}. In the next example we add means and confidence intervals for $p = 0.95$ (the default) assuming normality.
+To pass as an argument a function that returns a central value like the mean plus confidence or other limits, we use parameter \code{fun.data} instead of \code{fun}. In the next example we add means and confidence intervals for $p = 0.95$ (the default) assuming normality.
 
 <<summary-plot-04, eval=eval_plots_all, echo=3>>=
 ggplot(data = fake.data, aes(y = y, x = group)) +
@@ -1101,7 +1099,7 @@ Finally, we plot the means in a scatter plot, with the observations superimposed
 
 <<summary-plot-09, eval=eval_plots_all>>=
 ggplot(data = fake.data, aes(y = y, x = group)) +
-  stat_summary(fun.y = "mean", geom = "point",
+  stat_summary(fun = "mean", geom = "point",
                fill = "white", color = "black") +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "errorbar",
@@ -1113,14 +1111,14 @@ We can plot means, or other summaries, by group mapped to \code{x} (\code{class}
 
 <<summary-plot-09a>>=
 ggplot(mpg, aes(class, hwy)) +
-  stat_summary(geom = "col", fun.y = mean)
+  stat_summary(geom = "col", fun = mean)
 @
 
 We can easily add error bars to the column plot. We use \code{size} to make the lines of the error bars thicker. The default \emph{geometry} in \ggstat{stat\_summary()} is \gggeom{geom\_pointrange()}, so we can pass \code{"linerange"} as an argument for \code{geom} to eliminate the point.
 
 <<summary-plot-12, eval=eval_plots_all, echo=3:4>>=
 ggplot(mpg, aes(class, hwy)) +
-  stat_summary(geom = "col", fun.y = mean) +
+  stat_summary(geom = "col", fun = mean) +
   stat_summary(geom = "linerange", fun.data = "mean_se",
                size = 1, color = "red")
 @
@@ -1134,7 +1132,7 @@ The ``reverse'' syntax is also valid, as we can add the \emph{geometry} to the p
 
 <<summary-plot-10, eval=eval_plots_all>>=
 ggplot(mpg, aes(class, hwy)) +
-  geom_col(stat = "summary", fun.y = mean)
+  geom_col(stat = "summary", fun = mean)
 @
 \end{explainbox}
 \index{plots!data summaries|)}
@@ -1144,18 +1142,18 @@ ggplot(mpg, aes(class, hwy)) +
 \index{plots!smooth curves|(}
 \index{plots!fitted curves|(}
 \index{plots!statistics!smooth}
-The \emph{statistic} \ggstat{stat\_smooth()} fits a smooth curve to observations in the case when the scales for $x$ and $y$ are continuous---the corresponding \emph{geometry} \gggeom{geom\_smooth()} uses this \emph{statistic}, and differs only in how arguments are passed to formal parameters. For the first example, we use \ggstat{stat\_smooth()} with the default smoother, a spline. The type of spline is automatically chosen based on the number of observations.
+The \emph{statistic} \ggstat{stat\_smooth()} fits a smooth curve to observations in the case when the scales for $x$ and $y$ are continuous---the corresponding \emph{geometry} \gggeom{geom\_smooth()} uses this \emph{statistic}, and differs only in how arguments are passed to formal parameters. For the first example, we use \ggstat{stat\_smooth()} with the default smoother, a spline. The type of spline is automatically chosen based on the number of observations and informed by a message. The \code{formula} must be stated using the names of the $x$ and $y$ aesthetics, rather the names of the mapped variables in \code{mtcars}.
 
 <<smooth-plot-01, eval=eval_plots_all>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg)) +
-       stat_smooth()
+       stat_smooth(formula = y ~ x)
 @
 
 In most cases we will want to plot the observations as points together with the smoother. We can plot the observation on top of the smoother, as done here, or the smoother on top of the observations.
 
 <<smooth-plot-02>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg)) +
-  stat_smooth() +
+  stat_smooth(formula = y ~ x) +
   geom_point()
 @
 
@@ -1163,7 +1161,7 @@ Instead of using the default spline, we can fit a different model. In this examp
 
 <<smooth-plot-03, eval=eval_plots_all, echo = 2>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg)) +
-  stat_smooth(method="lm") +
+  stat_smooth(method = "lm", formula = y ~ x) +
   geom_point()
 @
 
@@ -1171,7 +1169,7 @@ These data are really grouped, so we map variable \code{cyl} to the \code{color}
 
 <<smooth-plot-04>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
-  stat_smooth(method = "lm") +
+  stat_smooth(method = "lm", formula = y ~ x) +
   geom_point()
 @
 
@@ -1179,11 +1177,11 @@ To obtain a single smoother for the three groups, we need to set the mapping of 
 
 <<smooth-plot-05, eval=eval_plots_all>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
-  stat_smooth(method = "lm", color = "black") +
+  stat_smooth(method = "lm", formula = y ~ x, color = "black") +
   geom_point()
 @
 
-Instead of using the default \code{formula} for a linear regression as smoother, we pass a different \code{formula} as an argument. In this example we use a polynomial of order 2 fitted by \Rfunction{lm()}.
+Instead of using the \code{formula} for a linear regression as smoother, we pass a different \code{formula} as an argument. In this example we use a polynomial of order 2.
 
 <<smooth-plot-06>>=
 ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
@@ -1258,10 +1256,10 @@ As before, we generate suitable artificial data.
 
 <<histogram-plot-00>>=
 set.seed(12345)
-my.data <-
-data.frame(x = rnorm(200),
-y = c(rnorm(100, -1, 1), rnorm(100, 1, 1)),
-group = factor(rep(c("A", "B"), c(100, 100))) )
+my.data <- 
+  data.frame(x = rnorm(200),
+             y = c(rnorm(100, -1, 1), rnorm(100, 1, 1)),
+             group = factor(rep(c("A", "B"), c(100, 100))) )
 @
 
 We could have relied on the default number of bins automatically computed by the \ggstat{stat\_bin()} statistic, however, we here set it to 15 with \code{bins = 15}. It is important to remember that in this case no variable in \code{data} is mapped onto the \code{y} \emph{aesthetic}.
@@ -1376,7 +1374,7 @@ ggplot(my.data, aes(group, y)) +
   stat_boxplot()
 @
 
-As with other \emph{statistics}, their appearance obeys both the usual \emph{aesthetics} such as \code{color}, and parameters specific to this type of visual representation: \code{outlier.color}, \code{outlier.color}, \code{outlier.fill}, \code{outlier.shape}, \code{outlier.size}, \code{outlier.stroke} and \code{outlier.alpha}, which affect the outliers in a way similar to the equivalent \code{aethetics} in \code{geom\_point()}. The shape and width of the ``box'' can be adjusted with \code{notch}, \code{notchwidth} and \code{varwidth}. Notches in a boxplot serve a similar role for comparing medians as confidence limits serve when comparing means.
+As with other \emph{statistics}, their appearance obeys both the usual \emph{aesthetics} such as \code{color}, and parameters specific to this type of visual representation: \code{outlier.color}, \code{outlier.fill}, \code{outlier.shape}, \code{outlier.size}, \code{outlier.stroke} and \code{outlier.alpha}, which affect the outliers in a way similar to the equivalent \code{aethetics} in \code{geom\_point()}. The shape and width of the ``box'' can be adjusted with \code{notch}, \code{notchwidth} and \code{varwidth}. Notches in a boxplot serve a similar role for comparing medians as confidence limits serve when comparing means.
 
 <<bw-plot-02>>=
 ggplot(my.data, aes(group, y)) +
@@ -1520,7 +1518,7 @@ p + facet_wrap(facets = vars(cyl), nrow = 2)
 The example below (plot not shown), is similar to the earlier one for \code{facet\_grid}, but faceting according to two factors with \code{facet\_wrap()} along a single wrapped row of panels.
 
 <<facets-15, eval=eval_plots_all>>=
-p + facet_wrap(facets = vars(vs, am), nrow=2, labeller = label_both)
+p + facet_wrap(facets = vars(vs, am), nrow = 2, labeller = label_both)
 @
 
 <<echo=FALSE>>=
@@ -1829,10 +1827,11 @@ ggplot(data = mtcars, aes(wt, mpg)) +
 
 It is also possible to use different \code{breaks} and \code{labels} than for the main axes, and to provide a different \code{name} to be used as a secondary axis label.
 
-<<axis-secondary-02, eval=eval_plots_all, echo=3>>=
+<<axis-secondary-02, eval=eval_plots_all, echo=3:4>>=
 ggplot(data = mtcars, aes(wt, mpg)) +
   geom_point() +
-  scale_y_continuous(sec.axis = sec_axis(~ ., name = "y", breaks = c()))
+  scale_y_continuous(sec.axis = sec_axis(~ . / 2.3521458, name = expression(km / l), 
+                                         breaks = c(5, 7.5, 10, 12.5)))
 @
 \index{grammar of graphics!continuous scales|)}
 
@@ -1891,7 +1890,7 @@ opts_chunk$set(opts_fig_narrow)
 @
 <<scale-discrete-10>>=
 ggplot(mpg, aes(class, hwy)) +
-  stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
+  stat_summary(geom = "col", fun = mean, na.rm = TRUE) +
   scale_x_discrete(limits = c("compact", "subcompact", "midsize"),
                    labels = c("COMPACT", "SUBCOMPACT", "MIDSIZE"))
 @
@@ -1900,7 +1899,7 @@ If, as in the previous example, only the case of character strings needs to be c
 
 <<scale-discrete-10a, eval=eval_plots_all, echo=3:4>>=
 ggplot(mpg, aes(class, hwy)) +
-  stat_summary(geom = "col", fun.y = mean, na.rm = TRUE) +
+  stat_summary(geom = "col", fun = mean, na.rm = TRUE) +
   scale_x_discrete(limits = c("compact", "subcompact", "midsize"),
                    labels = toupper)
 @
@@ -1909,7 +1908,7 @@ Alternatively, we can change the order of the columns in the plot by reordering 
 
 <<scale-discrete-11, eval=eval_plots_all>>=
 ggplot(mpg, aes(reorder(x = factor(class), X = hwy, FUN = mean), hwy)) +
-  stat_summary(geom = "col", fun.y = mean)
+  stat_summary(geom = "col", fun = mean)
 @
 \index{grammar of graphics!discrete scales|)}
 <<echo=FALSE, include=FALSE>>=
@@ -2094,35 +2093,27 @@ Wind rose plots are frequently histograms or density plots drawn on a polar syst
 Here we plot a circular histogram of wind directions with 30-degree-wide bins. We use \ggstat{stat\_bin()}. The counts represent the number of minutes during 24~h when the wind direction was within each bin.
 
 <<wind-05>>=
-ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
+p <- ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
   coord_polar() +
-  stat_bin(color = "black", fill = "gray50", geom = "bar",
-           binwidth = 30, na.rm = TRUE) +
-  scale_y_continuous(name = "Frequency") +
   scale_x_continuous(breaks = c(0, 90, 180, 270),
                      labels = c("N", "E", "S", "W"),
                      limits = c(0, 360),
                      expand = c(0, 0),
                      name = "Wind direction")
+p + stat_bin(color = "black", fill = "gray50", geom = "bar", 
+             binwidth = 30, na.rm = TRUE) + labs(y = "Frequency")
 @
 
-For an equivalent plot, using an empirical density, we have to use \ggstat{stat\_density()} instead of \ggstat{stat\_bin()} and change the \code{name} of the \code{y} scale.
+For an equivalent plot, using an empirical density, we have to use \ggstat{stat\_density()} instead of \ggstat{stat\_bin()}, \gggeom{geom\_polygon()} instead of \gggeom{geom\_bar()} and change the \code{name} of the \code{y} scale.
 
-<<wind-06,echo=FALSE>>=
-ggplot(viikki_d29.dat, aes(WindDir_D1_WVT))  +
-  coord_polar() +
-  stat_density(color = "black", fill = "gray50", size = 1, na.rm = TRUE) +
-  scale_y_continuous(name = "Density") +
-  scale_x_continuous(breaks = c(0, 90, 180, 270),
-                     labels = c("N", "E", "S", "W"),
-                     limits = c(0, 360),
-                     expand = c(0, 0),
-                     name = "Wind direction")
+<<wind-06>>=
+p + stat_density(color = "black", fill = "gray50", 
+                 geom = "polygon", size = 1) + labs(y = "Density")
 @
 
 As the final wind-rose plot example, we do 2D density plot with facets added with \Rfunction{facet\_wrap()} to have separate panels for AM and PM. This plot uses fill to describe the density of observations for different combinations wind directions and speeds, the radius ($y$ \emph{aesthetic}) to represent wind speeds and the angle ($x$ \emph{aesthetic}) to represent wind direction.
 
-<<>>=
+<<echo=FALSE>>=
 opts_chunk$set(opts_fig_very_wide)
 @
 
