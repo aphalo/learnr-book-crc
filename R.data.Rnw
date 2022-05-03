@@ -226,14 +226,14 @@ How can \emph{pipes} exist within a single \Rlang script? When chaining function
 
 What do pipes achieve in \Rlang scripts? They relieve the user from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Pipes usually improve readability of scripts by allowing more concise code.
 
-Currently, two main implementations of pipes are available as \Rlang extensions, in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}.
+Currently, two main implementations of pipes are available as \Rlang extensions, in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr} and since version 4.1.0 R has pipes as part of the language.
 
-\subsection{\pkgname{magrittr}}
-\index{pipes!tidyverse|(}
+
+\subsection{Base R}
+\index{pipes!base R|(}
 \index{pipe operator}
-One set of operators needed to build pipes of \Rlang functions is implemented in package \pkgname{magrittr}. This implementation is used in the \pkgname{tidyverse} and the pipe operator re-exported by package \pkgname{dplyr}.
-
-We start with a toy example first written using separate steps and normal \Rlang syntax
+We describe first R's pipe syntax based on R 4.2.0.
+We start with a toy example first written using separate steps and traditional \Rlang syntax
 
 <<pipes-x02>>=
 data.in <- 1:10
@@ -242,73 +242,150 @@ data.out <- sum(data.tmp)
 rm(data.tmp) # clean up!
 @
 
-next using nested function calls still using normal \Rlang syntax
+next using nested function calls still using traditional \Rlang syntax
 
 <<pipes-x03>>=
 data.out <- sum(sqrt(data.in))
 @
 
-written as a pipe using the chaining operator from package \pkgname{magrittr}.
+written as a pipe using \Roperator{|>}, the chaining operator from current R.
+
+<<pipes-x03a>>=
+data.in |> sqrt() |> sum() -> data.out
+@
+
+\begin{explainbox}
+The \Roperator{|>} operator from base \Rlang takes two operands. The value returned by the \emph{lhs} (left-hand side) operand, which can be any \Rlang expression, is passed by default as the first argument to the \emph{rhs} operand, which must be a function accepting at least one argument. Consequently, in using this simple syntax, the function in the \emph{rhs} must have a suitable signature for the pipe to work. However, it is possible to pass piped arguments to a function by name to any parameter, including the first one, using an underscore (\code{\_}) as placeholder.
+
+Some base \Rlang functions like \code{subset()} have a signature that is natural for use in pipes by implicitly passing the piped value as argument to its first formal parameter. Other functions like \code{assign()} in many uses we would like to pass the piped value as argument to parameters other than the first. In such cases we can use \code{\_} as a placeholder and pass it by name. Alternatively, we can define a wrapper function, with the desired order for the formal parameters.
+
+<<pipes-box-wrapper>>=
+value_assign <- function(value, x, ...) {
+  assign(x = x, value = value, ...)
+}
+@
+
+\end{explainbox}
+
+\index{pipes!base R|)}
+
+\subsection{\pkgname{magrittr}}
+\index{pipes!tidyverse|(}
+\index{pipe operator}
+Another set of operators for constructing pipes of \Rlang functions is implemented in package \pkgname{magrittr} and its availability preceded the native \Rlang pipe by a few years. This implementation is used in the \pkgname{tidyverse}. The pipe operator defined in package \pkgname{magrittr} is imported and re-exported by package \pkgname{dplyr}.
+
+The same example as in the previous section, now written as a pipe using \Roperator{\%>\%}, the pipe operator from package \pkgname{magrittr}.
 
 <<pipes-x04>>=
 data.in %>% sqrt() %>% sum() -> data.out
 @
 
-\begin{explainbox}
-The \Roperator{\%>\%} from package \pkgname{magrittr} takes two operands. The value returned by the \emph{lhs} (left-hand side) operand, which can be any \Rlang expression, is passed as first argument to the \emph{rhs} operand, which must be a function accepting at least one argument. Consequently, in this implementation, the function in the \emph{rhs} must have a suitable signature for the pipe to work implicitly as usually used. However, it is possible to pass piped arguments to a function by name or to other parameters than the first one using a dot (\code{.}) as placeholder.
-
-Some base \Rlang functions like \code{subset()} have a signature that is suitable for use in \pkgname{magrittr} pipes using implicit passing of the piped value to the first argument, while others such as \code{assign()} will not. In such cases we can use \code{.} as a placeholder and pass it as an argument, or, alternatively, define a wrapper function to change the order of the formal parameters in the function signature.
-\end{explainbox}
-
-Package \pkgname{magrittr} provides additional pipe operators, such as ``tee'' (\Roperator{\%T>\%}) to create a branch in the pipe, and \Roperator{\%<>\%} to apply the pipe by reference. These operators are less frequently used than \Roperator{\%>\%}.
+Package \pkgname{magrittr} provides additional pipe operators, such as ``tee'' (\Roperator{\%T>\%}) to create a branch in the pipe, and \Roperator{\%<>\%} to apply the pipe by reference. These operators are much less frequently used than \Roperator{\%>\%}.
 \index{pipes!tidyverse|)}
 
 \subsection{\pkgname{wrapr}}
 \index{pipes!wrapr|(}
 \index{dot-pipe operator}
-The \Roperator{\%.>\%}, or ``dot-pipe'' operator from package \pkgname{wrapr}, allows expressions both on the rhs and lhs, and enforces the use of the dot (\code{.}), as placeholder for the piped object.
+The \Roperator{\%.>\%}, or ``dot-pipe'', operator from package \pkgname{wrapr}, allows expressions both on the rhs and lhs, and \emph{enforces the use of the dot} (\code{.}), as placeholder for the piped object.
 
 Rewritten using the dot-pipe operator, the pipe in the previous chunk becomes
 
 <<pipes-x05>>=
 data.in %.>% sqrt(.) %.>% sum(.) -> data1.out
 @
-However, the same code can use the pipe operator from \pkgname{magrittr}.
+
+However, as operator \Roperator{\%>\%} from \pkgname{magrittr} recognizes the \code{.} placeholder without enforcing its use, the code below where \Roperator{\%.>\%} was replaced by \Roperator{\%>\%} returns the same value as that above.
 
 <<pipes-x05a>>=
 data.in %>% sqrt(.) %>% sum(.) -> data2.out
 all.equal(data1.out, data2.out)
 @
 
-If needed or desired, named arguments are supported with the dot-pipe operator resulting in the expected behavior.
+To use operator \Roperator{|>} from \Rlang, we need to edit the code using a different placeholder (\code{\_}) and passing it as argument to parameters by name in the function calls on the \textit{rhs}.
 
-<<pipes-x06>>=
-data.in %.>% assign(value = ., x = "data3.out")
-all.equal(data.in, data3.out)
-@
-
-In contrast, the pipe operator silently and unexpectedly fails to create the variable for the same example.
-
-<<pipes-x06a>>=
-data.in %>% assign(value = ., x = "data4.out")
-exists("data4.out")
-@
-
-The dot-pipe operator allows us to use \code{.} in expressions as shown below, while \Roperator{\%>\%} fails with an error (not shown).
-
-<<pipes-x07>>=
-data.in %.>% (2 + .^2) %.>% assign("data1.out", .)
+<<pipes-x05b>>=
+data.in |> sqrt(x = _) |> sum(x = _) -> data3.out
+all.equal(data1.out, data3.out)
 @
 
 \begin{explainbox}
-In conclusion, \Rlang syntax for expressions is preserved when using the dot-pipe operator, with the only caveat that because of the higher precedence of the \Roperator{\%.>\%} operator, we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses.
+The design of R's native pipes has benefited from the experience gathered by earlier implementations and being now part the language, we can expect it to become the reference one once its implementation is stable. The designers of the three implementations have to some extent disagreed in their decisions. Consequently, some differences are more than aesthetic.
+
+The syntax of operators \Roperator{|>} and \Roperator{\%>\%} is not identical. With R's \Roperator{|>} the placeholder \code{\_} can be only passed to parameters by name, while with \pkgname{magrittr}'s \Roperator{\%>\%} the placeholder \code{.} can be used to pass arguments both by name and by position (as of R 4.2.0). With operator \Roperator{\%.>\%} the use of the placeholder \code{.} is mandatory, and it can be passed by name of by position to the function call on the \textit{rhs}.
+
+In the case of R, the pipe is conceptually a substitution with no alteration of the syntax or evaluation order. R's native pipes requires, consistently with \Rlang in all other situations, that functions that are to be evaluated use the parenthesis syntax, while \pkgname{magrittr} allows the parentheses to be missing when the piped argument is the only one passed to the function call on \textit{rhs}.
+
+<<pipes-x04a>>=
+data.in %>% sqrt %>% sum -> data.out
+@
 \end{explainbox}
 
-Under-the-hood, the implementations of \Roperator{\%>\%} and \Roperator{\%.>\%} are very different, with \Roperator{\%.>\%} usually having better performance.
+\begin{warningbox}
+In some situation the semantics of the operator \Roperator{\%>\%} from package \pkgname{magrittr} can behave unexpectedly. One example is attempting to use \Rfunction{assign()} in a pipe.
 
-In the rest of the book we will exclusively use \emph{dot pipes} in examples to ensure easier understanding as they avoid implicit (''invisible'') passing of arguments and impose fewer restrictions on the syntax that can be used.
+<<pipes-x06>>=
+data.in |> assign(x = "data4.out", value = _)
+all.equal(data.in, data4.out)
+@
 
-Although pipes can make scripts visually very different from the use of assignments of intermediate results to variables, from the point of view of data analysis what makes pipes most convenient to use are some of the new classes, functions, and methods defined in \pkgnameNI{tidyr}, \pkgnameNI{dplyr}, and other packages from the \pkgname{tidyverse}.
+Named arguments are also supported with the dot-pipe operator from \pkgname{wrapr} resulting in the expected behavior.
+
+<<pipes-x06a>>=
+data.in %.>% assign(x = "data5.out", value = .)
+all.equal(data.in, data5.out)
+@
+
+In contrast, the pipe operator (\Roperator{\%>\%}) from package \pkgname{magrittr} silently and unexpectedly fails to create the variable for the same example. This can be a problem when the name passed as argument to \Rfunction{assign()}'s parameter \code{x} is a computed value, otherwise it is possible to use the \Roperator{->} to assign the value.
+
+<<pipes-x06b>>=
+data.in %>% assign(x = "data6.out", value = .)
+if (exists("data6.out")) {
+  all.equal(data.in, data6.out)
+} else {
+  print("'data6.out' not found!")
+}
+@
+\end{warningbox}
+
+
+The \index{pipes!expressions in rhs} dot-pipe operator \Roperator{\%.>\%} from \pkgname{wrapr} allows us to use the placeholder \code{.} in expressions on its \emph{rhs} in addition to in function calls
+
+<<pipes-x07>>=
+data.in %.>% (.^2) -> data7.out
+@
+
+meanwhile operators \Roperator{|>} and \Roperator{\%>\%} do not support expressions, only function call syntax on their \textit{rhs}, forcing us to call operators with parenthesis syntax and named arguments
+
+<<pipes-x07a>>=
+data.in |> `^`(e1 = _, e2 = 2) -> data8.out
+all.equal(data7.out, data8.out)
+@
+
+or
+
+<<pipes-x07b>>=
+data.in %>% `^`(e1 = ., e2 = 2) -> data9.out
+all.equal(data7.out, data9.out)
+@
+
+In conclusion, \Rlang syntax for expressions is preserved when using the dot-pipe operator, with the only caveat that because of the higher precedence of the \Roperator{\%.>\%} operator, we need to ``protect'' bare expressions containing other operators by enclosing them in parentheses. In the examples above we showed a simple expression so that could be easily converted into a function call. The \Roperator{\%.>\%} operator supports also more complex expressions, even with multiple uses of the placeholder.
+
+<<pipes-x07c>>=
+data.in %.>% (.^2 + sqrt(. + 1))
+@
+
+Under-the-hood, the implementations of operators  \Roperator{|>} and \Roperator{\%>\%} and \Roperator{\%.>\%} are different, with \Roperator{|>} expected to have the best performance, followed by \Roperator{\%.>\%} and \Roperator{\%>\%} being slowest. As implementations evolve performance depends on versions. However, \Roperator{|>} being part of \Rlang is likely to remain the fastest.
+
+Being part of the \Rlang language, \Roperator{|>} will remain available and backwards compatible, while packages could be abandoned or redesigned by their maintainers. For this reason, for scripts or code expected to be reused, and not requiring compatibility with \Rlang versions before 4.2.0, new code would benefit from using this new operator.
+
+In the rest of the book when possible we will use \emph{R's pipes} and otherwise \emph{dot pipes} and avoid implicit (''invisible'') passing of arguments in examples to ensure easier understanding. In most cases the examples can be easily rewritten using the older operator \Roperator{\%>\%}.
+
+Pipes can make scripts visually more compact than the use of assignments of intermediate results to temporary variables. What makes pipes most convenient is the availability of classes, functions, and methods defined in \pkgnameNI{tidyr}, \pkgnameNI{dplyr}, and other packages from the \pkgname{tidyverse}. Debugging pipes usually requires dividing them, with one approach being the insertion of calls to \Rfunction{print()}. This is possible, because \Rfunction{print()} returns its input invisibly in addition to displaying it.
+
+<<pipes-x08>>=
+data.in |> print() |> sqrt() |> print() |> sum() |> print() -> data10.out
+all.equal(data.out, data10.out)
+@
 \index{pipes!wrapr|)}
 \index{chaining statements with \emph{pipes}|)}
 
@@ -328,12 +405,12 @@ We use in examples below the \Rdata{iris} data set included in base \Rlang. Some
 iris.tb <- as_tibble(iris)
 @
 
-Function \Rfunction{gather()} converts data from wide form into long form (or ''tidy''). We use \code{gather} to obtain a long-form tibble. By comparing \code{iris.tb} with \code{long\_iris.tb} we can appreciate how \Rfunction{gather()} reshaped its input.
+Function \Rfunction{pivot\_longer()} converts data from wide form into long form (or ''tidy''). We use \code{pivot\_longer()} to obtain a long-form tibble. By comparing \code{iris.tb} with \code{long\_iris.tb} we can appreciate how \Rfunction{pivot\_longer()} reshaped its input.
 
 <<tidy-tibble-01>>=
 head(iris.tb, 2)
-iris.tb %.>%
-  gather(., key = part, value = dimension, -Species) -> long_iris.tb
+iris.tb |>
+  gather(data = _, key = part, value = dimension, -Species) -> long_iris.tb
 long_iris.tb
 @
 
