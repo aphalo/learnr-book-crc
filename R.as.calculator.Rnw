@@ -64,7 +64,7 @@ If you are in doubt about how precedence rules work, you can add parentheses to 
 (1 + 2) * 3
 @
 
-The number of opening (left side) and closing (right side) parentheses must be balanced, and they must be located so that each enclosed term is a valid mathematical expression. For example, while \code{(1 + 2) * 3} is valid, \code{(1 +) 2 * 3} is a syntax error as \code{1 +} is incomplete and cannot be calculated.
+The number of opening (left side) and closing (right side) parentheses must be balanced, and they must be located so that each enclosed term is a valid mathematical expression, i.e., code that can be evaluated to return a value, a value that can be inserted in place of the expression enclosed in parenthesis before evaluating the remaining of the expression. For example, \code{(1 + 2) * 3} after evaluating \code{(1 + 2)} becomes \code{3 * 3} yielding \code{9}. In contrast, \code{(1 +) 2 * 3} is a syntax error as \code{1 +} is incomplete and does not yield a number.
 
 \begin{playground}
 Here results are not shown. These are examples for you to type at the command prompt. In general you should not skip them, as in many cases, as with the statements highlighted with comments in the code chunk below, they have something to teach or demonstrate. You are strongly encouraged to \emph{play}, in other words, create new variations of the examples and execute them to explore how \Rlang works.\qRfunction{sqrt()}\qRfunction{sin()}\qRfunction{log(), log10(), log2()}\qRfunction{exp()}
@@ -87,7 +87,7 @@ exp(1)
 
 \end{playground}
 
-Variables\index{variables}\index{assignment} are used to store values. After we \emph{assign} a value to a variable, we can use the name of the variable in place of the stored value. The ``usual'' assignment operator is \Roperator{<-}. In \Rlang, all names, including variable names, are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be long in \Rlang although it is not a good idea to use very long names. Here I am using very short names, something that is usually also a very bad idea. However, in the examples in this chapter where the stored values have no connection to the real world, simple names emphasize their abstract nature. In the chunk below, \code{a} and \code{b} are arbitrarily chosen variable names; I could have used names like \code{my.variable.a} or \code{outside.temperature} if they had been useful to convey information.
+Variables\index{variables}\index{assignment} are used to store values. After we \emph{assign} a value to a variable, we can use in our code the name of the variable in place of the stored value. The ``usual'' assignment operator is \Roperator{<-}. In \Rlang, all names, including variable names, are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be long in \Rlang although it is not a good idea to use very long names. Here I am using very short names, something that is usually also a very bad idea. However, in the examples in this chapter where the stored values have no connection to the real world, simple names emphasize their abstract nature. In the chunk below, \code{a} and \code{b} are arbitrarily chosen variable names; I could have used names like \code{my.variable.a} or \code{outside.temperature} if they had been useful to convey information.
 
 <<numbers-2>>=
 a <- 1
@@ -108,7 +108,7 @@ a + 1
 print(a + 1)
 @
 \begin{playground}
-There are some syntactically legal statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The ``backwards'' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
+There are some syntactically legal assignment statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The ``backwards'' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
 
 <<numbers-3, tidy=FALSE, eval=eval_playground>>=
 a <- b <- c <- 0.0
@@ -218,7 +218,7 @@ a + 1:4
 @
 
 \begin{explainbox}
-A useful thing to know: a vector can have length zero. Vectors of length zero may seem at first sight quite useless, but in fact they are very useful. They allow the handling of ``no input'' or ``nothing to do'' cases as normal cases, which in the absence of vectors of length zero would require to be treated as special cases. I describe here a useful function, \Rfunction{length()} which returns the length of a vector or list.
+A useful thing to know: a vector can have length zero. Vectors of length zero may seem at first sight quite useless, but in fact they are very useful. They allow the handling of ``no input'' or ``nothing to do'' cases as normal cases, which in the absence of vectors of length zero would require to be treated as special cases. Constructors for built in classes like \Rfunction{numeric()} return vectors of a length given by their first argument, which defaults to zero. I describe here a useful function, \Rfunction{length()} which returns the length of a vector or list.
 
 <<>>=
 z <- numeric(0)
@@ -226,7 +226,14 @@ z
 length(z)
 @
 
-Vectors and lists of length zero, behave in most cases, as expected---e.g.,  they can be concatenated as shown here.
+<<>>=
+z1 <- numeric()
+z1
+z2 <- numeric(length = 0)
+z2
+@
+
+Vectors and lists of length zero, behave in most cases, as expected---e.g., they can be concatenated as shown here.
 
 <<>>=
 length(c(a, numeric(0), b))
@@ -240,7 +247,7 @@ log(numeric(0))
 5 + numeric(0)
 @
 
-Even when of length zero, vectors do have to belong to a class acceptable for the operation.
+Even when of length zero, vectors do have to belong to a class acceptable for the operation: \code{5 + character(0)} is an error.
 
 \end{explainbox}
 
@@ -891,7 +898,7 @@ a[3] <- b[2]
 \index{vectors!indexing|(}\index{vectors!member extraction}
 If you have read earlier sections of this chapter, you already know how to create a vector. \Rlang's vectors are equivalent to what would be written in mathematical notation as $x_{1\ldots n} = a_1, a_2, \ldots, a_i, \ldots, a_n$, they are not the equivalent to the vectors, common in Physics, which are symbolized with an arrow as an ``accent,'' such as $\overrightarrow{\mathbf{F}}$.
 
-In this section we are going to see how to extract or retrieve, replace, and move elements such as $a_2$ from a vector. Elements are extracted using an index enclosed in single square brackets. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. What in maths would be $a_i$ for a vector $a_{1\ldots n}$, in \Rpgrm is represented as \code{a[i]} and the whole vector as earlier seen as \code{a}.
+In this section we are going to see how to extract or retrieve, replace, and move elements such as $a_2$ from a vector. Elements are extracted using an index enclosed in single square brackets. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. We here use a vector of characters to make it clear the distinction between contents of the vector from the numerical indexes. What in maths notation would be $a_i$ for a vector $a_{1\ldots n}$, in \Rpgrm is represented as \code{a[i]} and the whole vector as earlier seen as \code{a}.
 
 <<vectors-1>>=
 a <- letters[1:10]
@@ -910,7 +917,7 @@ In \Rlang, indexes always start from one, while in some other programming langua
 It is possible to extract a subset of the elements of a vector in a single operation, using a vector of indexes. The positions of the extracted elements in the result (``returned value'') are determined by the ordering of the members of the vector of indexes---easier to demonstrate than to explain.
 
 <<vectors-2>>=
-a[c(3,2)]
+a[c(3, 2)]
 a[10:1]
 @
 
@@ -919,9 +926,9 @@ The length of the indexing vector is not restricted by the length of the indexed
 
 <<vectors-PG1, eval=eval_playground>>=
 length(a)
-a[c(3,3,3,3)]
+a[c(3, 3, 3, 3)]
 a[c(10:1, 1:10)]
-a[c(1,11)]
+a[c(1, 11)]
 a[11]
 @
 
@@ -1802,7 +1809,8 @@ The most direct way of changing the order of columns and/or rows in data frames 
 When using the extraction operator \Roperator{[]} on both the left-hand-side and right-hand-side to swap columns, the vectors or factors are swapped, while the names of the columns are not! The same applies to row names, which makes storing important information in them inconvenient and error prone.
 \end{warningbox}
 
-To retain the correct naming after the column swap, we need to separately swap the names of the columns.
+To retain the correspondence between column naming and column contents after swapping or rearranging the columns, we need to separately move the names of the columns. This seems counter intuitive, unless we think in terms of positions being named rather than the contents of the columns being linked to the names.
+
 <<data-frames-8>>=
 my_data_frame.df <- data.frame(A = 1:10, B = 3)
 head(my_data_frame.df, 2)
@@ -1812,7 +1820,7 @@ colnames(my_data_frame.df)[1:2] <- colnames(my_data_frame.df)[2:1]
 head(my_data_frame.df, 2)
 @
 
-Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort either columns or rows of a data frame. When we want to sort rows, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}.
+Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort rows of a data frame. In this case, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}. Function \Rfunction{order()} is very rarely useful for sorting columns of data frames as it requires a vector across columns as input. In the case of \Rclass{matrix} and \Rclass{array} this approach can be applied to any of their dimensions as all their elements homogenously belong to one class.
 
 \begin{playground}\index{data frames!ordering rows}
 The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with three different haphazard sequences of values. Call these columns \code{A}, \code{B} and \code{C}. 1) Sort the rows of the data frame so that the values in \code{A} are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of \code{A} and \code{B} without adding a new column to the data frame or storing the vector of sums in a variable. In other words, do the sorting based on sums calculated on the fly.
@@ -1840,7 +1848,7 @@ comment(a.df) <- "this is stored as a comment"
 comment(a.df)
 @
 
-Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, and methods like \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. In addition, method \Rfunction{str()} displays all components of \Rlang objects including their attributes.
+Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, and methods like \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
 
 <<attributes-02>>=
 names(a.df)
