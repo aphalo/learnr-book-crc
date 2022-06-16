@@ -183,14 +183,29 @@ Conflicts among packages can easily arise, for example, when they use the same n
 
 \section{Control of execution flow}\label{sec:script:flow:control}
 \index{control of execution flow}
-We give the name \emph{control of execution statements} to those statements that allow the execution of sections of code when a certain dynamically computed condition is \code{TRUE}. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others allow statements to be executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
+By default \Rlang statements in a script are evaluated (or executed) in the sequence they appear in the script \textit{listing} or text. We give the name \emph{control of execution constructs} to those special statements that allow us to alter this default sequence, by either skipping or repeatedly evaluating individual statements. The statements whose evaluation is controlled can be either simple or compound. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others allow statements to be executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
 
-These \emph{control of execution statements} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. \emph{Control of execution statements} allow flexibility, as they allow conditional execution  and/or repeated execution of statements. The part of the script conditionally executed can be a simple or a compound code statement providing a lot of flexibility. As we will see next, a compound statement can include multiple simple or nested compound statements.
+These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. \emph{Control of execution constructs} are a crucial part of most scripts. As we will see next, a compound statement can include multiple simple or nested compound statements.
 
 \subsection{Compound statements}
 \index{compound code statements}\index{simple code statements}
 
-First of all, we need to consider compound statements. Individual statements can be grouped into compound statements by enclosed them in curly braces.
+Individual statements can be grouped into \emph{compound statements} by enclosed them in curly braces. Conceptually is like putting several statements into a box that allows us to operate with them as an anonymous whole.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (enc) [enclosure, color = blue, fill = blue!5, below of=start, yshift=-0.85cm] {\ };
+\node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow, color = blue] (start) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (stat3);
+\draw [arrow, color = blue] (stat3) -- (stop);
+\draw [arrow, color = black] (start) -- (enc);
+\draw [arrow, color = black] (enc) -- (stop);
+\end{tikzpicture}
+\end{center}
 
 <<compound-1>>=
 print("A")
@@ -205,14 +220,35 @@ The grouping of the last two statements above is of no consequence by itself, bu
 \subsection{Conditional execution}
 \index{conditional execution}
 
-Conditional execution allows handling different values, such as negative and non-negative values, differently within a script. This is achieved by evaluating or not (i.e., switching ON and OFF) parts of a script based on the result returned by a logical expression. This expression can also be a \emph{flag}---i.e., a \code{logical} variable set manually, preferable near the top of the script. Use of flags is most useful when switching between two script behaviors depends on multiple sections of code. A frequent use case for flags is jointly enabling and disabling printing of output from multiple statements scattered in over a long script.
+Conditional execution allows handling different values, such as negative and non-negative values, differently within a script. This is achieved by evaluating or not (i.e., switching ON and OFF) parts of a script based on the result returned by a logical expression. An \Rlang expression returning a logical value can be as simple as a logical value of \code{TRUE} or \code{FALSE} stored in a variable or the result of a computation done at the time of the flow-control decision.
 
-\Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectorized and vectorized. We will start with the non-vectorized one, which is similar to what is available in most other computer programming languages. We start with toy examples demonstrating how \emph{if} and \emph{if-else} statements work. Later we will see examples closer to real use cases.
+\begin{explainbox}
+We use the name \emph{flag} for a \code{logical} variable set manually, preferably near the top of the script. Use of flags is most useful when switching between two script behaviors depends on multiple sections of code. A frequent use case for flags is jointly enabling and disabling printing of output from multiple statements scattered in over a long script.
+\end{explainbox}
+
+\Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectorized and vectorized. We will start with the non-vectorized one, which is similar to what is available in most other computer programming languages and controls the evaluation of a code statement, which can be either simple or compound.
 
 \subsubsection[Non-vectorized \texttt{if}, \texttt{else} and \texttt{switch}]{Non-vectorized \code{if}, \code{else} and \code{switch}}
 \qRcontrol{if()}\qRcontrol{if()\ldots else}%
 
-The \code{if} construct ``decides,'' depending on a \code{logical} value, whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}).
+The \code{if} construct ``decides,'' depending on a \code{logical} value, whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}). The flow chart shows how \code{if} works: \code{<statement A>} is either evaluated or skipped depending on the value of \code{<condition>}, while \code{<statement B>} is always evaluated.\label{flowchart:if}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{if (<cond.>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.2cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\code{FALSE}} (stat3);
+\draw [arrow] (stat2) |- (stat3);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{center}
+
+We start with toy examples demonstrating how \emph{if} statements work. Later we will see examples closer to real use cases.
 
 <<if-1z>>=
 flag <- TRUE
@@ -241,7 +277,28 @@ if (printing) {
 }
 @
 
-The condition passed as an argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector, however, as this condition is \emph{not} vectorized, only the first element will be used and a warning issued if longer than one.
+\begin{warningbox}
+The condition passed as an argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector of length one. As this condition is \emph{not} vectorized, a longer vector will trigger an \Rlang warning or error depending on \Rlang's version.
+\end{warningbox}
+
+The \code{if \ldots\ else} construct ``decides,'' depending on a \code{logical} value, which of two code statements is executed. The flow chart shows how \code{if} works: either \code{<statement A>} or \code{<statement B>} is evaluated and the other skipped depending on the value of \code{<condition>}, while \code{<statement C>} is always evaluated.\label{flowchart:if:else}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.7cm] {\code{if (<cond.>) else}};
+\node (stat2) [process, color = blue, fill = blue!15, left of=dec1, xshift=-3.6cm] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.6cm] {\code{<statement B>}};
+\node (stat4) [process, below of=dec1, yshift=-0.7cm] {\code{<statement C>}};
+\node (stop) [startstop, below of=stat4] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{FALSE}} (stat3);
+\draw [arrow] (stat2) |- (stat4);
+\draw [arrow] (stat3) |- (stat4);
+\draw [arrow] (stat4) -- (stop);
+\end{tikzpicture}
+\end{center}
 
 <<if-3>>=
 a <- 10.0
@@ -300,7 +357,7 @@ In the example above, we enclosed a single statement between each pair of curly 
 Play with the use of conditional execution, with both simple and compound statements, and also think how to combine \code{if} and \code{else} to select among more than two options.
 \end{playground}
 
-In \Rlang, the value returned by any compound statement is the value returned by the last simple statement executed within the compound one. This means that we can assign the value returned by an \code{if} and \code{else} statement to a variable. This style is less frequently used, but occasionally can result in easier-to-understand scripts.
+In \Rlang, the value returned by any compound statement is the value returned by the last simple statement executed within the compound one. This means that we can assign the value returned by an \code{if} and \code{else} statement to a variable. This style is less frequently used, but occasionally can result in easier-to-understand scripts.\label{chunk:if:assignment}
 
 <<if-4c>>=
 a <- 1
@@ -309,7 +366,15 @@ my.message <-
 print(my.message)
 @
 
-\begin{playground}
+\begin{explainbox}
+If the condition statement returns a value of a class other than \code{logical}, \Rlang will attempt to convert it into a logical. This is sometimes used instead of a comparison to zero, as the conversion from \code{integer} yields \code{TRUE} for all integers except zero. The code below illustrates a rather frequently used idiom for checking if there is something available to display.
+<<if-explain_conv>>=
+message <- "abc"
+if (length(message)) print(message)
+@
+\end{explainbox}
+
+\begin{advplayground}
 Study the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics.
 
 % chunk contains intentional error-triggering examples
@@ -328,31 +393,122 @@ if ("1") print("hello")
 @
 
 Hint: if you need to refresh your understanding of the type conversion rules, see section \ref{sec:calc:type:conversion} on page \pageref{sec:calc:type:conversion}.
-\end{playground}
+\end{advplayground}
 
-In addition to \Rcontrol{if()}, there is in \Rlang a \Rcontrol{switch()} statement, which we describe next. It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one. The switch statement returns a value, the value returned by the statement corresponding to the matching switch value, or the default if there is no match and a default return value has been defined in the code.
+In addition to \Rcontrol{if} and \code{if \ldots\ else}, there is in \Rlang a \Rcontrol{switch()} statement, which we describe next. It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one. While \Rcontrol{if} and \code{if \ldots\ else} allow for binary choices as they are controlled by a logical value, \Rcontrol{switch()} can control execution of many more statements. The usual way in which \Rcontrol{switch()} statement is used is by assignment of the returned value, as described as being rather unusual, but legal, for \code{if \ldots\ else} on page \pageref{chunk:if:assignment}.
+
+The switch statement returns a value, the value returned by the \Rcontrol{switch()} statement is that returned by the statement corresponding to the matching switch value, or the default (similar to \code{else}) if there is no match and a default return value has been defined. Each optional statement can be thought as a \textit{case} from a set of possible cases.\label{flowchart:switch}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{switch(<value>)}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=dec1, xshift=4cm] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (stat4) [process, color = blue, fill = blue!15, below of=stat3] {\code{<statement C>}};
+\node (stat5) [process, color = blue, fill = blue!15, below of=stat4, yshift=-0.4cm] {\code{<statement D>}};
+\node (stat6) [process, below of=stat5, xshift=4cm] {\code{<statement E>}};
+\node (stop) [startstop, below of=stat6] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 1>}} (stat2);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 2>}} (stat3);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 3>}} (stat4);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<default>}} (stat5);
+\draw [arrow] (stat2) -| (stat6);
+\draw [arrow] (stat3) -| (stat6);
+\draw [arrow] (stat4) -| (stat6);
+\draw [arrow] (stat5) -| (stat6);
+\draw [arrow] (stat6) -- (stop);
+\end{tikzpicture}
+\end{center}
+
+In the first example we use character constants saved in a variable as a condition, with the last statement with no tag being the default. Instead of the name of variable \code{my.object}, we could have used a complex expression returning a suitable \code{character} value of length one.
 
 <<>>=
 my.object <- "two"
 b <- switch(my.object,
             one = 1,
             two = 1 / 2,
-            three = 1 / 4,
+            four = 1 / 4,
+            0
+)
+b
+@
+
+Multiple condition values can share the same statement.
+
+<<>>=
+my.object <- "two"
+b <- switch(my.object,
+            one =, uno = 1,
+            two =, dos = 1 / 2,
+            four =, cuatro = 1 / 4,
+            0
+)
+b
+@
+\begin{playground}
+    Do play with the use of the switch statement. Look at the documentation for \code{switch()} using \code{help(switch)} and study the examples at the end of the help page. Explore what happens if you set \code{my.object <- "ten"}, \code{my.object <- "three"}, \code{my.object <- NA\_character\_} or  \code{my.object <- character()}. Then remove the \code{, 0} as default value, and repeat.
+\end{playground}
+
+When the expression used as a condition returns a value that is not a \code{character}, it will be interpreted as an \code{integer} index. In this case no names are used for the cases, and the last one is always interpreted as the default.
+
+<<>>=
+my.number <- 2
+b <- switch(my.number,
+            1,
+            1 / 2,
+            1 / 4,
             0
 )
 b
 @
 
 \begin{playground}
-    Do play with the use of the switch statement. Look at the documentation for \code{switch()} using \code{help(switch)} and study the examples at the end of the help page.
+    Continue playing with the use of the switch statement. Explore what happens if you set \code{my.number <- 10}, \code{my.number <- 3}, \code{my.number <- NA} or  \code{my.object <- numeric()}. Then remove the \code{, 0} as default value, and repeat.
 \end{playground}
 
-The \Rcontrol{switch()} statement can substitute for chained \code{if else} statements when all the conditions are comparisons against different constant values, resulting in more concise and clear code.
+\begin{explainbox}
+The statements for the different values of the condition in a \Rcontrol{switch()} statement can be compound statements as in the case of \code{if}, and they can even be used for a side effect. We can for example modify the example above to print a message when the default value is returned.
+<<explain-switch-01>>=
+my.object <- "ten"
+b <- switch(my.object,
+            one = 1,
+            two = 1 / 2,
+            three = 1 / 4,
+            {print("No match! Using default"); 0}
+)
+b
+@
+\end{explainbox}
+
+\begin{explainbox}
+  The \Rcontrol{switch()} statement can substitute for chained \code{if \ldots\ else} statements when all the conditions are comparisons against different constant values, resulting in more concise code. The equivalent of the first \Rcontrol{switch()} example above when written using \code{if \ldots\ else} becomes longer. Given how terse code using \Rcontrol{switch()} is, those not yet familiar with its use may find the more verbose style used below easier to understand. On the other hand, with numerous cases \Rcontrol{switch()} is easier to read.
+    
+<<explain-switch-11>>=
+my.object <- "two"
+if (my.object == "one") {
+  b <- 1
+} else if (my.object == "two") {
+  b <- 1 / 2
+} else if (my.object == "four") {
+  b <- 1 / 4
+} else {
+  b <- 0
+}
+b
+@
+
+\end{explainbox}
 
 \subsubsection[Vectorized \texttt{ifelse()}]{Vectorized \code{ifelse()}}
 \index{vectorized ifelse}
 Vectorized \emph{ifelse} is a peculiarity of the \Rlang language, but very useful for writing concise code that may execute faster than logically equivalent but not vectorized code.
-Vectorized conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector usually the result of a test (parameter \code{test}), a result vector for \code{TRUE} cases (parameter \code{yes}), and a result vector for \code{FALSE} cases (parameter \code{no}). At each index position along the vectors, the value included in the returned vector is taken from \code{yes} if \code{test} is \code{TRUE} and from \code{no} if \code{test} is \code{FALSE}. All three arguments can be any \Rlang statement returning the required vector. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will take place if they are shorter than the logical vector passed as argument to \code{test}. No recycling ever applies to \code{test}, even if \code{yes} and/or \code{no} are longer than \code{test}. It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
+Vectorized conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector usually the result of a test (parameter \code{test}), an expression to use for \code{TRUE} cases (parameter \code{yes}), and an expression to use for \code{FALSE} cases (parameter \code{no}). At each index position along the vectors, the value included in the returned vector is taken from \code{yes} if \code{test} is \code{TRUE} and from \code{no} if \code{test} is \code{FALSE}. All three arguments can be any \Rlang statement returning the required vectors. In the case of vectors passed as arguments to parameters \code{yes} and \code{no}, recycling will take place if they are shorter than the logical vector returned by the expression passed as argument to \code{test}. No recycling ever applies to \code{test}, even if \code{yes} and/or \code{no} are longer than \code{test}. 
+
+The flow chart for \Rcontrol{ifelse()} is similar to that for \code{if \ldots\ else} shown on page \pageref{flowchart:if} but applied in parallel to the individual members of vectors; e.g.\ the condition expression is evaluated at index position \code{1} controls which value will be present in the returned vector at index position \code{1}, and so on.
+
+It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
 
 <<ifelse-0>>=
 my.test <- c(TRUE, FALSE, TRUE, TRUE)
@@ -412,7 +568,24 @@ We give the name \emph{iteration} to the process of repetitive execution of a pr
 The section of computer code being executed multiple times, forms a loop (a closed path). Most loops contain a condition that determines when the flow of execution will exit the loop and continue at the next statement following the loop. In \Rlang three types of iteration loops are available: those using \Rloop{for}, \Rloop{while} and \Rloop{repeat} constructs. They differ in how much flexibility they provide with respect to the values they iterate over, and how the condition that terminates the iteration is tested. When the same algorithm can be implemented with more than one of these constructs, using the least flexible of them usually results in the easiest to understand \Rlang scripts. In \Rlang, rather frequently, explicit loops as described in this section can be replaced advantageously by calls to the \emph{apply} functions described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}.
 
 \subsubsection[\texttt{for} loops]{\code{for} loops}
-The\index{for loop}\index{iteration!for loop}\qRloop{for} most frequently used type of loop is a \code{for} loop. These loops work in \Rlang on lists or vectors of values to act upon.
+The\index{for loop}\index{iteration!for loop}\qRloop{for} most frequently used type of loop is a \code{for} loop. These loops work in \Rlang on lists or vectors of values to act upon. The implicit test for the end of the vector or list takes place at the top of the construct before the loop statement is evaluated. The flow chart is has a loop as the execution can be directed to an earlier position in the sequence of statements, allowing the same code to be evaluated multiple times.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.4cm] {\code{for (<list>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.5cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\textsl{continue}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\textsl{break}} (stat3);
+\draw [arrow, color = blue] (stat2) |- (entry);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{center}
 
 <<for-0>>=
 b <- 0
@@ -494,6 +667,24 @@ print(c)
 \subsubsection[\texttt{while} loops]{\code{while} loops}
 \Rloop{while} loops\index{iteration!while loop} are frequently useful, even if not as frequently used as \code{for} loops. Instead of a list or vector, they take a logical argument, which is usually an expression, but which can also be a variable.
 
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.1cm] {\code{while (<cond.>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=4cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\code{FALSE}} (stat3);
+\draw [arrow, color = blue] (stat2) |- (entry);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{center}
+
+
 <<while-2>>=
 a <- 2
 while (a < 50) {
@@ -535,6 +726,23 @@ Explain why a second \code{print(a)} has been added before \code{while()}. Hint:
 
 \subsubsection[\texttt{repeat} loops]{\code{repeat} loops}
 The \Rloop{repeat}\index{iteration!repeat loop} construct is less frequently used, but adds flexibility as termination will always depend on a call to \Rcontrol{break()}, which can be located anywhere within the compound statement that forms the body of the loop. To achieve conditional end of iteration, function \Rcontrol{break()} must be called, as otherwise, iteration in a \code{repeat} loop will not stop.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [process, color = blue, fill = blue!15, below of=start, yshift=-0.3cm] {\code{repeat}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.3cm] {\code{<statement A>}};
+\node (stat3) [process, below of=stat2] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {} (stat2);
+\draw [arrow, color=blue] (stat2) |- node[anchor=south east] {\textsl{continue}} (entry);
+\draw [arrow, color=blue] (stat2) -- node[anchor=west] {\code{break()}} (stat3);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{center}
 
 <<repeat-1>>=
 a <- 2
@@ -689,6 +897,10 @@ on.exit(file.remove("temp.file"))
 
 \emph{Apply}\index{apply functions}\index{loops!faster alternatives} functions apply a function passed as an argument to parameter \code{FUN} or equivalent, to elements in a collection of \Rlang objects passed as an argument to parameter \code{X} or equivalent. Collections to which \code{FUN} is to be applied can be vectors, lists, data frames, matrices or arrays. As long as the operations to be applied are \emph{independent---i.e., the results from one iteration are not used in another iteration---} apply functions can replace \code{for}, \code{while} or \code{repeat} loops.
 
+\begin{explainbox}
+Conceptually, \code{for}, \code{while} and \code{repeat} loops are interpreted as controlling sequential evaluation of program statements. In contrast, \Rlang's \emph{apply} functions are, conceptually, thought as evaluating a function in parallel the with different members of their input. So, while in loops the results of earlier iterations through a loop can be stored in variables and used in subsequent iterations, this is not possible in the case of \emph{apply} functions.
+\end{explainbox}
+
 The different \emph{apply} functions in base \Rlang differ in the class of the values they accept for their \code{X} parameter, the class of the object they return and/or the class of the value returned by the applied function. \Rloop{lapply()} and \Rloop{sapply()} expect a \code{vector} or \code{list} as an argument passed through \code{X}. \Rloop{lapply()} returns a \code{list} or an \code{array}; and \Rloop{vapply()} always \emph{simplifies} its returned value into a vector, while \Rloop{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply an \Rlang function that returns a value of the same or a different class as its argument. In the case of \Rloop{apply()} and \Rloop{lapply()} not even the length of the values returned for each member of the collection passed as an argument, needs to be consistent. In summary, \Rloop{apply()} is used to apply a function to the elements along a dimension of an object that has two or more \emph{dimensions}, and \Rloop{lapply()} and \Rloop{sapply()} are used to apply a function to the members of a vector or list. \Rloop{apply()} returns an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function.
 
 \subsection{Applying functions to vectors and lists}
@@ -696,7 +908,7 @@ The different \emph{apply} functions in base \Rlang differ in the class of the v
 We first exemplify the use of \Rloop{lapply()}, \Rloop{sapply()} and \Rloop{vapply()}. In the chunks below we apply a user-defined function to a vector.
 
 \begin{warningbox}
-A constraint on the function to be applied is that the member object will be always passed as an argument to the first parameter of the applied function.
+A constraint is that the individual member objects in the list or vector passed as argument to the \code{x} parameter of \textit{apply} functions will be always passed as a positional argument to the first formal parameter of the applied function, i.e., the function passed as argument to \code{FUN} must be compatible with this approach.
 \end{warningbox}
 
 <<apply-01>>=
