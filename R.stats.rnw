@@ -44,12 +44,12 @@ summary(x)
   In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
 \end{playground}
 
-By default, if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.omit} allows us to override this default behavior by requesting any \code{NA} in the input to be omitted (or discarded) before calculation,
+By default, if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.rm} allows us to override this default behavior by requesting any \code{NA} in the input to be removed (or discarded) before calculation,
 
 <<stat-fun-2>>=
 x <- c(1:20, NA)
 mean(x)
-mean(x, na.omit = TRUE)
+mean(x, na.rm = TRUE)
 @
 
 \section{Distributions}
@@ -241,14 +241,40 @@ Repeat the exercise in the playground immediately above, but now using non-param
 \end{playground}
 \index{correlation|)}
 
+\section[Model fitting in R]{Model fitting in \Rlang}\label{sec:stat:mf}
+\index{models fitting|(}
+The general approach to model fitting in \Rlang is to separate the actual fitting of a model from the inspection of the fitted model. A model fitting function minimally requires a description of the model to fit, as a model \code{formula} and a data frame or vectors with the data or observations to which to fit the model. These functions in \Rlang return a model fit object. This object contains the data, the model formula, call and the result of fitting the model. To inspect this model several methods are available. In the diagram we show a linear model fit, done with function \Rfunction{lm()} where the non-filled boxes represent what is in common with the fitting of other types of models, and the filled ones what is specific to \Rfunction{lm()}.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model $\to$ \code{formula}}};
+\node (data) [tprocess, below of=model] {\textsl{observations $\to$ \code{data}}};
+\node (fitfun) [tprocess, right of=model, yshift=-0.7cm, xshift=2.5cm, fill=blue!5] {\code{lm()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm, fill=blue!5] {\textsl{\code{lm} object}};
+\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\textsl{\code{summary()}}};
+\node (anova) [tprocess, color = black, below of=summary] {\textsl{\code{anova()}}};
+\node (plot) [tprocess, color = black, above of=summary] {\textsl{\code{plot()}}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (plot);
+\draw [arrow] (fm) -- (anova);
+\draw [arrow] (fm) -- (summary);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+Models are described using model formulas such as \verb|y ~ x| which we read as $y$ is explained by $x$. We use lhs (left-hand-side) and rhs (right-hand-side) to signify all terms to the left and right of the tilde (\verb|~|), respectively (\verb|<lhs> ~ <rhs>|). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of models formulas.
+
+In addition to the methods shown in the diagram above, several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} are available for model fit objects. Most of the methods for inspecting model fit objects have implementations for different types of statistical models. Consequently, what is described in this chapter, also applies in many respects to the fitting of types of models not described here.
+
+\index{models fitting|)}
+
 \section{Fitting linear models}\label{sec:stat:LM}
 \index{models!linear|see{linear models}}
 \index{linear models|(}
 \index{LM|see{linear models}}
-
-In \Rlang, the models to be fitted are described by ``model formulas'' such as \verb|y ~ x| which we read as $y$ is explained by $x$. Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models.
-
-As most things in \Rlang, model formulas can be stored in variables. In addition, contrary to the usual behavior of other statistical software, the result of a model fit is returned as an object, containing the different components of the fit. Once the model has been fitted, different methods allow us to extract parts and/or further manipulate the results obtained by fitting a model. Most of these methods have implementations for model fit objects for different types of statistical models. Consequently, what is described in this chapter using linear models as examples, also applies in many respects to the fit of models not described here.
 
 The \Rlang function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
 
@@ -270,7 +296,7 @@ is.factor(cars$speed)
 is.numeric(cars$speed)
 @
 
-We then fit the simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).
+We then fit the simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).\label{chunk:lm:models1}
 
 <<models-1>>=
 fm1 <- lm(dist ~ 1 + speed, data=cars)
@@ -293,7 +319,7 @@ Let's\index{linear models!summary table} look at the printout of the summary, se
 
 If we return to the model formulation, we can now replace $\alpha$ and $\beta$ by the estimates obtaining $y = -17.6 + 3.93 x$. Given the nature of the problem, we \emph{know based on first principles} that stopping distance must be zero when speed is zero. This suggests that we should not estimate the value of $\alpha$ but instead set $\alpha = 0$, or in other words, fit the model $y = \beta \cdot x$.
 
-However, in \Rlang models, the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e., a missing \code{+ 1} does not change the model. To exclude the intercept from the previous model, we need to specify it as \verb|dist ~ speed - 1|, resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
+However, in \Rlang models, the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e., a missing \code{+ 1} does not change the model. To exclude the intercept from the previous model, we need to specify it as \verb|dist ~ speed - 1| (or its equivalent \verb|dist ~ speed + 0|), resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
 
 <<models-2>>=
 fm2 <- lm(dist ~ speed - 1, data = cars)
@@ -307,6 +333,7 @@ plot(fm2, which = 1)
 @
 
 The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
+
 \begin{playground}
 You will now fit a second-degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.
 
@@ -496,6 +523,29 @@ When a linear model includes both explanatory factors and continuous explanatory
 \index{GLM|see{generalized linear models}}
 
 Linear models make the assumption of normally distributed residuals. Generalized linear models, fitted with function \Rfunction{glm()} are more flexible, and allow the assumed distribution to be selected as well as the link function.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model $\to$ \code{formula}}};
+\node (data) [tprocess, below of=model] {\textsl{observations $\to$ \code{data}}};
+\node (family) [tprocess, below of=data, fill=blue!5] {\textsl{distribution $\to$ \code{family}}};
+\node (fitfun) [tprocess, right of=data, xshift=2.5cm, fill=blue!5] {\code{glm()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm, fill=blue!5] {\textsl{\code{glm} object}};
+\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\textsl{\code{summary()}}};
+\node (anova) [tprocess, color = black, below of=summary] {\textsl{\code{anova()}}};
+\node (plot) [tprocess, color = black, above of=summary] {\textsl{\code{plot()}}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (family) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (plot);
+\draw [arrow] (fm) -- (anova);
+\draw [arrow] (fm) -- (summary);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
 For the analysis of the \Rdata{InsectSpray} data set above (section \ref{sec:anova} on page \pageref{sec:anova}), the Normal distribution is not a good approximation as count data deviates from it. This was visible in the quantile--quantile plot above.
 
 For count data, GLMs provide a better alternative. In the example below we fit the same model as above, but we assume a quasi-Poisson distribution instead of the Normal. In addition to the model formula we need to pass an argument through \code{family} giving the error distribution to be assumed---the default for \code{family} is \code{gaussian} or Normal distribution.
@@ -543,9 +593,31 @@ fm10$iter
 \index{models!non-linear|see{non-linear models}}%
 \index{NLS|see{non-linear models}}
 
-Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non-linear \emph{in the parameters} whose values are being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e., polynomials of any degree are linear models. In contrast, the Michaelis-Menten equation used in chemistry and the  Gompertz equation used to describe growth are non-linear models in their parameters.
+Function \Rfunction{nls()} is \Rlang's workhorse for fitting non-linear models. By \emph{non-linear} it is meant non-linear \emph{in the parameters} whose values are being estimated through fitting the model to data. This is different from the shape of the function when plotted---i.e., polynomials of any degree are linear models. In contrast, the Michaelis-Menten equation used in chemistry and the Gompertz equation used to describe growth are non-linear models in their parameters.
 
 While analytical algorithms exist for finding estimates for the parameters of linear models, in the case of non-linear models, the estimates are obtained by approximation. For analytical solutions, estimates can always be obtained, except in infrequent pathological cases where reliance on floating point numbers with limited resolution introduces rounding errors that ``break'' mathematical algorithms that are valid for real numbers. For approximations obtained through iteration, cases when the algorithm fails to \emph{converge} onto an answer are relatively common. Iterative algorithms attempt to improve an initial guess for the values of the parameters to be estimated, a guess frequently supplied by the user. In each iteration the estimate obtained in the previous iteration is used as the starting value, and this process is repeated one time after another. The expectation is that after a finite number of iterations the algorithm will converge into a solution that ``cannot'' be improved further. In real life we stop iteration when the improvement in the fit is smaller than a certain threshold, or when no convergence has been achieved after a certain maximum number of iterations. In the first case, we usually obtain good estimates; in the second case, we do not obtain usable estimates and need to look for different ways of obtaining them. When convergence fails, the first thing to do is to try different starting values and if this also fails, switch to a different computational algorithm. These steps usually help, but not always. Good starting values are in many cases crucial and in some cases ``guesses'' can be obtained using either graphical or analytical approximations.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model $\to$ \code{formula}}};
+\node (data) [tprocess, below of=model] {\textsl{observations $\to$ \code{data}}};
+\node (guess) [tprocess, below of=data, fill=blue!5] {\textsl{guesses $\to$ \code{start}}};
+\node (fitfun) [tprocess, right of=data, xshift=2.5cm, fill=blue!5] {\code{nls()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm, fill=blue!5] {\textsl{\code{nls} object}};
+\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\textsl{\code{summary()}}};
+\node (anova) [tprocess, color = black, below of=summary] {\textsl{\code{anova()}}};
+\node (plot) [tprocess, color = black, above of=summary] {\textsl{\code{plot()}}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (family) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (plot);
+\draw [arrow] (fm) -- (anova);
+\draw [arrow] (fm) -- (summary);
+\end{tikzpicture}
+\end{small}
+\end{center}
 
 For functions for which computational algorithms exist for ``guessing'' suitable starting values, \Rlang provides a mechanism for packaging the function to be fitted together with the function generating the starting values. These functions go by the name of \emph{self-starting functions} and relieve the user from the burden of guessing and supplying suitable starting values. The\index{self-starting functions} self-starting functions available in \Rlang are \code{SSasymp()}, \code{SSasympOff()}, \code{SSasympOrig()}, \code{SSbiexp()}, \code{SSfol()}, \code{SSfpl()}, \code{SSgompertz()}, \code{SSlogis()}, \code{SSmicmen()}, and \code{SSweibull()}. Function \code{selfStart()} can be used to define new ones. All these functions can be used when fitting models with \Rfunction{nls} or \Rfunction{nlme}. Please, check the respective help pages for details.
 
@@ -590,26 +662,82 @@ fm21$convInfo
 
 \index{non-linear models|)}
 
-\section{Model formulas}
+\section{Model formulas}\label{sec:stat:formulas}
 \index{model formulas|(}
-In the examples above we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all, one can avoid use of operator \code{*} and explicitly define all individual main effects and interactions using operators \code{+} and \code{:}. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to exclude some interactions by combining the use of \code{*} and parentheses.
+\Rlang is consistent in how it treats various objects, to a extent that can be surprising to those familiar with other computer languages. Model formulas are objects of class \Rclass{formula} and mode \Rclass{call} and can be manipulated and stored similarly to objects of other classes.
+
+<<mformulas-intro-1>>=
+class(y ~ x)
+mode(y ~ x)
+@
+
+Like any other \Rlang object formulas can be assigned to variables and be members of lists and vectors. Consequently, the first linear model fit example from page \pageref{chunk:lm:models1} can be rewritten as follows.
+
+<<mformulas-intro-2, eval=FALSE>>=
+my.formula <- dist ~ 1 + speed
+fm1 <- lm(my.formula, data=cars)
+@
+
+In some situations models lacking a lhs term (a term on the left hand side of \verb|~|) are used but at least one term on the must be present in the rhs.
+<<mformulas-intro-5>>=
+class(~ x + y)
+mode(~ x + y)
+is.empty.model(~ x + y)
+@
+
+\begin{explainbox}
+In this box we highlight, for completeness, some idiosyncracies of \Rlang formulas that are seldom important in everyday use but can be important in advanced scripts. As with other classes, empty objects or vectors of length zero are valid. In the case of formulas there is an additional kind of emptiness, a formula describing a model with no explanatory terms on its rhs.
+
+An empty object of class \Rclass{formula} can be created with \code{formula()}. The last statement triggers an error as there is no model formula.
+
+<<mformulas-intro-3>>=
+class(formula())
+mode(formula())
+# is.empty.model(formula())
+@
+
+An object of class \Rclass{formula} containing a formula object describing an empty model. While \verb|y ~ 1| describes a model with only an intercept (estimating $a = \bar{x}$), \verb|y ~ 0| or its equivalent \verb|y ~ -1|, describes an empty model that cannot be fitted to data.
+
+<<mformulas-intro-4>>=
+class(y ~ 0)
+mode(y ~ 0)
+is.empty.model(y ~ 0)
+is.empty.model(y ~ 1)
+is.empty.model(y ~ x)
+@
+
+The value returned by \Rmethod{length()} on a single formula is not always 1, the number of formulas in the vector of formulas, but instead the number of components in the formula. For longer and shorter vectors, it does return the number of member formulae. Because of this, it is better to store model formulas in objects of class \Rclass{list} than in vectors, as \Rfunction{length()} consistently returns the expected value on lists.
+
+<<mformulas-intro-6>>=
+length(formula())
+length(y ~ 0)
+length(y ~ 1)
+length(y ~ x)
+length(c(y ~ 1, y ~ x))
+length(list(y ~ 1))
+length(list(y ~ 1, y ~ x))
+@
+
+\end{explainbox}
+
+In the examples in previous sections we fitted simple models. More complex ones can be easily formulated using the same syntax. First of all, one can avoid use of operator \code{*} and explicitly define all individual main effects and interactions using operators \code{+} and \code{:}. The syntax implemented in base \Rlang allows grouping by means of parentheses, so it is also possible to exclude some interactions by combining the use of \code{*} and parentheses.
 
 The same symbols as for arithmetic operators are used for model formulas. Within a formula, symbols are interpreted according to formula syntax. When we mean an arithmetic operation that could be interpreted as being part of the model formula we need to ``protect'' it by means of the identity function \Rfunction{I()}. The next two examples define formulas for models with only one explanatory variable. With formulas like these, the explanatory variable will be computed on the fly when fitting the model to data. In the first case below we need to explicitly protect the addition of the two variables into their sum, because otherwise they would be interpreted as two separate explanatory variables in the model. In the second case, \Rfunction{log()} cannot be interpreted as part of the model formula, and consequently does not require additional protection, neither does the expression passed as its argument.
 
-<<mformulas-000,eval=FALSE>>=
+<<mformulas-intro-7,eval=FALSE>>=
 y ~ I(x1 + x2)
 y ~ log(x1 + x2)
 @
 
 \Rlang formula syntax allows alternative ways for specifying interaction terms. They allow ``abbreviated'' ways of entering formulas, which for complex experimental designs saves typing and can improve clarity. As seen above, operator \code{*} saves us from having to explicitly indicate all the interaction terms in a full factorial model.
 
-<<mformulas-00,eval=FALSE>>=
+<<mformulas-intro-8,eval=FALSE>>=
 y ~ x1 + x2 + x3 + x1:x2 + x1:x3 + x2:x3 + x1:x2:x3
 @
 
 Can be replaced by a concise equivalent.
 
-<<mformulas-00a,eval=FALSE>>=
+<<mformulas-00,eval=FALSE>>=
 y ~ x1 * x2 * x3
 @
 
@@ -647,7 +775,7 @@ terms(y ~ (x1 + x2 + x3)^2)
 @
 
 \begin{advplayground}
-For operator \code{\textasciicircum{}} to behave as expected, its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas with \Rfunction{trems()}.
+For operator \code{\textasciicircum{}} to behave as expected, its first operand should be a formula with no interactions!  Compare the result of expanding these two formulas with \Rfunction{terms()}.
 
 <<mformulas-PG01, eval=eval_playground>>=
 y ~ (x1 + x2 + x3)^2
@@ -683,7 +811,7 @@ anova(lm(yield ~ N + P + K + N %in% P + K %in% P, data = npk))
 Nesting of factors in experiments using hierarchical designs such as split-plots or repeated measures, results in the need to compute additional error terms, differing in their degrees of freedom. In such a design, different effects are tested based on different error terms. Whether nesting exists or not is a property of an experiment. It is decided as part of the design of the experiment based on the mechanics of treatment assignment to experimental units. In base-\Rlang model-formulas, nesting needs to be described by explicit definition of error terms by means of \code{Error()} within the formula. Nowadays, linear mixed-effects (LME) models are most frequently used with data from experiments and surveys using hierarchical designs, as implemented in packages \pkgname{nlme} and \pkgname{lme4}. These two packages use their own extensions to the model formula syntax to describe nesting and distinguishing fixed and random effects. Additive models have required other extensions, most of them specific to individual packages. These extensions fall outside the scope of this book.
 
 \begin{warningbox}
-  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is \emph{the responsibility of the user to ensure that models are meaningful}. The most common, and dangerous, mistake is specifying for factorial experiments, models that are missing lower-order interactions.
+  \Rlang will accept any syntactically correct model formula, even when the results of the fit are not interpretable. It is \emph{the responsibility of the user to ensure that models are meaningful}. The most common, and dangerous, mistake is specifying for factorial experiments, models tht are missing lower-order interactions.
 
   Fitting models like those below to data from an experiment based on a three-way factorial design should be avoided. In both cases simpler terms are missing, while higher-order interaction(s) that include the missing term are included in the model. Such models are not interpretable, as the variation from the missing term(s) ends being ``disguised'' within the remaining terms, distorting their apparent significance and parameter estimates.
 
@@ -941,7 +1069,7 @@ Method \code{plot()} generates a bar plot of variances corresponding to the diff
 plot(pc)
 @
 
-Visually more elaborate plots of the principal components and their loadings can be obtained using packages \pkgnameNI{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}. Package \pkgnameNI{ggfortify} and package \pkgnameNI{ggbiplot} extend \pkgnameNI{ggplot} so as to make it easy to plot principal components and their loadings.
+Visually more elaborate plots of the principal components and their loadings can be obtained using package \pkgnameNI{ggplot} described in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}. Package \pkgnameNI{ggfortify} extends \pkgnameNI{ggplot} so as to make it easy to plot principal components and their loadings.
 
 \begin{playground}
 For growth and morphological data, a log-transformation can be suitable given that variance is frequently proportional to the magnitude of the values measured. We leave as an exercise to repeat the above analysis using transformed values for the dimensions of petals and sepals. How much does the use of transformations change the outcome of the analysis?
@@ -1034,7 +1162,7 @@ str(hc)
 
 \section{Further reading}\label{sec:stat:further:reading}
 
-Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples, are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
+Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples, are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions of various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()

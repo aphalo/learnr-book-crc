@@ -32,7 +32,9 @@ Computer languages have strict rules and interpreters and compilers are unforgiv
 
 One can think of constant values and variables (values stored under a name) as nouns and of operators and functions as verbs. A complete command, or statement, is the equivalent of a natural language sentence: ``a comprehensible utterance.'' The simple statement \code{a + 1} has three components: \code{a}, a variable, \code{+}, an operator and \code{1} a constant. The statement \code{sqrt(4)} has two components, a function \code{sqrt()} and a numerical constant \code{4}. We say that ``to compute $\sqrt{4}$ we \emph{call} \code{sqrt()} with \code{4} as its \emph{argument}.''
 
-In later chapters you will learn how to write compound statements, the equivalent of natural-language paragraphs, and scripts, the equivalent of essays. You will also learn how to define new verbs, user-defined functions and operators, and new nouns, user-defined classes.
+Although all values manipulated in a digital computer are stored as \textit{bits} in memory, multiple interpretations are possible. Numbers, letters, logical values, etc., can be encoded into bits and decoded as long as their type or \code{mode} is known. The concept of \code{class} is not directly related to how values are encoded when stored in computer memory, but instead their interpretation as part of a computer program. We can have, for example, RGB color values, stored as three numbers such as \code{0, 0, 255}, as hexadecimal numbers stored as characters {\#0000FF}, or even use fancy names stored as character strings like \code{"blue"}. We could create a \code{class} for colors using any of these representations, based on two different modes: \code{numeric} and \code{character}.
+
+In this chapter we will focus on individual program statements, the equivalent of sentences in natural language. In later chapters you will learn how to combine them to create compound statements, the equivalent of natural-language paragraphs, and scripts, the equivalent of essays. You will also learn how to define new verbs, user-defined functions and operators, and new nouns, user-defined classes.
 
 \section{Numeric values and arithmetic}
 \index{classes and modes!numeric, integer, double|(}\index{numbers and their arithmetic|(}\qRclass{numeric}\index{math operators}\index{math functions}\index{numeric values}\qRoperator{+}\qRoperator{-}\qRoperator{*}\qRoperator{/}
@@ -151,7 +153,11 @@ is.double(1)
 The name \code{double} originates from the \Clang language, in which there are different types of floats available. With the name \code{double} used to mean ``double-precision floating-point numbers.'' Similarly, the use of \code{L} stems from the \texttt{long} type in \Clang, meaning ``long integer numbers.''
 \end{explainbox}
 
-Numeric variables can contain more than one value. Even single numbers are in \Rlang \Rclass{vector}s of length one. We will later see why this is important. As you have seen above, the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line.
+Numeric variables can contain more than one value. Even single numbers are in \Rlang \Rclass{vector}s of length one. We will later see why this is important. As you have seen above, the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line. Vectors, in mathematical notation, are represented with positional subindexes,
+\begin{equation}\label{eq:vector}
+  a_{1\ldots n} = a_1, a_2, \cdots a_i, \cdots, a_n,
+\end{equation}
+where $a_{1\ldots n}$ represents the whole vector and $a_1$ its first member. The length of $a_{1\ldots n}$ is $n$ as it contains $n$ members.
 
 One can use \Rmethod{c()} ``concatenate'' to create a vector from other vectors, including vectors of length 1, such as the \code{numeric} constants in the statements below.
 
@@ -607,7 +613,108 @@ sin(2 * pi)
 \section{Sets and set operations}
 \index{sets|(}\index{algebra of sets}\index{operators!set|(}
 
-The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to have character vectors of gene tags. We may have a vector for each of a set of different samples, and need to compare them. However, we start by using a more mundane example, everyday shopping.
+The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. Set algebra operations and their equivalents in mathematical notation and \Rlang functions are: \emph{union}, $\cup$, \code{union()}; \emph{intersection}, $\cap$, \code{intersect()}; \emph{difference (asymmetrical)}, $-$, \code{setdiff()}; \emph{equality test} \code{setequal()}; \emph{membership}, \code{is.element()} and \code{\%in\%}. The first three functions return vector of the same mode as their inputs, and the last three a \code{logical} vector. The action of the first three operations is most easily illustrated with Venn diagrams.\vspace{1ex}
+
+\begin{small}
+\hfill%
+\begin{tikzpicture}[thick,
+    set/.style = {circle,
+        minimum size = 3cm,
+        fill=blue!15}]
+
+% Set A
+\node[set,label={135:$A$}] (A) at (0,0) {};
+
+% Set B
+\node[set,label={45:$B$}] (B) at (1.8,0) {};
+
+% Intersection
+\begin{scope}
+    \clip (0,0) circle(1.5cm);
+    \clip (1.8,0) circle(1.5cm);
+    \fill[blue!15](0,0) circle(1.5cm);
+\end{scope}
+
+% Circles outline
+\draw (0,0) circle(1.5cm);
+\draw (1.8,0) circle(1.5cm);
+
+% Set intersection label
+\node at (0.9,0) {$A\cup B$};
+
+\end{tikzpicture}%
+\hfill%
+\begin{tikzpicture}[thick,
+    set/.style = {circle,
+        minimum size = 3cm,
+        fill = blue!5}]
+
+% Set A
+\node[set,label={135:$A$}] (A) at (0,0) {};
+
+% Set B
+\node[set,label={45:$B$}] (B) at (1.8,0) {};
+
+% Intersection
+\begin{scope}
+    \clip (0,0) circle(1.5cm);
+    \clip (1.8,0) circle(1.5cm);
+    \fill[blue!15](0,0) circle(1.5cm);
+\end{scope}
+% Circles outline
+\draw (0,0) circle(1.5cm);
+\draw (1.8,0) circle(1.5cm);
+
+% Set intersection label
+\node at (0.9,0) {$A\cap B$};
+
+\end{tikzpicture}%
+\hfill%
+\vspace{2ex}
+
+\hfill%
+\begin{tikzpicture}[thick,
+    set/.style = {circle,
+        minimum size = 3cm}]
+
+% Set A
+\node[set,label={135:$A$},fill=blue!15] (A) at (0,0) {};
+
+% Set B
+\node[set,label={45:$B$},fill=blue!5] (B) at (1.8,0) {};
+
+% Circles outline
+\draw (0,0) circle(1.5cm);
+\draw (1.8,0) circle(1.5cm);
+
+% Set intersection label
+\node at (0.9,0) {$A - B$};
+
+\end{tikzpicture}%
+\hfill%
+\begin{tikzpicture}[thick,
+    set/.style = {circle,
+        minimum size = 3cm}]
+
+% Set B
+\node[set,label={45:$B$},fill=blue!15] (B) at (1.8,0) {};
+
+% Set A
+\node[set,label={135:$A$},fill=blue!5] (A) at (0,0) {};
+
+% Circles outline
+\draw (0,0) circle(1.5cm);
+\draw (1.8,0) circle(1.5cm);
+
+% Set intersection label
+\node at (0.9,0) {$B - A$};
+
+\end{tikzpicture}%
+\hfill%
+\end{small}
+\vspace{1ex}
+
+In Bioinformatics it is usual, for example, to have character vectors of gene tags. We may have a vector for each of a set of different samples, and need to compare them. However, we start by using a more mundane example, everyday shopping, as illustration, followed by explanations.
 
 <<sets-00>>=
 fruits <- c("apple", "pear", "orange", "lemon", "tangerine")
@@ -619,38 +726,50 @@ intersect(bakery, shopping)
 intersect(dairy, shopping)
 "lemon" %in% dairy
 "lemon" %in% fruits
+dairy %in% shopping
 setdiff(union(bakery, dairy), shopping)
 @
 
-We continue next with abstract (symbolic) examples.
+For explanations we use abstract (symbolic) examples.
 
 <<sets-01>>=
 my.set <- c("a", "b", "c", "b")
 @
 
-To test if a given value belongs to a set, we use operator \Roperator{\%in\%}. In the algebra of sets notation, this is written $a \in A$, where $A$ is a set and $a$ a member. The second statement shows that the \code{\%in\%} operator is vectorized on its left-hand-side (lhs) operand, returning a logical vector.
+To test if a given value belongs to a set, we use operator \Roperator{\%in\%} or its function equivalent \Rfunction{is.element()}. In the algebra of sets notation, this is written $a \in A$, where $A$ is a set and $a$ a member. The second statement shows that the \code{\%in\%} operator is vectorized on its left-hand-side (lhs) operand, returning a logical vector.
 
 <<sets-02>>=
+is.element("a", my.set)
 "a" %in% my.set
 c("a", "a", "z") %in% my.set
 @
 
-The negation of inclusion is $a \not\in A$, and coded in \Rlang by applying the negation operator \Roperator{!} to the result of the test done with \Roperator{\%in\%}.
-
+\begin{explainbox}
+Keep in mind that inclusion is an asymmetrical (not reflective) operation among sets. The rhs argument is interpreted as a set, while the lhs argument is interpreted as a vector of values to test for inclusion. In other words, any duplicate member in the lhs will be retained while the rhs is interpreted as a set of unique values. The returned logical vector has the same length as the lhs.
 <<sets-02a>>=
+my.set %in% "a"
+@
+\end{explainbox}
+
+The negation of inclusion is $a \not\in A$, and coded in \Rlang by applying the negation operator \Roperator{!} to the result of the test done with \Roperator{\%in\%} or function \Rfunction{is.element()}.
+
+<<sets-02b>>=
+!is.element("a", my.set)
 !"a" %in% my.set
 !c("a", "a", "z") %in% my.set
 @
 
-Although inclusion is a set operation, it is also very useful for the simplification of \code{if()\ldots else} statements by replacing multiple tests for alternative constant values of the same \code{mode} chained by multiple \Roperator{|} operators.
+Although inclusion is a set operation, it is also very useful for the simplification of \code{if()\ldots else} statements by replacing multiple tests for alternative constant values of the same \code{mode} chained by multiple \Roperator{|} operators. A useful property of \Roperator{\%in\%} and \Rfunction{is.element()} is that they never return \code{NA}.
 
 \begin{playground}
-Use operator \Roperator{\%in\%} to simplify the following comparison.
+Use operator \Roperator{\%in\%} to write more concisely the following comparisons. Hint: see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean} for the difference between \code{|} and \code{||} operators.
 
 <<sets-PG00, eval=FALSE>>=
 x <- c("a", "a", "z")
 x == "a" | x == "b" | x == "c" | x == "d"
 @
+
+Convert the \code{logical} vectors of length 3 into a vector of length one. Hint: see help for functions \code{all()} and \code{any()}.
 \end{playground}
 
 With \Rfunction{unique()} we convert a vector of possibly repeated values into a set of unique values. In the algebra of sets, a certain object belongs or not to a set. Consequently, in a set, multiple copies of the same object or value are meaningless.
@@ -896,9 +1015,9 @@ a[3] <- b[2]
 
 \section{Vector manipulation}\label{sec:vectors}\label{sec:calc:indexing}
 \index{vectors!indexing|(}\index{vectors!member extraction}
-If you have read earlier sections of this chapter, you already know how to create a vector. \Rlang's vectors are equivalent to what would be written in mathematical notation as $x_{1\ldots n} = a_1, a_2, \ldots, a_i, \ldots, a_n$, they are not the equivalent to the vectors, common in Physics, which are symbolized with an arrow as an ``accent,'' such as $\overrightarrow{\mathbf{F}}$.
+If you have read earlier sections of this chapter, you already know how to create a vector. \Rlang's vectors are equivalent to what would be written in mathematical notation as $a_{1\ldots n} = a_1, a_2, \ldots, a_i, \ldots, a_n$, they are not the equivalent to the vectors, common in Physics, which are symbolized with an arrow as an ``accent,'' such as $\overrightarrow{\mathbf{F}}$.
 
-In this section we are going to see how to extract or retrieve, replace, and move elements such as $a_2$ from a vector. Elements are extracted using an index enclosed in single square brackets. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. We here use a vector of characters to make it clear the distinction between contents of the vector from the numerical indexes. What in maths notation would be $a_i$ for a vector $a_{1\ldots n}$, in \Rpgrm is represented as \code{a[i]} and the whole vector as earlier seen as \code{a}.
+In this section we are going to see how to extract or retrieve, replace, and move elements such as $a_2$ from a vector. Elements are extracted using an index enclosed in single square brackets. The index indicates the position in the vector, starting from one, following the usual mathematical tradition. We here use a vector of characters to make it clear the distinction between contents of the vector from the numerical indexes. What in maths notation would be $a_i$ for a vector $a_{1\ldots n}$, in \Rpgrm is represented as \code{a[i]} and the whole vector, by excluding the brackets and indexing vector, as \code{a}.
 
 <<vectors-1>>=
 a <- letters[1:10]
@@ -1105,14 +1224,30 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Matrices and multidimensional arrays}\label{sec:matrix:array}
 \index{matrices|(}\index{arrays|(}\qRclass{matrix}\qRclass{array}
 
-Vectors have a single dimension, and, as we saw above, we can query their length with method \Rfunction{length()}. Matrices have two dimensions, which can be queried with \Rfunction{dim()}, \Rfunction{ncol()} and \Rfunction{nrow()}. \Rlang arrays can have any number of dimensions, even a single dimension, which can be queried with method \Rfunction{dim()}. As expected \Rfunction{is.vector()}, \Rfunction{is.matrix()} and \Rfunction{is.array()} can be used to query the class.
+Vectors have a single dimension, and, as we saw above, we can query their length with method \Rfunction{length()}. Matrices have two dimensions, which can be queried with \Rfunction{dim()}, \Rfunction{ncol()} and \Rfunction{nrow()}. \Rlang arrays can have any number of dimensions, even a single dimension, which can be queried with method \Rfunction{dim()}. As expected \Rfunction{is.vector()}, \Rfunction{is.matrix()} and \Rfunction{is.array()} can be used to query the class. In mathematical notation a matrix is denoted as follows
 
-We can create a new matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} is a vector. In the same way as vectors, matrices are homogeneous, all elements are of the same type.
+\begin{equation*}
+  A_{m\times n} =
+  \begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1j} & \cdots & a_{1n}\\
+    a_{21} & a_{22} & \cdots & a_{2j} & \cdots & a_{2n}\\
+    \vdots & \vdots & \ddots & \vdots &        & \vdots \\
+   a_{i1} & a_{i2} & \cdots & a_{ij} & \cdots & a_{in}\\
+     \vdots & \vdots &      & \vdots &  \ddots & \vdots \\
+   a_{m1} & a_{m2} & \cdots & a_{mj} & \cdots & a_{mn}
+  \end{bmatrix}
+\end{equation*}
+
+where $A$ represents the whole matrix and the $a_{ij}$ its elements, with $i$ indexing rows and $j$ indexing columns. The two dimensions of the matrix are given by $m$ and $n$, for rows and columns.
+
+In \Rlang we can create a matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} is a vector. In the same way as vectors, matrices are homogeneous, all elements are of the same type.
 
 <<matrix-01>>=
 matrix(1:15, ncol = 3)
 matrix(1:15, nrow = 3)
 @
+
+When a matrix is printed in \Rlang the row and column indexes are indicated on the edges left and top margins, in the same way as they would be used to extract whole rows and columns.
 
 When a vector is converted to a matrix, \Rlang's default is to allocate the values in the vector to the matrix starting from the leftmost column, and within the column, down from the top. Once the first column is filled, the process continues from the top of the next column, as can be seen above. This order can be changed as you will discover in the playground below.
 
@@ -1145,7 +1280,7 @@ A
 A[1, 1]
 @
 
-Remind yourself of how indexing of vectors works in \Rlang (see section \ref{sec:vectors} on page \pageref{sec:vectors}). We will now apply the same rules in two dimensions.
+Remind yourself of how indexing of vectors works in \Rlang (see section \ref{sec:vectors} on page \pageref{sec:vectors}). We will now apply the same rules in two dimensions. The first or leftmost indexing vector corresponds to rows and the second one to columns, so \Rlang uses a rows-first convention for indexing. Missing indexing vectors are interpreted as meaning \emph{extract all rows} and \emph{extract all columns}, respectively.
 
 <<matrix-11>>=
 A[1, ]
@@ -1157,8 +1292,30 @@ A[4:3, 2:1] <- A[3:4, 1:2]
 A
 @
 
+\begin{warningbox}
+Matrices can be indexed as vectors, without triggering an error or warning.
+
+<<matrix-11a>>=
+A <- matrix(1:20, ncol = 4)
+A
+dim(A)
+A[10]
+A[5, 2]
+@
+
+The next code example demonstrates that indexing as a vector with a single index, always works column-wise even if matrix \code{B} was created by assigning vector elements by row.
+
+<<matrix-11b>>=
+B <- matrix(1:20, ncol = 4, byrow = TRUE)
+B
+dim(B)
+B[10]
+B[5, 2]
+@
+\end{warningbox}
+
 \begin{explainbox}
-In \Rlang, a \Rclass{matrix} can have a single row, a single column, a single element or no elements. However, in all cases, a \code{matrix} will have \emph{dimensions} of length two defined and stored as an attribute.
+In \Rlang, a \Rclass{matrix} can have a single row, a single column, a single element or no elements. However, in all cases, a \code{matrix} will have a \emph{dimensions} attribute of length two defined.
 
 <<dimensions-box-01>>=
 my.vector <- 1:6
@@ -1186,7 +1343,7 @@ B
 B[2, 2, 2]
 @
 
-In the chunk above, the length of the supplied vector is the product of the dimensions, $27 = 3 \times 3 \times 3$.
+In the chunk above, the length of the supplied vector is the product of the dimensions, $27 = 3 \times 3 \times 3 = 3^3$. Arrays are printed in slices, with slices across 3rd and higher dimensions printed separately, with their corresponding indexes above each slice and the first two dimensions on the margins of the individual slices, similarly to how matrices are displayed.
 
 \begin{playground}
   How do you use indexes to extract the second element of the original vector, in each of the following matrices and arrays?
@@ -1451,7 +1608,7 @@ try(a.list[[c(1,3)]])
 @
 
 \begin{explainbox}
-\emph{Lists}, as usually defined in languages like \Clang, are based on pointers stored at each node, and these pointers chain or link the different member nodes. In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \Rlang, \code{list} members can be accessed through positional indexes. Of course, insertions and deletions in the middle of a list, whatever their implementation, alter (or \emph{invalidate}) any position-based indexes.
+\emph{Lists}, as usually defined in languages like \Clang, are based on pointers to memory locations stored at each node, and these pointers chain or link the different member nodes (this allows, for example, sorting of lists in place by modifying the pointers). In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \Rlang, \code{list} members can be accessed through positional indexes, similarly to vectors. Of course, insertions and deletions in the middle of a list, whatever their implementation, alter (or \emph{invalidate}) any position-based indexes.
 \end{explainbox}
 
 To investigate the returned values, function \Rfunction{str()} (\emph{structure}) is of help, especially when the lists have many members, as it formats lists more compactly than function \code{print()}.
@@ -1565,7 +1722,7 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames|(}\qRclass{data.frame}
 \index{worksheet@`worksheet'|see{data frame}}
-Data frames are a special type of list, in which each element is a vector or a factor of the same length. They are created with function \Rfunction{data.frame()} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from class \Rclass{list}. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the required full length is reached.
+Data frames are a special type of list, in which each element is a vector or a factor of the same length (or rarely a matrix with the same number of rows as the enclosing data frame). They are created with function \Rfunction{data.frame()} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from class \Rclass{list}. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the required full length is reached.
 
 <<data-frames-0>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -1606,7 +1763,61 @@ a.ls$x3 <- "b"
 str(a.ls)
 @
 
-Data frames are extremely important to anyone analyzing or plotting data using \Rlang. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there are several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can be treated as members in a list, and can be accessed both by name or index (position). When accessed by name, using \Roperator{\$} or double square brackets, a single column is returned as a vector or factor. In contrast to lists, data frames are always ``rectangular'' and for this reason the values stored can also be accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors, indexes can be vectors of integer numbers or vectors of logical values. For columns they can, in addition, be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first}.
+\begin{advplayground}
+Usually data frames are created from lists or by passing individual vectors and factors to the constructors. It is also possible to construct data frames starting from matrices, other data frames and named vectors and combinations of them. In these cases additional nuances become important. We give only some examples here, as the details are well described in \code{help(data.frame)}.
+
+We use a named numeric vector, and a factor. The names are moved from the vector to the rows of the data frame! Consult \code{help(data.frame)} for an explanation.
+
+<<data-frames-bx-constr-01>>=
+my.vector <- c(one = 1, two = 2, three = 3, four = 4)
+my.factor <- as.factor(c(1, 2, 3, 2))
+df1 <- data.frame(my.factor, my.vector)
+df1
+df1$my.vector
+@
+
+If we protect the vector with \Rlang's identity function \Rfunction{I()} the names are not removed from the vector as can be seen by extracting the column from the data frame.
+
+<<data-frames-bx-constr-02>>=
+df2 <- data.frame(my.factor, I(my.vector))
+df2
+df2$my.vector
+@
+
+If we start with a matrix instead of a vector, the matrix is split into separate columns in the data frame. If the matrix has no column names, new ones are created.
+<<data-frames-bx-constr-04>>=
+my.matrix <- matrix(1:12, ncol = 3)
+df4 <- data.frame(my.factor, my.matrix)
+df4
+@
+
+If we protect the matrix with function \Rfunction{I()}, it is not split, and the whole matrix becomes a column in the data frame.
+
+<<data-frames-bx-constr-05>>=
+df5 <- data.frame(my.factor, I(my.matrix))
+df5
+df5$my.matrix
+@
+
+If we start with a list, each member with a suitable number of elements, each member becomes a column in the data frame. In the case of a too short one, recycling is applied.
+
+<<data-frames-bx-constr-06>>=
+my.list <- list(a = 4:1, b = letters[4:1], c = "n", d = "z")
+df6<- data.frame(my.factor, my.list)
+df6
+@
+
+If we protect the list, then the list is added in whole, similarly as in a tibble (see chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details about the \pkgname{tidiyverse}).
+<<data-frames-bx-constr-07>>=
+df7<- data.frame(my.factor, I(my.list))
+df7
+df7$my.list
+@
+
+What is this exercise about? Do check the documentation carefully and think of uses where the flexibility gained by use of function \Rfunction{I()} to protect arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write code to extract individual members of embedded matrices and lists using indexing in a single \Rlang statement in each case.
+\end{advplayground}
+
+Data frames are extremely important to anyone analyzing or plotting data using \Rlang. One can think of data frames as tightly structured work-sheets, or as lists. As you may have guessed from the examples earlier in this section, there are several different ways of accessing columns, rows, and individual observations stored in a data frame. The columns can be treated as members in a list, and can be accessed both by name or index (position). When accessed by name, using \Roperator{\$} or double square brackets, a single column is returned as a vector or factor. In contrast to lists, data frames are always ``rectangular'' and for this reason the values stored can also be accessed in a way similar to how elements in a matrix are accessed, using two indexes. As we saw for vectors, indexes can be vectors of integer numbers or vectors of logical values. For columns they can, in addition, be vectors of character strings matching the names of the columns. When using indexes it is extremely important to remember that the indexes are always given \textbf{row first} in \Rlang.
 
 \begin{explainbox}
 Indexing of data frames can in all cases be done as if they were lists, which is preferable, as it ensures compatibility with regular \Rlang lists and with newer implementations of data-frame-like structures like those defined in package \pkgname{tibble}. Using this approach, extracting two values from the second and third positions in the first column of \code{a.df} is done as follows, using numerical indexes.
@@ -1839,7 +2050,9 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Attributes of R objects}\label{sec:calc:attributes}
 \index{attributes|(}
 
-\Rlang objects can have attributes. Attributes are normally used to store ancillary data. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. Attribute \code{"comment"} is meant to be set by users---e.g.,  to store metadata together with data.\qRfunction{comment()}\qRfunction{comment()<-}
+\Rlang objects can have attributes. Attributes are named slots normally used to store ancillary data such as object properties. There are no restrictions on the class of what is assigned to an attribute. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. However, they are rarely displayed explicitly when an object is printed. They can be also used to store metadata accompanying the data stored in an object, which is important for reproducible research and data sharing.
+
+Attribute \code{"comment"} is meant to be set by users to store a character string---e.g., to store metadata as text together with data. As comments are frequently used, \Rlang has functions for accessing and setting comments. \qRfunction{comment()}\qRfunction{comment()<-}
 
 <<attributes-01>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -1848,30 +2061,47 @@ comment(a.df) <- "this is stored as a comment"
 comment(a.df)
 @
 
-Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, and methods like \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
+Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, and methods like \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. With \Rfunction{attr()} we access, and with  \Rfunction{attr()<-} we set individual attributes by name. With \Rfunction{attributes()} we retrieve all attributes of an object as a named \code{list}. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
+
+Continuing with the previous example, we can retrieve and set the comment using these functions. In the second statement we delete the value stored in the \code{"comment"} attribute by assigning \code{NULL} to it.
+
+<<attributes-01a>>=
+attr(a.df, "comment")
+attr(a.df, "comment") <- NULL
+attr(a.df, "comment")
+comment(a.df) # same as previous line
+@
+
+The \code{"names"} attribute of \code{a.df} was set by the \code{data.frame()} constructor when it was created above. In the next example, in the first statement we retrieve the names, and implicitly print them. In the second statement, read from right to left, we retrieve the names, convert them to upper case and save them back to the same attribute.
 
 <<attributes-02>>=
 names(a.df)
 names(a.df) <- toupper(names(a.df))
 names(a.df)
 attr(a.df, "names") # same as previous line
+@
+
+We can add a new attribute, under our own control, as long as its name does not clash with that of existing attributes.
+
+<<attributes-02a>>=
 attr(a.df, "my.attribute") <- "this is stored in my attribute"
 attributes(a.df)
 @
-
 \begin{warningbox}
-There is no restriction to the creation, setting, resetting and reading of attributes, but not all methods and operators that can be used to modify objects will preserve non-standard attributes. So, using private attributes is a double-edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
+There is no restriction to the creation, setting, resetting and reading of attributes, but not all methods and operators that can be used to modify objects will preserve non-standard attributes. This can be a problem when using some \Rlang packages, such as some popular packages from the \pkgname{tidyverse}. So, using private attributes is a double-edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
 
-Even the class of S3 objects is stored as an attribute that is accessible as any other attribute---this is in contrast to the mode and atomic class of an object. Object-oriented programming in \Rlang in explained in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}.
+Even the class of S3 objects is stored as an attribute that is accessible as any other attribute---this is in contrast to the mode and atomic class of an object. Object-oriented programming in \Rlang is explained in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}.
 
 <<attributes_WB1>>=
 numbers <- 1:10
+mode(numbers)
 class(numbers)
 attributes(numbers)
 @
 
 <<attributes_WB1a>>=
 a.factor <- factor(numbers)
+mode(a.factor)
 class(a.factor)
 attributes(a.factor)
 @
@@ -1988,11 +2218,13 @@ There are several functions in \Rlang that let us obtain different views into ob
 
 <<exploring-dfs-1>>=
 class(cars)
+head(cars)
+tail(cars)
 nrow(cars)
 ncol(cars)
 names(cars)
-head(cars)
-tail(cars)
+colnames(cars)
+head(rownames(cars))
 str(cars)
 @
 
@@ -2000,7 +2232,7 @@ str(cars)
 Look up the help pages for \Rfunction{head()} and \Rfunction{tail()}, and edit the code above to print only the first two lines, or only the last three lines of \code{cars}, respectively.
 \end{playground}
 
-The different columns of a data frame can be factors or vectors of various modes (e.g.,  numeric, logical, character, etc.) (see section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}).
+The different columns of a data frame can be factors, or vectors of various modes (e.g., numeric, logical, character, etc.) (see section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}).
 To explore the mode of the columns of \code{cars}, we can use an \emph{apply} function. In the present case, we want to apply function \code{class()} to each column of the data frame \code{cars}. (Apply functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}.)
 \qRloop{sapply}
 
@@ -2013,6 +2245,10 @@ The statement above returns a vector of character strings, with the mode of each
 \begin{playground}
 Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables (columns) it contains, their classes, the number of rows, etc.
 \end{playground}
+
+\begin{explainbox}
+Although the \Rlang language allows data frame columns of class \Rclass{matrix}, their use is infrequent. On the other hand, columns belonging to class \Rclass{list} are disallowed in data frames. The reverse is true for tibbles (described in section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
+\end{explainbox}
 
 Function \Rfunction{summary()} can be used to obtain a summary from objects of most \Rlang classes, including data frames. We can also use \Rloop{sapply()}, \Rloop{lapply()} or \Rloop{vapply()} to apply any suitable function to individual columns.
 
@@ -2073,7 +2309,7 @@ dev.off()
 When \Rlang is used interactively, a device to output the graphical output to a display device is opened automatically. The name of the device may depend on the operating system used (e.g.,  \osname{MS-Windows} or \osname{Linux}) or an IDE---e.g.,  \RStudio defines its own graphic device for output to the Plots pane of its user interface.
 
 \begin{warningbox}
-This approach of direct output to a device, and addition of plot components as shown below directly on the output device itself, is not the only approach available. As we will see in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}, an alternative approach is to build a \emph{plot object} as a list of member components that is later rendered as a whole on a graphical device by calling \code{print()} once.
+This approach of direct output to a device, and addition of plot components as shown below, directly on the output device itself, is not the only approach available. As we will see in chapter \ref{chap:R:plotting} starting on page \pageref{chap:R:plotting}, an alternative approach is to build a \emph{plot object} as a list of member components that is later rendered as a whole on a graphical device by calling \code{print()} once.
 
 <<gr-devices-03>>=
 png(file = "output/my-file.png", width = 600, height = 500)

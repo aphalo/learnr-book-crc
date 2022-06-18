@@ -69,6 +69,38 @@ The main role of functions is that of providing an abstraction allowing us to av
 
 How do we, in practice, avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and later we \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book; what we will next tackle is how to define new functions of our own.
 
+We saw in section \ref{sec:script:compound:statement} on page \pageref{sec:script:compound:statement} a diagram of a compound statement. A function is like a compound statement with the difference that statements within the function usually do not affect directly any variable defined outside the function.  Even tough the statements within the function body do have access to the environment in which the function is called, it is safest to pass all input through the function parameters, and return all values to the caller.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (call) [startstop] {\textsl{arguments $\to$ \textcolor{blue}{parameters}}};
+\node (enc) [enclosure, color = blue, fill = blue!5, below of=call, yshift=-0.85cm] {\ };
+\node (stat1) [process, color = blue, fill = blue!15, below of=call] {\code{<statement A>}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=stat1] {\code{<statement B>}};
+\node (return) [startstop, below of=stat2] {\textsl{\textcolor{blue}{returned  value} $\to$ caller}};
+\draw [arrow, color = blue] (call) -- (stat1);
+\draw [arrow, color = blue] (stat1) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (return);
+\end{tikzpicture}
+\end{center}
+
+The diagram above represents a function that has no \emph{side effects}, as it does not affect its environment, it only returns a value to the caller. A value on which the caller has full control. The statement that calls the function ``decides'' what to do with the value received from the function. When a function has a side effect, the caller is no longer in control. Side effects can be actions that do not alter any object in the calling code, like when a call to \Rfunction{print()} displays text or numbers. Side effects can also be an assignment that modifies an object in the caller's environment, such as assigning a new value to a variable in the caller's environment.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (call) [startstop] {\textsl{arguments $\to$ \textcolor{blue}{parameters}}};
+\node (enc) [enclosure, color = blue, fill = blue!5, below of=call, yshift=-0.85cm] {\ };
+\node (stat1) [process, color = blue, fill = blue!15, below of=call] {\code{<statement A>}};
+\node (sideeff) [process, color = black, right of=stat2, xshift=3cm] {\textsl{\textcolor{blue}{side effect}}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=stat1] {\code{<statement B>}};
+\node (return) [startstop, below of=stat2] {\textsl{\textcolor{blue}{returned  value} $\to$ caller}};
+\draw [arrow, color = blue] (call) -- (stat1);
+\draw [arrow, color = blue] (stat1) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (sideeff);
+\draw [arrow, color = blue] (stat2) -- (return);
+\end{tikzpicture}
+\end{center}
+
 New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below, \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as placeholders for actual values to be supplied as arguments when calling the function.
 
 <<fun-00>>=
@@ -77,7 +109,7 @@ my.prod(4, 3)
 @
 
 \begin{warningbox}
-In base \Rlang, arguments\index{functions!arguments} to functions are passed by copy. This is something very important to remember. Whatever you do within a function to modify an argument, its value outside the function will remain (almost) always unchanged. (In other languages, arguments can also be passed by reference, meaning that assignments to a formal parameter within the body of the function are referenced to the argument and modify it. Such roundabout effects are frequently called side effects of a call. It is possible to imitate such behavior in \Rlang using some language trickery and consequently, some packages such as \pkgname{data.table} do define functions that use passing of arguments by reference.)
+In base \Rlang, arguments\index{functions!arguments} to functions are passed by copy. This is something very important to remember. Whatever code in a function's body does to modify an argument passed through a formal parameter, its value outside the function will remain (almost) always unchanged. (In other computer languages, arguments can also be passed by reference, meaning that assignments to a formal parameter within the body of the function are back-referenced to the argument and modify it. It is possible to imitate such behavior in \Rlang using some language trickery and consequently, some packages such as \pkgname{data.table} do define functions that use passing of arguments by reference.)
 
 <<fun-01>>=
 my.change <- function(x){x <- NA}
@@ -88,7 +120,7 @@ a
 
 In general, any result that needs to be made available outside the function must be returned by the function---or explicitly assigned to an object in the enclosing environment (i.e., using \Roperator{<<-} or \Rfunction{assign()}) as a side effect.
 
-A function can only return a single object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return a complex list with heterogeneous named members.
+A function can only return a single object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, a class derived from class \Rclass{list}.
 \end{warningbox}
 
 \begin{playground}
