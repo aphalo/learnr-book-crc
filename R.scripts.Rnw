@@ -33,7 +33,11 @@ In \Rlang language, the closest match to a natural language essay is a script. A
 
 \subsection{What is a script?}\label{sec:script:what:is}
 \index{scripts!definition}
-A \textit{script} is a text file that contains (almost) the same commands that you would type at the console prompt. A true script is not, for example, an MS-Word file where you have pasted or typed some \Rlang commands. A script file has the following characteristics.
+A \textit{script} is a text file that contains (almost) the same commands that you would type at the console prompt. A true script is not, for example, an MS-Word file where you have pasted or typed some \Rlang commands.
+
+When typing commands/statements at the \Rlang console, we "feed" one line of text at a time. When we end the line by typing the enter key, the line of text is interpreted and evaluated. We then type the next line of text, which gets in turn interpreted and evaluated, and so on. In a script we write nearly the same text in an editor and save multiple lines containing commands into a text file. Interpretation takes place only later, when we \emph{source} the file as a whole into \Rlang.
+
+A script file has the following characteristics.
 \begin{itemize}
   \item The script is a text file.
   \item The file contains valid \Rlang statements (including comments) and nothing else.
@@ -41,6 +45,26 @@ A \textit{script} is a text file that contains (almost) the same commands that y
   \item The \Rlang statements are in the file in the order that they must be executed.
   \item \Rlang scripts have file names ending in \texttt{.r} or \texttt{.R}.
 \end{itemize}
+
+The statements in the text file, are read, interpreted and evaluated sequentially, from the start to the end of the file, as represented in the diagram. We use \textcolor{blue}{$\cdots$} to represent additional statements in the script.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop, color = blue, fill = blue!15] {\textsl{Top = start}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (continue) [startstop, color = blue, fill = blue!15, below of=stat3] {$\cdots$};
+\node (stop) [startstop, color = blue, fill = blue!15, below of=continue] {\textsl{Bottom = end}};
+\draw [arrow, color = blue] (start) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (stat3);
+\draw [arrow, color = blue] (stat3) -- (continue);
+\draw [arrow, color = blue] (continue) -- (stop);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+As we will see later in the chapter, code statements can be combined into larger statements and evaluated conditionally and/or repeatedly, which allows us to control the realised sequence of evaluated statements. Scripts need to respect the \Rlang syntax. In addition to being valid it is important that scripts are also understandable to humans, consequently a clear writing style and consistent adherence to it are important.
 
 It is good practice to write scripts so that they are self-contained. To make a script self-contained, one must include calls to \texttt{library()} to load the packages used, load or import data from files, perform the data analysis and display and/or save the results of the analysis. Such scripts can be used to apply the same analysis algorithm to other data and/or to reproduce the same analysis at a later time. Such scripts document all steps used for the analysis.
 
@@ -196,9 +220,9 @@ Individual statements can be grouped into \emph{compound statements} by enclosed
 \begin{small}
 \begin{tikzpicture}[node distance=1.7cm]
 \node (start) [startstop] {\ldots};
-\node (enc) [enclosure, color = blue, fill = blue!5, below of=start, yshift=-0.85cm] {\ };
+\node (enc) [enclosure, color = blue, fill = blue!5, below of=start, yshift=-0.75cm] {\ };
 \node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
-\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2, yshift=+0.2cm] {\code{<statement B>}};
 \node (stop) [startstop, below of=stat3] {\ldots};
 \draw [arrow, color = blue] (start) -- (stat2);
 \draw [arrow, color = blue] (stat2) -- (stat3);
@@ -237,11 +261,11 @@ The \code{if} construct ``decides,'' depending on a \code{logical} value, whethe
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
-\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{if (<cond.>)}};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.3cm] {\code{if (<cond.>)}};
 \node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.2cm] {\code{<statement A>}};
-\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
 \node (stop) [startstop, below of=stat3] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
@@ -289,12 +313,12 @@ The \code{if \ldots\ else} construct ``decides,'' depending on a \code{logical} 
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
-\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.7cm] {\code{if (<cond.>) else}};
-\node (stat2) [process, color = blue, fill = blue!15, left of=dec1, xshift=-3.6cm] {\code{<statement A>}};
-\node (stat3) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.6cm] {\code{<statement B>}};
-\node (stat4) [process, below of=dec1, yshift=-0.7cm] {\code{<statement C>}};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{if (<cond.>) else}};
+\node (stat2) [process, color = blue, fill = blue!15, left of=dec1, xshift=-3.2cm] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.2cm] {\code{<statement B>}};
+\node (stat4) [process, below of=dec1, yshift=-0.5cm] {\code{<statement C>}};
 \node (stop) [startstop, below of=stat4] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
@@ -407,14 +431,14 @@ The switch statement returns a value, the value returned by the \Rcontrol{switch
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
-\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{switch(<value>)}};
-\node (stat2) [process, color = blue, fill = blue!15, below of=dec1, xshift=4cm] {\code{<statement A>}};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.4cm] {\code{switch(<value>)}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=dec1, xshift=3.4cm] {\code{<statement A>}};
 \node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
 \node (stat4) [process, color = blue, fill = blue!15, below of=stat3] {\code{<statement C>}};
-\node (stat5) [process, color = blue, fill = blue!15, below of=stat4, yshift=-0.4cm] {\code{<statement D>}};
-\node (stat6) [process, below of=stat5, xshift=4cm] {\code{<statement E>}};
+\node (stat5) [process, color = blue, fill = blue!15, below of=stat4] {\code{<statement D>}};
+\node (stat6) [process, below of=stat5, xshift=3.3cm] {\code{<statement E>}};
 \node (stop) [startstop, below of=stat6] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 1>}} (stat2);
@@ -580,12 +604,12 @@ The\index{for loop}\index{iteration!for loop}\qRloop{for} most frequently used t
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
 \node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
-\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.4cm] {\code{for (<list>)}};
-\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.5cm] {\code{<statement A>}};
-\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.3cm] {\code{for (<list>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.55cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
 \node (stop) [startstop, below of=stat3] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) -- node[anchor=north] {\textsl{continue}} (stat2);
@@ -679,12 +703,12 @@ print(c)
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
 \node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
-\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.1cm] {\code{while (<cond.>)}};
-\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=4cm] {\code{<statement A>}};
-\node (stat3) [process, below of=dec1, yshift=-0.7cm] {\code{<statement B>}};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.3cm] {\code{while (<cond.>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.3cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
 \node (stop) [startstop, below of=stat3] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
@@ -741,12 +765,12 @@ The \Rloop{repeat}\index{iteration!repeat loop} construct is less frequently use
 
 \begin{center}
 \begin{small}
-\begin{tikzpicture}[node distance=1.7cm]
+\begin{tikzpicture}[node distance=1.5cm]
 \node (start) [startstop] {\ldots};
 \node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
 \node (dec1) [process, color = blue, fill = blue!15, below of=start, yshift=-0.3cm] {\code{repeat}};
 \node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.3cm] {\code{<statement A>}};
-\node (stat3) [process, below of=stat2] {\code{<statement B>}};
+\node (stat3) [process, below of=stat2, yshift=-0.1cm] {\code{<statement B>}};
 \node (stop) [startstop, below of=stat3] {\ldots};
 \draw [arrow] (start) -- (dec1);
 \draw [arrow, color=blue] (dec1) -- node[anchor=north] {} (stat2);
