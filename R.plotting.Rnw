@@ -88,8 +88,8 @@ The grammar of graphics allows us to design plots by combining various elements 
 
 When a plot is built, the whole plot and its components are created as \Rlang objects that can be saved in the workspace or written to a file as objects. The graphical representation is generated when the object is printed, explicitly or automatically. The same ggplot object can be rendered into different bitmap and vector graphic formats for display or printing.
 
-Even if we do not explicitly add them all, default elements may be used. The production of a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information:
-\textsf{data $\to$ scale $\to$ statistic $\to$ aesthetic $\to$ geometry $\to$ coordinate $\to$ ggplot $\to$ theme $\to$ rendered graphic}.
+The production of a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information. If we do not explicitly mention all steps in our code, in most cases defaults for them will be used. The steps from data to rendered graphic, with those in bold having no defaults are:\\[1.2ex]
+{\small\textsf{data $\to$ aes $\to$ stat $\to$ aes $\to$ geom $\to$ scale $\to$ coordinate $\to$ theme $\to$ \emph{ggplot object}}}
 
 \subsection{Data}
 The\index{grammar of graphics!data} data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns are different values observed in that single event. In other words, in long form (so-called ``tidy data'') as described in chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}.
@@ -98,14 +98,14 @@ The\index{grammar of graphics!data} data to be plotted must be available as a \c
 
 When\index{grammar of graphics!mapping of data} we design a plot, we need to map data variables to aesthetics\index{plots!aesthetics} (or graphic properties). Most plots will have an $x$ dimension, which is considered an \emph{aesthetic}, and a variable containing numbers mapped to it. The position on a 2D plot of, say, a point, will be determined by $x$ and $y$ aesthetics, while in a 3D plot, three aesthetics need to be mapped $x$, $y$ and $z$. Many aesthetics are not related to coordinates, they are properties, like color, size, shape, line type, or even rotation angle, which add an additional dimension on which to represent the values of variables and/or constants.
 
+\subsection{Statistics}
+
+Statistics\index{grammar of graphics!statistics} are ``words'' that represent calculation of summaries or some other operation on the values from the data. When \emph{statistics} are used for a computation, the returned value is passed directly to a \emph{geometry}, and consequently adding an \emph{statistics} also adds a layer to the plot. For example, \ggstat{stat\_smooth()} fits a smoother, and \ggstat{stat\_summary()} applies a summary function. Statistics are applied automatically by group when data have been grouped by mapping additional aesthetics such as color to a factor.
+
 \subsection{Geometries}
 
 \sloppy%
 Geometries\index{grammar of graphics!geometries} are ``words'' that describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a point or symbol for each observation, while \gggeom{geom\_line()}, draws line segments between observations. Some geometries rely by default on statistics, but most ``geoms'' default to the identity statistics. Each time a \emph{geometry} is used to add a graphical representation of data to a plot, we say that a new \emph{layer} has been added. The name \emph{layer} reflects the fact that each new layer added is plotted on top of the layers already present in the plot, or rather when a plot is printed the layers will be generated in the order they were added to the ggplot object. For example, one layer in a plot can display the observations, another layer a regression line fitted to them, and a third one may contain annotations such an equation or a text label.
-
-\subsection{Statistics}
-
-Statistics\index{grammar of graphics!statistics} are ``words'' that represent calculation of summaries or some other operation on the values from the data. When \emph{statistics} are used for a computation, the returned value is passed directly to a \emph{geometry}, and consequently adding an \emph{statistics} also adds a layer to the plot. For example, \ggstat{stat\_smooth()} fits a smoother, and \ggstat{stat\_summary()} applies a summary function. Statistics are applied automatically by group when data have been grouped by mapping additional aesthetics such as color to a factor.
 
 \subsection{Scales}
 
@@ -118,32 +118,40 @@ The\index{grammar of graphics!coordinates} most frequently used coordinate syste
 \subsection{Themes}
 
 How\index{grammar of graphics!themes} the plots look when displayed or printed can be altered by means of themes. A plot can be saved without adding a theme and then printed or displayed using different themes. Also, individual theme elements can be changed, and whole new themes defined. This adds a lot of flexibility and helps in the separation of the data representation aspects from those related to the graphical design.
+
+\subsection{Plot object}
+
+The end result is an \Rlang object containing the data plus the instructions to process them into a plot. This object, as well as intermediate objects can be saved. Rendering, or the production of graphical output, takes places when the object is printed. The format of the output, such as bitmap or vector graphics, is determined by the graphics device (see \ref{sec:plot:render} on page \pageref{sec:plot:render}).
 \index{grammar of graphics!elements|)}
 
 \subsection{Plot construction}
 \index{grammar of graphics!plot construction|(}
 We have described above the components of the grammar of graphics: aesthetics (\code{aes}), for example color, geometric elements \code{geom\_\ldots} such as lines and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, coordinate systems \code{coord\_\ldots}, and themes \code{theme\_\ldots}. In this section we will see how plots are assembled from these elements.
 
-As the workings and use of the grammar are easier to show by example than to explain with words, will show how to build plots of increasing complexity. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. We use function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is.
+\begin{infobox}
+The\index{plots!layers} plots created with package \pkgname{ggplot2} have a layered structure. These layers of graphical objects are stored and rendered in the order that they are added, and objects in layers added later can occlude those in layers added earlier. As colors in \Rlang support transparency through the \code{alpha} aesthetic the effect of overlapping layers can be altered by changing the order in which they are added to a plot and by use of semitransparent layers.
+\end{infobox}
+
+As the workings and use of the grammar are easier to show by example than to explain with words, I will show how to build plots of increasing complexity. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. We use function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is. \emph{A plot with no data or layers.}
 
 <<ggplot-basics-01>>=
 ggplot()
 @
 
-The plot above is of little use without any data, so we next pass a data frame object, in this case \code{mtcars}---\Rdata{mtcars} is a data set included in \Rlang; to learn more about this data set, type \code{help("mtcars")} at the \Rlang command prompt.
+The plot above is of little use without any data, so we next pass a data frame object, in this case \code{mtcars}---\Rdata{mtcars} is a data set included in \Rlang; to learn more about this data set, type \code{help("mtcars")} at the \Rlang command prompt. ({\small\textsf{data $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-02, eval=eval_plots_all>>=
 ggplot(data = mtcars)
 @
 
-Once the data are available, we need to \emph{map} the quantities in the data onto graphical features in the plot, or \emph{aesthetics}. When plotting in two dimensions, we need to map variables in the data to at least the $x$ and $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now match the ranges of the mapped variables, extended by a small margin. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations.
+Once the data are available, we need to \emph{map} the quantities in the data onto graphical features in the plot, or \emph{aesthetics}. When plotting in two dimensions, we need to map variables in the data to at least the $x$ and $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now match the ranges of the mapped variables, extended by a small margin. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations. ({\small\textsf{data $\to$ aes $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-03>>=
 ggplot(data = mtcars,
        aes(x = disp, y = mpg))
 @
 
-To make observations visible in the plot we need to add a suitable \emph{geometry} or \code{geom} to the plot. Here we display the observations as points using \gggeom{geom\_point()}
+To make observations visible in the plot we need to add a suitable \emph{geometry} or \code{geom} to the plot. Here we display the observations as points using \gggeom{geom\_point()}. Geometries are rendered as \emph{plot layers}. ({\small\textsf{data $\to$ aes $\to$ geom $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-04>>=
 ggplot(data = mtcars,
@@ -152,7 +160,7 @@ ggplot(data = mtcars,
 @
 
 \begin{warningbox}
-In the examples above, the plots were printed automatically, which is the default at the \Rlang console. However, as with other \Rlang objects, ggplots can be assigned to a variable,
+In the examples above, the plots were printed automatically, which is the default at the \Rlang console. However, as with other \Rlang objects, ggplots can be assigned to a variable.
 
 <<ggplot-basics-04-wb1>>=
 p <- ggplot(data = mtcars,
@@ -168,14 +176,12 @@ print(p)
 \end{warningbox}
 
 \begin{advplayground}
-Above we have seen how to build a plot, layer by layer, using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
+Above we have seen how to build a plot containing a single layer using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
 
 <<ggplot-basics-04-exb1, eval=eval_playground>>=
 summary(p)
 @
-We can view the structure of the ggplot object with \code{str()}.
-
-Package \pkgname{gginnards} provides methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()}. Use these methods to explore ggplot objects with different numbers of layers or mappings. You will see that the plot elements that were added to the plot are stored as members of a list with nested lists forming a tree-like structure.
+We can view the structure of the ggplot object with \code{str()}. Package \pkgname{gginnards} provides methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()}. As you make progress through the chapter, use these methods to explore ggplot objects with different numbers of layers or mappings. You will see that the plot elements that were added to the plot are stored as members of a list with nested lists forming a tree-like structure.
 \end{advplayground}
 
 Although \emph{aesthetics} can be mapped to variables in the data, they can also be set to constant values, but only within layers, not as whole-plot defaults.
@@ -186,7 +192,7 @@ ggplot(data = mtcars,
   geom_point(color = "red", shape = "square")
 @
 
-While a geometry directly constructs a graphical representation of the observations in the data, a \emph{statistics} or \code{stat} ``sits'' in-between the data and a \code{geom}, applying some computation, usually but not always, to produce a statistical summary of the data. Here we add a fitted line using \code{stat\_smooth()} with its output added to the plot using \gggeom{geom\_line()} passed by name with \code{"line"} as an argument to \code{stat\_smooth}. We fit a linear regression, using \code{lm()} as the method.
+While a geometry directly constructs a graphical representation of the observations in the data, a \emph{statistics} or \code{stat} ``sits'' in-between the data and a \code{geom}, applying some computation, usually but not always, to produce a statistical summary of the data. Here we add a fitted line using \code{stat\_smooth()} with its output added to the plot using \gggeom{geom\_line()} passed by name with \code{"line"} as an argument to \code{stat\_smooth}. We fit a linear regression, using \code{lm()} as the method. The has two layers, from geometries \gggeom{geom\_point} and \gggeom{geom\_line}. ({\small\textsf{data $\to$ aes $\to$ stat $\to$ geom $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-05>>=
 ggplot(data = mtcars,
@@ -195,7 +201,7 @@ ggplot(data = mtcars,
   stat_smooth(geom = "line", method = "lm", formula = y ~ x)
 @
 
-We haven't yet added some of the elements of the grammar described above: \emph{scales}, \emph{coordinates} and \emph{themes}. The plots were rendered anyway because these elements have defaults which are used when we do not set them explicitly. We next will see examples in which they are explicitly set. We start with a scale using a logarithmic transformation. This works like plotting by hand using graph paper with rulings spaced according to a logarithmic scale. Tick marks continue to be expressed in the original units, but statistics are applied to the transformed data. In other words, a transformed scale affects the values before they are passed to \emph{statistics}, and the linear regression will be fitted to \code{log10()} transformed $y$ values and the original $x$ values.
+We haven't yet added some of the elements of the grammar described above: \emph{scales}, \emph{coordinates} and \emph{themes}. The plots were rendered anyway because these elements have defaults which are used when we do not set them explicitly. We next will see examples in which they are explicitly set. We start with a scale using a logarithmic transformation. This works like plotting by hand using graph paper with rulings spaced according to a logarithmic scale. Tick marks continue to be expressed in the original units, but statistics are applied to the transformed data. In other words, a transformed scale affects the values before they are passed to \emph{statistics}, and the linear regression will be fitted to \code{log10()} transformed $y$ values and the original $x$ values. ({\small\textsf{data $\to$ aes $\to$ stat $\to$ geom $\to$ scale $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-06>>=
 ggplot(data = mtcars,
@@ -205,9 +211,9 @@ ggplot(data = mtcars,
   scale_y_log10()
 @
 
-The range limits of a scale can be set manually, instead of automatically by default. These limits create a virtual \emph{window into the data}: observations outside the scale limits remain hidden and are not mapped to aesthetics---i.e., these observations are not included in the graphical representation or used in calculations. Crucially, when using \emph{statistics} the computations are only applied to observations that fall within the limits of all scales in use. These limits \emph{indirectly} affect the plotting area when the plotting area is automatically set based on the range of the (within limits) data---even the mapping to values of a different aesthetics may change when a subset of the data are selected by manually setting the limits of a scale.
+The range limits of a scale can be set manually, instead of automatically as by default. These limits create a virtual \emph{window into the data}: observations outside the scale limits remain hidden and are not mapped to aesthetics---i.e., these observations are not included in the graphical representation or used in calculations. Crucially, when using \emph{statistics} the computations are only applied to observations that fall within the limits of all scales in use. These limits \emph{indirectly} affect the plotting area when the plotting area is automatically set based on the range of the (within limits) data---even the mapping to values of a different aesthetics may change when a subset of the data are selected by manually setting the limits of a scale.
 
-In contrast to \emph{scale limits}, \emph{coordinates}\index{grammar of graphics!cartesian coordinates} function as a \emph{zoomed view} into the plotting area, and do not affect which observations are visible to \emph{statistics}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but we manually set $y$ limits.
+In contrast to \emph{scale limits}, \emph{coordinates}\index{grammar of graphics!cartesian coordinates} function as a \emph{zoomed view} into the plotting area, and do not affect which observations are visible to \emph{statistics}. The coordinate system, as expected, is also determined by this grammar element---here we use cartesian coordinates which are the default, but we manually set $y$ limits. ({\small\textsf{data $\to$ aes $\to$ stat $\to$ geom $\to$ coordinate $\to$ theme $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-07>>=
 ggplot(data = mtcars,
@@ -227,7 +233,7 @@ ggplot(data = mtcars,
   coord_trans(y = "log10")
 @
 
-Themes affect the rendering of plots at the time of printing---they can be thought of as style sheets defining the graphic design. A complete theme can override the default gray theme. The plot is the same, the observations are represented in the same way, the limits of the axes are the same and all text is the same. On the other, hand how these elements are rendered by different themes can be drastically different.
+Themes affect the rendering of plots at the time of printing---they can be thought of as style sheets defining the graphic design. A complete theme can override the default gray theme. The plot is the same, the observations are represented in the same way, the limits of the axes are the same and all text is the same. On the other, hand how these elements are rendered by different themes can be drastically different. ({\small\textsf{data $\to$ aes $\to$ $\to$ geom $\to$ theme $\to$ \emph{ggplot object}}}
 
 <<ggplot-basics-09>>=
 ggplot(data = mtcars,
@@ -245,7 +251,7 @@ ggplot(data = mtcars,
   theme_classic(base_size = 20, base_family = "serif")
 @
 
-The details of how to set axis labels, tick positions and tick labels will be discussed in depth in section \ref{sec:plot:scales}. Meanwhile, we will use function \code{labs()} which is a convenience function allowing us to easily set the title and subtitle of a plot and to replace the default \code{name} of scales used for axis labels---by default \code{name} is set to the name of the mapped variable. When setting the \code{name} of scales with \code{labs()}, we use as parameter names the names of aesthetics and pass as an argument a character string, or an \Rlang expression. Here we use \code{x} and \code{y}, the names of the two \emph{aesthetics} to which we have mapped two variables in \code{data}, \code{disp} and \code{mpg}.
+The details of how to set axis labels, tick positions and tick labels will be discussed in depth in section \ref{sec:plot:scales}. Meanwhile, we will use function \code{labs()} which is \emph{a convenience function} allowing us to easily set the title and subtitle of a plot and to replace the default \code{name} of scales, in this case, those used for axis labels---by default the \code{name} of scales is set to the name of the mapped variable. When setting the \code{name} of scales with \code{labs()}, we use as parameter names the names of aesthetics and pass as an argument a character string, or an \Rlang expression. Here we use \code{x} and \code{y}, the names of the two \emph{aesthetics} to which we have mapped two variables in \code{data}, \code{disp} and \code{mpg}.
 
 <<ggplot-basics-11>>=
 ggplot(data = mtcars,
@@ -258,7 +264,7 @@ ggplot(data = mtcars,
 @
 
 \begin{infobox}
-As elsewhere in \Rlang, when a value is expected, either a value stored in a variable or statement returning a suitable value can be passed as an argument to be mapped to an \emph{aesthetic}. In other words, the values to be plotted do not need to be stored as variables (or columns) in the data frame passed as an argument to parameter \code{data}, they can also be computed from these variables. Here we plot miles-per-gallon, \code{mpg} on the engine displacement per cylinder by dividing \code{disp} by \code{cyl} within the call to \code{aes()}.
+As elsewhere in \Rlang, when a value is expected, either a value stored in a variable or a more complex statement returning a suitable value can be passed as an argument to be mapped to an \emph{aesthetic}. In other words, the values to be plotted do not need to be stored as variables (or columns) in the data frame passed as an argument to parameter \code{data}, they can also be computed from these variables. Here we plot miles-per-gallon, \code{mpg} on the engine displacement per cylinder by dividing \code{disp} by \code{cyl} within the call to \code{aes()}.
 
 <<ggplot-basics-info-01>>=
 ggplot(data = mtcars, aes(x = disp / cyl, y = mpg)) +
@@ -267,7 +273,7 @@ ggplot(data = mtcars, aes(x = disp / cyl, y = mpg)) +
 
 \end{infobox}
 
-Each of the elements of the grammar exemplified above has several different members, and many of the individual \emph{geometries} and \emph{statistics} accept arguments that can be used to modify their behavior. There are also more \emph{aesthetics} than those shown above. Multiple data objects as well as multiple mappings can coexist within a single ggplot object. Packages and user code can define new \emph{geometries}, \emph{statistics}, \emph{coordinates} and even implement new \emph{aesthetics}. Individual elements in a theme can also be modified and new complete themes created, re-used and shared. We will describe in the remaining sections of this chapter how to use the grammar of graphics to construct other types of graphical presentations including more complex plots than those in the examples above.
+Each of the elements of the grammar exemplified above has several different member functions, and many of the individual \emph{geometries} and \emph{statistics} accept arguments that can be used to modify their behavior. There are also more \emph{aesthetics} than those shown above. Multiple data objects as well as multiple mappings can coexist within a single ggplot object. Packages and user code can define new \emph{geometries}, \emph{statistics}, \emph{coordinates} and even implement new \emph{aesthetics}. Individual elements in a theme can also be modified and new complete themes created, re-used and shared. We will describe in the remaining sections of this chapter how to use the grammar of graphics to construct other types of graphical presentations including more complex plots than those in the examples above.
 \index{grammar of graphics!plot construction|)}
 
 \subsection{Plots as \Rlang objects}
@@ -332,7 +338,7 @@ ggplot(data = mtcars,
   geom_point()
 @
 
-However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers. In this case, those passed as arguments to \Rfunction{ggplot()}, if present,  are overridden by arguments passed to individual layers, making it possible to code the same plot as follows.
+However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers, passed to statistics or geometries through . In this case, those passed as arguments to \Rfunction{ggplot()}, if present,  are overridden by arguments passed to individual layers, making it possible to code the same plot as follows.
 
 <<ggplot-basics-13, eval=eval_plots_all>>=
 ggplot() +
@@ -369,12 +375,12 @@ ggplot(data = mtcars,
              size = 1.5)
 @
 
-The plot default data can also be operated upon using the \pkgname{magritrr} pipe operator, but not the dot-pipe operator from \pkgname{wrapr} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
+The plot default data can also be operated upon using the \pkgname{magritrr} pipe operator, but not the pipe operators native to \Rlang (\Roperator{|>}) or the dot-pipe operator from \pkgname{wrapr} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}).
 <<ggplot-basics-17, eval=eval_plots_all>>=
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg)) +
   geom_point(size = 4) +
-  geom_point(data = . %.>% subset(x = ., cyl == 4), color = "yellow",
+  geom_point(data = . %>% subset(x = ., cyl == 4), color = "yellow",
              size = 1.5)
 @
 
@@ -849,7 +855,7 @@ ggplot(data = mtcars,
 \index{grammar of graphics!inset-related geometries|(}
 \index{plots!insets|(}
 
-The support for insets in \pkgname{ggplot2} is confined to \code{annotation\_custom()} which was designed to be used for static annotations expected to be the same in each panel of a plot (the use of annotations is described in section \ref{sec:plot:annotations}). Package \pkgname{ggpmisc} provides geoms that mimic \code{geom\_text()} in relation to the \emph{aesthetics} used, but that similarly to \code{geom\_sf()}, expect that the column in \code{data} mapped to the \code{label} aesthetics are lists of objects containing multiple pieces of information, rather than atomic vectors. Similar to \code{geom\_sf()} these geoms do not inherit the plot's default mappings to aesthetics. Three geometries are currently available: \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()}.
+The support for insets in \pkgname{ggplot2} is confined to \code{annotation\_custom()} which was designed to be used for static annotations expected to be the same in each panel of a plot (the use of annotations is described in section \ref{sec:plot:annotations}). Package \pkgname{ggpmisc} provides geoms that mimic \code{geom\_text()} in relation to the \emph{aesthetics} used, but that similarly to \code{geom\_sf()}, expect that the column in \code{data} mapped to the \code{label} aesthetics are lists of objects containing multiple pieces of information, rather than atomic vectors. Three geometries are currently available: \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()}.
 
 \begin{warningbox}
 Given that  \gggeom{geom\_table()}, \gggeom{geom\_plot()} and \gggeom{geom\_grob()} will rarely use a mapping inherited from the whole plot, by default they do not inherit it. Either the mapping should be supplied as an argument to these functions or their parameter \code{inherit.aes} explicitly set to \code{TRUE}.
@@ -1210,12 +1216,12 @@ ggplot(Puromycin, aes(conc, rate, color = state)) +
               se = FALSE)
 @
 
-In some cases it is desirable to annotate plots with fitted model equations or fitted parameters. One way of achieving this is by fitting the model and then extracting the parameters to manually construct text strings to use for text or label annotations. However, package \pkgname{ggpmisc} makes it possible to automate such annotations in many cases.
+In some cases it is desirable to annotate plots with fitted model equations or fitted parameters. One way of achieving this is by fitting the model and then extracting the parameters to manually construct text strings to use for text or label annotations. However, package \pkgname{ggpmisc} makes it possible to automate such annotations in many cases. This package also provides \ggstat{stat\_poly\_line()} which is similar to \ggstat{stat\_smooth()} but with \code{method = "lm"} consistently as its default irrespective of the number of observations.
 
 <<smooth-plot-12>>=
 my.formula <- y ~ poly(x, 2)
 ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
-  stat_smooth(method = "lm", formula = my.formula, color = "black") +
+  stat_poly_line(formula = my.formula, color = "black") +
   stat_poly_eq(formula = my.formula, aes(label = ..eq.label..),
                color = "black", parse = TRUE, label.x.npc = 0.3) +
   geom_point()
@@ -1226,9 +1232,8 @@ This same package makes it possible to annotate plots with summary tables from a
 <<smooth-plot-13>>=
 my.formula <- y ~ poly(x, 2)
 ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
-  stat_smooth(method = "lm", formula = my.formula, color = "black") +
-  stat_fit_tb(method = "lm",
-              method.args = list(formula = my.formula),
+  stat_poly_line(formula = my.formula, color = "black") +
+  stat_fit_tb(method.args = list(formula = my.formula),
               color = "black",
               tb.vars = c(Parameter = "term",
                           Estimate = "estimate",
@@ -1240,7 +1245,7 @@ ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
   geom_point()
 @
 
-Package \pkgname{ggpmisc} provides additional \emph{statistics} for the annotation of plots based on fitted models. Please see the package documentation for details.
+Package \pkgname{ggpmisc} provides additional \emph{statistics} for the annotation of plots based on fitted models supported by package \pkgname{broom} and its extensions. It also supports lines and equations for quantile regression and major axis regression. Please see the package documentation for details.
 
 \index{plots!smooth curves|)}
 \index{plots!fitted curves|)}
@@ -2209,6 +2214,10 @@ Similar to other functions used to change options in \Rlang, \Rfunction{theme\_s
 theme_set(old_theme)
 p
 @
+
+\begin{explainbox}
+The use of a grey background as default for plots is unusual. This graphic design decision originates in the typesetters desire to maintain a uniform luminosity throughout the text and plots in a page. Many scientific journals require or at least prefer a more traditional graphic design. Theme \ggtheme{theme\_bw()} is the most versatile of the traditional designs supported as it works well both for individual plots as for plots with facets as it includes a box. Theme \ggtheme{theme\_classic()} lacking a box and grid works well for individual plots as is, but needs changes to the facet bars when used with facets.
+\end{explainbox}
 \index{grammar of graphics!complete themes|)}
 
 \subsection{Incomplete themes}
@@ -2317,7 +2326,7 @@ p + my_theme_gray(15, base_color = "darkred")
 
 \section{Composing plots}
 \index{plots!composing|(}
-In section \ref{sec:plot:facets} on page \pageref{sec:plot:facets}, we described how facets can be used to created coordinated sets of panels, based on a single data set. Rather frequently, we need to assemble a composite plot from individually created plots. If one wishes to have correctly aligned axis labels and plotting areas, similar to when using facets, then the task is not easy to achieve without the help of especial tools.
+In section \ref{sec:plot:facets} on page \pageref{sec:plot:facets}, we described how facets can be used to create coordinated sets of panels, based on a single data set. Rather frequently, we need to assemble a composite plot from individually created plots. If one wishes to have correctly aligned axis labels and plotting areas, similar to when using facets, then the task is not easy to achieve without the help of especial tools.
 
 Package \pkgname{patchwork} defines a simple grammar for composing plots created with \ggplot. We briefly describe here the use of operators \Roperator{+}, \Roperator{|} and \Roperator{/}, although \pkgname{patchwork} provides additional tools for defining complex layouts of panels. While \Roperator{+} allows different layouts, \Roperator{|} composes panels side by side, and \Roperator{/} composes panels on top of each other. The plots to be used as panels can be grouped using parentheses.
 
@@ -2355,6 +2364,8 @@ We add a title and tag the panels with a letter. In this, and similar cases, par
 <<patchwork-00b, echo=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 @
+
+Package \pkgname{patchwork} has in recent versions tools for the creation of complex layouts, addition of insets and combining in the same layout plots and other graphic objects such as bitmaps such as photographs and even tables.
 \index{plots!composing|)}
 
 \section[Using plotmath expressions]{Using \code{plotmath} expressions}\label{sec:plot:plotmath}
@@ -2617,7 +2628,7 @@ bw_ggplot(data = mtcars,
 \index{plots!programatic construction|)}
 \index{plots!modular construction|)}
 
-\section{Generating output files}
+\section{Generating output files}\label{sec:plot:render}
 \index{devices!output|see{graphic output devices}}
 \index{plots!saving to file|see{plots, rendering}}
 \index{graphic output devices|(}
