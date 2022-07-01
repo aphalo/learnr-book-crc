@@ -78,7 +78,7 @@ theme_set(theme_gray(14))
 eval_plots_all <- FALSE
 @
 
-\section{Introduction to the grammar of graphics}
+\section{Introduction to the grammar of graphics}\label{sec:plot:intro}
 \index{grammar of graphics!elements|(}
 What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of package \pkgname{ggplot2}). What is meant by grammar in this case is that plots are assembled piece by piece using different ``nouns'' and ``verbs'' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantics-based and to a large extent, how plots look when printed, displayed, or exported to a bitmap or vector-graphics file is controlled by themes.
 
@@ -89,7 +89,11 @@ The grammar of graphics allows us to design plots by combining various elements 
 When a plot is built, the whole plot and its components are created as \Rlang objects that can be saved in the workspace or written to a file as objects. The graphical representation is generated when the object is printed, explicitly or automatically. The same ggplot object can be rendered into different bitmap and vector graphic formats for display or printing.
 
 The production of a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information. If we do not explicitly mention all steps in our code, in most cases defaults for them will be used. The steps from data to rendered graphic, with those in bold having no defaults are:\\[1.2ex]
-{\small\textsf{data $\to$ aes $\to$ stat $\to$ aes $\to$ geom $\to$ scale $\to$ coordinate $\to$ theme $\to$ \emph{ggplot object}}}
+{\small\textsf{data $\to$ aes $\to$ stat $\to$ aes $\to$ geom $\to$ scale $\to$ aes $\to$ coordinate $\to$ theme $\to$ \emph{ggplot object}}}
+
+\begin{explainbox}
+The\index{plots!layers} plots created with package \pkgname{ggplot2} have a layered structure, with plots assembled layer by layer. Thus, the diagram shown above describes only simple plots. The layers of graphical objects are stored and rendered in the order that they are added, and objects in layers added later can occlude those in layers added earlier. As colors in \Rlang support transparency through the \code{alpha} aesthetic the effect of overlapping layers can be altered by changing the order in which they are added to a plot and by use of semitransparent layers.
+\end{explainbox}
 
 \subsection{Data}
 The\index{grammar of graphics!data} data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns are different values observed in that single event. In other words, in long form (so-called ``tidy data'') as described in chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}.
@@ -126,19 +130,36 @@ The end result is an \Rlang object containing the data plus the instructions to 
 
 \subsection{Plot construction}
 \index{grammar of graphics!plot construction|(}
-We have described above the components of the grammar of graphics: aesthetics (\code{aes}), for example color, geometric elements \code{geom\_\ldots} such as lines and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, coordinate systems \code{coord\_\ldots}, and themes \code{theme\_\ldots}. In this section we will see how plots are assembled from these elements.
+As we have described above, the components of the grammar of graphics are: aesthetics (\code{aes}), for example color, geometric elements \code{geom\_\ldots} such as lines and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, coordinate systems \code{coord\_\ldots}, and themes \code{theme\_\ldots}. In this section we will see how plots are assembled and rendered from these elements.
 
-\begin{infobox}
-The\index{plots!layers} plots created with package \pkgname{ggplot2} have a layered structure. These layers of graphical objects are stored and rendered in the order that they are added, and objects in layers added later can occlude those in layers added earlier. As colors in \Rlang support transparency through the \code{alpha} aesthetic the effect of overlapping layers can be altered by changing the order in which they are added to a plot and by use of semitransparent layers.
-\end{infobox}
+A ggplot object contains the data and instructions needed to build a plot. Both data transformations and rendering of the plot using functions from package \pkgname{grid} takes place at the time of printing or exporting the plot. The data provided by the user goes through three stages where mappings of variables to aesthetics can take place. The default for \Rfunction{aes()} is for the mapping to take place ahead of the statistics (1 in the simplified diagram below).\vspace{2.5ex}
 
-As the workings and use of the grammar are easier to show by example than to explain with words, I will show how to build plots of increasing complexity. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. We use function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is. \emph{A plot with no data or layers.}
+{\sffamily
+\centering
+%  \includegraphics[width=0.98\textwidth]{figures/fig2-model.png}
+\resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[auto]
+    \node [b] (data) {data};
+    \node [b, right = of data] (statistic) {statistic};
+    \node [b, right = of statistic] (geometry) {geometry};
+    \node [b, right = of geometry] (scale) {scale};
+    \node [b, right = of scale] (render) {rendered\\plot};
+
+    \path [ll] (statistic) -- (data) node[near end,above]{\textbf{1}};
+    \path [ll] (geometry) -- (statistic) node[near end,above]{\textbf{2}};
+    \path [ll] (scale) -- (geometry) node[near end,above]{\textbf{3}};
+    \path [ll] (render) -- (scale) node[near end,above]{\textbf{4}};
+  \end{tikzpicture}}}\vspace{2ex}
+
+A statistic receives as input \code{data} a data frame with the columns in user-supplied data renamed according to the names of the aesthetics they are mapped to, and additional columns with grouping and panel information added. The value returned by a statistics is also a data frame. This data frame is identical to the input in the case of \ggstat{stat\_identity()} or different, in the values contained and in the number of rows and/or columns for other statistics. Statistics provide default mappings and a default \code{geometry}, but these can be overridden by the user. Usually statistics return other variables in addition to those with default mappings. Within \Rfunction{aes()} we can use function \Rfunction{after\_stat()} to request a mapping after the statistic (2 in the diagram above).
+
+As the workings and use of the grammar are easier to demonstrate by example than to explain with words, I will show how to build plots of increasing complexity, starting from the simplest possible. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. We use function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is. \emph{A plot with no data or layers.}
 
 <<ggplot-basics-01>>=
 ggplot()
 @
 
-The plot above is of little use without any data, so we next pass a data frame object, in this case \code{mtcars}---\Rdata{mtcars} is a data set included in \Rlang; to learn more about this data set, type \code{help("mtcars")} at the \Rlang command prompt. ({\small\textsf{data $\to$ \emph{ggplot object}}})
+The plot above is of little use without any data, so we next pass a data frame object, in this case \code{mtcars}---\Rdata{mtcars} is a data set included in \Rlang; to learn more about this data set, type \code{help("mtcars")} at the \Rlang command prompt. Having no layers or scale, the result is also an empty grey plotting area. ({\small\textsf{data $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-02, eval=eval_plots_all>>=
 ggplot(data = mtcars)
@@ -288,7 +309,7 @@ p <- ggplot(data = mtcars,
 
 \begin{warningbox}
   \index{grammar of graphics!structure of plot objects|(}
-  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self-contained. Most importantly, a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean \Rlang session, even on another computer, and rendered as long as package \ggplot and its dependencies are available. Another consequence of a copy of the data being stored in the plot object, is that editing the data used to create a \code{"gg"} object after its creation does \emph{not} affect rendered plots unless we recreate the "gg" object.
+  The separation of plot construction and rendering is possible, because \code{"gg"} objects are self-contained. Most importantly, a copy of the data object passed as argument is saved within the plot object. In the example above, \code{p} by itself could be saved to a file on disk and loaded into a clean \Rlang session, even on another computer, and rendered as long as package \ggplot and its dependencies are available. Another consequence of storing a copy of the data in the plot object, is that editing after the creation of a \code{"gg"} object the data frame passed as argument to \code{data} when it was created does \emph{not} reflected in newly rendered plots unless we recreate the "gg" object.
 
   With \code{str()} we can explore the structure of any \Rlang object, including those of class \code{"gg"}. We use \code{max.level = 1} to reduce the length of output, but to see deeper into the nested list you can increase the value passed as an argument to \code{max.level} or simply accept its default.
 
@@ -328,8 +349,9 @@ p + my.layers
 \end{infobox}
 \index{grammar of graphics!plots as R objects|)}
 
-\subsection{Data and mappings}
+\subsection{Mappings to aesthetics}
 \index{grammar of graphics!mapping of data|(}
+\index{grammar of graphics!aesthetics(}
 In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as described above, passing an argument, \code{mtcars} in these examples, to the \code{data} parameter of \Rfunction{ggplot()}. Data passed in this way becomes the default for all layers in the plot. The same applies to the argument passed to \code{mapping}.\qRfunction{aes()}
 
 <<ggplot-basics-12, eval=eval_plots_all>>=
@@ -385,7 +407,65 @@ ggplot(data = mtcars,
 @
 
 \end{explainbox}
+
+\emph{Late mapping}\index{grammar of graphics!mapping of data!late} of variables to aesthetics has been possible in \pkgname{ggplot2} for a long time using as notation enclosure of the name of a variable returned by a statistic between \code{...}, but this notation has been deprecated some time ago and replaced by \ggscale{stat()}. In both cases, this imposed a limitation: it was impossible to map a computed variable to the same aesthetic as input to the statistic and to the geometry in the same layer. There were also some other quirks that prevented passing some arguments to the geometry through the dots \code{...} parameter of a statistic.
+
+In version 3.3.0 of \pkgname{ggplot2} the syntax used for mapping variables to aesthetics was changed adding functions \ggscale{stage()}, \ggscale{after\_stat()} and \ggscale{after\_scale()}. Function \ggscale{after\_stat()} replaces \ggscale{stat()} and the \code{...} notation (as of 'ggplot2' == 3.3.5 the old notation is still accepted). As shown in the diagram from section \ref{sec:plot:intro} on page \pageref{sec:plot:intro}, reproduced here, by \textsf{aesthetic} appearing in three places:\\[1.2ex]
+{\small\textsf{data $\to$ aes $\to$ stat $\to$ aes $\to$ geom $\to$ scale $\to$ aes $\to$ coordinate $\to$ theme $\to$ \emph{ggplot object}}}
+
+Variables in the data frame passed as argument to \code{data} are mapped to aesthetics before they are received as input by a statistic (possibly \code{stat\_identity()}). The mappings of variables in the data frame returned by statistics are the input to the geometry. Those statistics that operate on \textit{x} and/or \text{y} return a transformed version of these variables, by default also mapped to these aesthetics. However, in most cases other variables in addition to \textit{x} and/or \text{y} are included in the \code{data} returned by a \emph{statistic}. Although their default mapping is coded in the statistic functions' definitions, the user can modify this default mapping explicitly within a call to \code{aes()} using \ggscale{after\_stat()}, which lets us differentiate between the data frame supplied by the user and that returned by the statistic. The third stage was not accessible in earlier versions of \pkgname{ggplot2}, but lack of access was usually not insurmountable. Now this third stage can be accessed with \ggscale{after\_scale()} making coding simpler.
+
+User-coded transformations of the data are best handled at the third stage using scale transformations. However, when the intention is to jointly display or combine different computed variables returned by a statistic we need to set the desired mapping of original and computed variables to aesthetics at more than one stage.
+
+The documentation of \pkgname{ggplot2} gives several good examples of cases when the new syntax is useful. I give here a different example. We fit a polynomial using \Rfunction{rlm()}. RLM is a procedure that automatically assigns before computing the residual sums of squares, weights to the individual residuals in an attempt to protect the estimated fit from the influence of extreme observations or outliers. When using this and similar methods it is of interest to plot the residuals together with the weights. A frequent approach is to map weights to a gradient between two colours. We start by generating some artificial data containing outliers.
+
+<<mapping-stage-01>>=
+# we use capital letters X and Y as variable names to distinguish
+# them from the x and y aesthetics
+set.seed(4321)
+X <- 0:10
+Y <- (X + X^2 + X^3) + rnorm(length(X), mean = 0, sd = mean(X^3) / 4)
+my.data <- data.frame(X, Y)
+my.data.outlier <- my.data
+my.data.outlier[6, "Y"] <- my.data.outlier[6, "Y"] * 10
+@
+
+As it will be used in multiple examples, we give a name to the model formula. We do this just for convenience but also to ensure consistency in the model fits.
+
+<<mapping-stage-01a>>=
+my.formula <- y ~ poly(x, 3, raw = TRUE)
+@
+
+For the first plot it is enough to use \ggscale{after\_stat()} to map a variable \code{weights} computed by the statistic to the \code{colour} aesthetic. In the case of \ggstat{stat\_fit\_residuals()}, \gggeom{geom\_point()} is used by default. This figure shows the residuals before weights are applied, with the computed weights (with range 0 to 1) encoded by colours ranging between red and blue.
+
+<<mapping-stage-02>>=
+ggplot(my.data.outlier, aes(x = X, y = Y)) +
+  stat_fit_residuals(formula = my.formula, method = "rlm",
+                     mapping = aes(colour = after_stat(weights)),
+                     show.legend = TRUE) +
+  scale_color_gradient(low = "red", high = "blue", limits = c(0, 1),
+                       guide = "colourbar")
+@
+
+In the second plot we plot the weighted residuals, again with colour for weights. In this case we need to use \ggscale{stage()} to be able to distinguish the mapping ahead of the statistic (\code{start}) from that after the statistic, i.e., ahead of the geometry. We use as above, the default geometry, \gggeom{geom\_point()}. The mapping in this example can be read as: the variable \code{X} from the data frame \code{my.data.outlier} is mapped to the \textit{x} aesthetic at all stages. Variable \code{Y} from the data frame \code{my.data.outlier} is mapped to the \textit{y} aesthetic ahead of the computations in \ggstat{stat\_fit\_residuals()}. After the computations, variables \code{y} and \code{weights} in the data frame returned by \ggstat{stat\_fit\_residuals()} are multiplied and mapped to the \textit{y} ahead of \gggeom{geom\_point()}.\label{chunk:plot:weighted:resid}
+
+<<mapping-stage-03>>=
+ggplot(my.data.outlier) +
+  stat_fit_residuals(formula = my.formula,
+                     method = "rlm",
+                     mapping = aes(x = X,
+                                   y = stage(start = Y,
+                                             after_stat = y * weights),
+                                   colour = after_stat(weights)),
+                     show.legend = TRUE) +
+  scale_color_gradient(low = "red", high = "blue", limits = c(0, 1),
+                       guide = "colourbar")
+@
+
+In LM fits, the sum of squares of the un-weighted residuals is minimized to estimate the value of parameters for the best fitting model, while in RLM, the sum of squares of the weighted residuals is minimized instead.
+
 \index{grammar of graphics!mapping of data|)}
+\index{grammar of graphics!aesthetics)}
 
 \section{Geometries}\label{sec:plot:geometries}
 \index{grammar of graphics!geometries|(}
@@ -1418,6 +1498,158 @@ ggplot(my.data, aes(group, y)) +
 \index{plots!violin plot|)}
 \index{grammar of graphics!statistics|)}
 
+\section{Flipped plot layers}\label{sec:plot:flipped}
+\index{grammar of graphics!flipped axes(}
+\index{grammar of graphics!swap axes}
+\index{grammar of graphics!orientation}
+\index{grammar of graphics!horizontal geometries}
+\index{grammar of graphics!horizontal statistics}
+
+Although it is the norm to design plots so that the independent variable is on the $x$ axis, i.e., mapped to the \code{x} aesthetic, there are situations where swapping the roles of $x$ and $y$ is useful. In `ggplot2' this is described as \emph{flipping the orientation} of a plot. In the present section I exemplify both cases where the flipping is automatic and where it requires user intervention. Some geometries like \gggeom{geom\_point()} are symmetric on the \textit{x} and \textit{y} aesthetics, but others like \gggeom{geom\_line()} operate differently on \textit{x} and \textit{y}. This is also the cases for almost all \emph{statistics}.
+
+\ggplot version 3.3.5, supports flipping in most geometries and statistics where it is meaningful, using a new syntax. This new approach is different to the flip of the coordinate system, and similar to that implemented by package \pkgname{ggstance}. However, instead of defining new horizontal layer functions as in \pkgname{ggstance}, now the orientation of many layer functions from \ggplot can be changed by the user. This has made \pkgname{ggstance} nearly redundant and the coding of flipped plots easier and more intuitive. Although \ggplot has offered \ggcoordinate{coord\_flip()} for a long time, this affects the whole plot rather than individual layers.
+
+When a factor is mapped to $x$ or $y$ flipping is automatic. A factor creates groups and summaries are computed per group, i.e., per level of the factor irrespective of the factor being mapped to the $x$ or $y$ aesthetic.  Dodging and jitter do not need any special syntax as it was the case with package \pkgname{ggstance}.
+
+There are also cases that require user intervention. For example, flipping must be requested manually if both $x$ and $y$ are mapped to continuous variables. This is, for example, the case with \ggstat{stat\_smooth()} and a fit of $x$ on $y$.
+
+\begin{explainbox}
+In ggplot statistics, passing {orientation = "y"} results in flipping, that is applying the calculations after swapping the mappings of the $x$ and $y$ aesthetics. After applying the calculations the mappings of the $x$ and $y$ aesthetics are swapped again (diagram below).\vspace{2.5ex}
+
+{\sffamily
+\centering
+%  \includegraphics[width=0.98\textwidth]{figures/fig2-model.png}
+\resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[auto]
+    \node [b] (data) {data};
+    \node [b, right = of data] (statistic) {statistic};
+    \node [b, right = of statistic] (geometry) {geometry};
+    \node [b, right = of geometry] (render) {rendered\\plot};
+
+    \path [ll] (statistic) -- (data) node[near end,above]{$x \rightleftarrows y$};
+    \path [ll] (geometry) -- (statistic) node[near end,above]{$y \rightleftarrows x$};
+    \path [ll] (render) -- (geometry) node[near end,above]{};
+  \end{tikzpicture}}}\vspace{2ex}
+
+In geometries, passing {orientation = "y"} results in flipping of the aesthetics but with a twist. For example, in \gggeom{geom\_line()}, flipping changes the drawing of the lines. Normally observations are sorted along the $x$ axis for drawing the segments connecting them. If we flip this layer, observations are sorted along the $y$ axis before drawing the connecting segments, which can make a major difference. The variables shown on each axis remain the same, as does the position of points drawn with \gggeom{geom\_point()}. In this example only two segments are the same in the flipped plot and the not-flipped one.
+
+<<flipping_box-01-ggplot>>=
+ggplot(mtcars[1:8, ], aes(x = hp, y = mpg)) +
+    geom_point() +
+    geom_line(alpha = 0.5) +
+    geom_line(alpha = 0.5, orientation = "y", colour = "red")
+@
+
+\end{explainbox}
+
+The next pair of examples exemplify automatic flipping using \ggstat{stat\_boxplot()}. Here we map the factor \code{Species} first to $x$ and then to $y$. In both cases boxplots have been computed and plotted for each level of the factor. Statistics \ggstat{stat\_boxplot()}, \ggstat{stat\_summary}, \ggstat{stat\_histogram()} and \ggstat{stat\_density()} behave similarly with respect to flipping.
+
+<<flipping-01-ggplot>>=
+ggplot(iris, aes(x = Species, y = Sepal.Length)) +
+    stat_boxplot()
+@
+
+<<flipping-02-ggplot>>=
+ggplot(iris, aes(x = Sepal.Length, y = Species)) +
+    stat_boxplot()
+@
+
+When we map a variable to only one of $x$ or $y$ the flip is also automatic.
+
+<<flipping-03-ggplot>>=
+ggplot(iris, aes(x = Sepal.Length, color = Species)) +
+    stat_density(fill = NA)
+@
+
+<<flipping-04-ggplot>>=
+ggplot(iris, aes(y = Sepal.Length, color = Species)) +
+    stat_density(fill = NA)
+@
+
+\begin{explainbox}
+In the case of ordinary least squares (OLS), regressions of $y$ on $x$ and of $x$ on $y$ in most cases yield different fitted lines, even if $R^2$ is consistent. This is due to the  assumption that $x$ values are known, either set or measured without error, i.e., not subject to random variation. All unexplained variation in the data is assumed to be in $y$. See Chapter \ref{chap:R:case:fitted:models} on page \pageref{chap:R:case:fitted:models} or consult a Statistics book such as \citetitle{Holmes2019} \autocite[][pp.\ 168--170]{Holmes2019} for additional information.
+\end{explainbox}
+
+With two continuous variables mapped, the default is to take $x$ as independent and $y$ as dependent. This matters, of course, when computations as in model fitting treat $x$ and $y$ differently. In this case parameter \code{orientation} can be used to indicate which of $x$ or $y$ is the independent or explanatory variable.
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+
+<<flipping-05-ggplot>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+  stat_smooth(method = "lm", formula = y ~ x) +
+  geom_point() +
+  facet_wrap(~Species, scales = "free")
+@
+
+With \code{orientation = "y"} we tell that $y$ is the independent variable. In the case of \gggeom{geom\_smooth()} this means implicitly swapping $x$ and $y$ in \code{formula}.
+
+<<flipping-06-ggplot>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    stat_smooth(method = "lm", formula = y ~ x, orientation = "y") +
+    geom_point() +
+    facet_wrap(~Species, scales = "free")
+@
+
+\begin{explainbox}
+Flipping the orientation of plot layers with \code{orientation = "y"} is not equivalent to flipping the whole plot with \ggcoordinate{coord\_flip()}. In the first case which axis is considered independent for computation changes but not the positions of the axes in the plot, while in the second case the position of the $x$ and $y$ axes in the plot is swapped. So, when coordinates are flipped the $x$ aesthetic is plotted on the vertical axis and the $y$ aesthetic on the horizontal axis, but the role of the variable mapped to the \code{x} aesthetic remains as explanatory variable.
+
+<<flipping-06a-ggplot>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    stat_smooth(method = "lm", formula = y ~ x) +
+    geom_point() +
+    coord_flip() +
+    facet_wrap(~Species, scales = "free")
+@
+\end{explainbox}
+
+In package \pkgname{ggpmisc} (version $\geq$ 0.4.1) statistics related to model fitting have an \code{orientation} parameter as those from package \ggplot do, but in addition they accept formulas where $x$ is on the lhs and $y$ on the rhs, such as \code{formula = x \~{} y} providing a syntax consistent with \Rlang's model fitting functions. In the next pair of examples we use \ggstat{stat\_poly\_line()}. In the first example in this pair, the default \code{formula = y \~{} x} is used, while in the second example we pass explicitly \code{formula = x \~{} y} to force the flipping of the fitted model. To make the difference clear, we plot both linear regressions on the same plots.
+
+<<flipping-07-ggpmisc>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    stat_poly_line() +
+    stat_poly_line(formula = x ~ y, color = "red", fill = "yellow") +
+    geom_point() +
+    facet_wrap(~Species, scales = "free")
+@
+
+In\index{plots!major axis regression}\label{par:ma:example} the case of the \code{iris} data used for these examples, both approaches used above to linear regression are wrong. The variables mapped to $x$ and$y$ are correlated but both are measured with error and subject to biological variation. In this case the correct approach is to not assume that there is a variable that can be considered independent, and instead use a method like major axis (MA) regression, as can be seen below.
+
+<<flipping-08-ggpmisc, message=FALSE, warning=FALSE>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    stat_ma_line() +
+    geom_point() +
+    facet_wrap(~Species, scales = "free")
+@
+
+A related problem is when we need to summarize in the same plot layer $x$ and $y$ values. A simple example is adding a point with coordinates given by the means along the $x$ and $y$ axes as we need to pass these computed means simultaneously to \gggeom{geom\_point()}. Package \ggplot provides \ggstat{stat\_density2d()} and \ggstat{stat\_summary2d()}. However, \ggstat{stat\_summary2d()} uses bins, and is similar to \ggstat{stat\_density2d()} in how the computed values are returned. Package \pkgname{ggpmisc} provides two dimensional equivalents of \ggstat{stat\_summary()}: \ggstat{stat\_centroid()}, which applies the same summary function along $x$ and $y$, and \ggstat{stat\_summary\_xy()}, which accepts one function for $x$ and one for $y$.
+
+<<flipping-09-ggpmisc>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    geom_point() +
+    stat_centroid(color = "red") +
+    facet_wrap(~Species, scales = "free")
+@
+
+<<flipping-10-ggpmisc>>=
+ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+    geom_point() +
+    stat_centroid(geom = "rug", sides = "trbl",
+                  color = "red", size = 1.5) +
+    facet_wrap(~Species, scales = "free")
+@
+
+\begin{playground}
+Which of the plots in the last two chunks above can be created by adding two layers with \ggstat{stat\_summary()}? Recreate this plot using \ggstat{stat\_summary()}.
+\end{playground}
+
+\index{grammar of graphics!flipped axes)}
+
+<<echo=FALSE, include=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
 \section{Facets}\label{sec:plot:facets}
 \index{grammar of graphics!facets|(}
 \index{plots!trellis-like}\index{plots!coordinated panels}
@@ -1988,6 +2220,33 @@ Continuous color scales \ggscale{scale\_color\_continuous()}, \ggscale{scale\_co
 \subsection{Discrete color-related scales}
 \sloppy
 Color scales \ggscale{scale\_color\_discrete()}, \ggscale{scale\_color\_hue()}, \ggscale{scale\_color\_gray()} are used with categorical data stored as factors. Other scales like \ggscale{scale\_color\_viridis\_d()} and \ggscale{scale\_color\_brewer()} provide discrete sets of colours based on palettes.
+
+\subsection{Binned scales}\label{sec:binned:scales}
+\index{grammar of graphics!binned scales(}
+Before version 3.3.0 of \pkgname{ggplot2} only two types of scales were available, continuous and discrete. A third type of scales (implemented for all the aesthetics where relevant) was added in version 3.3.0 called \emph{binned}. They are to be used with continuous variables, but they discretize the continuous values into bins or classes, each for a range of values, and then represent them in the plot using a discrete set of values. We re-do the figure shown on page \pageref{chunk:plot:weighted:resid} but replacing \ggscale{scale\_color\_gradient()} by \ggscale{scale\_color\_binned()}.
+
+<<mapping-stage-01>>=
+@
+
+<<mapping-stage-01a>>=
+@
+
+<<binned-scales-01>>=
+ggplot(my.data.outlier) +
+  stat_fit_residuals(formula = my.formula,
+                     method = "rlm",
+                     mapping = aes(x = X,
+                                   y = stage(start = Y,
+                                             after_stat = y * weights),
+                                   colour = after_stat(weights)),
+                     show.legend = TRUE) +
+  scale_color_binned(low = "red", high = "blue", limits = c(0, 1),
+                     guide = "colourbar", n.breaks = 5)
+@
+
+The advantage of binned scales is that they facilitate the fast reading of the plot while their disadvantage is the decreased resolution of the scale. The choice of a binned vs.\ continuous scale, and the number and boundaries of bins, set by the argument passed to parameter \code{n.breaks} or to \code{breaks} need to be chosen carefully, taking into account the audience, the length of time available to the viewer to peruse the plot vs.\ the density of observations. Transformations are also allowed in these scales as in others.
+
+\index{grammar of graphics!binned scales)}
 
 \subsection{Identity scales}
 \index{grammar of graphics!identity color scales|(}

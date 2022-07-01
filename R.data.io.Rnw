@@ -123,6 +123,7 @@ The complementary function to \code{basename()} is \Rfunction{dirname()} and ext
 <<filenames-03>>=
 dirname("extdata/my-file.txt")
 @
+
 \index{file paths!parsing|)}
 \index{working directory|(}
 Functions \Rfunction{getwd()} and \Rfunction{setwd()} can be used to get the path to the current working directory and to set a directory as current, respectively.
@@ -400,15 +401,15 @@ cat(readLines('my-file2.txt'), sep = '\n')
 citation(package = "readr")
 @
 
-Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that allow faster input and output, and have different default behavior. Contrary to base \Rlang functions, they are optimized for speed, but may sometimes wrongly decode their input and rarely even silently do this. Base \Rlang functions do less \emph{guessing}, e.g., the delimiters must be supplied as arguments. The \pkgname{readr} functions guess more properties of the text file format; in most cases they succeed, which is very handy, but occasionally they fail. Automatic guessing can be overridden by passing arguments and this is recommended for scripts that may be reused to read different files in the future. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behavior of overwriting an existing file with the same name, to appending the output at its end.
+Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that have different default behavior and that are designed to be faster under different situations than those native to  \Rlang. The functions from package \pkgname{readr} can sometimes wrongly decode their input and rarely even silently do this. Base \Rlang functions do less \emph{guessing}, e.g., the delimiters must be supplied as arguments. The \pkgname{readr} functions guess more properties of the text file format; in most cases they succeed, which is very handy, but occasionally they fail. Automatic guessing can be overridden by passing arguments and this is recommended for scripts that may be reused to read different files in the future. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behavior of overwriting an existing file with the same name, to appending the output at its end.
 
 Although in this section we exemplify the use of these functions by passing a file name as an argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}). Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on the fly.
 
 \begin{warningbox}
-The names of functions ``equivalent'' to those described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names, or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behavior are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors and row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame}, but is not fully compatible (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
+Functions ``equivalent'' to native \Rlang functions described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names, or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behavior are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors as \Rlang functions did by default in versions earlier than 4.2.0. Row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame}, but is not fully compatible (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
 \end{warningbox}
 
-As we can see in this first example, these functions also report to the console the specifications of the columns, which is important when these are guessed from the file contents, or part of it.
+As we can see in this first example, these functions also report to the console the specifications of the columns, which is important when these are guessed from the file contents, or even only from rows near the top of the file.
 
 <<readr-01>>=
 read_csv(file = "extdata/aligned-ASCII-UK.csv")
@@ -418,16 +419,16 @@ read_csv(file = "extdata/aligned-ASCII-UK.csv")
 read_csv(file = "extdata/not-aligned-ASCII-UK.csv")
 @
 
-Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()}, retains quotes as part of read character strings.
+Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()}, retains quotes as part of read character strings. In this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
 
 <<readr-03>>=
 read_table(file = "extdata/aligned-ASCII.txt")
 @
 
-Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"}, we need to use \Rfunction{read\_table2()}, which allows misalignment of fields, like \Rfunction{read.table()}, instead of \Rfunction{read\_table()}, which expects vertically aligned fields across rows. However, in this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
+Package \pkgname{readr} is under active development, and different versions are not fully compatible. Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"} in the past we needed to use \Rfunction{read\_table2()}, which allowed misalignment of fields, similarly to \Rfunction{read.table()}. This function has been deprecated, as \Rfunction{read\_table()} now accepts vertically misaligned fields across rows. However, it fails with the same error as for aligned text file.
 
 <<readr-04>>=
-read_table2(file = "extdata/not-aligned-ASCII.txt")
+read_table(file = "extdata/not-aligned-ASCII.txt")
 @
 
 Function \Rfunction{read\_delim()} with space as the delimiter needs to be used.
@@ -439,22 +440,24 @@ read_delim(file = "extdata/not-aligned-ASCII.txt", delim = " ")
 Function \Rfunction{read\_tsv()} reads files encoded with the tab character as the delimiter, and \Rfunction{read\_fwf()} reads files with fixed width fields. There is, however, no equivalent to \Rfunction{read.fortran()}, supporting implicit decimal points.
 
 \begin{playground}
-Use the "wrong" \code{read\_} functions to read the example files used above and/or your own files. As mentioned earlier, forcing errors will help you learn how to diagnose when such errors are caused by coding mistakes. In this case, as wrongly read data are not always accompanied by error or warning messages, carefully check the returned tibbles for misread data values.
+Use the "wrong" \code{read\_} functions to read the example files used above and/or your own files. As mentioned earlier, forcing errors will help you learn how to diagnose when such errors are caused by coding or data entry mistakes. In this case, as wrongly read data are not always accompanied by error or warning messages, carefully check the returned tibbles for misread data values.
 \end{playground}
 
 \begin{explainbox}
-The functions from R's \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for very large text files. The functions from \pkgname{readr} read only the top 1000 lines by default for guessing, and then rather blindly read the whole files assuming that the guessed properties also apply to the remainder of the file. This is more efficient, but somehow risky. In earlier versions of \pkgname{readr}, a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be, at the time of writing correctly, handled. It also means that in cases when an individual value after \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings as base \Rpgrm functions, this value is encoded as a numeric \code{NA} with a warning. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an example file only a few lines in length.
+The functions from R's package \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for text files with many lines. The functions from \pkgname{readr} read by default only the top 1000 lines when guessing the format and class, and then rather blindly read the whole files assuming that the guessed properties also apply to the remaining lines of the file. This is more efficient in the case of such files, but somehow risky. In contrast, the functions from R's package \pkgname{utils} are much faster than those from package \pkgname{readr} at reading files with many fields (or columns) per line. 
+
+In earlier versions of \pkgname{readr}, a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be, at the time of writing correctly, handled. A guess based on the top 1000 lines of a text file also means that in cases values in lines below \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings as functions from R's package \pkgname{utils}, their values are replaced by numeric \code{NA} values with a warning. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an for the example a file only a few lines in length.
 
 <<tibble-print-20, echo=FALSE>>=
 options(tibble.print_max = 6, tibble.print_min = 6)
 @
 
 <<readr-06>>=
-read_table2(file = "extdata/miss-aligned-ASCII.txt")
+read_table(file = "extdata/miss-aligned-ASCII.txt")
 @
 
 <<readr-07>>=
-read_table2(file = "extdata/miss-aligned-ASCII.txt", guess_max = 3L)
+read_table(file = "extdata/miss-aligned-ASCII.txt", guess_max = 3L)
 @
 \end{explainbox}
 \index{importing data!text files|)}
@@ -477,7 +480,7 @@ cat(read_lines('my-file6.csv'), sep = '\n')
 @
 
 \begin{playground}
-Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (the version you are using, with the locale settings of your computer)?
+Compare the output from \Rfunction{write\_excel\_csv()} and \Rfunction{write\_csv()}. What is the difference? Does it matter when you import the written CSV file into Excel (in the version you are using, and with the locale settings of your computer)?
 \end{playground}
 
 The pair of functions \Rfunction{read\_lines()} and \Rfunction{write\_lines()} read and write character vectors without conversion, similarly to base \Rlang \code{readLines()} and \code{writeLines()}. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} read and write the contents of a whole text file into, and from, a single character string. Functions \Rfunction{read\_file()} and \Rfunction{write\_file()} can also be used with raw vectors to read and write binary files or text files of unknown encoding.
@@ -551,7 +554,7 @@ Microsoft Office, Open Office and Libre Office are the most frequently used suit
 
 \subsection{CSV files as middlemen}
 
-If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to recreate intermediate files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
+If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to create intermediate CSV formatted text files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection[`readxl']{\pkgname{readxl}}\label{sec:files:excel}
 \index{importing data!.xlsx files|(}
@@ -742,6 +745,7 @@ str(meteo_data.nc, max.level = 1)
 \begin{advplayground}
 Increase \code{max.level} in the call to \Rfunction{str()} above and study the connection object stores information on the dimensions and for each data variable. You can also \code{print(meteo\_data.nc)} for a more complete printout once you have understood the structure of the object.
 \end{advplayground}
+
 The dimensions of the array data are described with metadata, in our examples mapping indexes to a grid of latitudes and longitudes and into a time vector as a third dimension. The dates are returned as character strings. We get here the variables one at a time with function \Rfunction{ncvar\_get()}.
 
 <<ncdf4-02>>=
@@ -945,9 +949,11 @@ Most YoctoPuce input modules have a built-in datalogger, and the stored data can
 <<dbplyr-00a, eval=FALSE, include=FALSE>>=
 citation(package = "dbplyr")
 @
+
 <<dbplyr-00b, eval=FALSE, include=FALSE>>=
 citation(package = "DBI")
 @
+
 <<dbplyr-00c, eval=FALSE, include=FALSE>>=
 citation(package = "RSQLite")
 @
