@@ -1969,7 +1969,7 @@ The default breaks are computed by function \Rfunction{pretty\_breaks()} from \p
 <<scale-ticks-01a, eval=eval_plots_all, echo=3>>=
 ggplot(fake2.data, aes(z, y)) +
   geom_point() +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 7))
+  scale_y_continuous(breaks = pretty_breaks(n = 7))
 @
 
 We can set tick labels manually, in parallel to the setting of \code{breaks} by passing as arguments two vectors of equal length. In the next example we use an expression to obtain a Greek letter.
@@ -1981,15 +1981,29 @@ ggplot(fake2.data, aes(z, y)) +
                      labels = c("20", expression(10*pi), "40", "60"))
 @
 
-Package \pkgname{scales} provides several functions for the automatic generation of labels. For example, to display tick labels as percentages for data available as decimal fractions, we can use function \code{scales::percent()}.
+Package \pkgname{scales} provides several functions for the automatic generation of tick labels. For example, to display tick labels as percentages for data available as decimal fractions, we can use function \code{percent()}.
 
 <<scale-ticks-03>>=
 ggplot(fake2.data, aes(z, y / max(y))) +
   geom_point() +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = percent)
 @
 
-For currency, we can use \code{scales::dollar()}, to include commas separating thousands, millions, so on, we can use \code{scales::comma()}, and for numbers formatted using exponents of 10---useful for logarithmic-transformed scales---we can use \code{scales::scientific\_format()}. It is also possible to use user-defined functions both for breaks and labels.
+For currency, we can use \code{dollar()}, to include commas separating thousands, millions, so on, we can use \code{comma()}, and for numbers formatted using exponents of 10---useful for logarithmic-transformed scales---we can use \code{scientific\_format()}, \code{label\_number(scale\_cut = cut\_short\_scale())}, \code{label\_log()}, or \code{label\_number(scale\_cut = cut\_si("g")}. As shown below, some of these functions can be useful with untransformed continuous scales.
+
+<<scale-ticks-04>>=
+ggplot(fake2.data, aes(z, y * 1000)) +
+  geom_point() +
+  scale_y_continuous(name = "Mass", labels = label_number(scale_cut = cut_si("g")))
+@
+
+With date values mapped to $x$ or $y$, tick labels are created with functions \Rfunction{label\_date()} or \Rfunction{label\_date\_short()}. In the case of time, tick labels are created with function \Rfunction{label\_time()}.
+
+<<scale-ticks-05>>=
+## ADD EXAMPLES USING FORMATS for dates and times
+@
+
+It is also possible to use user-defined functions both for breaks and labels.
 
 \subsubsection{Transformed scales}\label{sec:plot:scales:trans}
 
@@ -2222,7 +2236,7 @@ Continuous color scales \ggscale{scale\_color\_continuous()}, \ggscale{scale\_co
 Color scales \ggscale{scale\_color\_discrete()}, \ggscale{scale\_color\_hue()}, \ggscale{scale\_color\_gray()} are used with categorical data stored as factors. Other scales like \ggscale{scale\_color\_viridis\_d()} and \ggscale{scale\_color\_brewer()} provide discrete sets of colours based on palettes.
 
 \subsection{Binned scales}\label{sec:binned:scales}
-\index{grammar of graphics!binned scales(}
+\index{grammar of graphics!binned scales|(}
 Before version 3.3.0 of \pkgname{ggplot2} only two types of scales were available, continuous and discrete. A third type of scales (implemented for all the aesthetics where relevant) was added in version 3.3.0 called \emph{binned}. They are to be used with continuous variables, but they discretize the continuous values into bins or classes, each for a range of values, and then represent them in the plot using a discrete set of values. We re-do the figure shown on page \pageref{chunk:plot:weighted:resid} but replacing \ggscale{scale\_color\_gradient()} by \ggscale{scale\_color\_binned()}.
 
 <<mapping-stage-01>>=
@@ -2246,7 +2260,7 @@ ggplot(my.data.outlier) +
 
 The advantage of binned scales is that they facilitate the fast reading of the plot while their disadvantage is the decreased resolution of the scale. The choice of a binned vs.\ continuous scale, and the number and boundaries of bins, set by the argument passed to parameter \code{n.breaks} or to \code{breaks} need to be chosen carefully, taking into account the audience, the length of time available to the viewer to peruse the plot vs.\ the density of observations. Transformations are also allowed in these scales as in others.
 
-\index{grammar of graphics!binned scales)}
+\index{grammar of graphics!binned scales|)}
 
 \subsection{Identity scales}
 \index{grammar of graphics!identity color scales|(}

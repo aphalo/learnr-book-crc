@@ -409,6 +409,10 @@ Although in this section we exemplify the use of these functions by passing a fi
 Functions ``equivalent'' to native \Rlang functions described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names, or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Other aspects of the default behavior are also different, for example \pkgname{readr} functions do not convert columns of character strings into factors as \Rlang functions did by default in versions earlier than 4.2.0. Row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame}, but is not fully compatible (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
 \end{warningbox}
 
+\begin{infobox}
+  Package \pkgname{readr} is under active development, and function with the same name from different major versions are not fully compatible. Code chunks for examples from the previous edition of the book no longer work because the new implementation fails to recognize escaped special characters. In addition function \Rfunction{read\_table2()} has been renamed \Rfunction{read\_table2()}.
+\end{infobox}
+
 As we can see in this first example, these functions also report to the console the specifications of the columns, which is important when these are guessed from the file contents, or even only from rows near the top of the file.
 
 <<readr-01>>=
@@ -419,19 +423,17 @@ read_csv(file = "extdata/aligned-ASCII-UK.csv")
 read_csv(file = "extdata/not-aligned-ASCII-UK.csv")
 @
 
-Function \Rfunction{read\_table()}, differently to \Rfunction{read.table()}, retains quotes as part of read character strings. In this case the embedded space character in the quoted string is misinterpreted and part of the string dropped with a warning.
+Package \pkgname{readr} is under active development, and different major versions are not fully compatible with each other. Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"} in the past we needed to use \Rfunction{read\_table2()}, which allowed misalignment of fields, similarly to \Rfunction{read.table()}. This function has been renamed as \Rfunction{read\_table()} and \Rfunction{read\_table2()} deprecated. However, parsing of both files fails if they are read with \Rfunction{read\_table()}. 
 
 <<readr-03>>=
 read_table(file = "extdata/aligned-ASCII.txt")
 @
 
-Package \pkgname{readr} is under active development, and different versions are not fully compatible. Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"} in the past we needed to use \Rfunction{read\_table2()}, which allowed misalignment of fields, similarly to \Rfunction{read.table()}. This function has been deprecated, as \Rfunction{read\_table()} now accepts vertically misaligned fields across rows. However, it fails with the same error as for aligned text file.
-
 <<readr-04>>=
 read_table(file = "extdata/not-aligned-ASCII.txt")
 @
 
-Function \Rfunction{read\_delim()} with space as the delimiter needs to be used.
+Function \Rfunction{read\_delim()} with space as the delimiter needs to be used instead of \Rfunction{read\_table()}.
 
 <<readr-05>>=
 read_delim(file = "extdata/not-aligned-ASCII.txt", delim = " ")
@@ -444,7 +446,7 @@ Use the "wrong" \code{read\_} functions to read the example files used above and
 \end{playground}
 
 \begin{explainbox}
-The functions from R's package \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for text files with many lines. The functions from \pkgname{readr} read by default only the top 1000 lines when guessing the format and class, and then rather blindly read the whole files assuming that the guessed properties also apply to the remaining lines of the file. This is more efficient in the case of such files, but somehow risky. In contrast, the functions from R's package \pkgname{utils} are much faster than those from package \pkgname{readr} at reading files with many fields (or columns) per line. 
+The functions from R's package \pkgname{utils} read the whole file as text before attempting to guess the class of the columns or their alignment. This is reliable but slow for text files with many lines. The functions from \pkgname{readr} read by default only the top 1000 lines when guessing the format and class, and then rather blindly read the whole files assuming that the guessed properties also apply to the remaining lines of the file. This is more efficient in the case of such files, but somehow risky. In contrast, the functions from R's package \pkgname{utils} are much faster than those from package \pkgname{readr} at reading files with many fields (or columns) per line.
 
 In earlier versions of \pkgname{readr}, a typical failure to correctly decode fields was when numbers are in increasing order and the field widths continue increasing in the lines below those used for guessing, but this case seems to be, at the time of writing correctly, handled. A guess based on the top 1000 lines of a text file also means that in cases values in lines below \code{guess\_max} lines cannot be converted to numeric, instead of returning a column of character strings as functions from R's package \pkgname{utils}, their values are replaced by numeric \code{NA} values with a warning. To demonstrate this we will drastically reduce \code{guess\_max} from its default so that we can use an for the example a file only a few lines in length.
 
