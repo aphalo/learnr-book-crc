@@ -36,7 +36,7 @@ The very welcome increase of awareness of the need for open availability of data
 
 Faster internet access to data sources and cheaper random-access memory (RAM) has made it possible to efficiently work with relatively large data sets in \Rlang. That \Rlang keeps all data in memory (RAM), imposes limits to the size of data \Rlang functions can operate on. For data sets large enough not to fit in computer RAM, one can use selective reading of data from flat files, or from databases outside of \Rlang.
 
-Some \Rlang packages have made it faster to import data saved in the same formats already supported by base \Rlang, but in some cases providing weaker guarantees of not corrupting the data than base \Rlang. Other contributed packages make it possible to import and export data stored in file formats not supported by base \Rlang functions. Some of these formats are subject-area specific while others are in widespread use.
+Some contributed \Rlang packages support import of data saved in the same formats already supported by base \Rlang, but using different compromises between reliability, easy of use and performance. Functions in base \Rlang tend to prioritize reliability and protection from data corruption while some contributed packages prioritize performance. Other contributed packages make it possible to import and export data stored in file formats not supported by base \Rlang functions. Some of these formats are subject-area specific while others are in widespread use. Packages supporting direct download of data sets from public repositories are becoming also common.
 
 \section{Packages used in this chapter}
 
@@ -423,7 +423,7 @@ read_csv(file = "extdata/aligned-ASCII-UK.csv")
 read_csv(file = "extdata/not-aligned-ASCII-UK.csv")
 @
 
-Package \pkgname{readr} is under active development, and different major versions are not fully compatible with each other. Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"} in the past we needed to use \Rfunction{read\_table2()}, which allowed misalignment of fields, similarly to \Rfunction{read.table()}. This function has been renamed as \Rfunction{read\_table()} and \Rfunction{read\_table2()} deprecated. However, parsing of both files fails if they are read with \Rfunction{read\_table()}. 
+Package \pkgname{readr} is under active development, and different major versions are not fully compatible with each other. Because of the misaligned fields in file \code{"not-aligned-ASCII.txt"} in the past we needed to use \Rfunction{read\_table2()}, which allowed misalignment of fields, similarly to \Rfunction{read.table()}. This function has been renamed as \Rfunction{read\_table()} and \Rfunction{read\_table2()} deprecated. However, parsing of both files fails if they are read with \Rfunction{read\_table()}.
 
 <<readr-03>>=
 read_table(file = "extdata/aligned-ASCII.txt")
@@ -554,9 +554,19 @@ I have passed all arguments by name to make explicit how this pipe works. See se
 
 Microsoft Office, Open Office and Libre Office are the most frequently used suites containing programs based on the worksheet paradigm. There is available a standardized file format for exchange of worksheet data, but it does not support all the features present in native file formats. We will start by considering \pgrmname{MS-Excel}. The file format used by \pgrmname{MS-Excel} has changed significantly over the years, and old formats tend to be less well supported by available \Rlang packages and may require the file to be updated to a more modern format with \pgrmname{MS-Excel} itself before import into \Rlang. The current format is based on XML and relatively simple to decode, whereas older binary formats are more difficult. Worksheets contain code as equations in addition to the actual data. In all cases, only values entered as such or those computed by means of the embedded equations can be imported into \Rlang rather than the equations themselves.
 
+\begin{warningbox}
+When directly reading from a worksheet, a column of cells with mixed type, can introduce \code{NA} values. A wrongly selected cell range from the worksheet can result in missing columns or rows, if the area is too small, or in rows or columns filled with \code{NA} values, if the range includes empty cells in the worksheet. Depending on the function used, it may be possible to ignore empty cells, by passing an argument.
+
+Many problems related to the import of data from work sheets and work books are due to translation between two different formats that impose different restrictions on what is allowed or not. While in a worksheet it is allowed to set the ``format'' (as called in \pgrmname{Excel}, and roughly equivalent to \code{mode} in \Rlang) of individual cells, a variable (column) in an \Rlang data frame is expected to be vector, and thus contain members belonging the same \code{mode} or type. For the import to work as expected, the ``format'' must be consistent, i.e., all cells in a column to be imported are marked as one of the \code{Number}, \code{Date}, \code{Time} or \code{Text} formats, with the possible exception of a \emph{single row} of column headers with the names of the variables as \code{Text}. The default format \code{General} also works but as it does not ensure consistency, it makes more difficult to see format inconsistencies at a glance in Excel.
+
+When reading a \code{CSV} file, text representing numbers will be recognized and converted, but only if the decimal point is encoded as expected from the arguments passed to the function call. So a single number with a comma instead of a dot as decimal marker (or vice versa) will result in most cases in the column not being decoded as numbers and returned as a \code{character} vector (or column) in the data frame. In the case of package \pkgname{readr} a \code{numeric} vector containing \code{NA} values for the non-decoded text may be returned instead of a \code{character} vector depending on whether the wrong decimal marker appears near the top or near the end of the file.
+
+When importing data from a worksheet or workbook, my recommendation is first to check it in the original software to ensure that the cells to be imported are encoded as expected. When using a \code{CSV} as an intermediate step, it is crucial to also open this file in a plain-text editor such as the editor pane in \RStudio (or \pgrmname{Notepad} in \pgrmnameNI{Windows} or \pgrmname{Nano}, \pgrmname{Emacs}, etc., in \pgrmnameNI{Unix} and \pgrmnameNI{Linux}). Based on what field separator, decimal mark, and possibly character encoding has been used, which depends on the locale settings in the operating system of the computer and in the worksheet program, select a suitable function to call and the necessary arguments to pass to it.
+\end{warningbox}
+
 \subsection{CSV files as middlemen}
 
-If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to create intermediate CSV formatted text files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
+If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that we should take care that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to create intermediate \code{CSV} formatted text files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection[`readxl']{\pkgname{readxl}}\label{sec:files:excel}
 \index{importing data!.xlsx files|(}
@@ -581,18 +591,30 @@ sheets
 In this case, the argument passed to \code{sheet} is redundant, as there is only a single worksheet in the file. It is possible to use either the name of the sheet or a positional index (in this case \code{1} would be equivalent to \code{"my data"}). We use function \Rfunction{read\_excel()} to import the worksheet. Being part of the \pkgname{tidyverse} the returned value is a tibble and character columns are returned as is.
 
 <<readxl-02>>=
-Book1.df <- read_excel("extdata/Book1.xlsx", sheet = "my data")
+Book1.df <- read_excel("extdata/Book1.xlsx",
+                       sheet = "my data")
 Book1.df
 @
 
 We can also read a region instead of the whole worksheet.
 
 <<readxl-03>>=
-Book1_region.df <- read_excel("extdata/Book1.xlsx", sheet = "my data", range = "A1:B8")
+Book1_region.df <- read_excel("extdata/Book1.xlsx",
+                              sheet = "my data",
+                              range = "A1:B8")
 Book1_region.df
 @
 
-Of the remaining arguments, the most useful ones have the same names and play similar roles as in \pkgname{readr} (see section \ref{sec:files:readr} on page \pageref{sec:files:readr}).
+Of the remaining arguments, the most useful ones have the same names and play similar roles as in \pkgname{readr} (see section \ref{sec:files:readr} on page \pageref{sec:files:readr}). For example, we can set new names to the columns instead of reading their names from the worksheet.
+
+<<readxl-04>>=
+Book1_region.df <- read_excel("extdata/Book1.xlsx",
+                              sheet = "my data",
+                              range = "A2:B8",
+                              col_names = c("A", "B"))
+Book1_region.df
+
+@
 
 \subsection[`xlsx']{\pkgname{xlsx}}
 
@@ -605,7 +627,8 @@ Package \pkgname{xlsx} can be more difficult to install as it uses Java function
 Here we use function \Rfunction{read.xlsx()}, indexing the worksheet by name. The returned value is a data frame, and following the expectations of \Rlang package \pkgnameNI{utils}, character columns are converted into factors by default.
 
 <<xlsx-01>>=
-Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx", sheetName = "my data")
+Book1_xlsx.df <- read.xlsx("extdata/Book1.xlsx",
+                           sheetName = "my data")
 Book1_xlsx.df
 @
 
@@ -614,8 +637,13 @@ With function \Rfunction{write.xlsx()} we can write data frames out to Excel wor
 <<xlsx-05>>=
 set.seed(456321)
 my.data <- data.frame(x = 1:10, y = letters[1:10])
-write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "first copy")
-write.xlsx(my.data, file = "extdata/my-data.xlsx", sheetName = "second copy", append = TRUE)
+write.xlsx(my.data,
+           file = "extdata/my-data.xlsx",
+           sheetName = "first copy")
+write.xlsx(my.data,
+           file = "extdata/my-data.xlsx",
+           sheetName = "second copy",
+           append = TRUE)
 @
 
 When opened in Excel, we get a workbook containing two worksheets, named using the arguments we passed through \code{sheetName} in the code chunk above.
