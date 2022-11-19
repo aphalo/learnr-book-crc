@@ -78,81 +78,160 @@ theme_set(theme_gray(14))
 eval_plots_all <- FALSE
 @
 
-\section{Introduction to the grammar of graphics}\label{sec:plot:intro}
+\section{The components of a plot}
+I start this chapter by briefly presenting some concepts central to data visualisation. Plots are a medium used to convey information, like text. It is worthwhile keeping this in mind. As with text, the design of plots needs to consider what we want to highlight, what is take home message we want to convey. The style of the plot should match the expectations and the plot-reading abilities of the expected audience. One needs to be careful to avoid ambiguities and most importantly of all not to miss-inform. Data visualisations like text need to be planned, revised, commented upon, revised again until the best way of expressing our message is found. As we will see through this chapter, the flexibility of the grammar of graphics supports very well this approach and designing and producing high quality data visualizations for different audiences.
+
+Of course, when exploring data we do not need fancy details of graphical design, but we still need the flexibility that allows looking at the same data from many differing angles, highlighting different aspects of them. In the same way as boiler-plate text and text templates have specific but limited uses, all-in-one functions for producing plots do not support well the design of original data visualizations. They tend to get the job done, but lack the flexibility needed to do the best job of communicating with readers. Being this a book about languages, the focus of this chapter is in the layered grammar of graphics.
+
+The plots we will describe in this chapter are classified as \emph{statistical graphics} within the larger field of data visualisation which is much broader. Plots such as scatter plots include points (geometric objects) that by their position, shape, colour or some other property directly convey information. If we consider these points their location in the plot fixed by the values of their coordinates and any alteration of these coordinates is wrong because it breaks the correspondence between coordinates and observed values thus conveying wrong/false information to the audience. A data label is connected to an observation but its position can be displaced as long as its link to the corresponding observation can be inferred, e.g., by the direction of an arrow or even simple proximity. Annotations, are additions to a plot that have no connection to individual observations, but rather with all observations taken together, e.g., a text like n = 200 indicating the number of observations and included in a corner of a plot. These three elements directly convey information about observations. The scales included in the visualisation make it possible for the plot-reader to retrieve the original values represented in the plot by graphical elements. Other elements in a visualisation may not carry additional information or represent scales, but still affect the easy with which a plot can be read. This include size of text and symbols, thickness of lines, font face, the choice of colour palette, etc. It is important to be aware of the roles played by all these components when designing a data visualisation and when implementing it using the grammar of graphics.
+
+\section{The grammar of graphics}\label{sec:plot:intro}
 \index{grammar of graphics!elements|(}
 What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of package \pkgname{ggplot2}). What is meant by grammar in this case is that plots are assembled piece by piece using different ``nouns'' and ``verbs'' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantics-based and to a large extent, how plots look when printed, displayed, or exported to a bitmap or vector-graphics file is controlled by themes.
 
-We can think of plotting as representing the observations or data in a graphical language. We use the properties of graphical objects to represent different aspects of our data. An observation can consist of multiple recorded values. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist of height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates\index{grammar of graphics!cartesian coordinates}, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ dimension. The observations could be represented on the plot by points.
+We can think of plotting as translating or mapping the observations or data into a graphical language. We use properties of graphical (or geometrical) objects to represent different aspects of our data. An observation can consist of multiple recorded values. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist of height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates\index{grammar of graphics!cartesian coordinates}, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ dimension. The observations could be represented on the plot by points.
 
 The grammar of graphics allows us to design plots by combining various elements in ways that are nearly orthogonal. In other words, the majority of the possible combinations of ``words'' yield valid plots as long as we assemble them respecting the rules of the grammar. This flexibility makes \ggplot extremely powerful as we can build plots and even types of plots which were not even considered while designing the \ggplot package.
 
 When a plot is built, the whole plot and its components are created as \Rlang objects that can be saved in the workspace or written to a file as objects. The graphical representation is generated when the object is printed, explicitly or automatically. The same \code{"gg"} plot object can be rendered into different bitmap and vector graphic formats for display or printing.
 
-The transformation of a set of data or observations into a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information, but also as a sequence of actions. However, what avoids that the flexibility becomes a burden is that if we do not explicitly mention all steps in our code, in most cases adequate defaults for them will be used instead. The steps in the transformation of data into a rendered graphic conform a chain. a) We indicate the data to use, b) indicate which variable to map to which plot aesthetic, c) we indicate which layers to add, statistical summaries or estimates to compute, and the geometric representation to use for the original data and/or statistical summaries, d) the scales to be used for the aesthetics to which we mapped data in point b), e) indicate a coordinate system (affecting only aesthetics $x$, $y$ and possibly $z$), f) indicate a theme to use. The result from constructing a plot with the grammar of graphics is an R object containing a ``plan for a plot'', including the data, that can be assigned a name, saved to a file or printed into a rendered plot, either to a physical printer or into vector or bitmap graphics formats. These are indeed many steps, but as mentioned above, we do not need to be explicit about all of them. Obviously step a) has no default, b) has defaults only in special cases, and c) has no defaults.
+The transformation of a set of data or observations into a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information, but also as a sequence of actions. However, what avoids that the flexibility becomes a burden is that if we do not explicitly mention all steps in our code, in most cases adequate defaults for them will be used instead. The recipe to build a plot needs to specify a) the data to use, b) which variable to map to which graphical property (or aesthetic), c) which layers to add and which geometric representation to use, d) the scales that establish the link between data values and aesthetic values, e) a coordinate system (affecting only aesthetics $x$, $y$ and possibly $z$), f) a theme to use. The result from constructing a plot with the grammar of graphics is an R object containing a ``recipe for a plot'', including the data. This R object, behaves like other R objects: can be assigned a name, saved to a file or printed into a rendered plot, either to a physical printer or into vector or bitmap graphics formats. The recipe includes indeed many elements, but as mentioned above, we do not need to be explicit about all of them. Obviously step a) has no default, b) has defaults only in special cases, and c) has no defaults.
 
 \begin{explainbox}
-The\index{plots!layers} plots created with package \pkgname{ggplot2} have a layered structure, with plots both assembled and rendered layer by layer. Each time we add a geometric representation, either of the observations or statistical summaries, we create a layer. A plot can have any number of layers, and the order in which we add them is stored in the resulting R object. When the R object is rendered into a plot, later layers are plotted on top of earlier layers. So graphical objects from the rendering of layers added later can occlude those in layers added earlier. As colors in \Rlang support transparency, and transparency can be accessed through the \code{alpha} aesthetic the effect of overlapping layers can be altered by changing the order in which they are added to a plot and by use of semitransparent layers.
+The\index{plots!layers} plots created with package \pkgname{ggplot2} have a layered structure, with plots both assembled and rendered layer by layer. Each time we add a geometric representation of data, either of observations or statistical summaries, we create a new plot layer.
 \end{explainbox}
 
-\subsection{Data}
-The\index{grammar of graphics!data} data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns are different values observed in that single event. In other words, in long form (so-called ``tidy data'') as described in chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}. (Some extensions to \pkgname{ggplot2} add support for other types of data such as time series). 
+\subsection{The words of the grammar}
+Before building a plot step by step, I introduce next the different components of a ggplot recipe, or the words in the grammar.
 
-\subsection{Mapping}
+\paragraph{Data}
+The\index{grammar of graphics!data} data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns are different values observed in that single event. In other words, in long form (so-called ``tidy data'') as described in chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}. (Some extensions to \pkgname{ggplot2} add support for other types of data such as time series).
 
+\paragraph{Mapping}
 When\index{grammar of graphics!mapping of data} we design a plot, we need to map data variables to aesthetics\index{plots!aesthetics} (or graphic properties). Most plots will have an $x$ dimension, which is considered an \emph{aesthetic}, and a variable containing numbers (or categories) mapped to it. The position on a 2D plot of, say, a point, will be determined by $x$ and $y$ aesthetics, while in a 3D plot, three aesthetics need to be mapped $x$, $y$ and $z$. Many aesthetics are not related to coordinates, they are properties, like color, size, shape, line type, or even rotation angle, which add an additional dimension on which to represent the values of variables and/or constants.
 
-\subsection{Geometries}
-
+\paragraph{Geometries}
 \sloppy%
 Geometries\index{grammar of graphics!geometries} are ``words'' that describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a point or symbol for each observation or summary value, while \gggeom{geom\_line()}, draws line segments between observations. Some geometries rely by default on statistics, but most ``geoms'' default to the identity statistics. Each time a \emph{geometry} is used to add a graphical representation of data to a plot, we say that a new \emph{layer} has been added. The name \emph{layer} reflects the fact that each new layer added is plotted on top of the layers already present in the plot, or rather when a plot is printed the layers will be generated in the order they were added to the plot object. For example, one layer in a plot can display the observations, another layer a regression line fitted to them, and a third one may contain annotations such an equation or a text label.
 
-\subsection{Statistics}
-
+\paragraph{Statistics}
 Statistics\index{grammar of graphics!statistics} are ``words'' that represent calculation of summaries or some other operation on the values in the data. When \emph{statistics} are used for a computation, the returned value is passed to a \emph{geometry}, and consequently adding a \emph{statistics} also adds a layer to the plot. For example, \ggstat{stat\_smooth()} fits a smoother, and \ggstat{stat\_summary()} applies a summary function such as \code{mean(()}. Most statistics are applied automatically by group when data have been grouped by mapping additional aesthetics such as color to a factor.
 
-\subsection{Scales}
-
+\paragraph{Scales}
 Scales\index{grammar of graphics!scales} give the ``translation'' or mapping between data values and the aesthetic values to be actually plotted. Mapping a variable to the ``color'' aesthetic (also recognized when spelled as ``colour'') only tells that different values stored in the mapped variable will be represented by different colors. A scale, such as \ggscale{scale\_color\_continuous()}, will determine which color in the plot corresponds to which value in the variable. Scales can also define transformations on the data, which are used when mapping data values to aesthetic values. All continuous scales support transformations---e.g., in the case of $x$ and $y$ aesthetics, positions on the plotting region or graphic viewport will be affected by the transformation, while the original values will be used for tick labels along the axes. Scales are used for all aesthetics, including continuous variables, such as numbers, and categorical ones such as factors. The grammar of graphics allows only one scale per \emph{aesthetic} and plot. This restriction is imposed by design to avoid ambiguity (e.g., it ensures that the red color will have the same ``meaning'' in all plot layers where the \code{color} \emph{aesthetic} is mapped to data). Scales have limits with observations falling outside these limits being ignored by default (replaced by \code{NA}) rather than passed to statistics or geometries---it is easy to unintentionally drop observations when setting scale limits manually, consequently warning messages reporting that \code{NA} values have been omitted from a plot should not be ignored.
 
-\subsection{Coordinate systems}
-
+\paragraph{Coordinate systems}
 The\index{grammar of graphics!coordinates} most frequently used coordinate system when plotting data, the cartesian system, is the default for most \emph{geometries}. In the cartesian system, $x$ and $y$ are represented as distances on two orthogonal (at 90$^\circ$) axes. Additional coordinate systems are available in \pkgname{ggplot2} and through extensions. For example, in the polar system of coordinates, the $x$ values are mapped to angles around a central point and $y$ values to the radius. Another example is the ternary system of coordinates, an extension of the grammar implemented in package \pkgname{ggtern}, that allows the construction of ternary plots. Setting limits to a coordinate system changes the region of the plotting space visible in the plot, but does not discard observations. In other words, when using \emph{statistics}, observations located outside the coordinate limits, i.e., not visible in the rendered plot, will still be included in computations if excluded by coordinate limits but will be ignored if excluded by scale limits.
 
-\subsection{Themes}
-
+\paragraph{Themes}
 How\index{grammar of graphics!themes} the plots look when displayed or printed can be altered by means of themes. A plot can be saved without adding a theme and then printed or displayed using different themes. Also, individual theme elements can be changed, and whole new themes defined. This adds a lot of flexibility and helps in the separation of the data representation aspects from those related to the graphical design.
-
-\subsection{Plot object}
-
-The end result is an \Rlang object containing the data plus the instructions to process them into a plot. This object, as well as intermediate objects can be saved. Rendering, or the production of graphical output, takes places when the object is printed. The format of the output, such as bitmap or vector graphics, is determined by the graphics device (see \ref{sec:plot:render} on page \pageref{sec:plot:render}).
 \index{grammar of graphics!elements|)}
 
-\subsection{Plot construction}
-\index{grammar of graphics!plot construction|(}
-As we have described above, the components of the grammar of graphics are: aesthetics (\code{aes}), for example color, geometric elements \code{geom\_\ldots} such as lines and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, coordinate systems \code{coord\_\ldots}, and themes \code{theme\_\ldots}. In this section we will see how plots are assembled and rendered from these elements.
+The R functions corresponding to the different components of the grammar of graphics have distinctive names with the first few letters hinting at their use: aesthetics mappings (\code{aes}), geometric elements \code{geom\_\ldots} such as lines and points, statistics \code{stat\_\ldots}, scales \code{scale\_\ldots}, coordinate systems \code{coord\_\ldots}, and themes \code{theme\_\ldots}.
 
-A \code{"gg"} plot object contains the data and instructions needed to build a plot. Both data transformations and rendering of the plot take place at the time of printing or exporting the plot. The data provided by the user goes through three stages where mappings of variables to aesthetics can take place. The default for \Rfunction{aes()} is for the mapping to take place ahead of the statistics (1 in the simplified diagram below).\vspace{2.5ex}
+\subsection{The workings of the grammar}\label{sec:plot:workings}
+\index{grammar of graphics!plot structure|(}
+\index{grammar of graphics!plot workings|(}
+In this section we will see how plots are assembled, stored and rendered from these elements.
+
+To understand ggplots we should first think in terms of the graphical organization of the plot: there is a background layer onto which layers composed by different graphical objects are laid. Each layer contains related graphical objects originating from the same data. The last layer added is the topmost and the first one added the lowermost. Graphical objects in upper layers occlude those in the layers below them if their locations overlap. Although usually the layers in a ggplot share the same data and mappings to aesthetics, this is not necessarily so. It is possible to build a ggplot where the layers are fully independent of each other, although the scales and plotting area are always shared among them.
+
+A \code{"gg"} plot object contains the data and instructions needed to build a plot, but not yet a rendering of the plot into graphical objects. Both data transformations and rendering of the plot take place at the time of printing or exporting the plot. A \code{"gg"} plot object is an object of mode \code{"list"} containing the recipe and data to construct a plot. It is self contained in the sense that the only requirement for rendering it into a graphical representation is the vailability of package \pkgname{ggplot2}.
+
+\begin{explainbox}
+We can look in more detail at how the recipes to make ggplots are stored in \code{"gg"} plot objects. In R lists can contain various kinds of objects, and objects of class \code{"gg"} are of mode \code{"list"}. R lists are described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists}. They contain data, function definitions, and unevaluated expressions. In other words the data plus instructions to transform the data, to map them into graphic objects, and various aspects of the rendering from scale limits to type faces to use. Understanding, conceptually how it all works can be very useful as we will see later in the chapter.
+
+As an example we show the top level members of a \code{"gg"} plot object for a simple plot. Method \code{summary()} shows the components without making explicit the structure of the object.
+
+<<ggplot-workings-box-01>>=
+p <- ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point()
+summary(p)
+@
+
+Method \code{str()} shows the structure of the object. Here we limit the depth to 1 level, and the length to 4 so as to keep the example concise, so that both length and depth are truncated. The point of this example is to provide only a glipmse into the innards of the object.
+
+<<ggplot-workings-box-02>>=
+str(p, max.level = 1, list.len = 4)
+@
+\end{explainbox}
+
+\begin{advplayground}
+Explore in more detail the different members of object \code{p}. For example for the \code{"layers"} member of object \code{p} one can use.
+
+<<ggplot-workings-box-03, eval=FALSE>>=
+str(p$layers, max.level = 1)
+@
+
+How many layers are present in this case?
+
+You can use \code{summary()} and \code{str()} while reading this chapter to develop an understanding of how more complex plots are stored and thus becoming familiar with the \emph{magic} behind them.
+\end{advplayground}
+
+A third perspective on ggplots is that of the process of converting the static representation described above of a plot stored in a \code{"gg"} plot object into a graphical representation that can be printed on paper or viewed on a computer screen. The transformations applied to the data to achieve this can be thought as a dynamic process divided in stages. We consider first a single self-contained layer in a plot, without a statistic. In this case, the data provided by the user goes through two stages where mappings of variables to aesthetics can take place, called in \pkgname{ggplot2}, \textbf{start} and \textbf{after scale}, and represented by circles in the diagram below.
+
+Function \code{aes()} is used to define mappings. The default for \Rfunction{aes()} is for the mapping to take place at the \textbf{start} (left circle in the diagram below), mapping names in the user data to aesthetics such as x, y, colour, shape, etc.
+With no statistic (or more accurately, with \ggstat{stat\_identity()}) the geometry sees the subset of the variables in data that have been mapped to aesthetics at \textbf{start}, with their names replaced by the names of the aesthetics. Their values in many cases are also changed into aesthetics' values. Additional variables indicating groups and panel indexes are added. The geometry has access to the scales and can use them. A geometry converts the data it receives into graphical objects (grobs in the terminology of package \pkgname{grid}). In most cases the only mapping set by the user is at the \textbf{start}, as the \textbf{after scale} mapping is infrequently meeded.\vspace{2.5ex}
+
+\hfill%
+{\sffamily%
+\resizebox{0.66\linewidth}{!}{%
+  \begin{tikzpicture}[auto]
+    \node [b] (data) {layer\\ data};
+    \node [cc, right = of data] (mapping1) {\textbf{start}};
+    \node [b, right = of mapping1] (geometry) {geometry + scale};
+    \node [cc, right = of geometry] (mapping3) {\textbf{after\\ scale}};
+    \node [b, right = of mapping3] (render) {layer\\ grobs};
+
+    \path [ll] (mapping1) -- (data) node[near end,above]{a};
+    \path [ll] (geometry) -- (mapping1) node[near end,above]{b};
+    \path [ll] (mapping3) -- (geometry) node[near end,above]{c};
+    \path [ll] (render) -- (mapping3) node[near end,above]{d};
+  \end{tikzpicture}}}\hfill%
+\vspace{2ex}
+
+When a layer includes a statistics the data goes through three stages where mappings of variables to aesthetics can take place. As above we have \textbf{start} and \textbf{after scale}, but we have in addition \textbf{after stat}. Statistics compute new values from the data received as input and return them. These data become the input to the geometry after the \textbf{after stat} mapping stage.\vspace{2.5ex}
 
 {\sffamily
 \centering
-%  \includegraphics[width=0.98\textwidth]{figures/fig2-model.png}
 \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[auto]
-    \node [b] (data) {data};
-    \node [b, right = of data] (statistic) {statistic};
-    \node [b, right = of statistic] (geometry) {geometry};
-    \node [b, right = of geometry] (scale) {scale};
-    \node [b, right = of scale] (render) {rendered\\plot};
+    \node [b] (data) {layer\\ data};
+    \node [cc, right = of data] (mapping1) {\textbf{start}};
+    \node [b, right = of mapping1] (statistic) {statistic};
+    \node [cc, right = of statistic] (mapping2) {\textbf{after\\ stat}};
+    \node [b, right = of mapping2] (geometry) {geometry + scale};
+    \node [cc, right = of geometry] (mapping3) {\textbf{after\\ scale}};
+    \node [b, right = of mapping3] (render) {layer\\ grobs};
 
-    \path [ll] (statistic) -- (data) node[near end,above]{\textbf{1}};
-    \path [ll] (geometry) -- (statistic) node[near end,above]{\textbf{2}};
-    \path [ll] (scale) -- (geometry) node[near end,above]{\textbf{3}};
-    \path [ll] (render) -- (scale) node[near end,above]{\textbf{4}};
+    \path [ll] (mapping1) -- (data) node[near end,above]{a};
+    \path [ll] (statistic) -- (mapping1) node[near end,above]{b};
+    \path [ll] (mapping2) -- (statistic) node[near end,above]{c};
+    \path [ll] (geometry) -- (mapping2) node[near end,above]{d};
+    \path [ll] (mapping3) -- (geometry) node[near end,above]{e};
+    \path [ll] (render) -- (mapping3) node[near end,above]{f};
   \end{tikzpicture}}}\vspace{2ex}
 
-A statistic receives as input \code{data} a data frame with the columns in user-supplied data renamed according to the names of the aesthetics they are mapped to, and additional columns with grouping and panel information. The value returned by a statistics is also a data frame. This data frame is identical to the input in the case of \ggstat{stat\_identity()} or different, in the values contained and in the number of rows and/or columns for other statistics. Statistics provide default mappings and a default \code{geometry}, but these can be overridden by the user. Usually statistics return other variables in addition to those with default mappings. Within \Rfunction{aes()} we can use function \Rfunction{after\_stat()} to request a mapping after the statistic (2 in the diagram above).
+In more detail, a statistic receives as its input \code{data} mapped at the \textbf{start} as described in the previous example as received by the geometry. The statistic computes new values from the data. The computed values are returned by a statistics also as a data frame. This data frame contains different values, the number of rows and/or columns usually also differ from those in the data frame received as input. Statistics provide default mappings for the \textbf{after stat} stage and a default \code{geometry}, but these can be overridden by the user. Usually statistics return other variables in addition to those with default mappings to facilitate the constructions of variations on a given type of data summary. Within \Rfunction{aes()} we can use function \Rfunction{after\_stat()} to request a mapping after the statistic.
 
-As the workings and use of the grammar are easier to demonstrate by example than to explain with words, I will show how to build plots of increasing complexity, starting from the simplest possible. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. We use function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is. \emph{A plot with no data or layers.}
+\begin{explainbox}
+  In reality all ggplot layers include a statistic, but most geometries have \ggstat{stat\_identity()} as their default. There are some statistics that in \pkgname{ggplot2} have companion geometries that can be used interchangeably. This` tends to lead into confusion, and in this book, only geometries that have as default \ggstat{stat\_identity()} are described as geometries. In the case of those that by default use other statistics, like \gggeom{geom\_smooth()} I only describe the companion statistic, \gggeom{stat\_smooth()}.
+\end{explainbox}
+
+A ggplot can have a single layer or many layers, but when ggplots have more than one layer, the data flow, computations and generation of graphical objects takes place independently for each layer. As mentioned above, most ggplots do not have fully independent layers, but the layers share the same data and aesthetic mappings at the \textbf{start}. Ahead of this point computations in layers are always independent of those in other layers, except that for a given aesthetic only one scale is allowed per plot. This is intentional, and makes it nearly impossible for one aesthetic to be assigned different meanings in different layers of the same plot.
+\index{grammar of graphics!plot workings|)}
+\index{grammar of graphics!plot structure|)}
+
+\subsection{Plot construction}
+\index{grammar of graphics!plot construction|(}
+
+As the use of the grammar is easier to demonstrate by example than to explain with words, I will show how to build plots of increasing complexity, starting from the simplest possible. All elements of a plot have defaults, although in some cases these defaults result in empty plots. Defaults make it possible to create a plot very succinctly. When building a plot step by step, we can consider the different aspects described in the previous section: the structure of the object, the graphic output, and the transformations applied to the data in the route between the recipe stored in an object and graphic output. In this section I emphasize the syntax of the grammar and how it translated into a plot.
+
+\begin{advplayground}
+  When reading this section, possibly a second time, use \code{summary()} and \code{str()} as described in the previous section to explore how \code{"gg"} plot objects gain new member components as the \emph{recipe} for the plot evolves in complexity.
+\end{advplayground}
+
+We start by using function \code{ggplot()} to create the skeleton for a plot, which can be enhanced, but also printed as is. \emph{A plot with no data or layers.}
 
 <<ggplot-basics-01>>=
 ggplot()
@@ -164,14 +243,16 @@ The plot above is of little use without any data, so we next pass a data frame o
 ggplot(data = mtcars)
 @
 
-Once the data are available, we need to \emph{map} the quantities in the data onto graphical features in the plot, or \emph{aesthetics}. When plotting in two dimensions, we need to map variables in the data to at least the $x$ and $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now match the ranges of the mapped variables, expanded by a small margin. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations. ({\small\textsf{data $\to$ aes $\to$ \emph{ggplot object}}})
+Once the data are available, we need to select a graphical or geometric representation for the quantities to plot. The overall kind of representation is determined by the geometry, such as \code{geom\_point()} and \code{geom\_line()}, drawing separate points for the observations or connecting them with lines, respectively. A mapping indicates which property of the geometric elements will be used to represent the values stored in a given variable in the user's data. For most geometries we need to provide mappings for both $x$ and $y$ aesthetics, to establish the position of the geometrical shapes like points or lines in the plotting area. Additional aesthetics like colour (applicable to both points and lines) or shape and linetype, applicable to points and lines, respectively have default mappings. Defaults can be overridden by including a mapping explicitly in the call to \code{aes()}.
+
+Here we map at the \textbf{start} stage two variables in the data, \code{disp} to $x$ and and \code{mpg} to $y$ aesthetics. This mapping can be seen in the chunk below by its effect on the plotting area ranges that now match the ranges of the mapped variables, expanded by a small margin. The axis labels also reflect the names of the mapped variables, however, there is no graphical element yet displayed for the individual observations. ({\small\textsf{data $\to$ aes $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-03>>=
 ggplot(data = mtcars,
        aes(x = disp, y = mpg))
 @
 
-To make observations visible in the plot we need to add a suitable \emph{geometry} or \code{geom} to the plot. Here we display the observations as points using \gggeom{geom\_point()}. Geometries are rendered as \emph{plot layers}. ({\small\textsf{data $\to$ aes $\to$ geom $\to$ \emph{ggplot object}}})
+To make observations visible we need to add a suitable \emph{geometry} or \code{geom} to the plot recipe. Here we display the observations as points using \gggeom{geom\_point()}, i.e, we add a \emph{plot layer}. ({\small\textsf{data $\to$ aes $\to$ geom $\to$ \emph{ggplot object}}})
 
 <<ggplot-basics-04>>=
 ggplot(data = mtcars,
@@ -180,7 +261,7 @@ ggplot(data = mtcars,
 @
 
 \begin{warningbox}
-In the examples above, the plots were printed automatically, which is the default at the \Rlang console. However, as with other \Rlang objects, ggplots can be assigned to a variable.
+In the examples above, the plots were printed automatically, which is the default at the \Rlang console. However, as with other \Rlang objects, ggplots can be assigned to a variable as first shown in section \ref{sec:plot:workings} on page \pageref{sec:plot:workings}.
 
 <<ggplot-basics-04-wb1>>=
 p <- ggplot(data = mtcars,
@@ -188,23 +269,22 @@ p <- ggplot(data = mtcars,
        geom_point()
 @
 
-and printed at a later time.
+and printed at a later time, and saved to and read from files on disk.
 
 <<ggplot-basics-04-wb2, eval=eval_plots_all>>=
 print(p)
 @
+
+Layers and other elements can be also added to a saved ggplot as the saved objects are not the graphical representation of the plots themselves but instead a \emph{recipe} plus data needed to build them.
 \end{warningbox}
 
 \begin{advplayground}
-Above we have seen how to build a plot containing a single layer using the grammar of graphics. We have also seen how to save a ggplot. We can peep into the innards of this object using \code{summary()}.
+Above we have seen how to build a plot and we also had a glimpse of the structure of a simple \code{"gg"} plot object. We have also saved a ggplot under the name \code{p}.
 
-<<ggplot-basics-04-exb1, eval=eval_playground>>=
-summary(p)
-@
-We can view the structure of the \code{"gg"} plot object with \code{str()}. Package \pkgname{gginnards} provides methods \code{str()}, \code{num\_layers()}, \code{top\_layer()} and  \code{mapped\_vars()}. As you make progress through the chapter, use these methods to explore \code{"gg"} plot objects with different numbers of layers or mappings. You will see that the plot elements that were added to the plot are stored as members of a list with nested lists forming a tree-like structure. (R lists are described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists}.)
+We can view the structure of any R object, including \code{"gg"} plot objects,  with \code{str()}. Package \pkgname{ggplot2} provides a \code{summary()} for \code{"gg"} plot object. Package \pkgname{gginnards} provides methods \code{str()}, \code{num\_layers()}, \code{top\_layer()}, \code{bottom\_layer()}, and \code{mapped\_vars()}. As you make progress through the chapter, use these methods to explore \code{"gg"} plot objects with different numbers of layers or mappings. You will be able to see how the plot components are stored as members of the \code{"gg"} plot objects.
 \end{advplayground}
 
-Although \emph{aesthetics} are usually mapped to variables in the data, they can also be set to constant values. While variables in \code{data} can be both mapped using \code{aes()} as whole-plot defaults, as shown above, or within individual layers, constant values for aesthetics can be set, as shown here, only for individual layers and directly rather than using \code{aes()}.
+Although \emph{aesthetics} are usually mapped to variables in the data, they can also be set to constant values, as many of them are by default. While variables in \code{data} can be both mapped using \code{aes()} as whole-plot defaults, as shown above, or within individual layers, constant values for aesthetics can be set, as shown here, only for individual layers and directly rather than using \code{aes()}.
 
 <<ggplot-basics-04a>>=
 ggplot(data = mtcars,
@@ -351,7 +431,7 @@ p + my.layer
 \end{infobox}
 \index{grammar of graphics!plots as R objects|)}
 
-\subsection{Mappings to aesthetics}
+\subsection{Mappings in detail}
 \index{grammar of graphics!mapping of data|(}
 \index{grammar of graphics!aesthetics(}
 In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as described above, passing an argument, \code{mtcars} in these examples, to the \code{data} parameter of \Rfunction{ggplot()}. Data passed in this way becomes the default for all layers in the plot. The same applies to the argument passed to \code{mapping}.\qRfunction{aes()}
@@ -370,6 +450,8 @@ ggplot() +
              mapping = aes(x = disp, y = mpg))
 @
 
+\begin{explainbox}
+The two examples show the two most commonly used styles when working at the console or writing simple scripts. There are other possibilities which are most useful when writing complex scripts, or in function definitions. We gui
 The default mapping can also be added directly with the \code{+} operator, instead of being passed as an argument to \Rfunction{ggplot()}.
 
 <<ggplot-basics-14, eval=eval_plots_all>>=
@@ -378,7 +460,7 @@ ggplot(data = mtcars) +
   geom_point()
 @
 
-It is even possible to have a default mapping for the whole plot, but no default data.
+It is also possible to have a default mapping for the whole plot, but no default data.
 
 <<ggplot-basics-15, eval=eval_plots_all>>=
 ggplot() +
@@ -386,9 +468,18 @@ ggplot() +
   geom_point(data = mtcars)
 @
 
-In these examples, the plot remains unchanged, but this flexibility in the grammar allows, in plots containing multiple layers, for each layer to use different data or a different mapping.
+We can save the mapping to a variable and add the variable instead of the call to \code{aes()} in each of the examples above, of which we show only the first one.
 
-\begin{explainbox}
+<<ggplot-basics-12a, eval=eval_plots_all>>=
+my.mapping <- aes(x = disp, y = mpg)
+ggplot(data = mtcars,
+       mapping = my.mapping) +
+  geom_point()
+@
+
+In all these examples, the plot remains unchanged (not shown). However, this flexibility in the grammar allows, as discussed in section \ref{sec:plot:workings} on \pageref{sec:plot:workings} makes it possible for layers to remain independent of each other when needed.
+\end{explainbox}
+
 The argument passed to parameter \code{data} of a layer function, can be a function instead of a data frame if the plot contains default data. In this case, the function is applied to the default data and must return a data frame containing data to be used in the layer. Here I use an anonymous function defined in-line, but a function can also be passed as argument by name.
 
 <<ggplot-basics-16, eval=eval_plots_all>>=
@@ -408,7 +499,6 @@ ggplot(data = mtcars,
              size = 1.5)
 @
 
-\end{explainbox}
 
 \emph{Late mapping}\index{grammar of graphics!mapping of data!late} of variables to aesthetics has been possible in \pkgname{ggplot2} for a long time using as notation enclosure of the name of a variable returned by a statistic between \code{...}, but this notation has been deprecated some time ago and replaced by \ggscale{stat()}. In both cases, this imposed a limitation: it was impossible to map a computed variable to the same aesthetic as input to the statistic and to the geometry in the same layer. There were also some other quirks that prevented passing some arguments to the geometry through the dots \code{...} parameter of a statistic.
 

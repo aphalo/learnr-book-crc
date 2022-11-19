@@ -1107,21 +1107,25 @@ str(z)
 
 \section{Functions that replace loops}
 
-\Rlang provides several functions that can be used to avoid writing iterative loops in \Rlang. These functions are written in \Clang and compiled, so even when iterative algorithms are used, they are fast. Replacing code implementing an iterative algorithm by a single function call simplifies the script's code and can make it easier to understand. A table with examples of some useful functions that are available in base \Rlang is provided here. All these functions take a vector as their first argument.\vspace{2ex}.
+\Rlang provides several functions that can be used to avoid writing iterative loops in \Rlang. The most frequently used are taken for granted: \Rfunction{mean()}, \Rfunction{var()} (variance), \Rfunction{sd()} (standard deviation), \Rfunction{max()}, and \Rfunction{min()}. Replacing code implementing an iterative algorithm by a single function call simplifies the script's code and can make it easier to understand. These functions are written in \Clang and compiled, so even when iterative algorithms are used, they are fast. A table with examples of additional functions available in base \Rlang that implement iterative algorithms is provided below. All these functions take a vector of arbitrary length as their first argument, except for \Rfunction{inverse.rle()}.\vspace{2ex}
 
+\noindent
 \begin{tabular}{lll}
   \toprule
   Function & Computation & Value, length \\
   \midrule
   \Rfunction{sum()} & $\sum_{i=1}^n x_i$ & numeric, 1 \\
   \Rfunction{prod()} & $\prod_{i=1}^n x_i$ & numeric, 1 \\
-  \Rfunction{max()} & $x_{max}$ & numeric, 1 \\
-  \Rfunction{min()} & $x_{min}$ & numeric, 1 \\
-  \Rfunction{cumsum()} & $\sum_{i=1}^1 x_i, \cdots \sum_{i=1}^j x_i, \cdots \sum_{i=1}^n x_i$ & numeric, n \\
-  \Rfunction{cumprod()} & $\prod_{i=1}^1 x_i, \cdots \prod_{i=1}^j x_i, \cdots \prod_{i=1}^n x_i$ & numeric, n \\
-  \Rfunction{cummax()} & $x_{max}$ & numeric, n \\
-  \Rfunction{cummin()} & $x_{min}$ & numeric, n \\
-  \Rfunction{diff()} & $x_2 - x_1, \cdots x_i - x_{i-1}, \cdots x_n - x_{n-1}$ & numeric, n-1 \\
+  \Rfunction{cumsum()} & $\sum_{i=1}^1 x_i, \cdots \sum_{i=1}^j x_i, \cdots \sum_{i=1}^n x_i$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cumprod()} & $\prod_{i=1}^1 x_i, \cdots \prod_{i=1}^j x_i, \cdots \prod_{i=1}^n x_i$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummax()} & cumulative maximum & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummin()} & cumulative minimum & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{runmed()} & running median & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{diff()} & $x_2 - x_1, \cdots x_i - x_{i-1}, \cdots x_n - x_{n-1}$ & numeric, $n_\mathrm{out} = n_\mathrm{in}-1$ \\
+  \Rfunction{diffinv()} & inverse of diff & numeric, $n_\mathrm{out} = n_\mathrm{in}+1$ \\
+  \Rfunction{factorial()} & $x!$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{rle()} & run-length encoding & $n_\mathrm{out} < n_\mathrm{in}$ \\
+  \Rfunction{inverse.rle()} & run-length decoding & $n_\mathrm{out} > n_\mathrm{in}$ \\
   \bottomrule
 \end{tabular}
 
@@ -1240,5 +1244,40 @@ str(results, max.level = 1)
 do.call(anova, results)
 @
 
-\subsection{Further reading}
+\section{Data pipes in base R}
+
+The \pkgname{tidyverse} has popularized the use of data pipes in \Rlang. Recently base \Rlang has gained a pipe operator, \Roperator{|>}, and in combination with well known base \Rlang functions it provides a concise notation for data selection and transformations. In general whenever we use temporary variables to store values that are used only once, we can chain the statements making the saving into a temporary variable implicit instead of explicit. In many cases, nested function calls can also be transformed into easier to read \emph{pipes}. 
+
+Addition of computed variables to a data frame using \Rfunction{within()} and selecting rows with \Rfunction{subset()} are combined in our first `toy' example. We use the \code{\_} placeholder to indicate the value returned by the preceding function in the pipe.
+
+<<r-pipes-01>>=
+data.frame(x = 1:10, y = rnorm(10)) |>
+  within(data = _, 
+         {
+           x4 <- x^4
+           is.large <- x^4 > 1000
+         }) |>
+  subset(x = _, is.large)
+@
+
+To summarize variables we can use \Rfunction{aggregate()}.
+
+<<r-pipes-02>>=
+data.frame(group = factor(rep(c("T1", "T2", "Ctl"), each = 4)),
+           y = rnorm(12)) |>
+  subset(x = _, group %in% c("T1", "T2")) |>                      
+  aggregate(data = _, y ~ group, mean)
+@
+
+Although the extraction operators are not accepted on the rhs of a pipe, function \Rfunction{getElement()} can be used to extract a member by name, in this case a column.
+
+<<r-pipes-03>>=
+data.frame(group = factor(rep(c("T1", "T2", "Ctl"), each = 4)),
+           y = rnorm(12)) |>
+  subset(x = _, group %in% c("T1", "T2")) |>
+  aggregate(data = _, y ~ group, mean) |>
+  getElement("y")
+@
+
+\section{Further reading}
 For\index{further reading!the R language} further readings on the aspects of \Rlang discussed in the current chapter, I suggest the books \citetitle{Matloff2011} (\citeauthor{Matloff2011}) and \citetitle{Wickham2019} (\citeauthor{Wickham2019}).
