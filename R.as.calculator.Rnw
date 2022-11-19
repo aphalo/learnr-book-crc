@@ -1961,24 +1961,46 @@ subset(a.df, x > 3)
 What is the behavior of \code{subset()} when the condition is \code{NA}? Find the answer by writing code to test this, for a case where tests for different rows return \code{NA}, \code{TRUE} and \code{FALSE}.
 \end{playground}
 
-When calling functions that return a vector, data frame, or other structure, the square brackets can be appended to the rightmost parenthesis of the function call, in the same way as to the name of a variable holding the same data.
+When calling functions that return a vector, data frame, or other structure, the extraction operators \Roperator{[ ]}, \Roperator{[[ ]]}, or \Roperator{\$} can be appended to the rightmost parenthesis of the function call, in the same way as to the name of a variable holding the same data.
 
 <<data-frames-5>>=
 subset(a.df, x > 3)[ , -3]
-subset(a.df, x > 3)$x
+subset(a.df, x > 3)[ , "x", drop = FALSE]
+subset(a.df, x > 3)[ , "x"]
 @
 
-None of the examples in the last three code chunks alter the original data frame \code{a.df}. We can store the returned value using a new name if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df}, deleting in the process, the previously stored value.
+\begin{advplayground}
+When do extraction operators applied to data frames return a vector or factor, and when do they return a data frame?
+\end{advplayground}
 
-\begin{warningbox}
-In the example above, the names in the expression passed as the second argument to \code{subset()} are first searched within \code{ad.df} but if not found, searched in the environment. There being no variable \code{A} in the data frame \code{a.df}, vector \code{A} from the environment is silently used in the expression resulting in a returned data frame with no rows.
+\begin{explainbox}
+In the case of \Rfunction{subset()} we can select columns directly as shown below, while for most other functions, extraction using operators \Roperator{[ ]}, \Roperator{[[ ]]} or \Roperator{\$} is needed. 
 
 <<data-frames-5a>>=
+subset(a.df, x > 3, select = 2)
+subset(a.df, x > 3, select = x)
+subset(a.df, x > 3, select = "x")
+@
+\end{explainbox}
+
+None of the examples in the last four code chunks alters the original data frame \code{a.df}. We can store the returned value using a new name if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df}, deleting in the process, the previously stored value.
+
+\begin{warningbox}
+In the examples above, the names in the expression passed as the second argument to \code{subset()} were searched within \code{ad.df} and found. However, if not found in the data frame objects with matching names are searched for in the environment. There being no variable \code{A} in the data frame \code{a.df}, vector \code{A} from the environment is silently used in the chunk below resulting in a returned data frame with no rows as \code{A > 3} returns \code{FALSE}.
+
+<<data-frames-5b>>=
 A <- 1
 subset(a.df, A > 3)
 @
 
-The use of \Rfunction{subset()} is convenient, but more prone to result in bugs compared to directly using the extraction operator \code{[ ]}. This same ``cost'' to achieving convenience applies to functions like \Rfunction{attach()} and \Rfunction{with()} described below. The longer time that a script is expected to be used, adapted and reused, the more careful we should be when using any of these functions. An alternative way of avoiding excessive verbosity is to keep the names of data frames short.
+This also applies to the expression passed as argument to parameter \code{select}, here shown as a way of selecting columns based on names stored in a character vector.
+
+<<data-frames-5c>>=
+columns <- c("x", "z")
+subset(a.df, select = columns)
+@
+
+The use of \Rfunction{subset()} is convenient, but more prone to bugs compared to directly using the extraction operator \code{[ ]}. This same ``cost'' to achieving convenience applies to functions like \Rfunction{attach()} and \Rfunction{with()} described below. The longer time that a script is expected to be used, adapted and reused, the more careful we should be when using any of these functions. An alternative way of avoiding excessive verbosity is to keep the names of data frames short.
 \end{warningbox}
 
 A frequently used way of deleting a column by name from a data frame is to assign \code{NULL} to it---i.e., in the same way as members are deleted from \code{list}s. This approach modifies \code{a.df} in place.
@@ -1991,13 +2013,14 @@ colnames(aa.df)
 @
 
 \begin{explainbox}
-Alternatively, we can use negative indexing to remove columns from a copy of a data frame. In this example we remove a single column. As base \Rlang does not support negative indexing by name, we need to find the numerical index of the column to delete.
+Alternatively, we can use negative indexing to remove columns from a copy of a data frame. In this example we remove a single column. As base \Rlang does not support negative indexing by name with the extraction operator, we need to find the numerical index of the column to delete. (See the examples above using \code{subset()} with bare names to delete columns.)
 
 <<data-frames-6a>>=
 a.df[ , -which(colnames(a.df) == "y")]
 @
 
-Instead of using the equality test, we can use the operator \code{\%in\%} or function \code{grepl()} to delete multiple columns in a single statement.
+Instead of using the equality test, we can use the operator \code{\%in\%} or function \code{grepl()} to create a \code{logical} vector useful to delete or select multiple columns in a single statement.
+
 \end{explainbox}
 
 \begin{playground}

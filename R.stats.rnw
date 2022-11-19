@@ -248,18 +248,14 @@ The general approach to model fitting in \Rlang is to separate the actual fittin
 \begin{center}
 \begin{small}
 \begin{tikzpicture}[node distance=1.4cm, scale=0.5]
-\node (model) [tprocess] {\textsl{model $\to$ \code{formula}}};
-\node (data) [tprocess, below of=model] {\textsl{observations $\to$ \code{data}}};
-\node (fitfun) [tprocess, right of=model, yshift=-0.7cm, xshift=2.5cm, fill=blue!5] {\code{lm()}};
-\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm, fill=blue!5] {\textsl{\code{lm} object}};
-\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\textsl{\code{summary()}}};
-\node (anova) [tprocess, color = black, below of=summary] {\textsl{\code{anova()}}};
-\node (plot) [tprocess, color = black, above of=summary] {\textsl{\code{plot()}}};
+\node (model) [tprocess] {\textsl{model specification}};
+\node (data) [tprocess, below of=model] {\textsl{observations}};
+\node (fitfun) [tprocess, right of=model, yshift=-0.7cm, xshift=2.5cm] {\textsl{fitting function}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm] {\textsl{fitted model}};
+\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\textsl{query functions}};
 \draw [arrow] (model) -- (fitfun);
 \draw [arrow] (data) -- (fitfun);
 \draw [arrow] (fitfun) -- (fm);
-\draw [arrow] (fm) -- (plot);
-\draw [arrow] (fm) -- (anova);
 \draw [arrow] (fm) -- (summary);
 \end{tikzpicture}
 \end{small}
@@ -267,7 +263,11 @@ The general approach to model fitting in \Rlang is to separate the actual fittin
 
 Models are described using model formulas such as \verb|y ~ x| which we read as $y$ is explained by $x$. We use lhs (left-hand-side) and rhs (right-hand-side) to signify all terms to the left and right of the tilde (\verb|~|), respectively (\verb|<lhs> ~ <rhs>|). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of models formulas.
 
-In addition to the methods shown in the diagram above, several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} are available for model fit objects. Most of the methods for inspecting model fit objects have implementations for different types of statistical models. Consequently, what is described in this chapter, also applies in many respects to the fitting of types of models not described here.
+Although there is some variation, especially for fitted model classes defined in extension packages, in most cases to the \textsl{query functions} bulked together in rightmost box in the diagram include methods \Rfunction{summary()}, \Rfunction{anova()} and \Rfunction{plot()}, with several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} usually also available. Additional methods may be available. However, as model fit object are derived from class \code{list}, these and other components can be extract or computed programmatically. Consequently, the examples in this chapter can be adapted to the fitting of types of models not described here.
+
+\begin{explainbox}
+  Fitted model objects in \Rlang are self contained and include a copy of the data to which the model was fit, as well as residuals and possibly even intermediate results of computations. Although this can make the size of these objects large, it allows querying and even updating them in the absence of the data in the current \Rlang workspace.
+\end{explainbox}
 
 \index{models fitting|)}
 
@@ -281,6 +281,28 @@ The \Rlang function \Rfunction{lm()} is used to fit linear models. If the explan
 \begin{warningbox}
 If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
 \end{warningbox}
+
+The generic diagram from the previous section redrawn to show a linear model fit, done with function \Rfunction{lm()} where the non-filled boxes represent what is in common with the fitting of other types of models, and the filled ones what is specific to \Rfunction{lm()}.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model} $\to$ \code{formula}};
+\node (data) [tprocess, below of=model] {\textsl{observations} $\to$ \code{data}};
+\node (fitfun) [tprocess, right of=model, yshift=-0.7cm, xshift=2.5cm, fill=blue!5] {\code{lm()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.5cm, fill=blue!5] {\code{lm} \textsl{object}};
+\node (summary) [tprocess, color = black, right of=fm, xshift=1.7cm] {\code{summary()}};
+\node (anova) [tprocess, color = black, below of=summary] {\code{anova()}};
+\node (plot) [tprocess, color = black, above of=summary] {\code{plot()}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (plot);
+\draw [arrow] (fm) -- (anova);
+\draw [arrow] (fm) -- (summary);
+\end{tikzpicture}
+\end{small}
+\end{center}
 
 \subsection{Regression}
 %\index{linear regression}
@@ -387,12 +409,17 @@ The objects returned by model fitting functions are rather complex and contain t
 
 <<models-EB0>>=
 class(fm1)
+names(fm1)
 @
 
-We rarely need to manually explore the structure of these model-fit objects when using \Rlang interactively. In contrast, when including model fitting in scripts or package code, the need to efficiently extract specific members from them happens more frequently. As with any other \Rlang object we can use \Rfunction{str()} to explore them.
+We rarely need to manually explore the structure of these model-fit objects when using \Rlang interactively. In contrast, when including model fitting in scripts or package code, the need to efficiently extract specific members from them happens more frequently. As with any other \Rlang object we can use \Rfunction{str()} to explore them. As this prints as a long text, we call \Rfunction{str()} as an example, only to two components of \code{fm1} and leave to the reader the task of exploring the remaining ones.
 
-<<models-EB1, eval=FALSE>>=
-str(fm1, max.level = 1) # not evaluated
+<<models-EB1>>=
+str(fm1$call)
+@
+
+<<models-EB1a>>=
+str(fm1$coefficients)
 @
 
 We frequently only look at the output of \Rfunction{anova()} as implicitly displayed by \code{print()}. However, both \Rfunction{anova()} and \Rfunction{summary()} return complex objects containing members with data not displayed by the matching \code{print()} methods. Understanding this is frequently useful, when we want to either display the results in a different format, or extract parts of them for use in additional tests or computations. Once again we use \Rfunction{str()} to look at the structure.
@@ -401,25 +428,31 @@ We frequently only look at the output of \Rfunction{anova()} as implicitly displ
 str(anova(fm1))
 @
 
+The \code{coefficients} estimates are the same, but in the summary are accompanied by estimates for the corresponding standard errors, \emph{t}-value and \emph{P}-value estimates.
+
 <<models-EB3>>=
 str(summary(fm1))
 @
 
-Once we know the structure of the object and the names of members, we can simply extract them using the usual \Rlang rules for member extraction.
+<<models-EB3b>>=
+print(summary(fm1)$coefficients)
+@
+
+Once we know the structure of the object and the names of members, we can simply extract them using the usual \Rlang rules for member extraction. This is useful when we need to do further calculations or when we want to present this values in a different format than that provided by the \code{print()} method, for example to add a textual annotation to a plot.
 
 <<models-EB4>>=
 summary(fm1)$adj.r.squared
 @
 
-As an example we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
+As an example of a further computation, we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
 
 The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with a null hypothesis of slope = 1. The procedure is applicable to any constant value as a null hypothesis for any of the fitted parameter estimates for hypotheses set \emph{a priori}. The examples use a two-sided test. In some cases, a single-sided test should be used (e.g., if its known a priori that deviation is because of physical reasons possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
 
 To estimate the \emph{t}-value we need an estimate for the parameter and an estimate of the standard error for this estimate and its degrees of freedom.
 
 <<models-EB5>>=
-est.slope.value <- summary(fm1)$coef["speed", "Estimate"]
-est.slope.se <- summary(fm1)$coef["speed", "Std. Error"]
+est.slope.value <- summary(fm1)$coefficients["speed", "Estimate"]
+est.slope.se <- summary(fm1)$coefficients["speed", "Std. Error"]
 degrees.of.freedom <- summary(fm1)$df[2]
 @
 
@@ -429,7 +462,9 @@ The \emph{t}-test is based on the difference between the value of the null hypot
 hyp.null <- 1
 t.value <- (est.slope.value - hyp.null) / est.slope.se
 p.value <- dt(t.value, df = degrees.of.freedom)
+cat("t.value =", signif(t.value, 3), "; P-value =", signif(p.value, 3)) 
 @
+
 \end{explainbox}
 
 \begin{advplayground}
@@ -480,14 +515,21 @@ anova(fm4)
 
 \begin{warningbox}
 The defaults used for model fits and ANOVA calculations vary among programs. There exist different so-called ``types'' of sums of squares, usually called I, II, and III. In orthogonal designs the choice has no consequences, but differences can be important for unbalanced designs, even leading to different conclusions. \Rlang's default, type~I, is usually considered to suffer milder problems than type~III, the default used by \pgrmname{SPSS} and \pgrmname{SAS}.
+\end{warningbox}
 
-The contrasts used affect the estimates returned by \Rfunction{coef()} and \Rfunction{summary()} applied to an ANOVA model fit. The default used in \Rlang is different to that used in some other programs (even different than in \Slang). The most straightforward way of setting a different default for a whole series of model fits is by setting \Rlang option \code{contrasts}, which we here only print.
+\begin{warningbox}
+The contrasts used affect the estimates returned by \Rfunction{coef()} and \Rfunction{summary()} applied to an ANOVA model fit. The default used in \Rlang is different to that used in some other programs (even different than in \Slang). The default, \code{contr.treatment} uses the first level of the factor (assumed to be a control) as reference for estimation of coefficients and testing of their significance. Instead, \code{contr.sum} uses as reference the mean of all levels, i.e., using as condition that the sum of the coefficient estimates is equal to zero. Obviously this changes what the coefficients describe, and consequently also the estimated $p$-values, and most importantly how the result of the tests should be interpreted.
+\end{warningbox}
+
+The most straightforward way of setting a different default for a whole series of model fits is by setting \Rlang option \code{contrasts}, which we here only print.
 
 <<contrasts-01>>=
 options("contrasts")
 @
 
-It is also possible to select the contrast to be used in the call to \code{aov()} or \code{lm()}. The default, \code{contr.treatment} uses the first level of the factor (assumed to be a control) as reference for estimation of coefficients and their significance, while \code{contr.sum} uses as reference the mean of all levels, by using as condition that the sum of the coefficient estimates is equal to zero. Obviously this changes what the coefficients describe, and consequently also the estimated $p$-values.
+The option is set to a named vector, with the value named \code{unordered} used when the explanatory variable is an unordered factor (created with \Rfunction{factor()}) and the value named \code{ordered} used when the explanatory variable is an ordered factor (created with \Rfunction{ordered()}).
+
+It is also possible to select the contrast to be used in the call to \code{aov()} or \code{lm()}. 
 
 <<models-6c>>=
 fm4trea <- lm(count ~ spray, data = InsectSprays,
@@ -507,7 +549,6 @@ summary(fm4sum)
 @
 
 In the case of contrasts, they always affect the parameter estimates independently of whether the experiment design is orthogonal or not. A different set of contrasts simply tests a different set of possible treatment effects. Contrasts, on the other hand, do not affect the table returned by \Rfunction{anova()} as this table does not deal with the effects of individual factor levels.
-\end{warningbox}
 
 \subsection{Analysis of covariance, ANCOVA}
 %\index{analysis of covariance}
