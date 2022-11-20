@@ -6,7 +6,7 @@ opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 rm(plot)
 @
 
-\chapter{The R language: Statistics}\label{chap:R:statistics}
+\chapter{The R language: ``Verbs'' and ``nouns'' for statistics}\label{chap:R:statistics}
 
 \begin{VF}
 The purpose of computing is insight, not numbers.
@@ -16,7 +16,7 @@ The purpose of computing is insight, not numbers.
 
 \section{Aims of this chapter}
 
-This chapter aims to give the reader only a quick introduction to statistics in base \Rlang, as there are many good texts on the use of \Rpgrm for different kinds of statistical analyses (see further reading on page \pageref{sec:stat:further:reading}). Although many of base \R's functions are specific to given statistical procedures, they use a particular approach to model specification and for returning the computed values that can be considered a part of the \Rlang language. Here you will learn the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear models, non-linear models and some simple multivariate methods as examples. My aim is teaching how to specify models, contrasts and data used, and how to access different components of the objects returned by the corresponding fit and summary functions.
+This chapter aims to give the reader an introduction to the approach used in base \Rlang for the computation of statistical summaries, the fitting of observations to models and tests of hypothesis. There are many good books on the use of \Rpgrm for different kinds of statistical analyses (see further reading on page \pageref{sec:stat:further:reading}) but most of them tend to focus on specific statistical methods rather than on the commonalities among them. Although base \R's model fitting functions target specific statistical procedures, they use a common approach to model specification and for returning the computed estimates and test outcomes. This approach, also followed by many contributed extension packages, can be considered as part of the philosophy behind the \Rlang language. In this chapter you will become familiar with the approaches used in \Rlang for calculating statistical summaries, generating (pseudo-)random numbers, sampling, fitting models and carrying out tests of significance. We will use linear correlation, \emph{t}-test, linear models, generalized linear models, non-linear models and some simple multivariate methods as examples. The focus is on how to specify statistical models, contrasts and observations, how to access different components of the objects returned by the corresponding fit and summary functions, and how to use these extracted components in further computations or for customized printing and formatting.
 
 %\emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
 
@@ -444,11 +444,11 @@ Once we know the structure of the object and the names of members, we can simply
 summary(fm1)$adj.r.squared
 @
 
-As an example of a further computation, we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero.
+As an example of a further computation, we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero. A null hypothesis of zero for the slope tests for the presence of an ``effect'' of an explanatory variable, which is usually of interest in an experiment. In contrast, when testing for deviations from a calibration by comparing two instruments or an instrument and a reference, a null hypothesis of one for the slope will test for deviations from the true readings. In some cases, we may want to test if the estimate for a parameter exceeds some other value, such as acceptable product tolerances. In other cases, when comparing the effectiveness of interventions or products we may be interested to test if a new approach surpasses that in current use by at least a specific margin. There exist many situations where the question of interest is not that an effect deviates from zero. Furthermore, when dealing with big data, very small deviations from zero can be statistically significant but biologically or practically irrelevant. In such case we can set the smallest response that is of interest, instead of zero, as the null hypothesis in the test.
 
-The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with a null hypothesis of slope = 1. The procedure is applicable to any constant value as a null hypothesis for any of the fitted parameter estimates for hypotheses set \emph{a priori}. The examples use a two-sided test. In some cases, a single-sided test should be used (e.g., if its known a priori that deviation is because of physical reasons possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
+The examples above are for a null hypothesis of slope = 0 and next we show how to do the equivalent test with a null hypothesis of slope = 1. The procedure is applicable to any constant value as a null hypothesis for any of the fitted parameter estimates. However, for the $P$-value estimates to be valid, the hypotheses should be set in advance of the study and independent of the observations being used in the test. The examples use a two-sided test. In some cases, a single-sided test should be used (e.g., if its known a priori that deviation is because of physical reasons possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
 
-To estimate the \emph{t}-value we need an estimate for the parameter and an estimate of the standard error for this estimate and its degrees of freedom.
+To estimate the \emph{t}-value we need an estimate for the parameter and an estimate of the standard error for this estimate and its degrees of freedom. We can extract them from the summary of a fitted model object.
 
 <<models-EB5>>=
 est.slope.value <- summary(fm1)$coefficients["speed", "Estimate"]
@@ -456,14 +456,16 @@ est.slope.se <- summary(fm1)$coefficients["speed", "Std. Error"]
 degrees.of.freedom <- summary(fm1)$df[2]
 @
 
-The \emph{t}-test is based on the difference between the value of the null hypothesis and the estimate.
+The \emph{t}-value is computed based on the difference between the value of the null hypothesis and the estimate.
 
 <<models-EB6>>=
 hyp.null <- 1
 t.value <- (est.slope.value - hyp.null) / est.slope.se
 p.value <- dt(t.value, df = degrees.of.freedom)
-cat("t.value =", signif(t.value, 3), "; P-value =", signif(p.value, 3)) 
+cat("t.value =", signif(t.value, 3), "; P-value =", signif(p.value, 3))
 @
+
+This example is for a linear model fit with function \Rfunction{lm()} but the same approach can be applied to any model fit procedure for which parameter estimates and their corresponding standard error estimates can be extracted or computed.
 
 \end{explainbox}
 
@@ -517,8 +519,9 @@ anova(fm4)
 The defaults used for model fits and ANOVA calculations vary among programs. There exist different so-called ``types'' of sums of squares, usually called I, II, and III. In orthogonal designs the choice has no consequences, but differences can be important for unbalanced designs, even leading to different conclusions. \Rlang's default, type~I, is usually considered to suffer milder problems than type~III, the default used by \pgrmname{SPSS} and \pgrmname{SAS}.
 \end{warningbox}
 
+\index{linear models!contrasts|(}
 \begin{warningbox}
-The contrasts used affect the estimates returned by \Rfunction{coef()} and \Rfunction{summary()} applied to an ANOVA model fit. The default used in \Rlang is different to that used in some other programs (even different than in \Slang). The default, \code{contr.treatment} uses the first level of the factor (assumed to be a control) as reference for estimation of coefficients and testing of their significance. Instead, \code{contr.sum} uses as reference the mean of all levels, i.e., using as condition that the sum of the coefficient estimates is equal to zero. Obviously this changes what the coefficients describe, and consequently also the estimated $p$-values, and most importantly how the result of the tests should be interpreted.
+The contrasts used affect the estimates returned by \Rfunction{coef()} and \Rfunction{summary()} applied to an ANOVA model fit. The default used in \Rlang is different to that used in some other programs (even different than in \Slang). The default, \code{contr.treatment} uses the first level of the factor (assumed to be a control) as reference for estimation of coefficients and testing of their significance. Instead, \code{contr.sum} uses as reference the mean of all levels, i.e., using as condition that the sum of the coefficient estimates is equal to zero. Obviously this changes what the coefficients describe, and consequently also the estimated $p$-values, and most importantly how the result of the tests should be interpreted. 
 \end{warningbox}
 
 The most straightforward way of setting a different default for a whole series of model fits is by setting \Rlang option \code{contrasts}, which we here only print.
@@ -527,9 +530,9 @@ The most straightforward way of setting a different default for a whole series o
 options("contrasts")
 @
 
-The option is set to a named vector, with the value named \code{unordered} used when the explanatory variable is an unordered factor (created with \Rfunction{factor()}) and the value named \code{ordered} used when the explanatory variable is an ordered factor (created with \Rfunction{ordered()}).
+The option is set to a named character vector of length two, with the first value, named \code{unordered} giving the name of the function used when the explanatory variable is an unordered factor (created with \Rfunction{factor()}) and the second value, named \code{ordered}, giving the name of the function used when the explanatory variable is an ordered factor (created with \Rfunction{ordered()}). 
 
-It is also possible to select the contrast to be used in the call to \code{aov()} or \code{lm()}. 
+It is also possible to select the contrast to be used in the call to \code{aov()} or \code{lm()}.
 
 <<models-6c>>=
 fm4trea <- lm(count ~ spray, data = InsectSprays,
@@ -540,15 +543,38 @@ fm4sum  <- lm(count ~ spray, data = InsectSprays,
 
 Interpretation of any analysis has to take into account these differences and users should not be surprised if ANOVA yields different results in base \Rlang and \pgrmname{SPSS} or \pgrmname{SAS} given the different types of sums of squares used. The interpretation of ANOVA on designs that are not orthogonal will depend on which type is used, so the different results are not necessarily contradictory even when different.
 
+In \code{fm4trea} we used \Rfunction{contr.treatment()}, thus contrasts for individual treatments are done against \code{Spray1} taking it as the control or reference, and can be inferred from the generated contrasts matrix. For this reason, there is no row for \code{Spray1} in the summary table. Each of the rows \code{Spray2} to \code{Spray6} is a test comparing these treatments individually against \code{Spray1}.
+
+\begin{warningbox}
+  Contrast are specified as matrices that are constructed by functions based on the number of levels in a factor. Constructor function \Rfunction{contr.treatment()} is the default in \Rlang for unordered factors, constructor \Rfunction{contr.SAS()} mimics the contrasts used in many \pgrmname{SAS} procedures, and \Rfunction{contr.helmert()} matches the default in \pgrmname{S}. Contrasts depend on the order of factor levels so it is crucial to ensure that the ordering in use yields the intended tests of significance for individual parameter estimates. (How to change the order of factor levels is explained in section \ref{sec:calc:factors} starting on page \pageref{sec:calc:factors}.)
+\end{warningbox}
+
+<<contrasts-02>>=
+contr.treatment(length(levels(InsectSprays$spray)))
+@
+
 <<models-6d>>=
 summary(fm4trea)
+@
+
+In \code{fm4sum} we used \Rfunction{contr.sum()}, thus contrasts for individual treatments are done differently, as can be inferred from the contrasts matrix. The sum is constrained to be zero, thus estimates for the last treatment level are determined by the sum of the previous ones, and not tested for significance.
+
+<<contrasts-03>>=
+contr.sum(length(levels(InsectSprays$spray)))
 @
 
 <<models-6e>>=
 summary(fm4sum)
 @
 
-In the case of contrasts, they always affect the parameter estimates independently of whether the experiment design is orthogonal or not. A different set of contrasts simply tests a different set of possible treatment effects. Contrasts, on the other hand, do not affect the table returned by \Rfunction{anova()} as this table does not deal with the effects of individual factor levels.
+\begin{advplayground}
+  Explore how taking the last level as reference in \Rfunction{contr.SAS()} instead of the first one as in \Rfunction{contr.treatment()} affects the estimates. Reorder the levels of factor \code{spray} so that the test using \Rfunction{contr.SAS()} becomes equivalent to that obtained above with \Rfunction{contr.treatment()}. Consider why \Rfunction{contr.poly()} is the default for ordered factors and when \Rfunction{contr.helmert()} could br  most useful.
+\end{advplayground}
+
+In the case of contrasts, they always affect the parameter estimates independently of whether the experiment design is orthogonal or not. A different set of contrasts simply tests a different set of possible treatment effects. Contrasts, on the other hand, do not affect the table returned by \Rfunction{anova()} as this table does not deal with the effects of individual factor levels. It can also seen that the overall estimates shown at the bottom of the summary table remain unchanged. In other words, the what changes is how the total variation explained by the fitted model is partitioned into components to be tested for specific contributions to the overall model fit.
+
+Contrasts and their interpretation are discussed in detail by \citeauthor{Venables2002} (\citeyear{Venables2002}) and \citeauthor{Crawley2012} (\citeyear{Crawley2012}).
+\index{linear models!contrasts|)}
 
 \subsection{Analysis of covariance, ANCOVA}
 %\index{analysis of covariance}
@@ -1203,7 +1229,7 @@ str(hc)
 
 \section{Further reading}\label{sec:stat:further:reading}
 
-Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples, are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2009} \autocite{Everitt2009} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions of various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
+Two recent text books\index{further reading!statistics in R} on statistics, following a modern approach, and using \Rlang for examples, are \citetitle{Diez2019} \autocite{Diez2019} and \citetitle{Holmes2019} \autocite{Holmes2019}. Three examples of books introducing statistical computations in \Rlang are \citetitle{Dalgaard2008} \autocite{Dalgaard2008}, \citetitle{Everitt2010} \autocite{Everitt2010} and \citetitle{Zuur2009} \autocite{Zuur2009}. More advanced books are available with detailed descriptions of various types of analyses in \Rlang, including thorough descriptions of the methods briefly presented in this chapter. Good examples of books with broad scope are \citebooktitle{Crawley2012} \autocite{Crawley2012} and the classic reference \citebooktitle{Venables2002} \autocite{Venables2002}. More specific books are also available from which a few suggestions for further reading are \citebooktitle{Everitt2011} \autocite{Everitt2011}, \citebooktitle{Faraway2004} \autocite{Faraway2004}, \citebooktitle{Faraway2006} \autocite{Faraway2006}, \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wood2017} \autocite{Wood2017}.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
