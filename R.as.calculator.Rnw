@@ -187,7 +187,7 @@ append(a, values = b, after = 2L)
 
 Both \code{c()} and \code{append()} can also be used with lists (described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists}).
 
-\begin{playground}
+\begin{playground}\label{pg:seq:rep}
 One can create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case, I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
 
 <<numbers-5, eval=eval_playground>>=
@@ -1421,111 +1421,62 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Factors}\label{sec:calc:factors}
 \index{factors|(}
 \index{categorical variables|see{factors}}\qRclass{factor}
-Factors are used to indicate categories, most frequently the factors describing the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Normal factors created with \Rfunction{factor()} are unordered or categorical. \Rlang also supports ordered factors that can be created with function \Rfunction{ordered()}.\index{factors!ordered}
+Factors are very important in \Rlang. In contrast to other statistical software in which the role of a variable is set when defining a model to be fitted or when setting up a test, in \Rlang, models are specified exactly in the same way for ANOVA and regression analysis, both as \emph{linear models}. The type of model that is fitted is decided by whether the explanatory variable is a factor (giving ANOVA) or a numerical variable (giving regression). This makes a lot of sense, because in most cases, considering an explanatory variable as categorical or not, depends on the quantity stored and/or the design of the experiment or survey. In other words, being categorical is a property of the data. The order of the levels in an unordered \code{factor} does not affect simple calculations or the values plotted, but as we will see in chapters \ref{chap:R:plotting} and \ref{chap:R:statistics}, it does affect how the output is printed, the order of the levels in the scales and keys of plots, and in some cases how contrasts are applied in significance tests.
+
+In a factor, values indicate discrete unordered categories, most frequently the treatments in an experiment, or categories in a survey. They can be created either from numerical or character vectors. The different possible values are called \emph{levels}. Factors created with \Rfunction{factor()} are always unordered or categorical. \Rlang also supports ordered factors, created with function \Rfunction{ordered()} with identical user interface. The distinction, however, only affects how they are interpreted in statistical tests as discussed in chapter \ref{chap:R:statistics}. \index{factors!ordered}
+
+When using \Rfunction{factor()} or \Rfunction{ordered()} we create a factor from a vector, but this vector can be created on-the-fly and anonymous as shown in this example. When the vector is \code{numeric} and no labels are supplied, level labels are character strings matching the numbers. The default ordering of the levels is alphanumerical.
 
 <<factors-1>>=
-my.vector <- c("treated", "treated", "control", "control", "control", "treated")
-my.factor <- factor(my.vector)
-my.factor
-my.factor <- factor(x = my.vector, levels = c("treated", "control"))
-my.factor
+factor(x = c(1, 2, 2, 1, 2, 1, 1))
+ordered(x = c(1, 2, 2, 1, 2, 1, 1))
+factor(x = c(1, 2, 2, 1, 2, 1, 1), ordered = TRUE)
 @
-
-The\index{factors!labels}\index{factors!levels} labels (``names'') of the levels can be set when the factor is created. In this case, when calling \Rfunction{factor()}, parameters \code{levels} and \code{labels} should both be passed a vector as argument, with levels and matching labels in the same position in the two vectors. The argument passed to \code{levels} determines the order of the levels based on their old names or values, and the argument passed to \code{labels} gives new names to the levels.
-
-<<factors-1a>>=
-my.vector <- c(1, 1, 0, 0, 0, 1)
-my.factor <- factor(x = my.vector, levels = c(1, 0), labels = c("treated", "control"))
-my.factor
-@
-
-It is always preferable to use meaningful labels for levels, although it is also possible to use numbers.
-
-In the examples above we passed a numeric vector or a character vector as an argument for parameter \code{x} of function \Rfunction{factor()}. It is also possible to pass a \code{factor} as an argument for parameter \code{x}. We use indexing with a test returning a logical vector to extract all ``controls.'' We use function \Rfunction{levels()} to look at the levels of the factors.
-
-<<factors-1b>>=
-levels(my.factor)
-control.factor <- my.factor[my.factor == "control"]
-control.factor
-control.factor <- factor(control.factor)
-control.factor
-@
-
-It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.\index{factors!drop unused levels}
 
 \begin{explainbox}
-When the pattern of levels is regular, it is possible to use function \Rfunction{gl()} to \emph{generate levels} in a factor. Nowadays, it is more usual to read data into \Rlang from files in which the treatment codes are already available as character strings or numeric values, however, when we need to create a factor within R, \Rfunction{gl()} can save some typing.
+When the pattern of levels is regular, it is possible to use function \Rfunction{gl()}, \emph{generate levels}, to construct a factor. Nowadays, it is usual to read data into \Rlang from files in which the treatment codes are already available as character strings or numeric values, however, when we need to create a factor within R, \Rfunction{gl()} can save some typing. In this case instead of passing a vector as argument, we pass a \emph{recipe} to create it: \code{n} is the number of levels, and \code{k} the number of contiguous repeats (called ``replicates'' in \Rlang documentation) and \code{length} the length of the factor to be created.
 
 <<factors-bx-01>>=
-gl(2, 5, labels = c("A", "B"))
+gl(n = 2, k = 5, labels = c("A", "B"))
+gl(n = 2, k = 1, length = 10, labels = c("A", "B"))
 @
 \end{explainbox}
 
-Converting factors into numbers is not intuitive, even in the case where a factor was created from a \code{numeric} vector.
+It is always preferable to use meaningful labels for levels, even if \Rlang does not require it. Here the vector is stored in a variable named \code{my.vector}. In a real data analysis situation in most cases the vector would have been read from a file on disk and would be longer.
 
 <<factors-2>>=
-my.vector2 <- rep(3:5, 4)
-my.vector2
-my.factor2 <- factor(my.vector2)
-my.factor2
-as.numeric(my.factor2)
-as.numeric(as.character(my.factor2))
+my.vector <- c("treated", "treated", "control", "control", "control", "treated")
+factor(my.vector)
 @
 
-\begin{explainbox}
-\textbf{Why is a double conversion needed?}\index{factors!convert to numeric} Internally, factor levels are stored as running integers starting from one, and those are the numbers returned by \Rfunction{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels. If these character strings represent numbers, they can be converted, in a second step, using \Rfunction{as.numeric()} into the original numeric values.
+The ordering of levels is established at the time a factor is created, and by default is alphabetical. This default ordering of levels is frequently not the one needed. We can pass an argument to parameter \code{levels} of function \Rfunction{factor()} to set a different ordering of the levels.
 
-<<factors-eb2>>=
-class(my.factor2)
-mode(my.factor2)
-@
-\end{explainbox}
-
-\begin{playground}
-Create a factor with levels labeled with words. Create another factor with the levels labeled with the same words, but ordered differently. After this convert both factors to numeric vectors using \Rfunction{as.numeric()}. Explain why the two numeric vectors differ or not from each other.
-\end{playground}
-
-Factors are very important in \Rlang. In contrast to other statistical software in which the role of a variable is set when defining a model to be fitted or when setting up a test, in \Rlang, models are specified exactly in the same way for ANOVA and regression analysis, both as \emph{linear models}. The type of model that is fitted is decided by whether the explanatory variable is a factor (giving ANOVA) or a numerical variable (giving regression). This makes a lot of sense, because in most cases, considering an explanatory variable as categorical or not, depends on the design of the experiment or survey, and in other words, is a property of the data and the experiment or survey that gave origin to them, rather than of the data analysis.
-
-The order of the levels in a \code{factor} does not affect simple calculations or the values plotted, but it does affect how the output is printed, the order of the levels in the scales of plots, and in some cases the contrasts in significance tests. The default ordering is alphabetical, and is established at the time a factor is created. Consequently, rather frequently the default ordering of levels is not the one needed. As shown above, parameter \code{levels} in the constructor makes it possible to set the order of the levels. It is also possible to change the ordering of an existing factor.
-
-\begin{explainbox}
-\textbf{Renaming factor levels.}\index{factors!rename levels} The most direct way is using \Rfunction{levels()<-} as shown below, but it is also possible to use \Rfunction{factor()}. The difference is that \code{factor()} drops the unused levels and \code{levels()} only renames existing levels, all of them by position. (Although we here use \code{character} strings that are only one character long, longer strings can be set as labels in exactly the same way.
-
-<<factors-2a>>=
-my.factor1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
-my.factor1
-levels(my.factor1) <- c("a", "b", "c", "d")
-my.factor1
+<<factors-3>>=
+factor(x = my.vector, levels = c("treated", "control"))
 @
 
-Or more safely by matching names---i.e., order in the list of replacement values is irrelevant.
+The\index{factors!labels}\index{factors!levels} labels (``names'') of the levels can be set when calling \Rfunction{factor()}. Two vectors are passed as arguments to parameters \code{levels} and \code{labels} with levels and matching labels in the same position. The argument passed to \code{levels} determines the order of the levels based on their old names or values, and the argument passed to \code{labels} gives new names to the levels.
 
-<<factors-2b>>=
-my.factor1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
-my.factor1
-levels(my.factor1) <- list("a" = "A", "d" = "Z", "c" = "B", "b" = "F")
-my.factor1
+<<factors-4>>=
+factor(x = c(1, 1, 0, 0, 0, 1), levels = c(1, 0), labels = c("treated", "control"))
 @
 
-Or alternatively by position and replacing the labels of only some levels---i.e., rather unsafe.
+In the examples above we passed a numeric vector or a character vector as an argument for parameter \code{x} of function \Rfunction{factor()}. It is also possible to pass a \code{factor} as an argument to parameter \code{x}. This makes it possible to modify the ordering of levels or replace the labels in a factor.
 
-<<factors-2c>>=
-my.factor1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
-my.factor1
+<<factors-5>>=
+my.factor <- factor(x = my.vector)
+my.factor
+factor(x = my.factor, levels = c("treated", "control"))
+factor(x = my.factor, labels = c(control = "cooled", treated = "heated"))
+factor(x = my.factor,
+       levels = c("treated", "control"),
+       labels = c("heated", "cooled"))
 @
-
-<<factors-2cc>>=
-levels(my.factor1)[c(1, 4)] <- c("a", "d")
-my.factor1
-@
-
-\end{explainbox}
 
 \begin{explainbox}
 \textbf{Merging factor levels.}\index{factors!merge levels} We use \Rfunction{factor()} as shown below, setting the same label for the levels we want to merge.
 
-<<factors-2d>>=
+<<factors-eb3>>=
 my.factor1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
 my.factor1
 factor(my.factor1,
@@ -1534,31 +1485,83 @@ factor(my.factor1,
 @
 \end{explainbox}
 
-\begin{explainbox}
-\textbf{Reordering factor levels.}\index{factors!reorder levels} The simplest approach is to use \Rfunction{factor()} and its \code{levels} parameter. The only complication is that the names of the existing levels and those passed as an argument need to match, and typing mistakes can cause bugs. To avoid the error-prone step, in all examples except the first, we use \Rfunction{levels()} to retrieve the names of the levels from the factor itself.
+We can use indexing on factors in the same way as with vectors. In the next example, we use a test returning a logical vector to extract all ``controls.'' We use function \Rfunction{levels()} to look at the levels of the factors, as with vectors, \code{lengtgh()} to query the number of values stored.
 
-<<factors-3>>=
-levels(my.factor2)
-my.factor2 <- factor(my.factor2, levels = c("5", "3", "4"))
+<<factors-6>>=
+my.factor
+levels(my.factor)
+length(my.factor)
+control.factor <- my.factor[my.factor == "control"]
+control.factor
+levels(control.factor) # same as in my.factor
+length(control.factor) # shorter than my.factor
+control.factor <- factor(control.factor)
+levels(control.factor) # the unused level was dropped
+@
+
+It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.\index{factors!drop unused levels}
+
+\begin{warningbox}
+How to convert factors into numeric vectors is not obvious, even when the factor was created from a \code{numeric} vector.
+
+<<factors-7>>=
+my.vector2 <- rep(3:5, 4)
+my.vector2
+my.factor2 <- factor(my.vector2)
+my.factor2
+as.numeric(my.factor2)
+as.numeric(as.character(my.factor2))
+@
+\end{warningbox}
+
+\begin{explainbox}
+\textbf{Why is a double conversion needed?}\index{factors!convert to numeric} Internally, factor values are  are stored as running integers starting from one, each distinct integer value corresponding to a level. These underlying integer values are returned by \Rfunction{as.numeric()} when applied to a factor instead of the level labels. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels for each of the values stored in the factor. If these character strings represent numbers, they can be converted, in a second step, using \Rfunction{as.numeric()} into the original numeric values. Use of \code{class} and \code{mode} is described on section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}, and \code{str()} on page \pageref{par:calc:str}.
+
+<<factors-eb2>>=
+class(my.factor2)
+mode(my.factor2)
+str(my.factor2)
+@
+
+\end{explainbox}
+
+\begin{playground}
+Create a factor with levels labeled with words. Create another factor with the levels labeled with the same words, but ordered differently. After this convert both factors to numeric vectors using \Rfunction{as.numeric()}. Explain why the two numeric vectors differ or not from each other.
+\end{playground}
+
+\begin{explainbox}
+\textbf{Safely reordering and renaming factor levels.}\index{factors!reorder levels} The simplest approach is to use \Rfunction{factor()} and its \code{levels} parameter as shown above. In these more advanced examples we use \Rfunction{levels()} to retrieve the names of the levels from the factor itself to protect from possible bugs due to typing mistakes, or for changes in the naming conventions used.
+
+Reverse previous order using \Rfunction{rev()}.
+
+<<factors-10>>=
+my.factor2 <- factor(c("treated", "treated", "control", "control", "control", "treated"))
 levels(my.factor2)
 my.factor2 <- factor(my.factor2, levels = rev(levels(my.factor2)))
 levels(my.factor2)
 @
 
-<<factors-3a>>=
+Sort in decreasing order, i.e., opposite to default.
+
+<<factors-11>>=
 my.factor2 <- factor(my.factor2,
                      levels = sort(levels(my.factor2), decreasing = TRUE))
 levels(my.factor2)
-my.factor2 <- factor(my.factor2, levels = levels(my.factor2)[c(2, 1, 3)])
+@
+
+Alter ordering using subscripting; especially useful with three or more levels.
+
+<<factors-12>>=
+my.factor2 <- factor(my.factor2, levels = levels(my.factor2)[c(2, 1)])
 levels(my.factor2)
 @
 
-Reordering the levels of a factor based on summary quantities from data is very useful, especially when plotting. Function \Rfunction{reorder()} can be used in this case. It defaults to using \code{mean()} for summaries, but other suitable functions can be supplied in its place.
+Reordering the levels of a factor based on summary quantities from data stored in a numeric vector is very useful, especially when plotting. Function \Rfunction{reorder()} can be used in this case. It defaults to using \code{mean()} for summaries, but other suitable summary functions, such as \code{median()} can be supplied in its place.
 
-<<factors-4>>=
+<<factors-13>>=
 my.factor3 <- gl(2, 5, labels = c("A", "B"))
 my.vector3 <- c(5.6, 7.3, 3.1, 8.7, 6.9, 2.4, 4.5, 2.1, 1.4, 2.0)
-levels(my.factor3)
+my.factor3
 my.factor3ord <- reorder(my.factor3, my.vector3)
 levels(my.factor3ord)
 my.factor3rev <- reorder(my.factor3, -my.vector3) # a simple trick
@@ -1570,7 +1573,7 @@ In the last statement, using the unary negation operator, which is vectorized, a
 \end{explainbox}
 
 \begin{advplayground}\label{calc:ADVPG:order:sort}
-\textbf{Reordering factor values.}\index{factors!reorder values}\index{factors!arrange values} It is possible to arrange the values stored in a factor either alphabetically according to the labels of the levels or according to the order of the levels.
+\textbf{Reordering factor values.}\index{factors!reorder values}\index{factors!arrange values} It is possible to arrange the values stored in a factor either alphabetically according to the labels of the levels or according to the order of the levels. (The use of \code{rep()} is explained on page \pageref{pg:seq:rep}.)
 
 <<factors-ADVPG-11, eval=eval_playground>>=
 # gl() keeps order of levels
@@ -1642,7 +1645,7 @@ try(a.list[[c(1,3)]])
 \emph{Lists}, as usually defined in languages like \Clang, are based on pointers to memory locations, with pointers stored at each node. These pointers chain or link the different member nodes (this allows, for example, sorting of lists in place by modifying the pointers). In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \Rlang, \code{list} members can be accessed through positional indexes, similarly to vectors. Of course, insertions and deletions in the middle of a list, whatever their implementation, alter (or \emph{invalidate}) any position-based indexes.
 \end{explainbox}
 
-To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}) is of help, especially when lists have many members. The \code{print()} method for the structure formats lists more compactly than function \code{print()} applied directly to a list.
+To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}) is of help, especially when lists have many members. The \code{print()} method for the structure formats lists more compactly than function \code{print()} applied directly to a list.\label{par:calc:str}
 
 <<lists-1a>>=
 str(a.list)
@@ -1974,7 +1977,7 @@ When do extraction operators applied to data frames return a vector or factor, a
 \end{advplayground}
 
 \begin{explainbox}
-In the case of \Rfunction{subset()} we can select columns directly as shown below, while for most other functions, extraction using operators \Roperator{[ ]}, \Roperator{[[ ]]} or \Roperator{\$} is needed. 
+In the case of \Rfunction{subset()} we can select columns directly as shown below, while for most other functions, extraction using operators \Roperator{[ ]}, \Roperator{[[ ]]} or \Roperator{\$} is needed.
 
 <<data-frames-5a>>=
 subset(a.df, x > 3, select = 2)
