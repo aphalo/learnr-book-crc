@@ -1170,13 +1170,13 @@ a
 
 \begin{small}
 \begin{tikzpicture}[font=\sffamily,
-array/.style={matrix of nodes,nodes={draw, minimum size=7mm, fill=blue!20},column sep=-\pgflinewidth, row sep=0.5mm, nodes in empty cells,
+array/.style={matrix of nodes,nodes={draw, minimum size=7mm, fill=red!20},column sep=-\pgflinewidth, row sep=0.5mm, nodes in empty cells,
 row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}},
 row 1 column 2/.style={nodes={draw}}}]
 
 \matrix[array] (array) {
 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\
-a\strut & b\strut & c\strut & d\strut & e\strut & f\strut & g\strut & h\strut & i\strut & j\strut \\};
+"a"\strut & "b"\strut & "c"\strut & "d"\strut & "e"\strut & "f"\strut & "g"\strut & "h"\strut & "i"\strut & "j"\strut \\};
 \node[draw, minimum size=4mm] at (array-2-2) (box) {};
 
 \begin{scope}[on background layer]
@@ -1309,7 +1309,7 @@ treat.map
 
 \begin{small}
 \begin{tikzpicture}[font=\sffamily,
-array/.style={matrix of nodes,nodes={draw, minimum size=7mm, fill=blue!20},column sep=-\pgflinewidth, row sep=0.5mm, nodes in empty cells,
+array/.style={matrix of nodes,nodes={draw, minimum size=7mm, fill=red!20},column sep=-\pgflinewidth, row sep=0.5mm, nodes in empty cells,
 row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 
 \matrix[array] (array) {
@@ -1392,7 +1392,7 @@ a
 \begin{playground}
 Do play with subscripts to your heart's content, really grasping how they work and how they can be used, will be very useful in anything you do in the future with \Rlang. Even the contrived example below follows the same simple rules, just study it bit by bit. Hint: the second statement in the chunk below, modifies \code{a}, so, when studying variations of this example you will need to recreate \code{a} by executing the first statement, each time you run a variation of the second statement.
 
-<<vectors-8a>>=
+<<vectors-8a, eval=eval_playground>>=
 a <- letters[1:10]
 a[5:1] <- a[c(TRUE,FALSE)]
 a
@@ -1838,18 +1838,19 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 
 \begin{explainbox}
   In \Rlang lists can have as members not only objects storing data on observations and categories, but also function definitions, model formulas, unevaluated expressions, matrices, arrays, and objects of user defined classes.
-  
+
   Differently to languages like \Clang, \Cpplang and \pascallang, \Rlang does not implement memory pointers or linked lists using pointers.
 \end{explainbox}
 
 Our first list has as its members three different vectors, each one belonging to a different class: \code{numeric}, \code{character} and \code{logical}. The three vectors also differ in their length: 6, 1, and 2, respectively.
 
 <<lists-0>>=
-a.list <- list(x = 1:6, y = "ab", z = c(TRUE, FALSE))
+a.list <- list(x = 1:3, y = "ab", z = c(TRUE, FALSE))
 @
 
 <<lists-0a>>=
 str(a.list)
+names(a.list)
 @
 
 \begin{small}
@@ -1859,7 +1860,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 
 \matrix[array] (array) {
 1 & 2 & 3 \\
-1:6\strut & ``ab''\strut & c(TRUE, FALSE)\strut \\};
+1, 2, 3\strut & ``ab''\strut & TRUE, FALSE\strut \\};
 
 \begin{scope}[on background layer]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-3.south east);
@@ -1876,6 +1877,23 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 %
 \end{tikzpicture}
 \end{small}
+
+\begin{small}
+\begin{tikzpicture}[font=\sffamily, my shape/.style={
+  rectangle split, rectangle split parts=#1, draw, anchor=north, minimum size=12mm}]
+  \node [my shape=3, rectangle split, fill=blue!20] at (0,1)
+    {1\strut\nodepart{two}2\strut\nodepart{three}3\strut};
+  \node [my shape=1, fill=red!20] at (1.3,1)
+    {``ab''\strut};
+  \node [my shape=2, fill=yellow!20] at (2.6,1)
+    {TRUE\strut\nodepart{two}FALSE\strut};
+\draw (-0.6,+0.65) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut a.list}};
+\end{tikzpicture}
+\end{small}
+
+\begin{warningbox}
+  With lists it is best to use informative names for indexing, as their members are heterogenous usually containing loosely related/connected data. Names make code easier to understand and mistakes more visible. Using names also makes code more robust to future changes in the position of fields in lists created upstream. Below, we use both positional indices and names to highlight the similarities between lists and vectors.
+\end{warningbox}
 
 Lists can behave as vectors with heterogeneous elements as members, as we will describe next. Lists can be nested, so tree-like structures are also possible (see section \ref{sec:calc:lists:nested} on page \pageref{sec:calc:lists:nested}).
 
@@ -1895,53 +1913,103 @@ Lists can behave as vectors with heterogeneous elements as members, as we will d
 %\end{tikzpicture}
 %}
 
-\subsection{Member extraction and subsetting}
-Using\qRoperator{[[]]}\index{lists!member extraction|(}\index{lists!member indexing|see{lists!member extraction}} double square brackets for indexing a list extracts the element stored in the list, in its original mode. In the example above, \code{a.list[["x"]]} returns a numeric vector, while \code{a.list[1]} returns a list containing the numeric vector \code{x}. \code{a.list\$x} returns the same value as \code{a.list[["x"]]}, a numeric vector. \code{a.list[c(1,3)]} returns a list of length two, while \code{a.list[[c(1,3)]]} is an error.
+\subsection{Member extraction, deletion and insertion}
+
+In\index{lists!member extraction|(}\index{lists!member indexing|see{lists!member extraction}}\index{lists!deletion and addition of members|(} section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} we saw that the extraction operator \Roperator{[]} applied to a vector, returns a vector, longer or shorter, possibly of length one, or even length zero. Similarly, applying operator \Roperator{[]} to a list returns a list, possibly of different length: \code{a.list["x"]} or \code{a.list[1]} return a list containing only one member, the numeric vector stored at the first position of \code{a.list}. In the last statement above, \code{a.list[c(1, 3)]} returns a list of length two as expected.
+
+<<lists-1a>>=
+a.list["x"]
+a.list$x
+a.list[1]
+a.list[c(1, 3)]
+@
+
+As with vectors negative positional indices remove members instead of extracting them. See page \pageref{par:calc:lists:rm} for a safer approach to deletion of list members.
+
+<<lists-1ay>>=
+a.list[-1]
+a.list[c(-1, -3)]
+@
+
+Using operator \Roperator{[[]]} (double square brackets) for indexing a list extracts the element stored in the list, in its original mode. In the example below, \code{a.list[["x"]]} and \code{a.list[["x"]]} return a numeric vector. We might say that extraction operator \Roperator{[[]]} reaches ``deeper'' into the list than operator \Roperator{[]}.
 
 <<lists-1>>=
 a.list$x
 a.list[["x"]]
 a.list[[1]]
-a.list["x"]
-a.list[1]
-a.list[c(1,3)]
-try(a.list[[c(1,3)]])
 @
+
+The operators can be used together as shown below, with \code{a.list[[1]]} extracting the vector from \code{a.list} and \code{[3]} extracting the member at position 3 of the vector.
+
+<<lists-1ax>>=
+a.list[[1]][3]
+@
+
+\begin{playground}
+Operators can be used on the lhs as well as on the rhs of an assignment, and lists can be empty, i.e, be of length zero. The example below makes use of this to build a list step by step.
+
+<<lists-pg-01, eval=eval_playground>>=
+b.list <- list()
+b.list[["x"]] <- 1:3
+b.list[["y"]] <- "ab"
+b.list[["z"]] <- c(TRUE, FALSE)
+@
+
+Compare \code{b.list} to \code{a.list}, used for the examples above.
+
+<<lists-pg-02, eval=eval_playground>>=
+b.list[["y"]] <- b.list[["x"]]
+@
+
+Compare them again, and try to understand why \code{b.list} has changed as it did. Pay also attention to possible changes to the members' names.
+
+\end{playground}
+
+\begin{warningbox}
+Suprisingly, \code{a.list[[c(1, 3)]]} returns the value at position 3 in the first member of the list, an operation that normally would be written as \code{a.list[[1]][3]} using two extractions, one after another. In most cases statements like the one below will be entered by mistake rather than intentionally, but being valid in \Rlang, they will not trigger an error message.
+
+<<lists-wb-xx>>=
+a.list[[c(1, 3)]]
+@
+\end{warningbox}
 
 \begin{explainbox}
-\emph{Lists}, as usually defined in languages like \Clang, are based on pointers to memory locations, with pointers stored at each node. These pointers chain or link the different member nodes (this allows, for example, sorting of lists in place by modifying the pointers). In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \Rlang, \code{list} members can be accessed through positional indexes, similarly to vectors. Of course, insertions and deletions in the middle of a list, whatever their implementation, alter (or \emph{invalidate}) any position-based indexes.
+\emph{Lists}, as usually defined in languages like \Clang, are based on pointers to memory locations, with pointers stored at each node. These pointers chain or link the different member nodes (this allows, for example, sorting of lists in place by modifying the pointers). In such implementations, indexing by position is not possible, or at least requires ``walking'' down the list, node by node. In \Rlang, \code{list} members can be accessed through positional indexes, similarly to vectors. Of course, insertions and deletions in the middle of a list, shift the position of members and change which member is pointed at by indexes for positions past the modified location. The names, in contrast remain valid.
+
+<<lists-eb-xx>>>=
+list(a = 1, b = 2, c = 3)[-2]
+@
 \end{explainbox}
 
-To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}) is of help, especially when lists have many members. The \code{print()} method for the structure formats lists more compactly than function \code{print()} applied directly to a list.\label{par:calc:str}
-
-<<lists-1a>>=
-str(a.list)
-@
-
-\index{lists!member extraction|)}
-
-\subsection{Adding and removing list members}
-The two most common simple operations on lists are insertions and deletions.\index{lists!insert into}\index{lists!append to} In \Rlang, function \Rfunction{append()} can be used both to append elements at the end of a list and insert elements into the head or any position in the middle of a list.
+Two frequent simple operations on lists are insertions and deletions.\index{lists!insert into}\index{lists!append to} In \Rlang, function \Rfunction{append()} can be used both to append elements at the end of a list and insert elements into the head or any position in the middle of a list.
 
 <<lists-1b>>=
 another.list <- append(a.list, list(yy = 1:10, zz = letters[5:1]), 2L)
 another.list
 @
 
-To delete a member from a list we assign \code{NULL} to it.
+To\label{par:calc:lists:rm} delete a member from a list we assign \code{NULL} to it.
 
 <<lists-1c>>=
 a.list$y <- NULL
 a.list
 @
 
+To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}), used above, is convenient, especially when lists have many members. The \code{print()} method for the structure formats lists more compactly than function \code{print()} applied directly to a list.\label{par:calc:str}
+
+<<lists-1aa>>=
+print(a.list)
+@
+
+\index{lists!deletion and addition of members|)}\index{lists!member extraction|)}
+
 \subsection{Nested lists}\label{sec:calc:lists:nested}
 
 Lists can be nested, i.e., lists of lists can be constructed to an arbitrary depth.\index{lists!nested}
 
 <<lists-2>>=
-a.list <- list("a", "aa", "aaa")
-b.list <- list("b", "bb")
+a.list <- list("a", "aa", 10)
+b.list <- list("b", TRUE)
 nested.list <- list(A = a.list, B = b.list)
 str(nested.list)
 @
@@ -1949,16 +2017,17 @@ str(nested.list)
 A nested\index{lists!nested} list can alternatively be constructed within a single statement in which several member lists are created. Here we combine the first three statements in the earlier chunk into a single one.
 
 <<lists-3>>=
-nested.list <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
+nested.list <- list(A = list("a", "aa", 10), B = list("b", TRUE))
 str(nested.list)
 @
 
 A list can contain a combination of list and vector members.
 
 <<lists-3s>>=
-nested.list <- list(A = list("a", "aa", c(2:5)),
-                    B = list("b", "bb"),
-                    C = c(1, 3, 9))
+nested.list <- list(A = list("a", "aa", 10),
+                    B = list("b", TRUE),
+                    C = c(1, 3, 9),
+                    D = 4321)
 str(nested.list)
 @
 
@@ -2365,7 +2434,7 @@ my.df
 
 \begin{advplayground}
 Add a variable named \code{genotype} to the data frame below so that for individual \code{4} its value is \code{"WT"}, for individual \code{1} its value is \code{"mutant1"}, and for individual \code{2} its value is \code{"mutant2"}.
-<<data-frames-11>>=
+<<data-frames-11, eval=eval_playground>>=
 my.df <- data.frame(individual = rep(c(2, 4, 1), 2),
                     value = c(1.5, 3.2, 4.5, 8.2, 7.4, 6.2))
 @
