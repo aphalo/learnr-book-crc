@@ -411,8 +411,8 @@ Real numbers are a mathematical abstraction, and do not have an exact equivalent
 The name \code{double} originates from the \Clang language, in which there are different types of floats available. With the name \code{double} used to mean ``double-precision floating-point numbers.'' Similarly, the use of \code{L} stems from the \code{long} type in \Clang, meaning ``long integer numbers.''
 \end{explainbox}
 
-\index{vectors!introduction|(}
-\Rlang's vectors\label{par:numeric:vectors:start} are one-dimensional arrays used to store similar values, e.g., numbers. They are not equivalent to the vectors, commonly used in Physics for describing directional forces, which are symbolized with an arrow as an ``accent,'' such as $\overrightarrow{\mathbf{F}}$. In \Rlang numeric values and other atomic values are always \Rclass{vector}s that can contain zero, one or more elements. The diagram below exemplifies a vector containing ten elements. These elements can be extracted using integer numbers as positional indices, and manipulated as described in more detail in section \ref{sec:calc:factors} on page \pageref{sec:calc:factors}.\vspace{1ex}
+\index{vectors!introduction|(}\label{par:calc:vectors:diag}
+\Rlang's vectors\label{par:numeric:vectors:start} are one-dimensional, of varying length and used to store similar values, e.g., numbers. They are different to the vectors, commonly used in Physics for describing directional forces, which are symbolized with an arrow as an ``accent,'' such as $\overrightarrow{\mathbf{F}}$. In \Rlang numeric values and other atomic values are always \Rclass{vector}s that can contain zero, one or more elements. The diagram below exemplifies a vector containing ten elements. These elements can be extracted using integer numbers as positional indices, and manipulated as described in more detail in section \ref{sec:calc:factors} on page \pageref{sec:calc:factors}.\vspace{1ex}
 
 \begin{small}
 \begin{tikzpicture}[font=\sffamily,
@@ -447,12 +447,31 @@ where $a_{1\ldots n}$ is the whole vector and $a_1$ its first member. The length
 
 As you have seen above, the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line. As single values are vectors of length one, when they are printed, they are also preceded with \code{[1]}.
 
-One can use \Rmethod{c()} ``concatenate'' to create a vector from other vectors, including vectors of length 1, or even vectors of length 0, such as the \code{numeric} constants in the statements below. We show \Rlang code followed by a diagram depicting the vector created.
+One can use \Rmethod{c()} ``concatenate'' to create a vector from other vectors, including vectors of length 1, or even vectors of length 0, such as the \code{numeric} constants in the statements below. The first example shows an anonymous vector created, printed, and then automatically discarded.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3 1 2
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+To be able to reuse the vector, we assign it to a variable, giving a name to it. The length of a vector can be queried with method \Rfunction{length()}. We show below \Rlang code followed by a diagram depicting the vector created.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlstd{a} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)}
+\hlkwd{length}\hlstd{(a)}
+\end{alltt}
+\begin{verbatim}
+## [1] 3
+\end{verbatim}
+\begin{alltt}
 \hlstd{a}
 \end{alltt}
 \begin{verbatim}
@@ -581,12 +600,12 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \end{tikzpicture}
 \end{small}
 
-In the examples above we saved the values returned by the \Rlang statements in named variables to reuse them and to help identify the matching diagrams. As shown earlier, values can be also printed at the \Rlang console.
+As shown earlier, values can be also printed at the \Rlang console. Here we show concatenation with a vector of the same class but with length zero.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{c}\hlstd{(d,} \hlkwd{numeric}\hlstd{())} \hlcom{# concatenate d with a vector of length zero}
+\hlkwd{c}\hlstd{(d,} \hlkwd{numeric}\hlstd{())}
 \end{alltt}
 \begin{verbatim}
 ## [1] 4 5 0 3 1 2
@@ -3243,23 +3262,80 @@ The second and third statements are only to demonstrate the effect of each step.
 \section{Matrices and multidimensional arrays}\label{sec:matrix:array}
 \index{matrices|(}\index{arrays|(}\qRclass{matrix}\qRclass{array}
 
-Vectors have a single dimension, and, as we saw above, we can query their length with method \Rfunction{length()}. Matrices have two dimensions, which can be queried with \Rfunction{dim()}, \Rfunction{ncol()} and \Rfunction{nrow()}. \Rlang arrays can have any number of dimensions, even a single dimension, which can be queried with method \Rfunction{dim()}. As expected \Rfunction{is.vector()}, \Rfunction{is.matrix()} and \Rfunction{is.array()} can be used to query the class. In mathematical notation a matrix is denoted as follows
+Matrices have two dimensions, rows and columns, and like vectors all their members share the same mode, and are atomic, i.e., they are homogeneous. Most commonly, matrices are used to store \code{numeric}, \code{integer} or \code{logical} values. The number of rows and columns can differ, so matrices can be either square or rectangular in shape, but never ragged. In \Rlang, the first index always denotes rows and the second index always denotes columns. Here we use a simpler representation than what we used for vectors on page \pageref{par:calc:vectors:diag} above, but the same concepts apply.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[auto matrix/.style={matrix of nodes,
+  draw,thick,inner sep=0pt,
+  nodes in empty cells,column sep=-0.2pt,row sep=-0.2pt,
+  cells={nodes={minimum width=3em,minimum height=3em,
+   draw,very thin,anchor=center,fill=black!3,
+   execute at begin node={%
+   $\vphantom{a_|}\ifnum\the\pgfmatrixcurrentrow<4
+     \ifnum\the\pgfmatrixcurrentcolumn<4
+      {#1}_{\the\pgfmatrixcurrentrow,\the\pgfmatrixcurrentcolumn}
+     \else
+      \ifnum\the\pgfmatrixcurrentcolumn=5
+       {#1}_{\the\pgfmatrixcurrentrow,n}
+      \fi
+     \fi
+    \else
+     \ifnum\the\pgfmatrixcurrentrow=5
+      \ifnum\the\pgfmatrixcurrentcolumn<4
+       {#1}_{m, \the\pgfmatrixcurrentcolumn}
+      \else
+       \ifnum\the\pgfmatrixcurrentcolumn=5
+        {#1}_{m,n}
+       \fi
+      \fi
+     \fi
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=14
+     \cdots
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=41
+     \vdots
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=44
+     \ddots
+    \fi$
+    }
+  }}}]
+ \matrix[auto matrix=a](matx){
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+ };
+ \draw[thick,-stealth] ([yshift=-2ex]matx.south west) --
+  ([yshift=-2ex]matx.south east) node[midway,below] {Columns or margin 2: $j = 1$ to $j = n$};
+ \draw[thick,-stealth] ([xshift=-2ex]matx.north west)
+   -- ([xshift=-2ex]matx.south west) node[midway,above,rotate=90] {Rows or margin 1: $i = 1$ to $i = m$};
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+In mathematical notation the same generic matrix is represented as
 
 \begin{equation*}
   A_{m\times n} =
   \begin{bmatrix}
-    a_{11} & a_{12} & \cdots & a_{1j} & \cdots & a_{1n}\\
-    a_{21} & a_{22} & \cdots & a_{2j} & \cdots & a_{2n}\\
+    a_{1,1} & a_{1,2} & \cdots & a_{1,j} & \cdots & a_{1,n}\\
+    a_{2,1} & a_{2,2} & \cdots & a_{2,j} & \cdots & a_{2,n}\\
     \vdots & \vdots & \ddots & \vdots &        & \vdots \\
-   a_{i1} & a_{i2} & \cdots & a_{ij} & \cdots & a_{in}\\
+   a_{i,1} & a_{i,2} & \cdots & a_{i,j} & \cdots & a_{i,n}\\
      \vdots & \vdots &      & \vdots &  \ddots & \vdots \\
-   a_{m1} & a_{m2} & \cdots & a_{mj} & \cdots & a_{mn}
+   a_{m,1} & a_{m,2} & \cdots & a_{m,j} & \cdots & a_{m,n}
   \end{bmatrix}
 \end{equation*}
 
-where $A$ represents the whole matrix and the $a_{ij}$ its elements, with $i$ indexing rows and $j$ indexing columns. The two dimensions of the matrix are given by $m$ and $n$, for rows and columns.
+where $A$ represents the whole matrix, $m \times n$ its dimensions, and $a_{i,j}$ its elements, with $i$ indexing rows and $j$ indexing columns. The lengths of the two dimensions of the matrix are given by $m$ and $n$, for rows and columns.
 
-In \Rlang we can create a matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} is a vector. In the same way as vectors, matrices are homogeneous, all elements are of the same type.
+Vectors have a single dimension, and, as described on page \pageref{par:calc:vectors:diag} above, we can query this dimension, their length, with method \Rfunction{length()}. Matrices have two dimensions, which can be queried separately with \Rfunction{ncol()} and \Rfunction{nrow()}, and jointly with method \Rfunction{dim()}. As expected method \Rfunction{is.matrix()} can be used to query the class.
+
+We can create a matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} must be a vector. Method \Rfunction{as.matrix()} is a conversion constructor, with specializations accepting as argument objects belonging to a few other classes.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -3579,7 +3655,91 @@ In \Rlang, a \Rclass{matrix} can have a single row, a single column, a single el
 
 \end{explainbox}
 
-Arrays\index{matrix!dimensions}\index{arrays!dimensions} are similar to matrices, but can have more than two dimensions, which are specified with the \code{dim} argument to the \Rfunction{array()} constructor.
+Arrays\index{matrix!dimensions}\index{arrays!dimensions} are similar to matrices, but can have one or more dimensions. The dimensions of an array can be queried with method \Rfunction{dim()}, similarly as with matrices. Whether an \Rlang object is an array can be found out with function \Rfunction{is.array()}. The diagram below depicts an array, $A$ with three dimensions giving a size equal to $l\times m \times n$, and individual values denoted by $a_{i,j,k}$.
+
+%\usetikzlibrary{matrix}
+\begin{center}
+\newcounter{kmargincount}
+\begin{small}
+\begin{tikzpicture}[auto matrix/.style={matrix of nodes,
+  draw,thick,inner sep=0pt,
+  nodes in empty cells,column sep=-0.2pt,row sep=-0.2pt,
+  cells={nodes={minimum width=3.5em,minimum height=3.5em,
+   draw,very thin,anchor=center,fill=black!3,
+   execute at begin node={%
+   $\vphantom{a_|}\ifnum\the\pgfmatrixcurrentrow<4
+     \ifnum\the\pgfmatrixcurrentcolumn<4
+      {#1}_{\the\pgfmatrixcurrentrow,\the\pgfmatrixcurrentcolumn,\arabic{kmargincount}}
+     \else
+      \ifnum\the\pgfmatrixcurrentcolumn=5
+       {#1}_{\the\pgfmatrixcurrentrow,m,\arabic{kmargincount}}
+      \fi
+     \fi
+    \else
+     \ifnum\the\pgfmatrixcurrentrow=5
+      \ifnum\the\pgfmatrixcurrentcolumn<4
+       {#1}_{l, \the\pgfmatrixcurrentcolumn,\arabic{kmargincount}}
+      \else
+       \ifnum\the\pgfmatrixcurrentcolumn=5
+        {#1}_{l,m,\arabic{kmargincount}}
+       \fi
+      \fi
+     \fi
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=14
+     \cdots
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=41
+     \vdots
+    \fi
+    \ifnum\the\pgfmatrixcurrentrow\the\pgfmatrixcurrentcolumn=44
+     \ddots
+    \fi$
+    }
+  }}}]
+\setcounter{kmargincount}{4}
+ \matrix[auto matrix=a,xshift=7.5em,yshift=7.5em](matback){
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+ };
+\setcounter{kmargincount}{3}
+ \matrix[auto matrix=a,xshift=5em,yshift=5em](matz){
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+ };
+\setcounter{kmargincount}{2}
+ \matrix[auto matrix=a,xshift=2.5em,yshift=2.5em](maty){
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+ };
+\setcounter{kmargincount}{1}
+ \matrix[auto matrix=a](matx){
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+  & & & & \\
+ };
+ \draw[thick,-stealth] ([xshift=2ex]matx.south east) -- ([xshift=2ex]matback.south east)
+  node[midway,below,rotate=45] {Margin 3: $k = 1$ to $k = n$};
+ \draw[thick,-stealth] ([yshift=-2ex]matx.south west) --
+  ([yshift=-2ex]matx.south east) node[midway,below] {Margin 2: $j = 1$ to $j = m$};
+ \draw[thick,-stealth] ([xshift=-2ex]matx.north west)
+   -- ([xshift=-2ex]matx.south west) node[midway,above,rotate=90] {Margin 1: $i = 1$ to $i = l$};
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+When calling the constructor \Rfunction{array()}, dimensions are specified with the argument passed to parameter \code{dim}.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -3648,8 +3808,8 @@ In the chunk above, the length of the supplied vector is the product of the dime
 
 Be aware that vectors and one-dimensional arrays are not the same thing, while two-dimensional arrays are matrices.
 \begin{enumerate}
-      \item Use the different constructors and query methods to explore this, and its consequences.
-      \item Convert a matrix into a vector using \Rfunction{unlist()} and \Rfunction{as.vector()} and compare the returned values.
+  \item Use the different constructors and query methods to explore this, and its consequences.
+  \item Convert a matrix into a vector using \Rfunction{unlist()} and \Rfunction{as.vector()} and compare the returned values.
 \end{enumerate}
 
 \end{playground}
