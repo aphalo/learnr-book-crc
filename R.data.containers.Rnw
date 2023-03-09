@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'container-chunk')
 @
 
-\chapter{The R language: "Collective nouns"}\label{chap:R:as:calc}
+\chapter{The R language: "Collective nouns"}\label{chap:R:}
 
 \begin{VF}
 The information that is available to the computer consists of a selected set of \emph{data} about the real world, namely, that set which is considered relevant to the problem at hand, that set from which it is believed that the desired results can be derived. The data represent an abstraction of reality\ldots
@@ -377,7 +377,7 @@ a.df[["x3"]] <- "b"
 str(a.df)
 @
 
-We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behavior. In a data frame, although class and mode can be different for different member variables (columns), they are required to be vectors or factors of the same length (or a matrix with the same number of rows). In the case of lists, there is no such requirement, and recycling never takes place when adding a node. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
+We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behavior. In a data frame, although class and mode can be different for different member variables (columns), they are required to be vectors or factors of the same length (or a matrix with the same number of rows, or a list with the same number of members). In the case of lists, there is no such requirement, and recycling never takes place when adding a member. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
 
 <<data-frames-2a>>=
 a.ls <- list(x = 1:6, y = "a", z = c(TRUE, FALSE))
@@ -387,9 +387,9 @@ a.ls$x3 <- "b"
 str(a.ls)
 @
 
-Being two dimensional and rectangular in shape, data frames, in relation to indexing and dimensions behave similarly to a matrix. They have rows and columns, and two indices identify the location of a cell. We provide some examples here, but please consult section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} and section \ref{sec:matrix:array} on page \pageref{sec:matrix:array} for additional details.
+Being two dimensional and rectangular in shape, data frames, in relation to indexing and dimensions behave similarly to a matrix. They have rows and columns, and two indices identify the location of a member ``cell''. We provide some examples here, but please consult section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} and section \ref{sec:matrix:array} on page \pageref{sec:matrix:array} for additional details.
 
-Matrix like notation allows simultaneous extraction from multiple columns, which is not possible with lists. The value returned is in most cases a ``smaller'' data frame as in this example.
+Matrix-like notation allows simultaneous extraction from multiple columns, which is not possible with lists. The value returned is in most cases a ``smaller'' data frame as in this example.
 
 <<data-frames-bx-03>>=
 a.df[2:3, 1:2]
@@ -427,7 +427,7 @@ a.df[3:6, 2] <- a.df[6, 3]
 a.df
 @
 
-\begin{warningbox}
+\begin{explainbox}
 We mentioned above that indexing by name can be done either with double square brackets, \Roperator{[[]]}, or with \Roperator{\$}. In the first case the name of the variable or column is given as a character string, enclosed in quotation marks, or as a variable with mode \code{character}. When using \Roperator{\$}, the name is entered as a constant, without quotation marks, and cannot be a variable.
 
 <<index-partial-1>>=
@@ -443,8 +443,10 @@ x.list$ab
 x.list$a
 @
 
-Both in the case of lists and data frames, when using double square brackets, by default an exact match is required between the name in the object and the name used for indexing. In contrast, with \Roperator{\$}, an unambiguous partial match is silently accepted. For interactive use, partial matching is helpful in reducing typing. However, in scripts, and especially \Rlang code in packages, it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g., when someone else revises the script, can lead to very difficult-to-diagnose errors. In addition, as \Roperator{\$} is implemented by first attempting a match to the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}. It is possible to set an \Rlang option so that partial matching triggers a warning, which can be very useful when debugging.
-\end{warningbox}
+Both in the case of lists and data frames, when using double square brackets, by default an exact match is required between the name in the object and the name used for indexing. In contrast, with \Roperator{\$}, an unambiguous partial match is silently accepted. For interactive use, partial matching is helpful in reducing typing. However, in scripts, and especially \Rlang code in packages, it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g., when someone else revises the script, can lead to very difficult-to-diagnose errors. 
+
+In addition, as \Roperator{\$} is implemented by first attempting a match to the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}. It is possible to set \Rlang option \code{warnPartialMatchDollar} so that partial matching triggers a warning when using \Roperator{\$} to extract a member, which can be very useful when debugging.
+\end{explainbox}
 
 Similarly as with matrices, if we extract a single column from a data frame using matrix-like indexing, it is by default simplified into a vector or factor, i.e., the column-dimension is dropped. By passing \code{drop = FALSE}, we can prevent this. Contrary to matrices, rows are not simplified.
 
@@ -486,7 +488,7 @@ df2
 df2$my.vector
 @
 
-If we start with a matrix instead of a vector, the matrix is split into separate columns in the data frame. If the matrix has no column names, new ones are created.
+If we start with a matrix instead of a vector, the matrix is by default split into separate columns in the data frame. If the matrix has no column names, new ones are created.
 
 <<data-frames-bx-constr-04>>=
 my.matrix <- matrix(1:12, ncol = 3)
@@ -510,7 +512,7 @@ df6<- data.frame(my.factor, my.list)
 df6
 @
 
-If we protect the list, then the list is added in whole, similarly as in a tibble (see chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details about the \pkgname{tidiyverse}).
+The behaviour is quite different if we protect the list with \Rfunction{I()}: then the list is added in whole as a variable or column in the data frame. In this case the length or number of members in the list itself must match the number of rows in the data frame, while the length of the individual members of the list can vary. This similar to the default behaviour of tibbles with use of \Rfunction{I()} (see chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details about the \pkgname{tibble}).
 
 <<data-frames-bx-constr-07>>=
 df7<- data.frame(my.factor, I(my.list))
@@ -521,9 +523,7 @@ df7$my.list
 What is this exercise about? Do check the documentation carefully and think of uses where the flexibility gained by use of function \Rfunction{I()} to protect arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write code to extract individual members of embedded matrices and lists using indexing in a single \Rlang statement in each case.
 \end{advplayground}
 
-
-\subsection{Operating within data frames}\label{sec:calc:df:with}
-\index{data frames!operating within}
+\subsection{Sub-setting data frames}\label{sec:calc:df:subset}
 When\index{data frames!subsetting}\index{data frames!``filtering rows''} the names of data frames are long, complex conditions become awkward to write using indexing---i.e., subscripts. In such cases \Rfunction{subset()} is handy because evaluation is done in the ``environment'' of the data frame, i.e., the names of the columns are recognized if entered directly when writing the condition. Function  \Rfunction{subset()} ``filters'' rows, usually corresponding to observations or experimental units. The condition is computed for each row, and if it returns \code{TRUE}, the row is included in the returned data frame, and excluded if \code{FALSE}.
 
 <<data-frames-4>>=
@@ -611,6 +611,49 @@ a.df
 Although in this last example we used numeric indexes to make it more interesting, in practice, especially in scripts or other code that will be reused, do use column or member names instead of positional indexes whenever possible. This makes code much more reliable, as changes elsewhere in the script could alter the order of columns and \emph{invalidate} numerical indexes. In addition, using meaningful names makes programmers' intentions easier to understand.
 \end{warningbox}
 
+\subsection{Splitting and summarizing data frames}\label{sec:calc:df:subset:split}
+\index{data frames!splitting}
+\Rlang function \Rfunction{split()} makes it possible to split a data frame into a list of data frames, based on the levels of a factor.
+
+<<data-frames-7aa>>=
+a.df <- data.frame(x1 = 1:6, x2 = c(1, 5, 4, 2, 6, 3), z = c("a", "b"))
+@
+
+<<data-frames-7a>>=
+split(a.df, a.df$z)
+@
+
+Or using formula notation, 
+
+<<data-frames-7c>>=
+split(a.df, ~ z)
+@
+
+Function \Rfunction{unsplit()} can be used to reverse splitting by \Rfunction{split()}.
+
+\begin{explainbox}
+\Rfunction{split()} is sometimes used in combination with apply functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) to compute group or treatment summaries. However, in most cases it is simpler to use \Rfunction{aggregate()} for computing such summaries.
+\end{explainbox}
+
+When using \Rfunction{aggregate()}, the \emph{lhs} of the formula indicates the variable to summarize and the \emph{rhs} the factor used to split the data before summarizing them.
+<<data-frames-7d>>=
+aggregate(x1 ~ z, FUN = mean, data = a.df)
+@
+
+We can summarize more than one column at a time.
+<<data-frames-7e>>=
+aggregate(cbind(x1, x2) ~ z, FUN = mean, data = a.df)
+@
+
+If all the columns not used for grouping are valid input to the function passed as argument to \code{FUN} the furmula can be simplified into.
+<<data-frames-7f>>=
+aggregate(. ~ z, FUN = mean, data = a.df)
+@
+
+\begin{infobox}
+Function \Rfunction{aggregate()} can be also used to aggregate time series data based on time intervals.
+\end{infobox}
+
 \subsection{Re-arranging columns and rows}
 \index{data frames!ordering rows}\index{data frames!ordering columns}
 The most direct way of changing the order of columns and/or rows in data frames (and matrices and arrays) is to use subscripting as described above. Once we know the original position and target position we can use numerical indexes on both right-hand side and left-hand side of an assignment.
@@ -630,7 +673,7 @@ colnames(my_data_frame.df)[1:2] <- colnames(my_data_frame.df)[2:1]
 head(my_data_frame.df, 2)
 @
 
-Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort rows of a data frame. In this case, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}. Function \Rfunction{order()} is very rarely useful for sorting columns of data frames as it requires a vector across columns as input. In the case of \Rclass{matrix} and \Rclass{array} this approach can be applied to any of their dimensions as all their elements homogenously belong to one class.
+Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort rows of a data frame. In this case, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}. Function \Rfunction{order()} is very rarely useful for sorting columns of data frames as it requires a vector across columns as input, which is possible only when all columns are of the same class. In the case of \Rclass{matrix} and \Rclass{array} this approach can be applied to any of their dimensions as all their elements homogenously belong to one class.
 
 \begin{playground}\index{data frames!ordering rows}
 The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with three different haphazard sequences of values. Call these columns \code{A}, \code{B} and \code{C}. 1) Sort the rows of the data frame so that the values in \code{A} are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of \code{A} and \code{B} without adding a new column to the data frame or storing the vector of sums in a variable. In other words, do the sorting based on sums calculated on the fly.
@@ -674,6 +717,8 @@ my.df <- data.frame(individual = rep(c(2, 4, 1), 2),
                     value = c(1.5, 3.2, 4.5, 8.2, 7.4, 6.2))
 @
 \end{advplayground}
+
+\subsection{Operating within data frames}\label{sec:calc:df:with}
 
 In the case of computing new values from existing variables named vectors are of limited use. Instead, variables in a data frame can be added or modified with \Rlang functions \Rscoping{transform()}, \Rscoping{with()} and \Rscoping{within()}. These functions can be thought as convenience functions as the same computations can be done using the extraction operators to access individual variables, in either the lhs, rhs or both lhs and rhs (see section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing}).
 
