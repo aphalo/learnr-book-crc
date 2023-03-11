@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'container-chunk')
 @
 
-\chapter{The R language: "Collective nouns"}\label{chap:R:}
+\chapter{The R language: ``Collective nouns''}\label{chap:R:}
 
 \begin{VF}
 The information that is available to the computer consists of a selected set of \emph{data} about the real world, namely, that set which is considered relevant to the problem at hand, that set from which it is believed that the desired results can be derived. The data represent an abstraction of reality\ldots
@@ -526,6 +526,8 @@ What is this exercise about? Do check the documentation carefully and think of u
 \subsection{Sub-setting data frames}\label{sec:calc:df:subset}
 When\index{data frames!subsetting}\index{data frames!``filtering rows''} the names of data frames are long, complex conditions become awkward to write using indexing---i.e., subscripts. In such cases \Rfunction{subset()} is handy because evaluation is done in the ``environment'' of the data frame, i.e., the names of the columns are recognized if entered directly when writing the condition. Function  \Rfunction{subset()} ``filters'' rows, usually corresponding to observations or experimental units. The condition is computed for each row, and if it returns \code{TRUE}, the row is included in the returned data frame, and excluded if \code{FALSE}.
 
+We create a data frame with six rows and three columns. For column \code{y}, we rely on \Rlang automatically extending \code{"a"} by repeating it six times, while for column \code{z}, we rely on \Rlang automatically extending \code{c(TRUE, FALSE)} by repeating it three times.
+
 <<data-frames-4>>=
 a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
 subset(a.df, x > 3)
@@ -611,9 +613,17 @@ a.df
 Although in this last example we used numeric indexes to make it more interesting, in practice, especially in scripts or other code that will be reused, do use column or member names instead of positional indexes whenever possible. This makes code much more reliable, as changes elsewhere in the script could alter the order of columns and \emph{invalidate} numerical indexes. In addition, using meaningful names makes programmers' intentions easier to understand.
 \end{warningbox}
 
-\subsection{Splitting and summarizing data frames}\label{sec:calc:df:subset:split}
+\subsection{Summarizing and splitting data frames}\label{sec:calc:df:split}\label{sec:calc:df:aggregate}
+Function\index{data frames!summarizing} \Rfunction{summary()} can be used to obtain a summary from objects of most \Rlang classes, including data frames. We can also use \Rloop{sapply()}, \Rloop{lapply()} or \Rloop{vapply()} to apply any suitable function to individual columns (see section \ref{sec:data:apply} on page \pageref{sec:data:apply} for a description of these functions and their use). 
+
+<<data-frames-7aaa>>=
+summary(a.df)
+@
+
 \index{data frames!splitting}
-\Rlang function \Rfunction{split()} makes it possible to split a data frame into a list of data frames, based on the levels of a factor.
+\Rlang function \Rfunction{split()} makes it possible to split a data frame into a list of data frames, based on the levels of a factor, even if the rows are not ordered according to factor levels.
+
+We create a data frame with six rows and three columns. In the case of column \code{z}, we rely on \Rlang to automatically extend \code{c("a", "b")} by repeating it three times so as to fill the six rows.
 
 <<data-frames-7aa>>=
 a.df <- data.frame(x1 = 1:6, x2 = c(1, 5, 4, 2, 6, 3), z = c("a", "b"))
@@ -623,7 +633,7 @@ a.df <- data.frame(x1 = 1:6, x2 = c(1, 5, 4, 2, 6, 3), z = c("a", "b"))
 split(a.df, a.df$z)
 @
 
-Or using formula notation,
+Using formula \code{~ z} to indicate the grouping.
 
 <<data-frames-7c>>=
 split(a.df, ~ z)
@@ -635,7 +645,8 @@ Function \Rfunction{unsplit()} can be used to reverse splitting by \Rfunction{sp
 \Rfunction{split()} is sometimes used in combination with apply functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) to compute group or treatment summaries. However, in most cases it is simpler to use \Rfunction{aggregate()} for computing such summaries.
 \end{explainbox}
 
-When using \Rfunction{aggregate()}, the \emph{lhs} of the formula indicates the variable to summarize and the \emph{rhs} the factor used to split the data before summarizing them.
+When\index{data frames!summarizing} using \Rfunction{aggregate()}, the \emph{lhs} of the formula indicates the variable to summarize and the \emph{rhs} the factor used to split the data before summarizing them.
+
 <<data-frames-7d>>=
 aggregate(x1 ~ z, FUN = mean, data = a.df)
 @
@@ -645,7 +656,7 @@ We can summarize more than one column at a time.
 aggregate(cbind(x1, x2) ~ z, FUN = mean, data = a.df)
 @
 
-If all the columns not used for grouping are valid input to the function passed as argument to \code{FUN} the formula can be simplified using \code{.} with meaning ``all columns except those on the \emph{rhs}''.
+If all the columns not used for grouping are valid input to the function passed as argument to \code{FUN} the formula can be simplified using \code{.} with meaning ``all columns except those on the \emph{rhs} of the formula''.
 <<data-frames-7f>>=
 aggregate(. ~ z, FUN = mean, data = a.df)
 @
@@ -950,6 +961,8 @@ unlink("my-df.rds")
 \index{data!exploration at the R console|(}
 There are several functions in \Rlang that let us obtain different views into objects. Function \Rfunction{print()} is useful for small data sets, or objects. Especially in the case of large data frames, we need to explore them step by step. In the case of named components, we can obtain their names with \Rfunction{colnames()}, \Rfunction{rownames()}, and \Rfunction{names()}. If a data frame contains many rows of observations, \Rfunction{head()} and \Rfunction{tail()} allow us to easily restrict the number of rows printed. Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (also applicable to matrices but not to lists or vectors where we use \Rfunction{length()}). As mentioned earlier, function \Rfunction{str()} concisely displays the structure of \Rlang objects.
 
+We use for examples data frames from package \pkgname{datasets}, included in the \Rpgrm distribution.
+
 <<exploring-dfs-1>>=
 class(cars)
 head(cars)
@@ -971,29 +984,20 @@ To explore the mode of the columns of \code{cars}, we can use an \emph{apply} fu
 \qRloop{sapply}
 
 <<exploring-dfs-2>>=
-sapply(X = cars, FUN = class)
+sapply(X = chickwts, FUN = mode)
 @
 
-The statement above returns a vector of character strings, with the mode of each column. Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the argument to the first parameter called \code{X}, to the one of current interest.
-
-\begin{playground}
-Data set \code{airquality} contains data from air quality measurements in New York, and, being included in the \Rpgrm distribution, can be loaded with \code{data(airquality)}. Load it, and repeat the steps above, to learn what variables (columns) it contains, their classes, the number of rows, etc.
-\end{playground}
-
-\begin{explainbox}
-Although the \Rlang language allows data frame columns of class \Rclass{matrix}, their use is infrequent. On the other hand, columns belonging to class \Rclass{list} are disallowed in data frames. The reverse is true for tibbles (described in section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
-\end{explainbox}
-
-Function \Rfunction{summary()} can be used to obtain a summary from objects of most \Rlang classes, including data frames. We can also use \Rloop{sapply()}, \Rloop{lapply()} or \Rloop{vapply()} to apply any suitable function to individual columns.
+The statement above returns a vector of character strings, with the mode of each column. The one below returns the class. For example factors have mode \code{"numeric"} but class \code{"factor"}
 
 <<exploring-dfs-3>>=
-summary(cars)
-sapply(cars, range)
+sapply(X = chickwts, FUN = class)
 @
 
-\begin{advplayground}
-Obtain the summary of \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column. Hint: using \code{sum()} on a \code{logical} vector returns the count of \code{TRUE} values as \code{TRUE}, and \code{FALSE} are transparently converted into \code{numeric} 1 and 0, respectively, when \code{logical} values are used in arithmetic expressions.
-\end{advplayground}
+Each element of the vector is named according to the name of the corresponding ``column'' in the data frame. For this same statement to be used with any other data frame or list, we need only to substitute the name of the object, the argument to the first parameter called \code{X}, to the one of current interest.
+
+\begin{playground}
+Data sets \code{airquality} and \code{iris} contain data from air quality measurements in New York and for the size of flower parts of different species of irises. Load them, and repeat the steps above, to learn what variables (columns) it contains, their classes, the number of rows, etc.
+\end{playground}
 
 \section{Plotting}
 \index{plots!base R graphics}
@@ -1062,7 +1066,7 @@ This is not the only approach available. As we will see in chapter \ref{chap:R:p
 
 \section{Further reading}
 For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter,
- I suggest the books \citetitle{Peng2016} (\citeauthor{Peng2016}) and \citetitle{Matloff2011} (\citeauthor{Matloff2011}).
+ I suggest the books \citetitle{Peng2016} \autocite{Peng2016} and \citetitle{Matloff2011} \autocite{Matloff2011}.
 
 <<container-chapter-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))

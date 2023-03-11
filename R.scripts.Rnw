@@ -943,7 +943,7 @@ Conceptually, \code{for}, \code{while} and \code{repeat} loops are interpreted a
 
 The different \emph{apply} functions in base \Rlang differ in the class of the values they accept for their \code{X} parameter, the class of the object they return and/or the class of the value returned by the applied function. \Rloop{lapply()} and \Rloop{sapply()} expect a \code{vector} or \code{list} as an argument passed through \code{X}. \Rloop{lapply()} returns a \code{list} or an \code{array}; and \Rloop{vapply()} always \emph{simplifies} its returned value into a vector, while \Rloop{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply an \Rlang function that returns a value of the same or a different class as its argument. In the case of \Rloop{apply()} and \Rloop{lapply()} not even the length of the values returned for each member of the collection passed as an argument, needs to be consistent. In summary, \Rloop{apply()} is used to apply a function to the elements along a dimension of an object that has two or more \emph{dimensions}, and \Rloop{lapply()} and \Rloop{sapply()} are used to apply a function to the members of a vector or list. \Rloop{apply()} returns an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function.
 
-\subsection{Applying functions to vectors and lists}
+\subsection{Applying functions to vectors, lists and data frames}
 
 We first exemplify the use of \Rloop{lapply()}, \Rloop{sapply()} and \Rloop{vapply()}. In the chunks below we apply a user-defined function to a vector.
 
@@ -951,7 +951,7 @@ We first exemplify the use of \Rloop{lapply()}, \Rloop{sapply()} and \Rloop{vapp
 A constraint is that the individual member objects in the list or vector passed as argument to the \code{x} parameter of \textit{apply} functions will be always passed as a positional argument to the first formal parameter of the applied function, i.e., the function passed as argument to \code{FUN} must be compatible with this approach.
 \end{warningbox}
 
-<<apply-01>>=
+<<apply-00>>=
 set.seed(123456) # so that a.vector does not change
 a.vector <- runif(6) # A short vector as input to keep output short
 str(a.vector)
@@ -966,10 +966,14 @@ z <- lapply(X = a.vector, FUN = my.fun, k = 5)
 str(z)
 @
 
+The code above calls \code{my.fun()} once with each of the six members of \code{a.vector} as argument and collects the returned values into a list, hence the \emph{l} in \Rloop{lapply()}.
+
 <<apply-02>>=
 z <- sapply(X = a.vector, FUN = my.fun, k = 5)
 str(z)
 @
+
+The code above calls \code{my.fun()} with of the six members of \code{a.vector} and collects the returned values into a vector, i.e., it simplifies the list into a vector, hence the \emph{s} in \Rloop{sapply()}.
 
 <<apply-03>>=
 z <- sapply(X = a.vector, FUN = my.fun, k = 5, simplify = FALSE)
@@ -985,11 +989,25 @@ z <- sapply(X = a.vector, FUN = function(x, k) {log(x) + k}, k = 5)
 str(z)
 @
 
-Of course, as discussed in section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}, when suitable vectorized functions are available, their use should be preferred. On the other hand, even if \emph{apply} functions are usually not as fast as vectorized functions, they are faster than the equivalent \code{for()} loops.
+\begin{infobox}
+As discussed in section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}, when suitable vectorized functions are available, their use is preferred. On the other hand, even if \emph{apply} functions are usually not as fast as vectorized functions, they are usually faster than the equivalent \code{for()} loops. Code that uses apply functions is also more concise than code based \code{for()} loops.
+\end{infobox}
 
 <<apply-05>>=
 z <- log(a.vector) + 5
 str(z)
+@
+
+As explained in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, class \code{data.frame} is derived from class \code{list}. The columns in a data frame are equivalent to members of a list, and functions can thus be applied to columns. Using data from package \pkgname{datasets} for stopping distance for cars.
+
+<<apply-05a>>=
+sapply(X = cars, FUN = mean)
+@
+
+In the next example, function \code{mean()} returns \code{NA} for the factor \code{Species}.
+
+<<apply-05b>>=
+sapply(X = iris, FUN = mean)
 @
 
 \begin{explainbox}
@@ -1024,11 +1042,15 @@ values
 \end{explainbox}
 
 \begin{playground}
-As explained in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, class \code{data.frame} is derived from class \code{list}. Apply function \code{mean\_and\_sd()} defined above to the data frame \code{cars} included as example data in \Rlang. The aim is to obtain the mean and standard deviation for each column.
+  Apply function \code{mean\_and\_sd()} defined above to the data frames \code{cars} and \code{iris} from \pkgname{datasets}. The aim is to obtain the mean and standard deviation for each numeric column.
 \end{playground}
 
+\begin{advplayground}
+Obtain the summary of data \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column. Hint: using \code{sum()} on a \code{logical} vector returns the count of \code{TRUE} values as \code{TRUE}, and \code{FALSE} are transparently converted into \code{numeric} 1 and 0, respectively, when \code{logical} values are used in arithmetic expressions.
+\end{advplayground}
+
 \subsection{Applying functions to matrices and arrays}
-In the next example we use \Rloop{apply()} and \Rfunction{mean()} to compute the mean for each column of matrix \code{a.matrix}. In \Rlang the dimensions of a matrix, rows and columns, over which a function is applied are called \emph{margins}. The argument passed to parameter \code{MARGIN} determines over which margin the function will be applied. If the function is applied to individual rows, we say that we operate on the first margin, and if the function is applied to individual columns, over the second margin. Arrays can have many dimensions, and consequently more margins. In the case of arrays with more than two dimensions, it is possible and useful to apply functions over multiple margins at once.
+In the next example we use \Rloop{apply()} and \Rfunction{mean()} to compute the mean for each column of matrix \code{a.matrix}. In \Rlang the dimensions of a matrix, rows and columns, over which a function is applied are called \emph{margins} (see diagrams in section \ref{sec:matrix:array}, on pages \pageref{fig:matrix:margins} and \pageref{fig:array:margins}). The argument passed to parameter \code{MARGIN} determines over which margin the function will be applied. If the function is applied to individual rows, we say that we operate on the first margin, and if the function is applied to individual columns, over the second margin. Arrays can have many dimensions, and consequently more margins. In the case of arrays with more than two dimensions, it is possible and useful to apply functions over multiple margins at once.
 
 \begin{warningbox}
 A constraint on the function to be applied is that the vector or ``slice'' will always be passed as a positional argument to the first formal parameter of the applied function.
