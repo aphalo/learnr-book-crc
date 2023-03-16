@@ -264,6 +264,9 @@ When\index{grammar of graphics!mapping of data} we design a plot, we need to map
 \sloppy%
 Geometries\index{grammar of graphics!geometries} are ``words'' that describe the graphics representation of the data: for example, \gggeom{geom\_point()}, plots a point or symbol for each observation or summary value, while \gggeom{geom\_line()}, draws line segments between observations. Some geometries rely by default on statistics, but most ``geoms'' default to the identity statistics. Each time a \emph{geometry} is used to add a graphical representation of data to a plot, we say that a new \emph{layer} has been added. The name \emph{layer} reflects the fact that each new layer added is plotted on top of the layers already present in the plot, or rather when a plot is printed the layers will be generated in the order they were added to the plot object. For example, one layer in a plot can display the observations, another layer a regression line fitted to them, and a third one may contain annotations such an equation or a text label.
 
+\paragraph{Positions}
+Positions\index{grammar of graphics!positions} are ``words'' that determine the displacement or not of graphical plot elements relative to their original $x$ and $y$ coordinates. They are one of the arguments accepted by \emph{geometries}. Position \ggposition{position\_identity()} introduces no displacement, and for example, \ggposition{position\_stack()} makes it possible to create stacked bar plots and stacked area plots. Positions will be discussed together with geometries as they are always subordinate to them.
+
 \paragraph{Statistics}
 Statistics\index{grammar of graphics!statistics} are ``words'' that represent calculation of summaries or some other operation on the values in the data. When \emph{statistics} are used for a computation, the returned value is passed to a \emph{geometry}, and consequently adding a \emph{statistics} also adds a layer to the plot. For example, \ggstat{stat\_smooth()} fits a smoother, and \ggstat{stat\_summary()} applies a summary function such as \code{mean(()}. Most statistics are applied automatically by group when data have been grouped by mapping additional aesthetics such as color to a factor.
 
@@ -1147,7 +1150,7 @@ It is also possible to use characters as shapes. The character is centered on th
 
 \end{knitrout}
 
-Instead of making the points semitransparent, we can randomly displace them to avoid overlaps. This is called \emph{jitter}, and can be added using \code{position\_jitter()} and the amount of jitter set with \code{width} as a fraction of the distance between adjacent factor levels in the plot.
+Instead of making the points semitransparent, we can randomly displace them to avoid overlaps. This is called \emph{jitter}, and can be added using \ggposition{position\_jitter()} as argument to formal parameter \code{position} and the amount of jitter set with \code{width} as a fraction of the distance between adjacent factor levels in the plot. The name as a character string can be also used when no arguments need to be passed to the \emph{position} function.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1156,7 +1159,55 @@ Instead of making the points semitransparent, we can randomly displace them to a
   \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.05}\hlstd{))}
 \end{alltt}
 \end{kframe}
+
+{\centering \includegraphics[width=.7\textwidth]{figure/pos-scatter-13-1} 
+
+}
+
+
 \end{knitrout}
+
+\begin{explainbox}
+The displacement introduced by jitter and nudge differ in that jitter is random, and nudge deterministic. \gggeom{geom\_point\_s()} from package \pkgname{ggpp} is used to make the displacement visible by drawing an arrow connecting original and displaced positions for each observation. \ggposition{position\_identity()} is the default for \gggeom{geom\_point()}. Position functions are passed as argument to formal parameter \code{position} of \emph{geometries}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.33}\hlstd{),}
+               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
+               \hlkwc{colour.target} \hlstd{=} \hlstr{"all"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.7\textwidth]{figure/pos-scatter-13a-1} 
+
+}
+
+
+\end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
+  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_nudge}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0.5}\hlstd{,} \hlkwc{y} \hlstd{=} \hlnum{2}\hlstd{),}
+               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
+               \hlkwc{colour.target} \hlstd{=} \hlstr{"all"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.7\textwidth]{figure/pos-scatter-13b-1} 
+
+}
+
+
+\end{knitrout}
+\end{explainbox}
+
+
 
 \index{plots!dot plot|)}
 \index{plots!bubble plot|(}We can create a ``bubble'' plot by mapping the \code{size} \emph{aesthetic} to a continuous variable. In this case, one has to think what is visually more meaningful. Although the radius of the shape is frequently mapped, due to how human perception works, mapping a variable to the area of the shape is more useful by being perceptually closer to a linear mapping. For this example we add a new variable to the plot. The weight of the car in tons and map it to the area of the points.
