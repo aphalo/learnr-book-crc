@@ -666,34 +666,43 @@ ggplot(data = mtcars, aes(x = factor(cyl), y = mpg)) +
   geom_point(alpha = 1/3)
 @
 
-Instead of making the points semitransparent, we can randomly displace them to avoid overlaps. This is called \emph{jitter}, and can be added using \ggposition{position\_jitter()} as argument to formal parameter \code{position} and the amount of jitter set with \code{width} as a fraction of the distance between adjacent factor levels in the plot. The name as a character string can be also used when no arguments need to be passed to the \emph{position} function.
+Function \ggposition{position\_identity()}, which is the default for \gggeom{geom\_point()}, does not alter the coordinates or position of observations, as shown in all examples above. To make overlapping observations visible, instead of making the points semitransparent as above, we can randomly displace them. This is called \emph{jitter}, and can be added using \ggposition{position\_jitter()} as argument to formal parameter \code{position}. The amount of jitter is set by nemeric arguments passed to \code{width} and/or \code{height}, given as a fraction of the distance between adjacent factor levels in the plot.
 
 <<scatter-13>>=
 ggplot(data = mtcars, aes(x = factor(cyl), y = mpg)) +
-  geom_point(position = position_jitter(width = 0.05))
+  geom_point(position = position_jitter(width = 0.25, heigh = 0.5))
 @
 
+\begin{infobox}
+   The name as a character string can be also used when no arguments need to be passed to the \emph{position} function, and for some positions by passing numerical arguments to specific parameters of geometries. However, the default width of $\pm0.5$ tends to be rarely optimal.
+
+<<scatter-13info>>=
+ggplot(data = mtcars, aes(x = factor(cyl), y = mpg), colour = factor(cyl)) +
+  geom_point(position = "jitter")
+@
+\end{infobox}
+
 \begin{explainbox}
-The displacement introduced by jitter and nudge differ in that jitter is random, and nudge deterministic. \gggeom{geom\_point\_s()} from package \pkgname{ggpp} is used to make the displacement visible by drawing an arrow connecting original and displaced positions for each observation. \ggposition{position\_identity()} is the default for \gggeom{geom\_point()}. Position functions are passed as argument to formal parameter \code{position} of \emph{geometries}.
+The displacement introduced by jitter and nudge differ in that jitter is random, and nudge deterministic. In each case the displacement can be separately adjusted vertically and horizontally. Jitter, as shown above is useful when we desire to make visible overlapping points. Nudge is most frequently used with data labels to avoid occluding points or other graphical features.
+
+Layer function \gggeom{geom\_point\_s()} from package \pkgname{ggpp} is used below to make the displacement visible by drawing an arrow connecting original and displaced positions for each observation. We need to use the \code{\_keep} flavor of the position functions for arrows to be drawn.
 
 <<scatter-13a>>=
 ggplot(data = mtcars, aes(x = factor(cyl), y = mpg)) +
-  geom_point() +
-  geom_point_s(position = position_jitter(width = 0.33),
-               colour = "red",
-               colour.target = "all")
+  geom_point(colour = "blue") +
+  geom_point_s(position = position_jitter_keep(width = 0.25, heigh = 0.5),
+               colour = "red")
 @
+
+The amount of nudging is set by a distance expressed in data units through parameters \code{x} and \code{y}. (Factors have mode \code{numeric} and each level is represented by an integer, thus distance between levels of a factor is 1.)
 
 <<scatter-13b>>=
 ggplot(data = mtcars, aes(x = factor(cyl), y = mpg)) +
-  geom_point() +
-  geom_point_s(position = position_nudge(x = 0.5, y = 2),
-               colour = "red",
-               colour.target = "all")
+  geom_point(colour = "blue") +
+  geom_point_s(position = position_nudge_keep(x = 0.2, y = 1),
+               colour = "red")
 @
 \end{explainbox}
-
-
 
 \index{plots!dot plot|)}
 \index{plots!bubble plot|(}We can create a ``bubble'' plot by mapping the \code{size} \emph{aesthetic} to a continuous variable. In this case, one has to think what is visually more meaningful. Although the radius of the shape is frequently mapped, due to how human perception works, mapping a variable to the area of the shape is more useful by being perceptually closer to a linear mapping. For this example we add a new variable to the plot. The weight of the car in tons and map it to the area of the points.

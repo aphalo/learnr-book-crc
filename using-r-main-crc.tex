@@ -1150,13 +1150,13 @@ It is also possible to use characters as shapes. The character is centered on th
 
 \end{knitrout}
 
-Instead of making the points semitransparent, we can randomly displace them to avoid overlaps. This is called \emph{jitter}, and can be added using \ggposition{position\_jitter()} as argument to formal parameter \code{position} and the amount of jitter set with \code{width} as a fraction of the distance between adjacent factor levels in the plot. The name as a character string can be also used when no arguments need to be passed to the \emph{position} function.
+Function \ggposition{position\_identity()}, which is the default for \gggeom{geom\_point()}, does not alter the coordinates or position of observations, as shown in all examples above. To make overlapping observations visible, instead of making the points semitransparent as above, we can randomly displace them. This is called \emph{jitter}, and can be added using \ggposition{position\_jitter()} as argument to formal parameter \code{position}. The amount of jitter is set by nemeric arguments passed to \code{width} and/or \code{height}, given as a fraction of the distance between adjacent factor levels in the plot.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.05}\hlstd{))}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.25}\hlstd{,} \hlkwc{heigh} \hlstd{=} \hlnum{0.5}\hlstd{))}
 \end{alltt}
 \end{kframe}
 
@@ -1167,17 +1167,37 @@ Instead of making the points semitransparent, we can randomly displace them to a
 
 \end{knitrout}
 
+\begin{infobox}
+   The name as a character string can be also used when no arguments need to be passed to the \emph{position} function, and for some positions by passing numerical arguments to specific parameters of geometries. However, the default width of $\pm0.5$ tends to be rarely optimal.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg),} \hlkwc{colour} \hlstd{=} \hlkwd{factor}\hlstd{(cyl))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=} \hlstr{"jitter"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.7\textwidth]{figure/pos-scatter-13info-1} 
+
+}
+
+
+\end{knitrout}
+\end{infobox}
+
 \begin{explainbox}
-The displacement introduced by jitter and nudge differ in that jitter is random, and nudge deterministic. \gggeom{geom\_point\_s()} from package \pkgname{ggpp} is used to make the displacement visible by drawing an arrow connecting original and displaced positions for each observation. \ggposition{position\_identity()} is the default for \gggeom{geom\_point()}. Position functions are passed as argument to formal parameter \code{position} of \emph{geometries}.
+The displacement introduced by jitter and nudge differ in that jitter is random, and nudge deterministic. In each case the displacement can be separately adjusted vertically and horizontally. Jitter, as shown above is useful when we desire to make visible overlapping points. Nudge is most frequently used with data labels to avoid occluding points or other graphical features.
+
+Layer function \gggeom{geom\_point\_s()} from package \pkgname{ggpp} is used below to make the displacement visible by drawing an arrow connecting original and displaced positions for each observation. We need to use the \code{\_keep} flavor of the position functions for arrows to be drawn.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.33}\hlstd{),}
-               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
-               \hlkwc{colour.target} \hlstd{=} \hlstr{"all"}\hlstd{)}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_jitter_keep}\hlstd{(}\hlkwc{width} \hlstd{=} \hlnum{0.25}\hlstd{,} \hlkwc{heigh} \hlstd{=} \hlnum{0.5}\hlstd{),}
+               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -1188,14 +1208,15 @@ The displacement introduced by jitter and nudge differ in that jitter is random,
 
 \end{knitrout}
 
+The amount of nudging is set by a distance expressed in data units through parameters \code{x} and \code{y}. (Factors have mode \code{numeric} and each level is represented by an integer, thus distance between levels of a factor is 1.)
+
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlkwd{ggplot}\hlstd{(}\hlkwc{data} \hlstd{= mtcars,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{=} \hlkwd{factor}\hlstd{(cyl),} \hlkwc{y} \hlstd{= mpg))} \hlopt{+}
-  \hlkwd{geom_point}\hlstd{()} \hlopt{+}
-  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_nudge}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0.5}\hlstd{,} \hlkwc{y} \hlstd{=} \hlnum{2}\hlstd{),}
-               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{,}
-               \hlkwc{colour.target} \hlstd{=} \hlstr{"all"}\hlstd{)}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{colour} \hlstd{=} \hlstr{"blue"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_point_s}\hlstd{(}\hlkwc{position} \hlstd{=} \hlkwd{position_nudge_keep}\hlstd{(}\hlkwc{x} \hlstd{=} \hlnum{0.2}\hlstd{,} \hlkwc{y} \hlstd{=} \hlnum{1}\hlstd{),}
+               \hlkwc{colour} \hlstd{=} \hlstr{"red"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 
@@ -1206,8 +1227,6 @@ The displacement introduced by jitter and nudge differ in that jitter is random,
 
 \end{knitrout}
 \end{explainbox}
-
-
 
 \index{plots!dot plot|)}
 \index{plots!bubble plot|(}We can create a ``bubble'' plot by mapping the \code{size} \emph{aesthetic} to a continuous variable. In this case, one has to think what is visually more meaningful. Although the radius of the shape is frequently mapped, due to how human perception works, mapping a variable to the area of the shape is more useful by being perceptually closer to a linear mapping. For this example we add a new variable to the plot. The weight of the car in tons and map it to the area of the points.
@@ -2354,9 +2373,7 @@ This same package makes it possible to annotate plots with summary tables from a
               \hlkwc{parse} \hlstd{=} \hlnum{TRUE}\hlstd{)} \hlopt{+}
   \hlkwd{geom_point}\hlstd{()}
 \end{alltt}
-
-
-{\ttfamily\noindent\color{warningcolor}{\#\# Warning: Computation failed in `stat\_fit\_tb()`\\\#\# Caused by error in `UseMethod()`:\\\#\# ! no applicable method for 'tidy' applied to an object of class "{}lm"{}}}\end{kframe}
+\end{kframe}
 
 {\centering \includegraphics[width=.7\textwidth]{figure/pos-smooth-plot-13-1} 
 
