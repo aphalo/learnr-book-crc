@@ -52,41 +52,76 @@ mean(x)
 mean(x, na.rm = TRUE)
 @
 
+Other more advanced functions are also available, such as \Rfunction{boxplot.stats()} that computes the values needed to draw a boxplot.
+
+\begin{infobox}
+  In many cases you will want to compute statistical summaries by group or treatment in addition or instead of for a whole data set or vector. See section \ref{sec:calc:df:aggregate} on page \pageref{sec:calc:df:aggregate} for details on how to compute summaries of data stored in data frames.
+\end{infobox}
+
 \section{Distributions}\label{sec:prob:dist}
 \index{distributions|(}\index{Normal distribution}
-Density, distribution functions, quantile functions and generation of pseudo-random values for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will open a help page describing all the distributions available in base \Rlang. In what follows we use the Normal distribution for the examples, but with slight differences in their parameters the functions for other theoretical distributions follow a consistent naming pattern. For each distribution the different functions contain the same ``root'' in their names: \code{norm} for the normal distribution, \code{unif} for the uniform distribution, and so on. The ``head'' of the name indicates the type of values returned: ``d'' for density, ``q'' for quantile, ``r'' (pseudo-)random numbers, and ``p'' for probabilities.
+Density, distribution functions, quantile functions and generation of pseudo-random values for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will open a help page describing all the distributions available in base \Rlang. For each distribution the different functions contain the same ``root'' in their names: \code{norm} for the normal distribution, \code{unif} for the uniform distribution, and so on. The ``head'' of the name indicates the type of values returned: ``d'' for density, ``q'' for quantile, ``r'' (pseudo-)random draws, and ``p'' for probabilities (Table \ref{tab:prob:funs}).
+
+\begin{table}[h]
+  \centering
+    \caption[Theoretical probability distributions]{Theoretical probability distributions in \Rlang. Partial list of base \Rlang functions related to probability distributions. The full list can be obtained by executing the command \code{help(Distributions)}.\vspace{1ex}}\label{tab:prob:funs}
+
+  \begin{tabular}{llllll}
+     \toprule
+     Distribution & symbol & density & $P$ & quantiles & draws \\
+     \midrule
+     normal & $N$ & \Rfunction{dnorm()} & \Rfunction{pnorm()} & \Rfunction{qnorm()} & \Rfunction{rnorm()} \\
+     Student's & $t$ & \Rfunction{dt()} & \Rfunction{pt()} & \Rfunction{qt()} & \Rfunction{rt()}\\
+     F & $F$ & \Rfunction{df()} & \Rfunction{pf()} & \Rfunction{qf()} & \Rfunction{rf()} \\
+     binomial & $B$ & \Rfunction{dbinom()} & \Rfunction{pbinom()} & \Rfunction{qbinom()} & \Rfunction{rbinom()} \\
+     multinomial & $M$ & \Rfunction{dmultinom()} & \Rfunction{pmultinom()} & \Rfunction{qmultinom()} & \Rfunction{rmultinom()} \\
+     Poisson &   & \Rfunction{dpois()} & \Rfunction{ppois()} & \Rfunction{qpois()} & \Rfunction{rpois()} \\
+     $\Chi$-squared & $\Chi^2$ & \Rfunction{dchisq()} & \Rfunction{pchisq()} & \Rfunction{qchisq()} & \Rfunction{rchisq()} \\
+     log-normal &  & \Rfunction{dlnorm()} & \Rfunction{plnorm()} & \Rfunction{qlnorm()} & \Rfunction{rlnorm()} \\
+     uniform &  & \Rfunction{dunif()} & \Rfunction{punif()} & \Rfunction{qunif()} & \Rfunction{runif()} \\
+     \bottomrule
+   \end{tabular}
+\end{table}
+
+Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} controlling location and \emph(standard deviation) (or its square, the \emph{variance}) controlling the spread around the center of the distribution. The four different functions differ in which values are calculated (the unknowns) and which values are supplied as arguments (the known inputs).
+
+In what follows we use the normal distribution as an example, but with differences in their parameters, the functions for other theoretical distributions follow a similar naming pattern.
 
 \subsection{Density from parameters}\label{sec:prob:dens}
 \index{distributions!density from parameters}
-Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} controlling location and \emph(standard deviation) (or its square, the \emph{variance}) controlling the spread around the center of the distribution.
-
 To obtain a single point from the distribution curve we pass a vector of length one as an argument for \code{x}.
 
 <<distrib-01>>=
 dnorm(x = 1.5, mean = 1, sd = 0.5)
 @
 
-To obtain multiple values we can pass a longer vector as an argument. As perusing a long vector of numbers is difficult, we plot the result of the computation as a line (\code{type = "l"}) that shows that the 50 generated data points give the illusion of a continuous curve.
+To obtain multiple values we can pass a longer vector as an argument.
 
 <<distrib-01a>>=
+dnorm(x = seq(from = -1, to = 1, length.out = 5), mean = 1, sd = 0.5)
+@
+
+With 50 equally spaced values for $x$ we can plot a line (\code{type = "l"}) that shows that the 50 generated data points give the illusion of a continuous curve. We also add a point showing the value for $x = 1.5$ calculated above.
+
+<<distrib-01b>>=
 my.x <- seq(from = -1, to = 3, length.out = 50)
 
 my.data <- data.frame(x = my.x,
                       y = dnorm(x = my.x, mean = 1, sd = 0.5))
 plot(y~x, data = my.data, type = "l")
+points(x = 1.5, y = dnorm(x = 1.5, mean = 1, sd = 0.5))
 @
 
 \subsection{Probabilities from parameters and quantiles}\label{sec:prob:quant}
 \index{distributions!probabilities from quantiles}
 
-If we have a calculated quantile we can look up the corresponding $p$-value from the Normal distribution. The mean and standard deviation would, in such a case, also be computed from the same observations under the null hypothesis. In the example below, we use invented values for all parameters \code{q}, the quantile, \code{mean}, and \code{sd}, the standard deviation. Use
+If we have a known quantile value we can look up the corresponding $p$-value from the Normal distribution, i.e., the area under the curve, either to the right or to the left of a given value of $x$. When working with observations, the quantile, mean and standard deviation are in most cases computed from the same observations under the null hypothesis. In the example below, we use invented values for all parameters \code{q}, the quantile, \code{mean}, and \code{sd}, the standard deviation.
 
 <<distrib-02>>=
 pnorm(q = 4, mean = 0, sd = 1)
 pnorm(q = 4, mean = 0, sd = 1, lower.tail = FALSE)
 pnorm(q = 4, mean = 0, sd = 4, lower.tail = FALSE)
 pnorm(q = c(2, 4), mean = 0, sd = 1, lower.tail = FALSE)
-pnorm(q = 4, mean = 0, sd = c(1, 4), lower.tail = FALSE)
 @
 
 \begin{explainbox}
@@ -96,7 +131,7 @@ pnorm(q = 4, mean = 0, sd = c(1, 4), lower.tail = FALSE)
 \subsection{Quantiles from parameters and probabilities}\label{sec:quant:prob}
 \index{distributions!quantiles from probabilities}
 
-The reverse computation from that in the previous section is to obtain the quantile corresponding to a known $p$-value. These quantiles are equivalent to the values in the tables used earlier to assess significance.
+The reverse computation from that in the previous section is to obtain the quantile corresponding to a known $p$-value or area under one of the tails of the distribution curve. These quantiles are equivalent to the values in the tables of precalculated quantiles used in earlier times to assess significance with statistical tests.
 
 <<distrib-03>>=
 qnorm(p = 0.01, mean = 0, sd = 1)
@@ -125,7 +160,9 @@ pnorm(q = 4, mean = 0, sd = 1) * 2
 \subsection{``Random'' draws from a distribution}\label{sec:stat:random}
 \index{random draws|see{distributions!pseudo-random draws}}\index{distributions!pseudo-random draws}
 
-True random sequences can only be generated by physical processes. All so-called ``random'' sequences of numbers generated by computation are really deterministic although they share some properties with true random sequences (e.g.,  in relation to autocorrelation). It is possible to compute not only pseudo-random draws from a uniform distribution but also from the Normal, $t$, $F$ and other distributions. Parameter \code{n} indicates the number of values to be drawn, or its equivalent, the length of the vector returned.\qRfunction{rnorm()}\qRfunction{runif()}
+True random sequences can only be generated by physical processes. All ``pseudo-random'' sequences of numbers generated by computation are really deterministic although they share some properties with true random sequences (e.g., in relation to autocorrelation). 
+
+It is possible to compute not only pseudo-random draws from a uniform distribution but also from the Normal, $t$, $F$ and other distributions. In each case, the probability with which different values are ``drawn'' approximates the probabilities set by the corresponding theoretical distribution. Parameter \code{n} indicates the number of values to be drawn, or its equivalent, the length of the vector returned.\qRfunction{rnorm()}\qRfunction{runif()}
 
 <<distrib-04,echo=2:3>>=
 set.seed(12234)
@@ -159,25 +196,32 @@ sample(x = LETTERS, size = 12, replace = TRUE)
 @
 
 In practice, pseudo-random sampling is useful when we need to select subsets of observations. One such case is  assigning treatments to experimental units in an experiment or selecting persons to interview in a survey. Another use is in bootstrapping to estimate variation in parameter estimates using empirical distributions.
+
+As described in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, data frames are commonly used to store one observation per row. To sample a subset of rows we need to generate a random set of indices to use with the extraction operator (\Roperator{[ ]}). In the final example we sample four rows from data frame \code{cars} included in \Rlang. These data consist of stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
+
+<<sampling-02>>=
+cars[sample(x = 1:nrow(cars), size = 4), ]
+@
+
+\begin{advplayground}
+Consult the documentation of \Rfunction{sample()} and explain why the code below is equivalent to that in the example immediately above.
+
+<<sampling-03, eval=eval_playground>>=
+cars[sample(x = nrow(cars), size = 4), ]
+@
+
+\end{advplayground}
 \index{distributions|)}
 
 \section{Correlation}
 \index{correlation|(}
 Both parametric (Pearson's) and non-parametric robust (Spearman's and Kendall's) methods for the estimation of the (linear) correlation between pairs of variables are available in base \Rlang. The different methods are selected by passing arguments to a single function. While Pearson's method is based on the actual values of the observations, non-parametric methods are based on the ordering or rank of the observations, and consequently less affected by observations with extreme values.
 
-We first load and explore the data set \Rdata{cars} from \Rlang which we will use in the example. These data consist of stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
-
-<<cor-00>>=
-data(cars)
-plot(cars)
-@
-\label{chunk:plot:cars}
-
 \subsection{Pearson's $r$}
 \index{correlation!parametric}
 \index{correlation!Pearson}
 
-Function \Rfunction{cor()} can be called with two vectors of the same length as arguments. In the case of the parametric Pearson method, we do not need to provide further arguments as this method is the default one.
+Function \Rfunction{cor()} can be called with two vectors of the same length as arguments. In the case of the parametric Pearson method, we do not need to provide further arguments as this method is the default one.  We use data set \code{cars}.
 
 <<cor-01>>=
 cor(x = cars$speed, y = cars$dist)
@@ -207,7 +251,11 @@ While \Rfunction{cor()} returns and estimate for $r$ the correlation coefficient
 cor.test(x = cars$speed, y = cars$dist)
 @
 
-As described below for model fitting and $t$-test, \Rfunction{cor.test()} also accepts a \code{formula} plus \code{data} as arguments.
+As described below for model fitting, \Rfunction{cor.test()} also accepts a \code{formula} plus \code{data} as arguments. The code below is equivalent to that above. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for more information on the use of model formulas in \Rlang.
+
+<<cor-03a, eval=eval_playground>>=
+cor.test(formula = ~ speed + dist, data = cars)
+@
 
 \begin{playground}
 Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
@@ -243,7 +291,7 @@ Repeat the exercise in the playground immediately above, but now using non-param
 
 \section[Model fitting in R]{Model fitting in \Rlang}\label{sec:stat:mf}
 \index{models fitting|(}
-The general approach to model fitting in \Rlang is to separate the actual fitting of a model from the inspection of the fitted model. A model fitting function minimally requires a description of the model to fit, as a model \code{formula} and a data frame or vectors with the data or observations to which to fit the model. These functions in \Rlang return a model fit object. This object contains the data, the model formula, call and the result of fitting the model. To inspect this model several methods are available. In the diagram we show a linear model fit, done with function \Rfunction{lm()} where the non-filled boxes represent what is in common with the fitting of other types of models, and the filled ones what is specific to \Rfunction{lm()}.
+The general approach to model fitting in \Rlang is to separate the actual fitting of a model from the inspection of the fitted model. A model fitting function minimally requires a description of the model to fit, as a model \code{formula} and a data frame or vectors with the data or observations to which to fit the model. These functions in \Rlang return a model fit object. This object contains the data, the model formula, call and the result of fitting the model. To inspect this model several methods are available. In the diagram we show the overall approach used fit models to data.
 
 \begin{center}
 \begin{small}
@@ -261,9 +309,9 @@ The general approach to model fitting in \Rlang is to separate the actual fittin
 \end{small}
 \end{center}
 
-Models are described using model formulas such as \verb|y ~ x| which we read as $y$ is explained by $x$. We use lhs (left-hand-side) and rhs (right-hand-side) to signify all terms to the left and right of the tilde (\verb|~|), respectively (\verb|<lhs> ~ <rhs>|). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of models formulas.
+Models are described using model formulas such as \verb|y ~ x| which we read as $y$ is explained by $x$. We use lhs (left-hand-side) and rhs (right-hand-side) to signify all terms to the left and right of the tilde (\verb|~|), respectively (\verb|<lhs> ~ <rhs>|). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of model formulas.
 
-Although there is some variation, especially for fitted model classes defined in extension packages, in most cases the \textsl{query functions} bulked together in rightmost box in the diagram include methods \Rfunction{summary()}, \Rfunction{anova()} and \Rfunction{plot()}, with several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} usually also available. Additional methods may be available. However, as model fit objects are derived from class \code{list}, these and other components can be extract or computed programmatically when needed. Consequently, the examples in this chapter can be adapted to the fitting of types of models not described here.
+Although there is some variation, especially for fitted model classes defined in extension packages, in most cases the \textsl{query functions} bulked together in the rightmost box in the diagram include methods \Rfunction{summary()}, \Rfunction{anova()} and \Rfunction{plot()}, with several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} usually also available. Additional methods may be available. However, as model fit objects are derived from class \code{list}, these and other components can be extract or computed programmatically when needed. Consequently, the examples in this chapter can be adapted to the fitting of types of models not described here.
 
 \begin{explainbox}
   Fitted model objects in \Rlang are self contained and include a copy of the data to which the model was fit, as well as residuals and possibly even intermediate results of computations. Although this can make the size of these objects large, it allows querying and even updating them in the absence of the data in the current \Rlang workspace.
@@ -276,13 +324,13 @@ Although there is some variation, especially for fitted model classes defined in
 \index{linear models|(}
 \index{LM|see{linear models}}
 
-The \Rlang function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
+Function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
 
 \begin{warningbox}
 If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
 \end{warningbox}
 
-The generic diagram from the previous section redrawn to show a linear model fit, done with function \Rfunction{lm()} where the non-filled boxes represent what is in common with the fitting of other types of models, and the filled ones what is specific to \Rfunction{lm()}. The diagram includes only the three most frequently used query methods. In the diagram, both response variables and explanatory variables are included under \textsl{observations} .
+The generic diagram from the previous section redrawn to show a linear model fit, done with function \Rfunction{lm()} where the non-filled boxes represent what is in common with the fitting of other types of models, and the filled ones what is specific to \Rfunction{lm()}. The diagram includes only the three most frequently used query methods and both response variables and explanatory variables are included under \textsl{observations} .
 
 \begin{center}
 \begin{small}
@@ -307,18 +355,9 @@ The generic diagram from the previous section redrawn to show a linear model fit
 \subsection{Regression}
 %\index{linear regression}
 \index{linear regression|see{linear models!linear regression}}\index{linear models!linear regression}
-In \index{linear models!ANOVA table} the example immediately below, \code{speed} is a continuous numeric variable. In the ANOVA table calculated for the model fit, in this case a linear regression, we can see that the term for \code{speed} has only one degree of freedom (df).
+In this section we continue using the \Rdata{cars} data set, which contains to \code{numeric} variables.
 
-In the next example we continue using the stopping distance for \Rdata{cars} data set included in \Rpgrm. Please see the plot on page \pageref{chunk:plot:cars}.
-\label{xmpl:fun:lm:fm1}
-
-<<models-1z>>=
-data(cars)
-is.factor(cars$speed)
-is.numeric(cars$speed)
-@
-
-We then fit the simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).\label{chunk:lm:models1}
+We fit a simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).\label{chunk:lm:models1}
 
 <<models-1>>=
 fm1 <- lm(dist ~ 1 + speed, data=cars)
@@ -475,7 +514,7 @@ str(summary(fm1)$coefficients)
 
 As an example of the use of values extracted from the \code{summary.lm} object, we test if the slope from a linear regression fit deviates significantly from a constant value different from the usual zero. A null hypothesis of zero for the slope tests for the presence of an ``effect'' of an explanatory variable, which is usually of interest in an experiment. In contrast, when testing for deviations from a calibration by comparing two instruments or an instrument and a reference, a null hypothesis of one for the slope will test for deviations from the true readings. In some cases, we may want to test if the estimate for a parameter exceeds some other value, such as acceptable product tolerances. In other cases, when comparing the effectiveness of interventions we may be interested to test if a new approach surpasses that in current use by at least a specific margin. There exist many situations where the question of interest is not that an effect deviates from zero. Furthermore, when dealing with big data, very small deviations from zero can be statistically significant but biologically or practically irrelevant. In such case we can set the smallest response that is of interest, instead of zero, as the null hypothesis in the test.
 
-The examples above, using \Rfunction{anova()} and \Rfunction{summary()} are for a null hypothesis of slope = 0. Here do the equivalent test with a null hypothesis of slope = 1. The procedure is applicable to any constant value as a null hypothesis for any of the fitted parameter estimates. However, for the $P$-value estimates to be valid, the hypotheses should be set in advance of the study, i.e., independent of the observations used for the test. The examples use a two-sided test. In some cases, a single-sided test should be used (e.g., if its known a priori because of physical reasons that deviation is possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
+The examples above, using \Rfunction{anova()} and \Rfunction{summary()} are for a null hypothesis of slope = 0. Here we do the equivalent test with a null hypothesis of slope = 1. The procedure is applicable to any constant value as a null hypothesis for any of the fitted parameter estimates. However, for the $P$-value estimates to be valid, the hypotheses should be set in advance of the study, i.e., independent of the observations used for the test. The examples use a two-sided test. In some cases, a single-sided test should be used (e.g., if its known a priori because of physical reasons that deviation is possible only in one direction away from the null hypothesis, or because only one direction of response is of interest).
 
 To estimate the \emph{t}-value we need an estimate for the parameter value and an estimate of the standard error for this estimate, and the degrees of freedom. We can extract all these values from the summary of a fitted model object.
 
@@ -510,7 +549,7 @@ Use \code{class(anova(fm1))} and \code{str(anova(fm1))} to explore the \Rlang ob
 Method \Rfunction{predict()} uses the fitted model together with new data for the independent variables to compute predictions. As \Rfunction{predict()} accepts new data as input, it allows interpolation and extrapolation to values of the independent variables not present in the original data. In the case of fits of linear- and some other models, method \Rfunction{predict()} returns, in addition to the prediction, estimates of the confidence and/or prediction intervals. The new data must be stored in a data frame with columns using the same names for the explanatory variables as in the data used for the fit, a response variable is not needed and additional columns are ignored. (The explanatory variables in the new data can be either continuous or factors, but they must match in this respect those in the original data.)
 
 \begin{infobox}
-  Method \Rfunction{predict()} is behind most plotting of lines corresponding to fitted models. For some types of models this is automated by readily available methods that both generate the data and plot them. In other cases it is necessary to generate the predicted values with \Rfunction{predict()} and use these values as data input for a line-plotting method.
+  Method \Rfunction{predict()} is behind most plotting of lines corresponding to fitted models. For some types of models plotting is automated by ready available methods that both generate the predicted values and plot them. In other cases it is necessary to generate the predicted values with \Rfunction{predict()} and use these values as data input for a line-plotting method.
 \end{infobox}
 
 \begin{playground}
@@ -781,7 +820,7 @@ my.formula <- dist ~ 1 + speed
 fm1 <- lm(my.formula, data=cars)
 @
 
-In some situations models lacking a lhs term (a term on the left hand side of \verb|~|) are used but at least one term on the must be present in the rhs.
+In some situations, e.g., calculation of correlations, models lacking a lhs term (a term on the left hand side of \verb|~|) are used but at least one term on the must be present in the rhs.
 <<mformulas-intro-5>>=
 class(~ x + y)
 mode(~ x + y)

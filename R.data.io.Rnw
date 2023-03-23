@@ -245,7 +245,7 @@ The hardest part of all these problems is to diagnose their origin, as function 
 \index{text files!with field markers}
 Text files containing data in columns can be divided into two broad groups. Those with fixed-width fields and those with delimited fields. Fixed-width fields were especially common in the early days of \langname{FORTRAN} and \langname{COBOL} when data storage capacity was very limited. These formats are frequently capable of encoding information using fewer characters than when delimited fields are used. The best way of understanding the differences is with examples. Although in this section we exemplify the use of functions by passing a file name as an argument, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}).
 
-In the first example we will read a file with fields solely delimited by ``,.'' This is what is called comma-separated-values (CSV) format which can be read and written with \Rfunction{read.csv()} and \Rfunction{write.csv()}, respectively.
+In the first example we will read a file with fields solely delimited by ``,'' This is what is called comma-separated-values (CSV) format which can be read and written with \Rfunction{read.csv()} and \Rfunction{write.csv()}, respectively.
 
 Example file \code{not-aligned-ASCII-UK.csv} contains:
 
@@ -254,14 +254,27 @@ cat(readLines("extdata/not-aligned-ASCII-UK.csv"), sep = "\n")
 @
 
 <<file-io-csv-01>>=
-from_csv_a.df <- read.csv("extdata/not-aligned-ASCII-UK.csv")
+from_csv_a.df <- read.csv("extdata/not-aligned-ASCII-UK.csv", stringsAsFactors = FALSE)
 @
 
 <<file-io-csv-02>>=
 sapply(from_csv_a.df, class)
 from_csv_a.df[["col4"]]
+@
+
+\begin{warningbox}
+  Wether columns containing character strings that cannot be converted into numbers are converted into factors or remain as character strings in the returned data frame depends on the value passed to parameter \code{stringsAsFactors}. The default changed in \Rlang version 4.0.0 from \code{TRUE} into \code{FALSE}, so it is better to explicitly pass an argument when it is possible that code is run on both newer and older versions of \Rlang.
+
+<<file-io-csv-01fact>>=
+from_csv_a.df <- read.csv("extdata/not-aligned-ASCII-UK.csv", stringsAsFactors = TRUE)
+@
+
+<<file-io-csv-02fact>>=
+sapply(from_csv_a.df, class)
+from_csv_a.df[["col4"]]
 levels(from_csv_a.df[["col4"]])
 @
+\end{warningbox}
 
 \begin{playground}
 Read the file \code{not-aligned-ASCII-UK.csv} with function \Rfunction{read.csv2()} instead of \Rfunction{read.csv()}. Although this may look like a waste of time, the point of the exercise is for you to get familiar with \Rlang behavior in case of such a mistake. This will help you recognize similar errors when they happen accidentally, which is quite common when files are shared.
@@ -274,11 +287,13 @@ cat(readLines("extdata/aligned-ASCII-UK.csv"), sep = "\n")
 @
 
 Although space characters are read as part of the fields, they are ignored when conversion to numeric takes place. The remaining leading and trailing spaces in character strings are difficult to see when data frames are printed.
+
 <<file-io-csv-03>>=
-from_csv_b.df <- read.csv("extdata/aligned-ASCII-UK.csv")
+from_csv_b.df <- read.csv("extdata/aligned-ASCII-UK.csv", stringsAsFactors = TRUE)
 @
 
 Using \code{levels()} we can more clearly see that the labels of the automatically created factor levels contain leading spaces.
+
 <<file-io-csv-04>>=
 sapply(from_csv_b.df, class)
 from_csv_b.df[["col4"]]
@@ -288,22 +303,11 @@ levels(from_csv_b.df[["col4"]])
 By default, column names are sanitized but factor levels are not. By consulting the documentation with \code{help(read.csv)} we discover that by passing an additional argument we can change this default and obtain the data read as desired. Most likely the default has been chosen so that by default data integrity is maintained.
 
 <<file-io-csv-05>>=
-from_csv_e.df <- read.csv("extdata/aligned-ASCII-UK.csv", strip.white = TRUE)
+from_csv_e.df <- read.csv("extdata/aligned-ASCII-UK.csv",
+                          stringsAsFactors = TRUE, strip.white = TRUE)
 sapply(from_csv_e.df, class)
 from_csv_e.df[["col4"]]
 levels(from_csv_e.df[["col4"]])
-@
-
-The functions from the \Rlang \pkgname{utils} package by default convert columns containing character strings into factors, as seen above. This default can be changed so that character strings remain as is.
-
-<<file-io-csv-06>>=
-from_csv_c.df <- read.csv("extdata/not-aligned-ASCII-UK.csv",
-                          stringsAsFactors = FALSE)
-@
-
-<<file-io-csv-07>>=
-sapply(from_csv_c.df, class)
-from_csv_c.df[["col4"]]
 @
 
 Decimal points and exponential notation are allowed for floating point values. In English-speaking locales, the decimal mark is a point, while in many other locales it is a comma. If a comma is used as decimal marker, we can no longer use it as field separator and is usually substituted by a semicolon (\verb|;|). In such a case we can use \Rfunction{read.csv2()} and \Rfunction{write.csv2()}. Furthermore, parameters \code{dec} and \code{sep} allow setting them to arbitrary characters. Function \Rfunction{read.table()} does the actual work and functions like \Rfunction{read.csv()} only differ in the default arguments for the different parameters. By default, \Rfunction{read.table()} expects fields to be separated by white space (one or more spaces, tabs, new lines, or carriage return). Strings with embedded spaces need to be quoted in the file as shown below.
