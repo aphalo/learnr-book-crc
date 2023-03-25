@@ -7,7 +7,7 @@ assignees: aphalo
 
 ---
 
-Please briefly describe your problem and what enhancement you would like to be implemented in future versions. If you have an ordinary question, please don't use this form, but instead ask on stackoverflow <http://stackoverflow.com>, or contact the author.
+Please briefly describe your problem and what enhancement you would like to be implemented in future versions. If you have an ordinary question, please don't use this form, but instead ask on stackoverflow <http://stackoverflow.com>, or use the _support question_ template to raise an issue here.
 
 Please expalin clearly the change or addition proposed, indicating the chapter, section and subsection. The goal is to make it as easy as possible for me to understand what you are missing and to make sure that it is not something that is already explained.
 
