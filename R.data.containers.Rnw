@@ -305,7 +305,7 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames|(}\qRclass{data.frame}
 \index{worksheet@`worksheet'|see{data frame}}
-Data frames are a special type of list, in which each element is a vector or a factor of the same length (or rarely a matrix with the same number of rows as the enclosing data frame). They are central to most data manipulation and analysis procedures in \Rlang. They are commonly used to store observations, so that some columns (or member variables) are numeric vectors containing values from measurements and others are factors describing membership into a category, such as a treatment or genotype. Columns can also be date-, time-, character-, or logical vectors. In the diagram below column \code{t} is a factor encoding two conditions, and \code{x} and \code{y} are numeric vectors containing measurements.
+Data frames are a special type of list, in which each element is a vector or a factor of the same length (or rarely a matrix with the same number of rows as the enclosing data frame). They are central to most data manipulation and analysis procedures in \Rlang. They are commonly used to store observations, so that some columns (or member variables) are numeric vectors containing values from measurements and others are factors describing membership into a category, such as a treatment or genotype. Columns can also be date-, time-, character-, or logical vectors. In the diagram below column \code{treatment} is a factor with two levels encoding two conditions, \code{hot} and \code{cold}. Columns \code{height} and \code{weight} are numeric vectors containing measurements.
 
 \begin{center}
 \begin{small}
@@ -342,7 +342,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
 \end{small}
 \end{center}
 
-Data frames are created with constructor function \Rfunction{data.frame()} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from class \Rclass{list}. As the expectation is equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the required full length is reached.
+Data frames are created with constructor function \Rfunction{data.frame()} with a syntax similar to that used for lists---in object-oriented programming we say that data frames are derived from class \Rclass{list}. 
 
 <<data-frames-0>>=
 a.df <- data.frame(treatment = factor(rep(c("hot", "cold"), 3)),
@@ -358,6 +358,19 @@ is.data.frame(a.df)
 is.list(a.df)
 @
 
+\begin{playground}
+As the expectation is that all member variables (or ``columns'') have equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the required full length is reached, as shown below for \code{treatment}.
+
+<<data-frames-0a>>=
+b.df <- data.frame(treatment = factor(c("hot", "cold")),
+                   height = c(10.2, 8.3, 12.0, 9.0, 11.2, 8.7),
+                   weight = c(2.2, 3.3, 2.5, 2.8, 2.4, 3.0))
+@
+
+Are \code{a.df} and \code{b.df} equal?
+
+\end{playground}
+
 With function \Rfunction{class()} we can query the class of an \Rlang object (see section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). As we saw in the previous chunk, \code{list} and \code{data.frame} objects belong to two different classes. However, their relationship is based on a hierarchy of classes. We say that class \Rclass{data.frame} is derived from class \code{list}. Consequently, data frames inherit the methods and characteristics of lists, as long as they have not been hidden by new ones defined for data frames.
 
 Extraction of individual member variables or ``columns'' can be done like in a list with operators \Roperator{[[ ]]} and \Roperator{\$}.
@@ -369,7 +382,7 @@ a.df[[2]]
 class(a.df[["height"]])
 @
 
-In the same way as with lists, we can add members to data frames.
+In the same way as with lists, we can add member variables to data frames. Recycling takes place if needed.
 
 <<data-frames-2>>=
 a.df$x2 <- 6:1
@@ -377,6 +390,7 @@ a.df[["x3"]] <- "b"
 str(a.df)
 @
 
+\begin{playground}
 We have added two columns to the data frame, and in the case of column \code{x3} recycling took place. This is where lists and data frames differ substantially in their behavior. In a data frame, although class and mode can be different for different member variables (columns), they are required to be vectors or factors of the same length (or a matrix with the same number of rows, or a list with the same number of members). In the case of lists, there is no such requirement, and recycling never takes place when adding a member. Compare the values returned below for \code{a.ls}, to those in the example above for \code{a.df}.
 
 <<data-frames-2a>>=
@@ -387,7 +401,9 @@ a.ls$x3 <- "b"
 str(a.ls)
 @
 
-Being two dimensional and rectangular in shape, data frames, in relation to indexing and dimensions behave similarly to a matrix. They have rows and columns, and two indices identify the location of a member ``cell''. We provide some examples here, but please consult section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} and section \ref{sec:matrix:array} on page \pageref{sec:matrix:array} for additional details.
+\end{playground}
+
+Being two dimensional and rectangular in shape, data frames, in relation to indexing and dimensions behave similarly to a matrix. They have two margins, rows and columns, and two indices identify the location of a member ``cell''. We provide some examples here, but please consult section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} and section \ref{sec:matrix:array} on page \pageref{sec:matrix:array} for additional details.
 
 Matrix-like notation allows simultaneous extraction from multiple columns, which is not possible with lists. The value returned is in most cases a ``smaller'' data frame as in this example.
 
@@ -448,7 +464,7 @@ Both in the case of lists and data frames, when using double square brackets, by
 In addition, as \Roperator{\$} is implemented by first attempting a match to the name and then calling \Roperator{[[ ]]}, using \Roperator{\$} for indexing can result in slightly slower performance compared to using \Roperator{[[ ]]}. It is possible to set \Rlang option \code{warnPartialMatchDollar} so that partial matching triggers a warning when using \Roperator{\$} to extract a member, which can be very useful when debugging.
 \end{explainbox}
 
-Similarly as with matrices, if we extract a single column from a data frame using matrix-like indexing, it is by default simplified into a vector or factor, i.e., the column-dimension is dropped. By passing \code{drop = FALSE}, we can prevent this. Contrary to matrices, rows are not simplified.
+Similarly as with matrices, if we extract a single column from a data frame using matrix-like indexing, it is by default simplified into a vector or factor, i.e., the column-dimension is dropped. By passing \code{drop = FALSE}, we can prevent this. Contrary to matrices, rows are not simplified in the case of data frames.
 
 <<data-frames-2b>>=
 is.data.frame(a.df[1, ])
@@ -512,7 +528,7 @@ df6<- data.frame(my.factor, my.list)
 df6
 @
 
-The behaviour is quite different if we protect the list with \Rfunction{I()}: then the list is added in whole as a variable or column in the data frame. In this case the length or number of members in the list itself must match the number of rows in the data frame, while the length of the individual members of the list can vary. This is similar to the default behaviour of tibbles, but \Rlang data frames requires explicit use of \Rfunction{I()} (see chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details about the \pkgname{tibble}).
+The behaviour is quite different if we protect the list with \Rfunction{I()}: then the list is added in whole as a variable or column in the data frame. In this case the length or number of members in the list itself must match the number of rows in the data frame, while the length of the individual members of the list can vary. This is similar to the default behaviour of tibbles, but \Rlang data frames require explicit use of \Rfunction{I()} (see chapter \ref{chap:R:data} starting on page \pageref{chap:R:data} for details about the \pkgname{tibble}).
 
 <<data-frames-bx-constr-07>>=
 df7<- data.frame(my.factor, I(my.list))
@@ -520,7 +536,7 @@ df7
 df7$my.list
 @
 
-What is this exercise about? Do check the documentation carefully and think of uses where the flexibility gained by use of function \Rfunction{I()} to protect arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write code to extract individual members of embedded matrices and lists using indexing in a single \Rlang statement in each case.
+What is this exercise about? Do check the documentation carefully and think of uses where the flexibility gained by use of function \Rfunction{I()} to protect arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write code to extract individual members of embedded matrices and lists using indexing in a single \Rlang statement in each case. Finally test if the behavior is the same when assigning new member variables (or ``columns'') to an existing data frame.
 \end{advplayground}
 
 \subsection{Sub-setting data frames}\label{sec:calc:df:subset}
