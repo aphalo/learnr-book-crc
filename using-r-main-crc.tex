@@ -2508,7 +2508,7 @@ The remaining operations are easier to exemplify using vectors with values repre
 \end{knitrout}
 
 \begin{warningbox}
-  Sets describe membership as a binary property, thus when vectors are interpreted as sets, duplicate members are meaningless, although accepted as input and always simplified in the returned values.
+Sets describe membership as a binary property, thus when vectors are interpreted as sets, duplicate members are meaningless, although accepted as input and always simplified in the returned values.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -2610,6 +2610,13 @@ The negation of inclusion is $a \not\in A$, and coded in \Rlang by applying the 
 
 Although inclusion is a set operation, it is also very useful for the simplification of \code{if () \ldots\ else} statements by replacing multiple tests for alternative constant values of the same \code{mode} chained by multiple \Roperator{|} operators. A useful property of \Roperator{\%in\%} and \Rfunction{is.element()} is that they never return \code{NA}.
 
+\begin{explainbox}
+Operator \Roperator{\%in\%} is equivalent to function \Rfunction{match()}, although the additional parameters of \Rfunction{match()} provide additional flexibility.
+
+In some cases, such as when accepting partial character strings as input, the aim is not an exact match, but a partial match to target character strings. In this case, either \Rfunction{charmatch()} or \Rfunction{pmatch()} is the correct tool to use depending on the desired handling of partial, ambiguous and exact matches. Use \code{help()} to find the details if you need to use on of them.
+
+\end{explainbox}
+
 \begin{playground}
 Use operator \Roperator{\%in\%} to write more concisely the following comparisons. Hint: see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean} for the difference between \code{|} and \code{||} operators.
 
@@ -2635,14 +2642,58 @@ With \Rfunction{unique()} we convert a vector of possibly repeated values into a
 \begin{verbatim}
 ## [1] "a" "b" "c"
 \end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{unique()} is frequently useful, for example when we want determine the number of distinct values in a vector.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlkwd{c}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlstr{"a"}\hlstd{,} \hlstr{"z"}\hlstd{)} \hlopt{%in%} \hlkwd{unique}\hlstd{(my.set)}
+\hlkwd{length}\hlstd{(}\hlkwd{unique}\hlstd{(my.set))}
 \end{alltt}
 \begin{verbatim}
-## [1]  TRUE  TRUE FALSE
+## [1] 3
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
+
+\begin{playground}
+  Do the values returned by these two statements differ?
+  
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{c}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlstr{"a"}\hlstd{,} \hlstr{"z"}\hlstd{)} \hlopt{%in%} \hlstd{my.set}
+\hlkwd{c}\hlstd{(}\hlstr{"a"}\hlstd{,} \hlstr{"a"}\hlstd{,} \hlstr{"z"}\hlstd{)} \hlopt{%in%} \hlkwd{unique}\hlstd{(my.set)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{playground}
+
+\begin{explainbox}
+Function \Rfunction{duplicated()} is the counterpart of \Rfunction{unique()}, returning a logical vector indicating which values in a vector are duplicates of values already present at positions with a lower index.
+  
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{duplicated}\hlstd{(my.set)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE FALSE FALSE  TRUE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{anyDuplicated}\hlstd{(my.set)}
+\end{alltt}
+\begin{verbatim}
+## [1] 4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The \Rlang language includes many functions that simplify tasks related to data analysis. Some are well known like \code{unique()}, but others may need to be searched for in the documentation.
+\end{explainbox}
 
 In the notation used in algebra of sets, the set union operator is $\cup$ while the intersection operator is $\cap$. If we have sets $A$ and $B$, their union is given by $A \cup B$---in the next three examples, \code{c("a", "a", "z")} is a constant, while \code{my.set} is a variable.
 
@@ -8470,7 +8521,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.30    0.05    0.36
+##    0.29    0.06    0.36
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9828,7 +9879,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x000001e655440d90>
+## <bytecode: 0x000001cbd732eda8>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9913,7 +9964,7 @@ Next we print the definition of \Rlang's linear model fitting function \code{lm(
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x000001e654783b78>
+## <bytecode: 0x000001cbd41b4a18>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -10048,7 +10099,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001e65466eb60>
+## <bytecode: 0x000001cbd3863b00>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -19578,9 +19629,9 @@ Base \Rlang provides several functions for portably working with files, and they
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2023-03-26 00:16:07 2023-03-26 00:16:07
+## xxx.txt    0 FALSE  666 2023-03-27 00:16:23 2023-03-27 00:16:23
 ##                       atime exe
-## xxx.txt 2023-03-26 00:16:07  no
+## xxx.txt 2023-03-27 00:16:23  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
