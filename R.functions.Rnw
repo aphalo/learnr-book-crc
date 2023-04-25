@@ -17,48 +17,7 @@ Computer Science is a science of abstraction---creating the right model for a pr
 
 \section{Aims of this chapter}
 
-In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. In the first part of the chapter we will focus on using existing packages and how they expand the functionality of \Rlang. In the second part you will learn how to define new functions, operators and classes. We will not consider the important, but more advanced question of packaging functions and classes into new \Rlang packages.
-
-\section{Packages}\label{sec:script:packages}
-
-\subsection{Sharing of \Rlang-language extensions}
-\index{extensions to R}
-The most elegant way of adding new features or capabilities to \Rlang is through packages. This is without doubt the best mechanism when these extensions to \Rlang need to be shared. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
-
-Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was \Sexpr{nrow(available.packages(repos = "https://cran.rstudio.com/"))}.
-
-A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for R packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the ROpenScience website (\url{https://ropensci.org/}). In some cases you may need or want to install less stable code from Git repositories such as versions still under development not yet submitted to \CRAN. Using the package \pkgname{devtools} we can install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. Installations from code repositories are always installations from sources (see below). It is of course also possible to install packages from local files (e.g.,  after a manual download).
-
-One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox.'' How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
-
-\subsection{How packages work}
-
-The development of packages is beyond the scope of the current book, and thoroughly explained in the book \citebooktitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes and complexity. Packages use a relatively rigid structure of folders for storing the different types of files, including documentation compatible with \Rpgrm's built-in help system. This allows documentation for contributed packages to be seamlessly linked to \Rlang's help system when packages are loaded. In addition to \Rlang code, packages can call functions and routines written in \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, \langname{Python}, etc., but some kind of ``glue'' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. For \langname{C++}, the \pkgname{Rcpp} \Rlang package makes the ``gluing'' relatively easy \autocite{Eddelbuettel2013}. In the case of \langname{Python}, \Rlang package \pkgname{reticulate} makes calling of \langname{Python} methods and exchange of data easy, and it is well supported by \RStudio. In the case of \langname{Java} we can use package \pkgname{RJava} instead. For \langname{C} and \langname{FORTRAN}, \Rlang provides the functionality needed, but the interface needs some ad hoc coding in most cases.
-
-Only objects exported by a package that has been attached are visible outside its own namespace. Loading and attaching a package with \Rfunction{library()} makes the exported objects available. Attaching a package adds the objects exported by the package to the search path so that they can be accessed without prepending the name of the namespace. Most packages do not export all the functions and objects defined in their code; some are kept internal, in most cases because they may change or be removed in future versions. Package namespaces can be detached and also unloaded with function \Rscoping{detach()} using a slightly different notation for the argument from that which we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}.
-
-\subsection{Download, installation and use}
-
-\index{packages!using}
-In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages. When using \RStudio it is easiest to use \RStudio menus (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install or update packages.
-
-\begin{playground}
-Use \code{help} to look up the help pages for \Rfunction{install.packages()} and \Rfunction{library()}, and explain what the code in the next chunk does.
-\end{playground}
-
-\Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in installers (you will need \pgrmname{RTools}, and \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}). It is easier to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
-
-\subsection{Finding suitable packages}
-
-Due to the large number of contributed \Rlang packages it can sometimes be difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built into base \Rlang. Base \Rlang plus the recommended packages (installed when \Rlang is installed) cover a lot of ground. To analyze data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate or extend the functionality in base \Rlang with advantage. When one considers the use of novel or specialized types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to choose from within the available contributed packages. Sometimes groups or suites of packages are designed to work well together.
-
-The \CRAN repository has very broad scope and includes a section called ``views.'' \Rlang views are web pages providing annotated lists of packages frequently used within a given field of research, engineering or specific applications. These views are edited and updated by different editors. They can be found at \url{https://cran.r-project.org/web/views/}.
-
-The Bioconductor repository specializes in bioinformatics with \Rlang. It also has a section with ``views'' and within it, descriptions of different data analysis workflows. The workflows are especially good as they reveal which sets of packages work well together. These views can be found at \url{https://www.bioconductor.org/packages/release/BiocViews.html}.
-
-Although ROpenSci does not keep a separate package repository for the peer-reviewed packages, they do keep an index of them at \url{https://ropensci.org/packages/}.
-
-The \CRAN repository keeps an archive of earlier versions of packages, on an individual package basis. METACRAN (\url{https://www.r-pkg.org/}) is an archive of repositories, that keeps a historical record as snapshots from \CRAN. METACRAN uses a different search engine than \CRAN itself, making it easier to search the whole repository.
+In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. We will start by discussing how to define and use new functions, operators and classes. Later we will focus on using existing packages and touch briefly on how they work. We will not consider the important, but more advanced question of packaging functions and classes into new \Rlang packages.
 
 \section{Defining functions and operators}\label{sec:script:functions}
 \index{functions!defining new}\index{operators!defining new}
@@ -118,7 +77,7 @@ my.change(a)
 a
 @
 
-In general, any result that needs to be made available outside the function must be returned by the function---or explicitly assigned to an object in the enclosing environment (i.e., using \Roperator{<<-} or \Rfunction{assign()}) as a side effect.
+In general, results that need to be made available outside the function are \emph{returned} by the function to the caller.
 
 A function can only return a single object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, a class derived from class \Rclass{list}.
 \end{warningbox}
@@ -148,6 +107,12 @@ Test the behavior of functions \code{print.x.1()} and \code{print.x.5()}, as def
 \end{advplayground}
 
 Functions have their own scope. Any names created by normal assignment within the body of a function are visible only within the body of the function and disappear when the function returns from the call. In normal use, functions in \Rlang do not affect their environment through side effects. They receive input through arguments and return a value as the result of the call. This value can be either printed or assigned as we have seen when using functions earlier.
+
+\begin{explainbox}
+Scoping in \Rlang is implemented using \emph{environments} and \emph{name spaces}. We can think of environments as having a boundary with asymmetric visibility. The code within a function runs in it own environment, in isolation from the calling environment in relation to assignments, but the values stored in objects in the calling environment can be retrieved. This protects from unintentional side effects by making difficult to overwrite object definitions in the calling environment. It is possible to override this protection with operator \Roperator{<<-} or with function \Rfunction{assign()}, this should be only used as a last resource as it makes the code much more difficult to read and debug.
+
+Environments can be explicitly created with function \Rfunction{environment()}. However, \Rfunction{environment()} is rarely used in scripts while it can be useful within packages. Name spaces are briefly described in section \ref{sec:packages:work} on page \pageref{sec:packages:work}.
+\end{explainbox}
 
 \subsection{Ordinary functions}\label{sec:functions:sem}
 \index{functions!defining new}
@@ -407,9 +372,94 @@ rm(my.pie)
 exists("my.pie")
 @
 
+\section{Packages}\label{sec:script:packages}
+
+\subsection{Sharing of \Rlang-language extensions}
+\index{extensions to R}
+The most elegant way of adding new features or capabilities to \Rlang is through packages. This is without doubt the best mechanism when these extensions to \Rlang need to be shared. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
+
+Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was \Sexpr{nrow(available.packages(repos = "https://cran.rstudio.com/"))}.
+
+A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for R packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the ROpenScience website (\url{https://ropensci.org/}). In some cases you may need or want to install less stable code from Git repositories such as versions still under development not yet submitted to \CRAN. Using the package \pkgname{devtools} we can install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. Installations from code repositories are always installations from sources (see below). It is of course also possible to install packages from local files (e.g.,  after a manual download).
+
+One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox.'' How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
+
+\subsection{Download, installation and use}
+
+\index{packages!using}
+In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages. When using \RStudio it is easiest to use \RStudio menus (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to install or update packages.
+
+\begin{playground}
+Use \code{help} to look up the help pages for \Rfunction{install.packages()} and \Rfunction{library()}, and explain what the code in the next chunk does.
+\end{playground}
+
+\Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in installers (you will need \pgrmname{RTools}, and \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}). It is easier to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
+
+\subsection{Finding suitable packages}
+
+Due to the large number of contributed \Rlang packages it can sometimes be difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built into base \Rlang. Base \Rlang plus the recommended packages (installed when \Rlang is installed) cover a lot of ground. To analyze data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate or extend the functionality in base \Rlang with advantage. When one considers the use of novel or specialized types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to choose from within the available contributed packages. Sometimes groups or suites of packages are designed to work well together.
+
+The \CRAN repository has very broad scope and includes a section called ``views.'' \Rlang views are web pages providing annotated lists of packages frequently used within a given field of research, engineering or specific applications. These views are edited and updated by different editors. They can be found at \url{https://cran.r-project.org/web/views/}.
+
+The Bioconductor repository specializes in bioinformatics with \Rlang. It also has a section with ``views'' and within it, descriptions of different data analysis workflows. The workflows are especially good as they reveal which sets of packages work well together. These views can be found at \url{https://www.bioconductor.org/packages/release/BiocViews.html}.
+
+Although ROpenSci does not keep a separate package repository for the peer-reviewed packages, they do keep an index of them at \url{https://ropensci.org/packages/}.
+
+The \CRAN repository keeps an archive of earlier versions of packages, on an individual package basis. METACRAN (\url{https://www.r-pkg.org/}) is an archive of repositories, that keeps a historical record as snapshots from \CRAN. METACRAN uses a different search engine than \CRAN itself, making it easier to search the whole repository.
+
+\subsection{How packages work}\label{sec:packages:work}
+
+The development of packages is beyond the scope of the current book, and thoroughly explained in the book \citebooktitle{Wickham2015} \autocite{Wickham2015}. However, it is still worthwhile mentioning a few things about the development of \Rpgrm packages. Using \RStudio it is relatively easy to develop your own packages. Packages can be of very different sizes and complexity. Packages use a relatively rigid structure of folders for storing the different types of files, including documentation compatible with \Rpgrm's built-in help system. This allows documentation for contributed packages to be seamlessly linked to \Rlang's help system when packages are loaded. In addition to \Rlang code, packages can call functions and routines written in \langname{C}, \langname{C++}, \langname{FORTRAN}, \langname{Java}, \langname{Python}, etc., but some kind of ``glue'' is needed, as function call conventions and \emph{name mangling} depend on the programming language, and in many cases also on the compiler used. For \langname{C++}, the \pkgname{Rcpp} \Rlang package makes the ``gluing'' relatively easy \autocite{Eddelbuettel2013}. In the case of \langname{Python}, \Rlang package \pkgname{reticulate} makes calling of \langname{Python} methods and exchange of data easy, and it is well supported by \RStudio. In the case of \langname{Java} we can use package \pkgname{RJava} instead. For \langname{C} and \langname{FORTRAN}, \Rlang provides the functionality needed, but the interface needs some ad hoc coding in most cases.
+
+Only objects exported by a package that has been attached are visible outside its own namespace. Loading and attaching a package with \Rfunction{library()} makes the exported objects available. Attaching a package adds the objects exported by the package to the search path so that they can be accessed without prepending the name of the namespace. Most packages do not export all the functions and objects defined in their code; some are kept internal, in most cases because they may change or be removed in future versions. Package namespaces can be detached and also unloaded with function \Rscoping{detach()} using a slightly different notation for the argument from that which we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}.
+
 An additional important thing to remember is that \Rlang packages define all objects within a \emph{namespace} with the same name as the package itself. This means that when we reuse a name defined in a package, its definition in the package does not get overwritten, but instead, only hidden and still accessible using the name \emph{qualified} by prepending the name of the package followed by two colons.
 
-If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached. To avoid confusion in such cases, in scripts is best to use the qualified names for calling both definitions.
+If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached. To avoid confusion in such cases, in scripts it is best to use the qualified names for calling all the objects defined with the same name in the two package, or attaching only one of the packages and using qualified names for all the objects exported by the other package.
+
+\begin{infobox}
+In one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library}, the package is only loaded. In other words, the names of the objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
+\end{infobox}
+
+\begin{infobox}
+Some functions that are part of \Rlang are collected into packages grouped by category: \pkgname{stats}, \pkgname{datasets}, etc., and can be called when needed used qualified names. even functions like \Rfunction{list()} can be called as \code{base::list()} if they cannot be accessed directly because of the presence of other objects with the same name being present in the global environment, or having priority.  We can find out the search order by calling \Rfunction{search()}, with the search starting at the \code{".GlobalEnv"} for statements evaluated at the R command line.
+\end{infobox}
+
+\begin{explainbox}
+Namespaces isolate the names defined within them from those in other namespaces. This helps prevent name clashes, and makes it possible to access objects even when they are ``hidden'' by a different object with the same name.
+
+<<pkg-01>>=
+head(cars, 3) # first three rows
+getAnywhere("cars")$where # defined in package
+cars <- "my car is blue"
+getAnywhere("cars")$where # the first visible definition is in the global environemnt
+cars # prints cars defined in the global environment
+head(datasets::cars, 3) # first three rows
+rm(cars) # clean up
+@
+
+In the example above I used a data frame object, but the same mechanisms apply to all R objects including functions. The situation when one of the definitions is a function and the other is not, is slightly different in that a call using parenthesis notation will distinguish between a function and an object of the same name that is not a function. Relying on this distinction is anyway a bad idea.
+
+<<pkg-02>>=
+mean
+mean <- mean(1:5)
+mean
+mean(8:9)
+getAnywhere("mean")$where
+rm(mean)
+getAnywhere("mean")$where
+@
+
+In this last example we removed with \code{rm(mean)} the variable we had assigned a value to. Package namespaces also prevent deletion or overwriting of objects defined in the package. This is different to defining a new object with the same name, which is allowed. The two statements below trigger errors and are not evaluated when typesetting the book.
+
+<<pkg-03, eval=FALSE>>=
+datasets::cars <- "my car is green"
+rm(datasets::cars)
+@
+
+We looked at only one member of the value returned by \Rfunction{getAnywhere()}, do have a look at its help page for more details as it contains additional information.
+
+\end{explainbox}
 
 \section{Further reading}
 
