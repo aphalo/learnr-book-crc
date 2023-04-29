@@ -6,7 +6,7 @@ opts_knit$set(unnamed.chunk.label = 'functions-chunk')
 rm(plot)
 @
 
-\chapter{The R language: ``Verbs'' and ``nouns'' for statistics}\label{chap:R:statistics}
+\chapter{Base R: ``Verbs'' and ``nouns'' for statistics}\label{chap:R:statistics}
 
 \begin{VF}
 The purpose of computing is insight, not numbers.
@@ -392,7 +392,7 @@ summary(fm2)
 The equation of the second fitted model is $y = 2.91 x$, and from the residuals, it can be seen that it is inadequate, as the straight line does not follow the curvature of the relationship between \code{dist} and \code{speed}.
 
 \begin{playground}
-You will now fit a second-degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.
+You will now fit a second-degree polynomial\index{linear models!polynomial regression}\index{polynomial regression}, a different linear model: $y = \alpha \cdot 1 + \beta_1 \cdot x + \beta_2 \cdot x^2$. The function used is the same as for linear regression, \Rfunction{lm()}. We only need to alter the formulation of the model. The identity function \Rfunction{I()} is used to protect its argument from being interpreted as part of the model formula. Instead, its argument is evaluated beforehand and the result is used as the, in this case second, explanatory variable.\label{chunk:stats:fm3}
 
 <<models-3, eval=eval_playground>>=
 fm3 <- lm(dist ~ speed + I(speed^2), data = cars)
@@ -422,7 +422,10 @@ anova(fm2, fm3, fm3a)
 anova(fm2, fm3a, fm3)
 @
 
-We can use different criteria to choose the ``best'' model: significance based on $p$-values or information criteria (AIC, BIC). AIC (Akaike's ``An Information Criterion'') and BIC (``Bayesian Information Criterion'' = SBC, ``Schwarz's Bayesian criterion'') that penalize the resulting ``goodness'' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for both BIC and AIC are returned by \Rfunction{anova()}, and on their own by \Rfunction{BIC()} and \Rfunction{AIC()}
+\label{par:stats:AIC}%
+We\index{Akaike's An Information Criterion@Akaike's \emph{An Information Criterion}}\index{AIC|see \emph{An Information Criterion}}%
+\index{Bayesian Information Criterion@\emph{Bayesian Information Criterion}}\index{BIC|see \emph{Bayesian Information Criterion}}%
+\index{Schwarz's Bayesian criterion@\emph{Schwarz's Bayesian criterion}|see \emph{Bayesian Information Criterion}} can use different criteria to choose the ``best'' model: significance based on $p$-values or information criteria (AIC, BIC). AIC (Akaike's ``An Information Criterion'') and BIC (``Bayesian Information Criterion'' = SBC, ``Schwarz's Bayesian criterion'') that penalize the resulting ``goodness'' based on the number of parameters in the fitted model. In the case of AIC and BIC, a smaller value is better, and values returned can be either positive or negative, in which case more negative is better. Estimates for both BIC and AIC are returned by \Rfunction{anova()}, and on their own by \Rfunction{BIC()} and \Rfunction{AIC()}
 
 <<models-5a, eval=eval_playground>>=
 BIC(fm2, fm1, fm3, fm3a)
@@ -465,8 +468,8 @@ Additional methods give easy access to different components of fitted models: \R
 Familiarize yourself with these extraction and summary methods by reading their documentation and use them to explore \code{fm1} fitted above or model fits to other data of your interest.
 \end{playground}
 
-\begin{explainbox}
-The\index{linear models!structure of model fit object} objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them. There are different specializations of these methods which are called depending on the class of the model-fit object. (See section \ref{sec:methods} on page \pageref{sec:methods}.)
+\begin{explainbox}\label{box:LM:fit:object}
+The\index{linear models!structure of model fit object} objects returned by model fitting functions are rather complex and contain the full information, including the data to which the model was fit to. Their structure resembles a nested list. In most cases the class of the objects returned by model fit functions agrees in name with the name of the model-fit function (\code{"lm"} in this example) but is not derived from \Rlang class \code{"list"}. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them. There are different specializations of these methods which are called depending on the class of the model-fit object. (See section \ref{sec:methods} on page \pageref{sec:methods}.)
 
 <<models-EB0>>=
 class(fm1)
@@ -589,7 +592,7 @@ is.factor(InsectSprays$spray)
 levels(InsectSprays$spray)
 @
 
-We fit the model in exactly the same way as for linear regression; the difference is that we use a factor as the explanatory variable. By using a factor instead of a numeric vector, a different model matrix is built from an equivalent formula.
+We fit the model in exactly the same way as for linear regression; the difference is that we use a factor as the explanatory variable. By using a factor instead of a numeric vector, a different model matrix is built from an equivalent formula.\label{chunk:stat:fm4}
 
 <<models-6>>=
 fm4 <- lm(count ~ spray, data = InsectSprays)
@@ -676,6 +679,116 @@ Contrasts and their interpretation are discussed in detail by \citeauthor{Venabl
 
 When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models and, as mentioned in previous sections, what determines the type of analysis is the nature of the explanatory variable(s). As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite[e.g.][]{Smith1957}.
 \index{linear models|)}
+
+\subsection{Model update and selection}\label{sec:stat:update:step}
+
+We mentioned when describing model-fit objects in page \pageref{box:LM:fit:object} that linear model fit objects contain not only the results of the fit but also the data to which the model was fit. Given that also the call is also stored, all the information needed to recalculate the same fit is contained in the model-fit object. Method \Rfunction{update()} makes is possible to recalculate the fit with changes to the call, without specifying a whole new call. Model fit objects created with other functions from base \Rlang and extension packages usually also contain data and call, specialised \Rfunction{update()} methods for different types of models are common. In the case on fit with \Rfunction{lm()} can pass a different model and/or different data arguments. We can also modify the data used in the fit by replacing the argument previously passed to \code{subset}, including the default.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model}};
+\node (data) [tprocess, below of=model, yshift=-0.4cm] {\textsl{observations}};
+\node (fitfun) [tprocess, right of=model, yshift=-0.9cm, xshift=1cm] {\code{lm()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.8cm] {\code{lm} \textsl{object} $\to$ \code{object}};
+\node (update) [tprocess, color = black, right of=fm, xshift = 1.8cm, fill=blue!5] {\code{update()}};
+\node (newmodel) [tprocess, above of=fm, fill=blue!5, yshift=-0.3cm] {\textsl{new model} $\to$ \code{formula}};
+\node (newdata) [tprocess, below of=fm, fill=blue!5, yshift=0.3cm] {\textsl{new observs.} $\to$ \code{data}};
+\node (newfm) [tprocess, color = black, right of=update, xshift=1.5cm, fill=blue!5] {\code{lm} \textsl{object}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (update);
+\draw [arrow] (newmodel) -- (update);
+\draw [arrow] (newdata) -- (update);
+\draw [arrow] (update) -- (newfm);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+For the next example we recreate the model fit object \code{fm4} from page \pageref{chunk:stat:fm4}.
+
+<<models-update-01>>=
+fm4 <- lm(count ~ spray, data = InsectSprays)
+anova(fm4)
+fm4a <- update(fm4, formula = log10(count + 1) ~ spray)
+anova(fm4a)
+@
+
+\begin{playground}
+Print \code{fm4\$call} and \code{fm4a\$call}. These two calls differ in the argument to \code{formula}. What other members have been updated in \code{fm4a} compared to \code{fm4}?
+\end{playground}
+
+In the chunk above we replaced the argument passed to \code{formula}. This is a frequent use, but for example to fit the same model to a subset of the data we can pass a suitable argument to parameter \code{subset}.
+
+<<models-update-02>>=
+fm4b <- update(fm4, subset = !spray %in% c("A", "B"))
+anova(fm4b)
+@
+
+\begin{advplayground}
+When having many treatments with long names, which is not the case here, instead of listing the factor levels for which to subset the data, it can be convenient to use regular expressions for pattern matching. Please run the code below, and investigate why \code{anova(fm4b)} and \code{anova(fm4c)} produce the same ANOVA table printout, but the fit model objects are not identical. You can use \code{str()} to explore if any members differ between the two objects.
+
+<<models-update-03, eval=eval_playground>>=
+fm4c <- update(fm4, subset = !grepl("[AB]", spray))
+anova(fm4c)
+identical(fm4b, fm4c)
+@
+
+\end{advplayground}
+
+\begin{explainbox}
+In the presence of multiple explanatory variables, or when using polynomial regression, using \Rfunction{update()} makes is easier to compare models with \Rfunction{anova()}.
+
+Method \Rfunction{update()} is specially convenient when using model fitting functions with many formal parameters. It plays an additional role when fitting is done by numerical approximation, as the previously computed estimates are used as the starting values for the numerical calculations required for fitting the updated model.
+\end{explainbox}
+
+\begin{warningbox}
+That the data are stored in the model fit object ensures that the use of methods like \Rfunction{update()} and various computations on the fit results can be reliably and consistently done irrespective of the presence or not of the same data in \Rlang's current-session. However, it should be kept in mind that changes to the original data done after the model fit object was created will not be reflected in the model fit objects returned by \Rfunction{update()} unless the new data are passed as an argument.
+\end{warningbox}
+
+Step-wise multiple regression, either in the \emph{forward} direction from simpler to more complex models, in the backward direction from more complex to simpler models or in both directions is implemented in base \Rlang's \emph{method} \Rfunction{step()} using Akaike's information criterion (AIC)\index{Akaike's An Information Criterion@Akaike's \emph{An Information Criterion}} as the selection criterion. Use of method \Rfunction{step()} from base \Rlang is possible with \code{lm()} and \code{glm} fits. AIC is described on page \pageref{par:stats:AIC}.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.4cm, scale=0.5]
+\node (model) [tprocess] {\textsl{model}};
+\node (data) [tprocess, below of=model, yshift=-0.4cm] {\textsl{observations}};
+\node (fitfun) [tprocess, right of=model, yshift=-0.9cm, xshift=1cm] {\code{lm()}};
+\node (fm) [tprocess, color = black, right of=fitfun, xshift=1.8cm] {\code{lm} \textsl{object} $\to$ \code{object}};
+\node (step) [tprocess, color = black, right of=fm, xshift = 1.8cm, fill=blue!5] {\code{step()}};
+\node (newmodels) [tprocess, above of=fm, fill=blue!5, yshift=-0.3cm] {\textsl{new model(s)} $\to$ \code{scope}};
+\node (newfm) [tprocess, color = black, right of=update, xshift=1.5cm, fill=blue!5] {\code{lm} \textsl{object}};
+\draw [arrow] (model) -- (fitfun);
+\draw [arrow] (data) -- (fitfun);
+\draw [arrow] (fitfun) -- (fm);
+\draw [arrow] (fm) -- (update);
+\draw [arrow] (newmodels) -- (step);
+\draw [arrow] (step) -- (newfm);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+
+For the next example we recreate the model fit object \code{fm3} from page \pageref{chunk:stats:fm3} for a polynomial regression. If as shown here, no models are passed through scope, the previously fit model will be simplified if possible.
+
+<<models-step-01>>=
+fm3 <- lm(dist ~ speed + I(speed^2), data = cars)
+summary(fm3)
+fm3a <- step(fm3)
+summary(fm3a)
+@
+
+If we pass a single model with additional terms through parameter \code{scope} this will be taken as the most complex model to be assessed if two nested models are passed, then these delimit the scope of the stepwise search. In the next example we see that first a backward search is done and term \code{speed} is removed. Subsequently a forward search is done unsuccessfully for a model with lower \code{AIC}.
+
+<<models-step-02>>=
+fm3b <- 
+  step(fm3, 
+       scope = dist ~ speed + I(speed^2) + I(speed^3) + I(speed^4))
+summary(fm3b)
+@
+
+Functions \Rfunction{update()} and \Rfunction{step()} are \emph{convenience functions} as they provide direct and/or simpler access to operations available through other functions or combined use of functions.
 
 \section{Generalized linear models}\label{sec:stat:GLM}
 \index{generalized linear models|(}\index{models!generalized linear|see{generalized linear models}}
@@ -1235,9 +1348,10 @@ For growth and morphological data, a log-transformation can be suitable given th
 \end{playground}
 
 \begin{advplayground}
-As for other fitted models, the object returned by function \Rfunction{prcomp()} is a list with multiple components.
+As for other fitted models, the object returned by function \Rfunction{prcomp()} is list-like with multiple components and belongs to a class of the same name as the function, not derived from class \code{"list"}.
 
 <<pca-EB-01, eval=eval_playground>>=
+class(pc)
 str(pc, max.level = 1)
 @
 \end{advplayground}
