@@ -414,7 +414,7 @@ Additional functions designed to be used in pipes are available through packages
 \index{control of execution flow}
 By default \Rlang statements in a script are evaluated (or executed) in the sequence they appear in the script \textit{listing} or text. We give the name \emph{control of execution constructs} to those special statements that allow us to alter this default sequence, by either skipping or repeatedly evaluating individual statements. The statements whose evaluation is controlled can be either simple or compound. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others allow statements to be executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
 
-These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. \emph{Control of execution constructs} are a crucial part of most scripts. As we will see next, a compound statement can include multiple simple or nested compound statements.
+These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. However, \emph{control of execution constructs} are a crucial part of most useful scripts. As we will see next, a compound statement can include multiple simple or nested compound statements.
 
 \Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectorized and vectorized. We will start with the non-vectorized one, which is similar to what is available in most other computer programming languages and controls the evaluation of a code statement, which can be either simple or compound.
 
@@ -440,10 +440,12 @@ The \code{if} construct ``decides,'' depending on a \code{logical} value, whethe
 \end{small}
 \end{center}
 
+The usefulness of \emph{if} statements stems from the possibility of computing the \code{logical} value used as \code{<condition>} with comparison operators (see section \ref{sec:calc:comparison} on page \pageref{sec:calc:comparison}) and logical operators (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}).
+
 We start with toy examples demonstrating how \emph{if} statements work. Later we will see examples closer to real use cases. Here \Rcontrol{if()} controls the evaluation or not of the simple statement \code{print("Hello!")}.
 
 \begin{explainbox}
-We use the name \emph{flag} for a \code{logical} variable set manually, preferably near the top of the script. Real flags were used in railways to indicate to trains whether to stop or continue at stations and which route to follow at junctions. Use of \code{logical} flags in scripts is most useful when switching between two behaviors that depend on multiple decisions. A frequent use case for flags is jointly enabling and disabling printing of output from multiple statements scattered in over a long script.
+We use the name \emph{flag} for a \code{logical} variable set manually, preferably near the top of the script. Real flags were used in railways to indicate to trains whether to stop or continue at stations and which route to follow at junctions. Use of \code{logical} flags in scripts is most useful when switching between two behaviors that depend on multiple separate statements. A frequent use case for flags is jointly enabling and disabling printing of output from multiple statements scattered in a long script.
 \end{explainbox}
 
 <<if-1z>>=
@@ -626,7 +628,9 @@ The switch statement returns a value, the value returned by the \Rcontrol{switch
 \end{small}
 \end{center}
 
-In the first example we use character constants saved in a variable as a condition, with the last statement with no tag being the default. Instead of the name of variable \code{my.object}, we could have used a complex expression returning a suitable \code{character} value of length one.
+The \code{if \ldots\ else} construct supports two alternatives because the \code{<condition>} is \code{logical}, with only two possible values. In theory the \Rcontrol{switch()} construct supports nearly unlimited alternatives as the \code{<condition>} can be either an \code{integer} value or a \code{character} value. In practice including more than a handful of alternatives becomes cumbersome. It is good style not to use \Rcontrol{switch()} when the individual code statements are complex. \Rcontrol{switch()} is mostly a convenience as it allows us to write code that is more concise than when using many concatenated \code{if \ldots\ else if \ldots\ else \ldots} constructs.
+
+In the first example we use character constants saved in a variable as the condition, with the last statement with no tag being the default used for any other character value passed as first argument to \Rcontrol{switch()}. Instead of the name of variable \code{my.object}, we could have used a complex expression returning a suitable \code{character} value of length one.
 
 <<>>=
 my.object <- "two"
@@ -773,7 +777,7 @@ Continuing from the playground above, test the behaviour of \Rcontrol{ifelse()} 
 
 \section{Iteration}
 \index{loops|seealso{iteration}}
-We give the name \emph{iteration} to the process of repetitive execution of a program statement (simple or compound)---e.g., \emph{computed by iteration}. We use the same word, \emph{iteration}, to name each one of these repetitions of the execution of a statement---e.g.,  the second iteration.
+We give the name \emph{iteration} to the process of repetitive execution of a program statement (simple or compound)---e.g., \emph{computed by iteration}. We use the same word, \emph{iteration}, to name each one of these repetitions of the execution of a statement---e.g., the second iteration.
 
 The section of computer code being executed multiple times, forms a loop (a closed path). Most loops contain a condition that determines when the flow of execution will exit the loop and continue at the next statement following the loop. In \Rlang three types of iteration loops are available: those using \Rloop{for}, \Rloop{while} and \Rloop{repeat} constructs. They differ in how much flexibility they provide with respect to the values they iterate over, and how the condition that terminates the iteration is tested. When the same algorithm can be implemented with more than one of these constructs, using the least flexible of them usually results in the easiest to understand \Rlang scripts. In \Rlang, rather frequently, explicit loops as described in this section can be replaced advantageously by calls to the \emph{apply} functions described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}. In other cases \Rlang vectorized functions and operators can be used instead of explicit iteration loops (vectorization of arithmetic operations is explained on page \pageref{par:calc:vectorized:opers}).
 
@@ -803,13 +807,19 @@ The\index{for loop}\index{iteration!for loop}\qRloop{for} most frequently used t
 \end{small}
 \end{center}
 
+In the diagram above the argument to \code{for()} is shown as \code{<list>} but it can also be a \code{vector} of any mode. Objects of most classes derived from \code{list} or from an atomic vector can also fulfil the same role. The extraction operation with a numeric index must be supported by objects of the class passed as argument.
+ 
 <<for-00>>=
 b <- 0 # variable needs to set to a valid numeric value!
 for (a in 1:5) b <- b + a
 b
 @
 
-Here the statement \code{b <- b + a} is executed five times, with placeholder variable \code{a} sequentially taking each of the values in vector \code{1:5}. The name used as placeholder has to fulfil the same requirements as an ordinary \Rlang variable name. The list or vector following \code{in} can contain any valid \Rlang objects, as long as the code statements in the loop body can handle them. This vector of list cannot be modified by the code within the \code{for} loop.
+Here the statement \code{b <- b + a} is executed five times, with placeholder variable \code{a} sequentially taking each of the values, 1, 2, 3, 4, and 5, in vector \code{1:5}. The name used as placeholder has to fulfil the same requirements as an ordinary \Rlang variable name. The list or vector following \code{in} can contain any valid \Rlang objects, as long as the code statements in the loop body can handle them. 
+
+\begin{warningbox}
+In a \code{for()} loop construct, the vector or list passed as argument cannot be modified by the code statement within the \code{for} loop.
+\end{warningbox}
 
 A\index{for loop!unrolled} loop can be ``unrolled'' into a linear sequence of statements. Let's work through the \code{for} loop above.
 
@@ -900,7 +910,7 @@ In this case, the code examples trigger no errors or warnings, but the same appr
 In the previous chunk we used \code{seq(along.with = a)} to build a new numeric vector with a sequence of the same length as vector \code{a}. Using this \emph{idiom} is best as it ensures that even the case when \code{a} is an \emph{empty} vector of length zero will be handled correctly, with \code{numeric(0)} assigned to \code{b}.
 
 \begin{advplayground}
-Run the examples below and explain why the two approaches are equivalent only when the length of \code{a} is one or more. Find the answer by assigning to \code{a}, vectors of different lengths, including zero (using \code{a <- numeric(0)}).
+Run the examples below and explain why the two approaches are equivalent only when the length of \code{a} is one or more. Find the answer by assigning to \code{a}, vectors of different lengths, including zero (using \code{a <- numeric(0)}). Here we use function \Rfunction{seq()} to create a vector that contains sequence of \code{integer} values of the same length as \code{a} that we use to access members of vectors \code{a} and \code{b} with the extraction operator \code{[ ]} (use \code{help(seq)} to find additional information on how to create different sequences of integers).
 
 <<for-04, eval=eval_playground>>=
 b <- numeric(length(a))
@@ -934,6 +944,8 @@ b
 i
 a[i]
 @
+
+Hint: if you find the code in the example above difficult to understand, insert \code{print()} statements and run it again inspecting how the values of \code{a}, \code{b}, \code{idxs} and \code{i} behave within the loop. 
 
 In \Rloop{for} loops the use of \Rcontrol{break()} and \Rcontrol{next()} should be reserved for exceptional conditions. If the \Rloop{for} construct is not flexible enough for the computations being implemented, the use of a \Rloop{while} or a \Rloop{repeat} loop may be more appropriate.
 
@@ -1208,6 +1220,8 @@ on.exit(file.remove("temp.file"))
 
 \begin{explainbox}
 Conceptually, \code{for}, \code{while} and \code{repeat} loops are interpreted as controlling sequential evaluation of program statements. In contrast, \Rlang's \emph{apply} functions are, conceptually, thought as evaluating a function in parallel for each of the different members of their input. So, while in loops the results of earlier iterations through a loop can be stored in variables and used in subsequent iterations, this is not possible in the case of \emph{apply} functions.
+
+Apply functions can be thought as a convenience as they can be substituted by more verbose code based on \code{for} loops. However, being more specific in function and monolithic their use tends to produce \Rlang code that executes faster than explicit iteration loops.
 \end{explainbox}
 
 The different \emph{apply} functions in base \Rlang differ in the class of the values they accept for their \code{X} parameter, the class of the object they return and/or the class of the value returned by the applied function. \Rloop{lapply()} and \Rloop{sapply()} expect a \code{vector} or \code{list} as an argument passed through \code{X}. \Rloop{lapply()} returns a \code{list} or an \code{array}; and \Rloop{vapply()} always \emph{simplifies} its returned value into a vector, while \Rloop{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply an \Rlang function that returns a value of the same or a different class as its argument. In the case of \Rloop{apply()} and \Rloop{lapply()} not even the length of the values returned for each member of the collection passed as an argument, needs to be consistent. In summary, \Rloop{apply()} is used to apply a function to the elements along a dimension of an object that has two or more \emph{dimensions}, and \Rloop{lapply()} and \Rloop{sapply()} are used to apply a function to the members of a vector or list. \Rloop{apply()} returns an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function.
@@ -1472,9 +1486,13 @@ str(obj_lst)
 Think of possible uses of functions \Rfunction{assign()}, \Rfunction{get()} and \Rfunction{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
 \end{advplayground}
 
+More realistic use examples will given in chapter \ref{chap:R:data:io}
+
 \section{The multiple faces of loops}\label{sec:R:faces:of:loops}
 
-\ilAdvanced\ To close this chapter, I will mention some advanced aspects of the \Rlang language that are useful when writing complex scrips---if you are going through the book sequentially, you will want to return to this section after reading chapters \ref{chap:R:functions} and \ref{chap:R:statistics}. In the same way as we can assign names to \code{numeric}, \code{character} and other types of objects, we can assign names to functions and expressions. We can also create lists of functions and/or expressions. The \Rlang language has a very consistent grammar, with all lists and vectors behaving in the same way. The implication of this is that we can assign different functions or expressions to a given name, and consequently it is possible to write loops over lists of functions or expressions.
+\ilAdvanced\ To close this chapter, I describe some advanced uses of the \Rlang loops that can be useful when writing scrips. As these depend on function calls, if you are going through the book sequentially, you should skip this section and return to it after reading chapters \ref{chap:R:functions} and \ref{chap:R:statistics}.
+
+In the same way as we can assign names to \code{numeric}, \code{character} and other types of objects, we can assign names to functions and expressions. We can also create lists of functions and/or expressions. The \Rlang language has a very consistent grammar, with all lists and vectors behaving in the same way. The implication of this is that we can assign different functions or expressions to a given name, and consequently it is possible to write loops over lists of functions or expressions.
 
 In this first example we use a \emph{character vector of function names}, and use function \Rfunction{do.call()} as it accepts either character strings or function names as its first argument. We obtain a numeric vector with named members with names matching the function names.
 

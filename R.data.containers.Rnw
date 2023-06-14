@@ -14,8 +14,6 @@ The information that is available to the computer consists of a selected set of 
 \VA{Niklaus Wirth}{\emph{Algorithms + Data Structures = Programs}, 1976}\nocite{Wirth1976}
 \end{VF}
 
-%\dictum[Howard Aiken, \emph{Proposed automatic calculating machine}, presented to IBM in 1937]{The desire to economize time and mental effort in arithmetical computations, and to eliminate human liability to error, is probably as old as the science of arithmetic itself.}\vskip2ex
-
 \section{Aims of this chapter}
 
 Data-set organization and storage is one of the keys to efficient data analysis. How to keep together all the information that belongs together, say all measurements from an experiment and corresponding metadata such as treatments applied and/or dates. The title ``collective nouns'' is based on the idea that a data set is a collection of data objects.
@@ -36,12 +34,16 @@ Any \Rlang object can have attributes, allowing objects to carry along additiona
 
 \section{Lists}\label{sec:calc:lists}
 \index{lists|(}\qRclass{list}
-\emph{Lists'} main difference from vectors is, in \Rlang, that they can be heterogeneous. While the member elements of a vector must be \emph{atomic} values, any \Rlang object can be a list member. In \Rlang, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as members of vectors. Members of a list as well as members of a vector can be named, and retrieved (indexed) through their names. In practice, named lists are more frequently used than named vectors. Lists are created using function \Rfunction{list()} similarly as \Rfunction{c()} is used for vectors. Members of a list can be objects differing both in their class and in their size. Lists can be nested.
+\emph{Lists'} main difference from vectors is, in \Rlang, that they can be heterogeneous. While the member elements of a vector must be \emph{atomic} values, any \Rlang object can be a list member. In \Rlang, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as members of vectors. Members of a list as well as members of a vector can be named, and retrieved (indexed) through their names. In practice, named lists are more frequently used than named vectors. Lists are created using function \Rfunction{list()} similarly as \Rfunction{c()} is used for vectors. Members of a list can be objects differing both in their class and in their size. Lists can be nested to construct lists of lists.
 
 \begin{explainbox}
   In \Rlang lists can have as members not only objects storing data on observations and categories, but also function definitions, model formulas, unevaluated expressions, matrices, arrays, and objects of user defined classes.
 
   Differently to languages like \Clang, \Cpplang and \pascallang, \Rlang does not implement memory pointers or linked lists using pointers.
+\end{explainbox}
+
+\begin{explainbox}
+List and list-like objects are widely used in \Rlang because they make it possible to keep, for example, the data, instructions for operations and results from operations together in a single \Rlang object that can saved, copied, etc. as a unit. This avoid the proliferation of multiple disconnect objects with their interrelations being encoded only by their names, or even worse in separate notes or even in a person'd memory, all approaches that are error prone. Model fit functions described in chapter \ref{chap:R:statistics} are good examples of this approach. Objects used to store the instructions to build plots with multiple layers as described in chapter \ref{chap:R:plotting} is a further example.
 \end{explainbox}
 
 Our first list has as its members three different vectors, each one belonging to a different class: \code{numeric}, \code{character} and \code{logical}. The three vectors also differ in their length: 6, 1, and 2, respectively.
@@ -91,10 +93,10 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
 \end{center}
 
 \begin{warningbox}
-  With lists it is best to use informative names for indexing, as their members are heterogenous usually containing loosely related/connected data. Names make code easier to understand and mistakes more visible. Using names also makes code more robust to future changes in the position of fields in lists created upstream. Below, we use both positional indices and names to highlight the similarities between lists and vectors.
+  With lists it is best to use informative names for indexing, as their members are heterogenous usually containing loosely related/connected data. Names make code easier to understand and mistakes more visible. Using names also makes code more robust to future changes in the position of list members in lists created upstream of our own \Rlang code. Below, we use both positional indices and names to highlight the similarities between lists and vectors.
 \end{warningbox}
 
-Lists can behave as vectors with heterogeneous elements as members, as we will describe next. Lists can be nested, so tree-like structures are also possible (see section \ref{sec:calc:lists:nested} on page \pageref{sec:calc:lists:nested}).
+Lists can behave as vectors with heterogeneous elements as members, as we will describe next. Lists can also be nested, so tree-like structures are also possible (see section \ref{sec:calc:lists:nested} on page \pageref{sec:calc:lists:nested}).
 
 %{ \tikzstyle{every node}=[draw=black,thick,anchor=west,fill=blue!10]
 % \tikzstyle{root}=[dashed,fill=gray!50]
@@ -130,12 +132,19 @@ a.list[-1]
 a.list[c(-1, -3)]
 @
 
-Using operator \Roperator{[[ ]]} (double square brackets) for indexing a list extracts the element stored in the list, in its original mode. In the example below, \code{a.list[["x"]]} and \code{a.list[["x"]]} return a numeric vector. We might say that extraction operator \Roperator{[[ ]]} reaches ``deeper'' into the list than operator \Roperator{[ ]}.
+Using operator \Roperator{[[ ]]} (double square brackets) for indexing a list extracts the element stored in the list, in its original mode. In the example below, \code{a.list[["x"]]} and \code{a.list[[1]]} return a numeric vector. We might say that extraction operator \Roperator{[[ ]]} reaches ``deeper'' into the list than operator \Roperator{[ ]}.
 
 <<lists-1>>=
 a.list$x
 a.list[["x"]]
 a.list[[1]]
+@
+
+<<lists-1az>>=
+is.vector(a.list[1])
+is.list(a.list[1])
+is.vector(a.list[[1]])
+is.list(a.list[[1]])
 @
 
 The operators can be used together as shown below, with \code{a.list[[1]]} extracting the vector from \code{a.list} and \code{[3]} extracting the member at position 3 of the vector.
@@ -814,10 +823,16 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 
 \Rlang objects can have attributes. Attributes are named slots normally used to store ancillary data such as object properties. There are no restrictions on the class of what is assigned to an attribute. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. However, they are rarely displayed explicitly when an object is printed. They can be also used to store metadata accompanying the data stored in an object, which is important for reproducible research and data sharing.
 
+Although we rarely need to set or extract values stored in attributes explicitly, many of the features of \Rlang that we take for granted are implemented using attributes: columns names in data frames are stored in an attribute. Matrices are vectors with additional attributes.
+
+<<attributes-00>>=
+a.df <- data.frame(x = 1:6, y = c("a", "b"), z = c(TRUE, FALSE, NA))
+attributes(a.df)
+@
+
 Attribute \code{"comment"} is meant to be set by users to store a character string---e.g., to store metadata as text together with data. As comments are frequently used, \Rlang has functions for accessing and setting comments. \qRfunction{comment()}\qRfunction{comment()<-}
 
 <<attributes-01>>=
-a.df <- data.frame(x = 1:6, y = "a", z = c(TRUE, FALSE))
 comment(a.df)
 comment(a.df) <- "this is stored as a comment"
 comment(a.df)
@@ -851,13 +866,16 @@ attributes(a.df)
 @
 
 \begin{explainbox}
-The attributes used internally by \Rlang can be directly modified by user code. In most cases this is unnecessary as \Rlang provides pairs of functions to query and set the relevant attributes. This is true for the attributes \code{dim}, \code{names} and \code{levels}. In the example below we read the attributes from a vector.
+The attributes used internally by \Rlang can be directly modified by user code. In most cases this is unnecessary as \Rlang provides pairs of functions to query and set the relevant attributes. This is true for the attributes \code{dim}, \code{names} and \code{levels}. In the example below we read the attributes from a matrix.
 
 <<attibutes-ebx-01>>=
 M <- matrix(1:10, ncol = 2)
 M
 attr(M, "dim")
 attr(M, "dim") <- c(2, 5)
+M
+attr(M, "dim") <- NULL
+is.vector(M)
 M
 @
 

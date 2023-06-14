@@ -125,7 +125,7 @@ a
 
 \end{playground}
 
-\begin{explainbox}
+\begin{explainbox}\label{box:integer:float}
 In\index{numeric, integer and double values} \Rlang, all numbers belong to mode \Rclass{numeric} (we will discuss the concepts of \emph{mode} and \emph{class} in section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). We can query if the mode of an object is \Rclass{numeric} with function \Rfunction{is.numeric()}.
 
 <<classes-01>>=
@@ -134,7 +134,7 @@ a <- 1
 is.numeric(a)
 @
 
-Because numbers can be stored in different formats, requiring different amounts of computer memory per value, most computing languages implement several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} can be used everywhere that a number is expected. However, in some cases it has advantages to explicitly indicate that we will store or operate on whole numbers, in which case we can use class \Rclass{integer}, with integer constants indicated by a trailing capital ``L,'' as in  \code{32L}.
+Because numbers can be stored in different formats, most computing languages implement several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} values can be used everywhere that a number is expected. However, in some cases it has advantages to explicitly indicate that we will store or operate on whole numbers, in which case we can use class \Rclass{integer}, with integer constants indicated by a trailing capital ``L,'' as in  \code{32L}.
 
 <<classes-02>>=
 is.numeric(1L)
@@ -150,7 +150,6 @@ is.integer(1)
 is.double(1)
 @
 
-The name \code{double} originates from the \Clang language, in which there are different types of floats available. With the name \code{double} used to mean ``double-precision floating-point numbers.'' Similarly, the use of \code{L} stems from the \code{long} type in \Clang, meaning ``long integer numbers.''
 \end{explainbox}
 
 \index{vectors!introduction|(}\label{par:calc:vectors:diag}
@@ -557,75 +556,10 @@ What does value truncation mean? Function \Rfunction{trunc()} truncates a numeri
 
 \index{classes and modes!numeric, integer, double|)}\index{numbers and their arithmetic|)}
 
-\section{Logical values and Boolean algebra}\label{sec:calc:boolean}
-\index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
-What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). They are vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts''). There are also logical operators that allow Boolean algebra. In the chunk below we operate on \Rclass{logical} vectors of length one.
-
-<<logical-1>>=
-a <- TRUE
-b <- FALSE
-mode(a)
-a
-!a # negation
-a && b # logical AND
-a || b # logical OR
-xor(a, b) # exclusive OR
-@
-
-%%%% index operators using verb!!
-As with arithmetic operators, vectorization is available with \emph{some} logical operators. The availability of two kinds of logical operators is one of the most troublesome aspects of the \Rlang language for beginners. Pairs of ``equivalent'' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names \Roperator{\&} and \Roperator{\textbar}, while the non-vectorized ones have double-character names \Roperator{\&\&} and \Roperator{\textbar\textbar}. There is only one version of the negation operator \Roperator{!} that is vectorized. In recent versions of \Rlang, an error is triggered when a non-vectorized operator is used with a vector with length $> 1$.
-
-<<logical-2>>=
-a <- c(TRUE,FALSE)
-b <- c(TRUE,TRUE)
-a
-b
-a & b # vectorized AND
-a | b # vectorized OR
-@
-
-Functions \Rfunction{any()} and \Rfunction{all()} take zero or more logical vectors as their arguments, and return a single logical value ``summarizing'' the logical values in the vectors. Function \Rfunction{all()} returns \code{TRUE} only if all values in the vectors passed as arguments are \code{TRUE}, and \Rfunction{any()} returns \code{TRUE} unless all values in the vectors are \code{FALSE}.
-
-<<>>=
-any(a)
-all(a)
-any(a & b)
-all(a & b)
-@
-
-Another important thing to know about logical operators is that they ``short-cut'' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard protecting a later condition from being evaluated when it would trigger an error.
-
-<<logical-3>>=
-TRUE || NA
-FALSE || NA
-TRUE && NA
-FALSE && NA
-TRUE && FALSE && NA
-TRUE && TRUE && NA
-@
-
-When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained at each index position.
-
-<<logical-4>>=
-a & b & NA
-a & b & c(NA, NA)
-a | b | c(NA, NA)
-@
-
-\begin{playground}
-Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to devise several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
-
-<<logical-PG01,eval=eval_playground>>=
-x <- c(TRUE, FALSE, TRUE, NA)
-x & FALSE
-x | c(TRUE, FALSE)
-@
-
-\end{playground}
-\index{logical values and their algebra|)}
-\section{Comparison operators and operations}
+\section{Comparison operators and operations}\label{sec:calc:comparison}
 \index{comparison operators|(}\index{operators!comparison|(}\qRoperator{>}\qRoperator{<}\qRoperator{>=}\qRoperator{<=}\qRoperator{==}\qRoperator{!=}
-Comparison operators return vectors of \code{logical} values as results.
+Comparison operators return vectors of \code{logical} values (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}),
+with values \code{TRUE} or \code{FALSE} depending on the outcome.
 
 <<comparison-1>>=
 1.2 > 1.0
@@ -695,23 +629,37 @@ any(c > 20, na.rm=TRUE)
 
 \begin{explainbox}
 \label{box:floats} \label{par:float}
+\index{integer numbers!arithmetic|(}\index{double precision numbers!arithmetic|(}
 \index{floating point numbers!arithmetic|(}\index{machine arithmetic!precision|(}
-\index{floats|see{floating point numbers}}\index{machine arithmetic!rounding errors}\index{Real numbers and computers}
+\index{floats|see{floating point numbers}}\index{machine arithmetic!rounding errors}\index{Real numbers and computers}\index{Integer numbers and computers}
 \index{EPS ($\epsilon$)|see{machine arithmetic precision}}%
-Here I give some examples for which the finite resolution of computer machine floats, as compared to Real numbers as defined in mathematics, can cause serious problems. In \Rpgrm, numbers that are not integers are stored as \emph{double-precision floats}. In addition to having limits to the largest and smallest numbers that can be represented, the precision of floats is limited by the number of significant digits that can be stored. Precision is usually described by ``epsilon'' ($\epsilon$), abbreviated \emph{eps}, defined as the largest value of $\epsilon$ for which $1 + \epsilon = 1$. The finite resolution of floats can lead to unexpected results when testing for equality. In the second example below, the result of the subtraction is still exactly 1 due to insufficient resolution.
+The usual way to store numerical values in computers is to reserve a fixed amount of space in memory for each value, which imposes limits on which numbers can be represented or not, and the maximum precision that can be achieved. The difference between \Rclass{integer} amd \Rclass{double} is explained on page \pageref{box:integer:float}. Integers, or ``whole numbers'', like \Rlang \Rclass{integer} values are stored always with the same resolution such that the smallest difference between two integer values is 1. The amount of memory available to store an individual value creates a limit for the size of largest and smallest values that can be represented. Thus integers in \Rlang behave like Integers as defined in mathematics, but constrained to a restricted finite range of values. In computing languages like \Clang different types of integer numbers are available \code{short} and \code{long}, these differ in the size of the space reserved for them in memory. \Rlang \Rclass{integer} type is equivalent to \code{long} in \Clang, thus the use of \code{L} for integer constant values like \code{5L}.
+
+Floating point numbers like \Rlang \Rclass{double} values are stored in two parts an integer \emph{significand} and an integer \emph{exponent}, each part using a fixed amount of space in memory. The relative resolution is constrained by the number of digits that can be stored in the significand while the absolute size of the largest and smallest numbers that can be represented is limited by the largest and smallest values that fit in the memory reserved for the exponent. In computing languages like \Clang different types of floating point numbers are available, these differ in the size of the space reserved for them in memory. The properties of Real numbers as defined in mathematics differ from floating point numbers in assuming unlimited resolution and unlimited range of representable values.
+
+In \Rpgrm, numbers that are not integers are stored as \emph{double-precision floats}. Precision of numerical values in computers is usually described by ``epsilon'' ($\epsilon$), abbreviated \emph{eps}, defined as the largest value of $\epsilon$ for which $1 + \epsilon = 1$. In the second example below, the result of the subtraction is exactly 1 due to insufficient resolution in the returned value, while in the first case there is no loss of information.
 
 <<numbers-EB9>>=
 0 - 1e-20
 1 - 1e-20
 @
 
-The finiteness of floats also affects tests of equality, which is more likely to result in errors with important consequences.
+The finite resolution of floats can lead to unexpected results when testing for equality or inequality.
 
 <<comparison-5>>=
 1e20 == 1 + 1e20
 1 == 1 + 1e-20
 0 == 1e-20
 @
+
+Another way of revealing the limited precision is during conversion to \code{character}.
+
+<<numbers-EB10>>=
+format(5.123, digits = 16) # near maximun resolution
+format(5.123, digits = 22) # more digits than in resolution
+@
+
+More likely to be a problem in real use of \Rlang is the accumulation of successive small losses in precision from multiple operations on \Rlang \code{double} values. Thus when computations involve both very large and very small numbers, the returned value can depend on the order of the operations. In practice ordinary users rarely need to be concerned about losses in precision except when testing for equality and inequality. On the other hand, finite resolution of \code{double} numerical values can explain why sometimes returned values for equivalent computations differ, and why some computation algorithm may be preferable, or even fail, in specific cases.
 
 As \Rpgrm can run on different types of computer hardware, the actual machine limits for storing numbers in memory may vary depending on the type of processor and even compiler used to build the \Rpgrm program executable. However, it is possible to obtain these values at run time from the variable \code{.Machine}, which is part of the \Rlang language. Please see the help page for \code{.Machine} for a detailed and up-to-date description of the available constants.\qRconst{.Machine\$double.eps}\qRconst{.Machine\$double.neg.eps}\qRconst{.Machine\$double.max}\qRconst{.Machine\$double.min}
 
@@ -753,6 +701,8 @@ We see next that the exponentiation operator \Roperator{\^{}} forces the promoti
 2147483600L * 2147483600L
 2147483600L^2L
 @
+
+\index{integer numbers!arithmetic|)}\index{double precision numbers!arithmetic|)}
 \index{floating point numbers!arithmetic|)}\index{machine arithmetic!precision|)}
 \end{explainbox}
 
@@ -777,6 +727,104 @@ sin(2 * pi)
 \end{warningbox}
 
 \index{comparison operators|)}\index{operators!comparison|)}
+
+\section{Logical values and Boolean algebra}\label{sec:calc:boolean}
+\index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
+What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). Logical values \code{TRUE} and \code{FALSE} should not be confused with text strings, they are names for the two conditions that can be stored. Logical values are always vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts'').
+
+Logical values are used mostly to keep track of binary conditions, like results from comparisons, and operate on them. In mathematics, Boolean algebra provides the rules of the logic used to combine multiple logical values. Boolean operators like AND and OR take as operands logical values and return a logical value as a result 
+
+In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
+
+<<logical-1>>=
+a <- TRUE
+b <- FALSE
+mode(a)
+a
+!a # negation
+a && b # logical AND
+a || b # logical OR
+xor(a, b) # exclusive OR
+@
+
+%%%% index operators using verb!!
+The availability of two kinds of logical operators is one of the most troublesome aspects of the \Rlang language for beginners. Pairs of ``equivalent'' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names \Roperator{\&} and \Roperator{\textbar}, while the non-vectorized ones have double-character names \Roperator{\&\&} and \Roperator{\textbar\textbar}. There is only one version of the negation operator \Roperator{!} that is vectorized. In recent versions of \Rlang, an error is triggered when a non-vectorized operator is used with a vector with length $> 1$, which helps prevent mistakes.
+
+<<logical-2>>=
+a <- c(TRUE,FALSE)
+b <- c(TRUE,TRUE)
+a
+b
+a & b # vectorized AND
+a | b # vectorized OR
+@
+
+\begin{explainbox}
+Obviously binary values can be also stored as 0's and 1's, or as any other two numbers, in a \code{numeric} vector, or as text strings in a \code{character} vector. The point of using \Rclass{logical} values is that they support the operations of the Boolean algebra.
+
+For example to test if members of a numeric vector are within a range, in our example, -1 to +1, we can combine the results from two comparisons using the vectorized logical AND operator \Roperator{\&}.
+
+<<logical-2a>>=
+c <- -2:3
+c >= -1 & c <= 1
+@
+
+If we want to find those values outside this same range, we can negate the test.
+
+<<logical-2b>>=
+c <- -2:3
+!(c >= -1 & c <= 1)
+@
+
+Or we can combine another two comparisons using the vectorized logical OR operator \Roperator{\textbar}.
+
+<<logical-2c>>=
+c <- -2:3
+c < -1 | c > 1
+@
+
+In some cases an additional advantage is that \Rclass{logical} values require less space in memory for their storage than \code{numeric} values.
+\end{explainbox}
+
+Functions \Rfunction{any()} and \Rfunction{all()} take zero or more logical vectors as their arguments, and return a single logical value ``summarizing'' the logical values in the vectors. Function \Rfunction{all()} returns \code{TRUE} only if all values in the vectors passed as arguments are \code{TRUE}, and \Rfunction{any()} returns \code{TRUE} unless all values in the vectors are \code{FALSE}.
+
+<<>>=
+any(a)
+all(a)
+any(a & b)
+all(a & b)
+@
+
+Another important thing to know about logical operators is that they ``short-cut'' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard protecting a later condition from being evaluated when it would trigger an error.
+
+<<logical-3>>=
+TRUE || NA
+FALSE || NA
+TRUE && NA
+FALSE && NA
+TRUE && FALSE && NA
+TRUE && TRUE && NA
+@
+
+When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained at each index position.
+
+<<logical-4>>=
+a & b & NA
+a & b & c(NA, NA)
+a | b | c(NA, NA)
+@
+
+\begin{playground}
+Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to devise several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
+
+<<logical-PG01,eval=eval_playground>>=
+x <- c(TRUE, FALSE, TRUE, NA)
+x & FALSE
+x | c(TRUE, FALSE)
+@
+
+\end{playground}
+\index{logical values and their algebra|)}
 \index{classes and modes!logical|)}
 
 \section{Sets and set operations}
@@ -1890,7 +1938,7 @@ A * 0:1
 A * 1:0
 @
 
-In the examples above with the usual multiplication operator \code{*}, the operation described is not a matrix product, but instead, the products between individual elements of the matrix and vectors. Matrix multiplication is indicated by operator \Roperator{\%*\%}.\index{matrix!multiplication}
+In the examples above with the usual multiplication operator \code{*}, the operation described is not a matrix product, but instead, the products between individual elements of the matrix and vectors. Operators and functions implementing the operations of matrix algebra are available. Matrix algebra gives the rules for operations where operands are whole matrices. For example, matrix multiplication is indicated by operator \Roperator{\%*\%}. \index{matrix!multiplication}
 
 <<matrix-33>>=
 B <- matrix(1:16, ncol = 4)
