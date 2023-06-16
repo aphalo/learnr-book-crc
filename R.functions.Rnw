@@ -384,15 +384,22 @@ A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconduct
 
 One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox.'' How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
 
-\subsection{Download, installation and use}
+\subsection{Download, installation and use}\label{sec:packages:install}
 
 \index{packages!using}
-In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages. When using \RStudio it is easiest to use \RStudio menus (which call \Rfunction{install.packages()} and \Rfunction{update.packages()}) to freshly install packages or to update already installed packages to their current version.
+In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages.
+
+\begin{faqbox}{How to install or update a package from CRAN?}
+CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
+
+Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can called with the name of the package as argument. For example, to install package ’learnrbook’ we use.
 
 <<pkg-00, eval=FALSE>>=
-install("learnrbook")
-library("learnrbook")
+install.packages("learnrbook")
 @
+
+Already installed packages are updated with function \Rfunction{update.packages()}.
+\end{faqbox}
 
 \Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in installers (you will need \pgrmname{RTools}, and \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}). It is easier to install packages from binary \texttt{.zip} files under \pgrmname{MS-Windows}. Under Linux most tools will be available, or very easy to install, so it is usual to install packages from sources. For \pgrmname{OS X} (Apple Mac) the situation is somewhere in-between. If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available.
 
@@ -401,8 +408,22 @@ Use \code{help} to look up the help page for \Rfunction{install.packages()}, and
 \end{advplayground}
 
 \begin{infobox}
-  Frequently the README file of a package includes instructions on how to install it from CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file.
+Frequently the README file of a package includes instructions on how to install it from CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file.
 \end{infobox}
+
+\begin{faqbox}{How to change the default repository?}
+Function \Rfunction{setRepositories()} can be used to enable other repositories than CRAN interactively. 
+In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
+\end{faqbox}
+
+\begin{faqbox}{How to use a package?}
+To use the functions and other objects defined in a package, the package must first be loaded, and for the names of these objects to be visible in the user's workspace, the package needs to be attached. Function \Rfunction{library()} loads and attaches one package at a time. For example, to load and attach package 'learnrbook' we use.
+
+<<pkg-00a, eval=FALSE>>=
+library("learnrbook")
+@
+
+\end{faqbox}
 
 As packages are contributed by independent authors, they should be cited in addition to citing \Rpgrm itself when they are used to obtain results or plots included in publications. \Rlang function \Rfunction{citation()} when called with the name of a package as its argument provides the reference that should be cited for the package, and without an explicit argument, the reference to cite for the version of \Rlang in use as shown below.
 
@@ -413,6 +434,10 @@ citation()
 \begin{playground}
   Look at the help page for function \code{citation()} for a discussion of why it is important for users to cite \Rpgrm and packages when using them.
 \end{playground}
+
+\begin{warningbox}
+Conflicts among packages can easily arise, for example, when they use the same names for objects or functions. These are reported when the packages are attached (see section \ref{sec:packages:work} on page \pageref{sec:packages:work} for a workaround). In addition, many packages use functions defined in packages in the \Rlang distribution itself or other independently developed packages by importing them. Updates to depended-upon packages can ``break'' (make non-functional) the dependent packages or parts of them. The rigorous testing by \CRAN detects such problems in most cases when package revisions are submitted, forcing package maintainers to fix problems before distribution through \CRAN is possible. However, if you use other repositories, I recommend that you make sure that revised (especially if under development) versions do work with your own code, before their use in ``production'' (important) data analyses.
+\end{warningbox}
 
 \subsection{Finding suitable packages}
 
@@ -437,11 +462,11 @@ An additional important thing to remember is that \Rlang packages define all obj
 If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached. To avoid confusion in such cases, in scripts it is best to use the qualified names for calling all the objects defined with the same name in the two package, or attaching only one of the packages and using qualified names for all the objects exported by the other package.
 
 \begin{infobox}
-In one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library}, the package is only loaded. In other words, the names of the objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
+If one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library}, the package is only loaded. In other words, the names of the objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
 \end{infobox}
 
 \begin{infobox}
-Some functions that are part of \Rlang are collected into packages grouped by category: \pkgname{stats}, \pkgname{datasets}, etc., and can be called when needed used qualified names. even functions like \Rfunction{list()} can be called as \code{base::list()} if they cannot be accessed directly because of the presence of other objects with the same name being present in the global environment, or having priority.  We can find out the search order by calling \Rfunction{search()}, with the search starting at the \code{".GlobalEnv"} for statements evaluated at the R command line.
+Some functions that are part of \Rlang are collected into packages grouped by category: \pkgname{stats}, \pkgname{datasets}, etc., and can be called when needed using qualified names. even functions like \Rfunction{list()} can be called as \code{base::list()} if they cannot be accessed directly because of the presence of other objects with the same name being present in the global environment, or having priority.  We can find out the search order by calling \Rfunction{search()}, with the search starting at the \code{".GlobalEnv"} for statements evaluated at the R command line.
 \end{infobox}
 
 \begin{explainbox}
