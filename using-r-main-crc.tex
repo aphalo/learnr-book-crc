@@ -6681,7 +6681,48 @@ Function \Rfunction{unsplit()} can be used to reverse splitting by \Rfunction{sp
 \Rfunction{split()} is sometimes used in combination with apply functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) to compute group or treatment summaries. However, in most cases it is simpler to use \Rfunction{aggregate()} for computing such summaries.
 \end{explainbox}
 
-When\index{data frames!summarizing} using \Rfunction{aggregate()}, the \emph{lhs} of the formula indicates the variable to summarize and the \emph{rhs} the factor used to split the data before summarizing them.
+Related to splitting a data frame is the calculation of summaries based on a subset of cases, or more commonly summaries for all observations but after grouping them based on the values in a column or the levels of a factor.
+
+\begin{faqbox}{How to summarize one variable from a data frame by group?}
+To summarize a single variable by group we can use \Rfunction{aggregate()}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{aggregate}\hlstd{(}\hlkwc{x} \hlstd{= iris}\hlopt{$}\hlstd{Petal.Length,} \hlkwc{by} \hlstd{=} \hlkwd{list}\hlstd{(iris}\hlopt{$}\hlstd{Species),} \hlkwc{FUN} \hlstd{= mean)}
+\end{alltt}
+\begin{verbatim}
+##      Group.1     x
+## 1     setosa 1.462
+## 2 versicolor 4.260
+## 3  virginica 5.552
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{faqbox}
+
+\begin{faqbox}{How to summarize numeric variables from a data frame by group?}
+To summarize variables we can use \Rfunction{aggregate()} (see section \ref{sec:dplyr:group:wise} on page \pageref{sec:dplyr:group:wise} for an alternative approach using package \pkgnameNI{dplyr}).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{aggregate}\hlstd{(}\hlkwc{x} \hlstd{= iris[ ,} \hlkwd{sapply}\hlstd{(iris, is.numeric)],} \hlkwc{by} \hlstd{=} \hlkwd{list}\hlstd{(iris}\hlopt{$}\hlstd{Species),} \hlkwc{FUN} \hlstd{= mean)}
+\end{alltt}
+\begin{verbatim}
+##      Group.1 Sepal.Length Sepal.Width Petal.Length Petal.Width
+## 1     setosa        5.006       3.428        1.462       0.246
+## 2 versicolor        5.936       2.770        4.260       1.326
+## 3  virginica        6.588       2.974        5.552       2.026
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+For these data as the only non-numeric variable is \code{Species} we could have also used formula notation as shown below.
+\end{faqbox}
+
+There\index{data frames!summarizing} is also a formula-based \Rfunction{aggregate()} method available (\Rlang \emph{formulas} are described in depth in section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas}). When using this method, the left hand side (\emph{lhs}) of the formula indicates the variable to summarize and the right hand side (\emph{rhs}) the factor used to split the data before summarizing them.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -6725,59 +6766,115 @@ If all the columns not used for grouping are valid input to the function passed 
 \end{knitrout}
 
 \begin{infobox}
-Function \Rfunction{aggregate()} can be also used to aggregate time series data based on time intervals.
+Function \Rfunction{aggregate()} can be also used to aggregate time series data based on time intervals (see \code{help(aggregate)}).
 \end{infobox}
 
 \subsection{Re-arranging columns and rows}
 \index{data frames!ordering rows}\index{data frames!ordering columns}
-The most direct way of changing the order of columns and/or rows in data frames (and matrices and arrays) is to use subscripting as described above. Once we know the original position and target position we can use numerical indexes on both right-hand side and left-hand side of an assignment.
+As with members of vectors and lists, to change the position of columns or row in a data frame we use the extraction operator and indexing by name or position. In a matrix-like object, such as data frames the first index corresponds to rows and the second to columns.
 
-\begin{warningbox}
-When using the extraction operator \Roperator{[ ]} on both the left-hand-side and right-hand-side to swap columns, the vectors or factors are swapped, while the names of the columns are not! The same applies to row names, which makes storing important information in them inconvenient and error prone.
-\end{warningbox}
-
-To retain the correspondence between column naming and column contents after swapping or rearranging the columns, we need to separately move the names of the columns. This seems counter intuitive, unless we think in terms of positions being named rather than the contents of the columns being linked to the names.
+The most direct way of changing the order of columns and/or rows in data frames (and matrices and arrays) is to use subscripting. Once we know the original position and target position we can use column names or positions as indexes on the right-hand side, listing all columns to be retained, even those remaining at their original position.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{my_data_frame.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{A} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{B} \hlstd{=} \hlnum{3}\hlstd{)}
+\hlstd{my_data_frame.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{A} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{B} \hlstd{=} \hlnum{3}\hlstd{,} \hlkwc{C} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{))}
 \hlkwd{head}\hlstd{(my_data_frame.df,} \hlnum{2}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##   A B
-## 1 1 3
-## 2 2 3
+##   A B C
+## 1 1 3 A
+## 2 2 3 B
+\end{verbatim}
+\begin{alltt}
+\hlstd{my_data_frame.df} \hlkwb{<-} \hlstd{my_data_frame.df[ ,} \hlkwd{c}\hlstd{(}\hlstr{"B"}\hlstd{,} \hlstr{"A"}\hlstd{,} \hlstr{"C"}\hlstd{)]}
+\hlkwd{head}\hlstd{(my_data_frame.df,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   B A C
+## 1 3 1 A
+## 2 3 2 B
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{warningbox}
+When using the extraction operator \Roperator{[ ]} on both the left-hand-side and right-hand-side with a \code{numeric} vector as argument to swap two columns, the vectors or factors are swapped, while the names of the columns are not!
+To retain the correspondence between column naming and column contents after swapping or rearranging the columns \emph{using numeric indices}, we need to separately move the names of the columns. This may seem counter intuitive, unless we think in terms of positions being named rather than the contents of the columns being linked to the names.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{my_data_frame.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{A} \hlstd{=} \hlnum{1}\hlopt{:}\hlnum{10}\hlstd{,} \hlkwc{B} \hlstd{=} \hlnum{3}\hlstd{,} \hlkwc{C} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"A"}\hlstd{,} \hlstr{"B"}\hlstd{))}
+\hlkwd{head}\hlstd{(my_data_frame.df,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   A B C
+## 1 1 3 A
+## 2 2 3 B
 \end{verbatim}
 \begin{alltt}
 \hlstd{my_data_frame.df[ ,} \hlnum{1}\hlopt{:}\hlnum{2}\hlstd{]} \hlkwb{<-} \hlstd{my_data_frame.df[ ,} \hlnum{2}\hlopt{:}\hlnum{1}\hlstd{]}
 \hlkwd{head}\hlstd{(my_data_frame.df,} \hlnum{2}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##   A B
-## 1 3 1
-## 2 3 2
+##   A B C
+## 1 3 1 A
+## 2 3 2 B
 \end{verbatim}
 \begin{alltt}
 \hlkwd{colnames}\hlstd{(my_data_frame.df)[}\hlnum{1}\hlopt{:}\hlnum{2}\hlstd{]} \hlkwb{<-} \hlkwd{colnames}\hlstd{(my_data_frame.df)[}\hlnum{2}\hlopt{:}\hlnum{1}\hlstd{]}
 \hlkwd{head}\hlstd{(my_data_frame.df,} \hlnum{2}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##   B A
-## 1 3 1
-## 2 3 2
+##   B A C
+## 1 3 1 A
+## 2 3 2 B
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort rows of a data frame. In this case, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}. Function \Rfunction{order()} is very rarely useful for sorting columns of data frames as it requires a vector across columns as input, which is possible only when all columns are of the same class. In the case of \Rclass{matrix} and \Rclass{array} this approach can be applied to any of their dimensions as all their elements homogenously belong to one class.
+\end{warningbox}
 
-\begin{playground}\index{data frames!ordering rows}
-The first task to be completed is to sort a data frame based on the values in one column, using indexing and \Rfunction{order()}. Create a new data frame and with three numeric columns with three different haphazard sequences of values. Call these columns \code{A}, \code{B} and \code{C}. 1) Sort the rows of the data frame so that the values in \code{A} are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of \code{A} and \code{B} without adding a new column to the data frame or storing the vector of sums in a variable. In other words, do the sorting based on sums calculated on the fly.
-\end{playground}
+Taking into account that \Rfunction{order()} returns the indexes needed to sort a vector (see page \pageref{box:vec:sort}), we can use \Rfunction{order()} to generate the indexes needed to sort rows of a data frame. In this case, the argument to \Rfunction{order()} is usually a column of the data frame being arranged. However, any vector of suitable length, including the result of applying a function to one or more columns, can be passed as an argument to \Rfunction{order()}. Function \Rfunction{order()} is not useful for sorting columns of data frames \emph{based on data} as it requires a vector across columns as input, which is possible only when all columns are of the same class. (In the case of \Rclass{matrix} and \Rclass{array} this approach can be applied to any of their dimensions as all their elements homogenously belong to one class.)
+
+\begin{faqbox}{How to order columns or rows in a data frame?}
+We use column names or numeric indexes with the extraction operator \Roperator{[ ]} only on the \emph{rhs} of the assignment. For example, to arrange the columns of data set \code{iris} in decreasing alphabetical order, we use \Rfunction{sort()} as shown, or \Rfunction{order()} (see page \pageref{box:vec:sort}).
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{sorted_cols_iris} \hlkwb{<-} \hlstd{iris[ ,} \hlkwd{sort}\hlstd{(}\hlkwd{colnames}\hlstd{(iris),} \hlkwc{decreasing} \hlstd{=} \hlnum{TRUE}\hlstd{)]}
+\hlkwd{head}\hlstd{(sorted_cols_iris,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   Species Sepal.Width Sepal.Length Petal.Width Petal.Length
+## 1  setosa         3.5          5.1         0.2          1.4
+## 2  setosa         3.0          4.9         0.2          1.4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Similarly we use values in a column as argument to \Rfunction{order()} to obtain the \code{numeric} indices to sort rows.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{sorted_rows_iris} \hlkwb{<-} \hlstd{iris[}\hlkwd{order}\hlstd{(iris}\hlopt{$}\hlstd{Petal.Length), ]}
+\hlkwd{head}\hlstd{(sorted_rows_iris,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## 23          4.6         3.6          1.0         0.2  setosa
+## 14          4.3         3.0          1.1         0.1  setosa
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\end{faqbox}
 
 \begin{advplayground}\index{data frames!ordering rows}
-Repeat the tasks in the playground immediately above but using factors instead of numeric vectors as columns in the data frame. Hint: revisit the exercise on page \pageref{calc:ADVPG:order:sort} were the use of \Rfunction{order()} on factors is described.
+Create a new data frame and with three numeric columns with three different haphazard sequences of values and a factor with two levels. Call these columns \code{A}, \code{B}, \code{C} and \code{F}. 1) Sort the rows of the data frame so that the values in \code{A} are in decreasing order. 2) Sort the rows of the data frame according to increasing values of the sum of \code{A} and \code{B} without adding a new column to the data frame or storing the vector of sums in a variable. In other words, do the sorting based on sums calculated on the fly. Sort the rows by level of factor \code{F} and finally by factor level and by value of \code{B}  within each factor level. Hint: revisit the exercise on page \pageref{calc:ADVPG:order:sort} were the use of \Rfunction{order()} on factors is described.
 \end{advplayground}
 
 \subsection{Re-encoding or adding variables}
@@ -8059,12 +8156,12 @@ Addition of computed variables to a data frame using \Rfunction{within()} and se
   \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= _, is.large)}
 \end{alltt}
 \begin{verbatim}
-##     x           y is.large    x4
-## 6   6 -0.07046070     TRUE  1296
-## 7   7  0.34507095     TRUE  2401
-## 8   8  0.25773567     TRUE  4096
-## 9   9  1.61699829     TRUE  6561
-## 10 10 -0.09766743     TRUE 10000
+##     x          y is.large    x4
+## 6   6  0.5718450     TRUE  1296
+## 7   7 -1.2915757     TRUE  2401
+## 8   8 -0.1381356     TRUE  4096
+## 9   9 -2.4026917     TRUE  6561
+## 10 10 -1.0059942     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8083,12 +8180,12 @@ Subset can be also used to select variables or columns from data frames and matr
   \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= _, is.large,} \hlkwc{select} \hlstd{=} \hlopt{-}\hlstd{x)}
 \end{alltt}
 \begin{verbatim}
-##             y is.large    x4
-## 6   1.1093836     TRUE  1296
-## 7   0.5756689     TRUE  2401
-## 8  -0.9052479     TRUE  4096
-## 9   1.1228269     TRUE  6561
-## 10 -1.9716532     TRUE 10000
+##              y is.large    x4
+## 6  -0.85036990     TRUE  1296
+## 7  -0.07157262     TRUE  2401
+## 8   0.38700736     TRUE  4096
+## 9  -0.21388127     TRUE  6561
+## 10  2.24440271     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8106,21 +8203,19 @@ Subset can be also used to select variables or columns from data frames and matr
 \end{alltt}
 \begin{verbatim}
 ##             y    x4
-## 1  -0.8158590     1
-## 2   1.4286601    16
-## 3   1.3933686    81
-## 4   0.5420552   256
-## 5   1.0968828   625
-## 6   0.4643120  1296
-## 7   1.1948137  2401
-## 8  -0.1717651  4096
-## 9  -0.3038139  6561
-## 10  0.4525170 10000
+## 1  -0.7657260     1
+## 2  -0.1261843    16
+## 3  -1.4015739    81
+## 4  -0.2358699   256
+## 5   0.3507269   625
+## 6  -1.6268950  1296
+## 7  -0.8393992  2401
+## 8  -0.6170822  4096
+## 9  -0.0156147  6561
+## 10  0.3527860 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-
-To summarize variables we can use \Rfunction{aggregate()}.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -8131,9 +8226,9 @@ To summarize variables we can use \Rfunction{aggregate()}.
   \hlkwd{aggregate}\hlstd{(}\hlkwc{data} \hlstd{= _, y} \hlopt{~} \hlstd{group, mean)}
 \end{alltt}
 \begin{verbatim}
-##   group           y
-## 1    T1 -0.05619322
-## 2    T2 -0.04847054
+##   group          y
+## 1    T1 -0.1130716
+## 2    T2  0.2649496
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8150,7 +8245,7 @@ Although the extraction operators are not accepted on the rhs of a pipe, functio
   \hlkwd{getElement}\hlstd{(}\hlstr{"y"}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.1307622  0.1605293
+## [1] 0.09604261 0.71667397
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9131,7 +9226,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.25    0.03    0.28
+##    0.28    0.03    0.32
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -10274,7 +10369,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x000001f3c27e5a98>
+## <bytecode: 0x0000014a95e11d58>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -10359,7 +10454,7 @@ Next we print the definition of \Rlang's linear model fitting function \code{lm(
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x000001f3c497b8b8>
+## <bytecode: 0x0000014a9b238460>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -10494,7 +10589,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001f3c3e275a8>
+## <bytecode: 0x0000014a9848e5e8>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -10775,7 +10870,7 @@ In the example above, the two variables are not defined in the same scope. In th
 \index{extensions to R}
 The most elegant way of adding new features or capabilities to \Rlang is through packages. This is without doubt the best mechanism when these extensions to \Rlang need to be shared. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
 
-Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was 19688.
+Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was 19687.
 
 A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for R packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the ROpenScience website (\url{https://ropensci.org/}). In some cases you may need or want to install less stable code from Git repositories such as versions still under development not yet submitted to \CRAN. Using the package \pkgname{devtools} we can install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. Installations from code repositories are always installations from sources (see below). It is of course also possible to install packages from local files (e.g.,  after a manual download).
 
@@ -10812,12 +10907,12 @@ Use \code{help} to look up the help page for \Rfunction{install.packages()}, and
 Frequently the README file of a package includes instructions on how to install it from CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file.
 \end{infobox}
 
-\begin{faqbox}{How to change the default repository?}
-Function \Rfunction{setRepositories()} can be used to enable other repositories than CRAN interactively. 
+\begin{faqbox}{How to change the repository used to install packages?}
+Function \Rfunction{setRepositories()} can be used to enable other repositories than CRAN interactively.
 In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
 \end{faqbox}
 
-\begin{faqbox}{How to use a package?}
+\begin{faqbox}{How to use an installed package?}
 To use the functions and other objects defined in a package, the package must first be loaded, and for the names of these objects to be visible in the user's workspace, the package needs to be attached. Function \Rfunction{library()} loads and attaches one package at a time. For example, to load and attach package 'learnrbook' we use.
 
 \begin{knitrout}\footnotesize
@@ -10958,7 +11053,7 @@ In the example above I used a data frame object, but the same mechanisms apply t
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001f3c3e275a8>
+## <bytecode: 0x0000014a9848e5e8>
 ## <environment: namespace:base>
 \end{verbatim}
 \begin{alltt}
@@ -11334,9 +11429,10 @@ In addition to drawing values from a theoretical distribution, we can draw value
 \end{kframe}
 \end{knitrout}
 
-In practice, pseudo-random sampling is useful when we need to select subsets of observations. One such case is  assigning treatments to experimental units in an experiment or selecting persons to interview in a survey. Another use is in bootstrapping to estimate variation in parameter estimates using empirical distributions.
+In practice, pseudo-random sampling is useful when we need to select subsets of observations. One such case is assigning treatments to experimental units in an experiment or selecting persons to interview in a survey. Another use is in bootstrapping to estimate variation in parameter estimates using empirical distributions.
 
-As described in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, data frames are commonly used to store one observation per row. To sample a subset of rows we need to generate a random set of indices to use with the extraction operator (\Roperator{[ ]}). In the final example we sample four rows from data frame \code{cars} included in \Rlang. These data consist of stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
+\begin{faqbox}{How to sample random rows from a data frame?}
+As described in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, data frames are commonly used to store one observation per row. To sample a subset of rows we need to generate a random set of indices to use with the extraction operator (\Roperator{[ ]}). Here we sample four rows from data frame \code{cars} included in \Rlang. These data consist of stopping distances for cars moving at different speeds as described in the documentation available by entering \code{help(cars)}).
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -11352,6 +11448,8 @@ As described in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:fram
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
+
+\end{faqbox}
 
 \begin{advplayground}
 Consult the documentation of \Rfunction{sample()} and explain why the code below is equivalent to that in the example immediately above.
@@ -15461,7 +15559,7 @@ Function \Rfunction{rename()} can be used to rename columns, whereas base \Rlang
 \end{knitrout}
 \index{row-wise operations on data|)}
 
-\subsection{Group-wise manipulations}
+\subsection{Group-wise manipulations}\label{sec:dplyr:group:wise}
 \index{group-wise operations on data|(}
 
 Another important operation is to summarize quantities by groups of rows. Contrary to base \Rlang, the grammar of data manipulation, splits this operation in two: the setting of the grouping, and the calculation of summaries. This simplifies the code, making it more easily understandable when using pipes compared to the approach of base \Rlang \Rfunction{aggregate()}, and it also makes it easier to summarize several columns in a single operation.
@@ -20876,9 +20974,9 @@ Base \Rlang provides several functions for portably working with files, and they
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2023-06-17 01:53:22 2023-06-17 01:53:22
+## xxx.txt    0 FALSE  666 2023-06-18 00:41:13 2023-06-18 00:41:13
 ##                       atime exe
-## xxx.txt 2023-06-17 01:53:22  no
+## xxx.txt 2023-06-18 00:41:13  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
