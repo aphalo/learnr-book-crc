@@ -291,14 +291,14 @@ How can \emph{pipes} exist within a single \Rlang script? When chaining function
 
 What do pipes achieve in \Rlang scripts? They relieve us from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Pipes usually improve readability of scripts by allowing more concise code.
 
-Since year 2021, starting from version 4.1.0, \Rlang includes a native pipe operator (\Roperator{\textbar >}) as part of the language. Subsequently, the placeholder (\code{\_}) was implemented in version 4.2.0. Another two implementations of pipes, that have been available as \Rlang extensions for some years in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}, are described in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
+Since year 2021, starting from version 4.1.0, \Rlang includes a native pipe operator (\Roperator{\textbar >}) as part of the language. Subsequently, the placeholder (\code{\_}) was implemented in version 4.2.0 and its functionality expanded in version 4.3.0. Another two implementations of pipes, that have been available as \Rlang extensions for some years in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}, are described in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
 
-We describe R's pipe syntax based on R 4.2.0. We start by showing the same operations coded using nested function calls, using explicit saving of intermediate values in temporary objects, and using the pipe operator.
+We describe R's pipe syntax based on R 4.3.0. We start by showing the same operations coded using nested function calls, using explicit saving of intermediate values in temporary objects, and using the pipe operator.
 
 Nested function calls are concise, but difficult to read when the depth of nesting increases.
 
 <<pipes-r-02>>=
-data.out <- sum(sqrt(1:10))
+sum(sqrt(1:10))
 @
 
 Saving intermediate results explicitly results in clear but verbose code.
@@ -306,20 +306,40 @@ Saving intermediate results explicitly results in clear but verbose code.
 <<pipes-r-03>>=
 data.in <- 1:10
 data.tmp <- sqrt(data.in)
-data.out <- sum(data.tmp)
+sum(data.tmp)
 rm(data.tmp) # clean up!
 @
 
 A pipe using operator \Roperator{\textbar >} makes the data flow clear and keeps the code concise.
 
 <<pipes-r-04>>=
-1:10 |> sqrt() |> sum() -> data.out
+1:10 |> sqrt() |> sum()
 @
 
-The \Roperator{\textbar >} operator from base \Rlang takes two operands. The value returned by the \emph{lhs} (left-hand side) operand, which can be any \Rlang expression, is passed by default as the first argument to the \emph{rhs} operand, which must be a function accepting at least one argument. Consequently, in using this simple syntax that implicitly passes the argument by position, the function in the \emph{rhs} must have a suitable signature for the pipe to work. However, it is possible to pass the piped argument also explicitly by name to any parameter of a function, including the first one, using an underscore (\code{\_}) as placeholder.
+We can assign the result of the computation to a variable, most elegantly using the \Roperator{->} operator on the \emph{rhs} of the pipe.
+
+<<pipes-r-04a>>=
+1:10 |> sqrt() |> sum() -> my_rhs.var
+my_rhs.var
+@
+
+We can also use the \Roperator{<-} operator on the \emph{lhs} of the pipe, i.e., for assignments a pipe behaves as a compound statement.
+
+<<pipes-r-04b>>=
+my_lhs.var <- 1:10 |> sqrt() |> sum() 
+my_lhs.var
+@
+
+Formally, the \Roperator{\textbar >} operator from base \Rlang takes two operands, just like operator \code{+} does. The value returned by the \emph{lhs} (left-hand side) operand, which can be any \Rlang expression, is passed as argument to the function-call operand on \emph{rhs} (right-hand side). The called function must accept at least one argument. This default syntax that implicitly passes the argument by position to the first parameter of the function would limit which functions could be used in a pipe construct. However, it is also possible to pass the piped argument explicitly by name to any parameter of the function on the \emph{rhs} using an underscore (\code{\_}) as placeholder.
 
 <<pipes-r-05>>=
-1:10 |> sqrt(x = _) |> sum(x = _) -> data.out
+1:10 |> sqrt(x = _) |> sum(x = _)
+@
+
+The placeholder can be also used with extraction operators.
+
+<<pipes-r-05a>>=
+1:10 |> sqrt(x = _) |> _[2:8] |> sum(x = _)
 @
 
 \begin{explainbox}
