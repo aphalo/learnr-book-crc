@@ -435,7 +435,7 @@ rm(z)
 ls(pattern="^z$")
 @
 
-There\index{special values!NA}\index{special values!NaN}\label{par:special:values} are some special values available for numbers. \Rconst{NA} meaning ``not available'' is used for missing values. Calculations can also yield the following values \Rconst{NaN} ``not a number'', \Rconst{Inf} and \Rconst{Inf@-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid. \Rconst{Inf} and \Rconst{-Inf} are also valid numerical values for input and constants.
+There\index{special values!NA}\index{special values!NaN}\label{par:special:values} are some special values available for numbers. \Rconst{NA} meaning ``not available'' is used for missing values. Calculations can also yield the following values \Rconst{NaN} ``not a number'', \Rconst{Inf} and \Rconst{-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid. \Rconst{Inf} and \Rconst{-Inf} are also valid numerical values for input and constants.
 
 <<numbers-8>>=
 a <- NA
@@ -1156,14 +1156,132 @@ cat(c)
 The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. For example, the new-line escape (\verb|\n|) can be embedded in strings used for axis-label, title or label in a plot to split them over two or more lines.
 
 \subsection{Character matching and substitution}\label{sec:calc:character:oper}
-As\index{regular expressions}\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest. An approach used in \Rlang and other languages is to use \emph{regular expressions} to concisely describe conditions for matching character strings. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning.
+As\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest.
 
-\begin{explainbox}
+To replacing or substitute part of a \code{character} string, we can use functions \Rfunction{sub()} or \Rfunction{gsub()}. The first example uses three \code{character} constants, but values stored in variables can also be passed as arguments.
+
+<<char-regex-01>>=
+sub(pattern = "ab", replacement = "AB", x = "about")
+@
+
+The difference between \Rfunction{sub()} (substitution) and \Rfunction{gsub()} (global substitution) is that the first replaces only the first match found while the second replaces all matches.
+
+<<char-regex-02>>=
+sub(pattern = "ab", replacement = "x", x = "abracadabra")
+gsub(pattern = "ab", replacement = "x", x = "abracadabra")
+@
+
+\begin{playground}
+Functions \Rfunction{sub()} or \Rfunction{gsub()} accept character vectors as argument for parameter \code{x}. Run the two statements below and study how the values returned differ.
+
+<<char-regex-03, eval=eval_playground>>=
+sub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
+gsub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
+@
+
+\end{playground}
+
+Function \Rfunction{grep()} returns indices to the values in a vector matching a pattern, or alternatively, the matching values themselves.
+
+<<char-regex-04>>=
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), value = TRUE)
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
+@
+
+Function \Rfunction{grepl()} is a variation of \Rfunction{grep()} that returns a vector of \code{logical} values instead of numeric indices to the matching values in \code{x}.
+
+<<char-regex-05>>=
+grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
+grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
+@
+
+\index{regular expressions|(}%
+In the examples above we passed as arguments for \code{pattern} strings that matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
+
+<<char-regex-06>>=
+sub(pattern = "ab", replacement = "AB", x = "about", fixed = TRUE)
+@
+
+\begin{warningbox}
 Regular expressions are used in Unix and Linux shell scripts and programs, and are part of \perllang, \Cpplang and other languages in addition to \Rlang. This means that variations exist on the same idea, with \Rlang supporting two variations of the syntax. A description of \Rlang regular expressions can be accessed with \code{help(regex)}. We here describe \Rlang's default syntax.
-\end{explainbox}
+\end{warningbox}
 
-TODO: add examples with gsub(), grep(), grepl(), etc.
+Regular expressions are concise, terse and extremely powerful. They are a language in themselves. However, the effort needed to learn their use more than pays back. I will show examples of the use, rather than systematically describe them. I will use \Rfunction{gsub()} for these examples, but several other \Rlang functions accept regular expressions as patterns.
 
+Within a regular expression \code{|} separates alternative matching patterns.
+ 
+<<char-regex-07>>=
+gsub(pattern = "ab|t", replacement = "123", x = "about")
+@
+
+Within a regular expression we can group characters within \code{[ ]} as alternative, e.g, \code{[0123456789]}, or \code{[0-9]} matches any digit.
+
+<<char-regex-08>>=
+gsub(pattern = "a[0123456789]", 
+     replacement = "ab", 
+     x = c("a1out", "a9out", "a3out"))
+@
+
+Character \code{\textasciicircum} indicates that the match must be at the ``head'' of the string, and \code{\$} that the match should be at its ``tail''.
+
+<<char-regex-09>>=
+gsub(pattern = "^a[0123456789]",
+     replacement = "ab",
+     x = c("a1out", "a9out", " a3out"))
+@
+
+The replacement can be an empty string.
+
+<<char-regex-10>>=
+gsub(pattern = "out$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+
+A \code{.} matches any character. In this example we replace the last character with \code{""}.
+
+<<char-regex-11>>=
+gsub(pattern = ".$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+
+\begin{playground}
+  How would you modify the last code example to edit \code{c("about", "axout", "a3outx")} into \code{c("about", "axout", "a3out")}? Think of different ways of doing this using regular expressions.
+\end{playground}
+
+The number of matching characters can be indicated with \code{+} (match 1 or more times), \code{?} (match 0 or 1 times), \code{*} (match 0 or more times) or even numerically. Matching is in most cases ``greedy''.
+
+<<char-regex-12>>=
+gsub(pattern = "^.[0-9][a-z]*$",
+     replacement = "gone",
+     x = c("about", "a9out", "a3outx"))
+@
+
+With parentheses we can isolate part of the matched string and reuse it in the replacement with a numeric backreference. Up to a maximum of nine pairs of parentheses can be used.
+
+<<char-regex-13>>=
+gsub(pattern = "^.([0-9])[a-z]*$",
+     replacement = "gone with \\1",
+     x = c("about", "a9out", "a3outx"))
+@
+
+Several named classes of characters are predefined, for example \code{[:lower:]⁠} for lower case alphabetic characters according to the current locale.
+
+\begin{playground}
+Run the two statements below, study the returned values by creating variations of the patterns and explain why the returned values differ.
+
+<<char-regex-14, eval=eval_playground>>=
+gsub(pattern = "^.+$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+gsub(pattern = "^.?$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+\end{playground}
+\index{regular expressions|)}
 \index{classes and modes!character|)}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}

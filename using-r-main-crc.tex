@@ -1358,7 +1358,7 @@ It\index{removing objects}\index{deleting objects|see {removing objects}} is pos
 \end{kframe}
 \end{knitrout}
 
-There\index{special values!NA}\index{special values!NaN}\label{par:special:values} are some special values available for numbers. \Rconst{NA} meaning ``not available'' is used for missing values. Calculations can also yield the following values \Rconst{NaN} ``not a number'', \Rconst{Inf} and \Rconst{Inf@-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid. \Rconst{Inf} and \Rconst{-Inf} are also valid numerical values for input and constants.
+There\index{special values!NA}\index{special values!NaN}\label{par:special:values} are some special values available for numbers. \Rconst{NA} meaning ``not available'' is used for missing values. Calculations can also yield the following values \Rconst{NaN} ``not a number'', \Rconst{Inf} and \Rconst{-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid. \Rconst{Inf} and \Rconst{-Inf} are also valid numerical values for input and constants.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -3024,14 +3024,244 @@ The\index{character string delimiters} outer quotes are not part of the string, 
 The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. For example, the new-line escape (\verb|\n|) can be embedded in strings used for axis-label, title or label in a plot to split them over two or more lines.
 
 \subsection{Character matching and substitution}\label{sec:calc:character:oper}
-As\index{regular expressions}\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest. An approach used in \Rlang and other languages is to use \emph{regular expressions} to concisely describe conditions for matching character strings. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning.
+As\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest.
 
-\begin{explainbox}
+To replacing or substitute part of a \code{character} string, we can use functions \Rfunction{sub()} or \Rfunction{gsub()}. The first example uses three \code{character} constants, but values stored in variables can also be passed as arguments.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"AB"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlstr{"about"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "ABout"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The difference between \Rfunction{sub()} (substitution) and \Rfunction{gsub()} (global substitution) is that the first replaces only the first match found while the second replaces all matches.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"x"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlstr{"abracadabra"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "xracadabra"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"x"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlstr{"abracadabra"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "xracadxra"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+Functions \Rfunction{sub()} or \Rfunction{gsub()} accept character vectors as argument for parameter \code{x}. Run the two statements below and study how the values returned differ.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"x"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"abra"}\hlstd{,} \hlstr{"cadabra"}\hlstd{))}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"x"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"abra"}\hlstd{,} \hlstr{"cadabra"}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{playground}
+
+Function \Rfunction{grep()} returns indices to the values in a vector matching a pattern, or alternatively, the matching values themselves.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{grep}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"C"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"R"}\hlstd{,} \hlstr{"C++"}\hlstd{,} \hlstr{"C"}\hlstd{,} \hlstr{"Perl"}\hlstd{,} \hlstr{"Pascal"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] 2 3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{grep}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"C"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"R"}\hlstd{,} \hlstr{"C++"}\hlstd{,} \hlstr{"C"}\hlstd{,} \hlstr{"Perl"}\hlstd{,} \hlstr{"Pascal"}\hlstd{),} \hlkwc{value} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "C++" "C"
+\end{verbatim}
+\begin{alltt}
+\hlkwd{grep}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"C"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"R"}\hlstd{,} \hlstr{"C++"}\hlstd{,} \hlstr{"C"}\hlstd{,} \hlstr{"Perl"}\hlstd{,} \hlstr{"Pascal"}\hlstd{),} \hlkwc{ignore.case} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 2 3 5
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{grepl()} is a variation of \Rfunction{grep()} that returns a vector of \code{logical} values instead of numeric indices to the matching values in \code{x}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{grepl}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"C"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"R"}\hlstd{,} \hlstr{"C++"}\hlstd{,} \hlstr{"C"}\hlstd{,} \hlstr{"Perl"}\hlstd{,} \hlstr{"Pascal"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE  TRUE  TRUE FALSE FALSE
+\end{verbatim}
+\begin{alltt}
+\hlkwd{grepl}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"C"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"R"}\hlstd{,} \hlstr{"C++"}\hlstd{,} \hlstr{"C"}\hlstd{,} \hlstr{"Perl"}\hlstd{,} \hlstr{"Pascal"}\hlstd{),} \hlkwc{ignore.case} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] FALSE  TRUE  TRUE FALSE  TRUE
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\index{regular expressions|(}%
+In the examples above we passed as arguments for \code{pattern} strings that matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"AB"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlstr{"about"}\hlstd{,} \hlkwc{fixed} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "ABout"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{warningbox}
 Regular expressions are used in Unix and Linux shell scripts and programs, and are part of \perllang, \Cpplang and other languages in addition to \Rlang. This means that variations exist on the same idea, with \Rlang supporting two variations of the syntax. A description of \Rlang regular expressions can be accessed with \code{help(regex)}. We here describe \Rlang's default syntax.
-\end{explainbox}
+\end{warningbox}
 
-TODO: add examples with gsub(), grep(), grepl(), etc.
+Regular expressions are concise, terse and extremely powerful. They are a language in themselves. However, the effort needed to learn their use more than pays back. I will show examples of the use, rather than systematically describe them. I will use \Rfunction{gsub()} for these examples, but several other \Rlang functions accept regular expressions as patterns.
 
+Within a regular expression \code{|} separates alternative matching patterns.
+ 
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"ab|t"}\hlstd{,} \hlkwc{replacement} \hlstd{=} \hlstr{"123"}\hlstd{,} \hlkwc{x} \hlstd{=} \hlstr{"about"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] "123ou123"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Within a regular expression we can group characters within \code{[ ]} as alternative, e.g, \code{[0123456789]}, or \code{[0-9]} matches any digit.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"a[0123456789]"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{"ab"}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"a1out"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3out"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "about" "about" "about"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Character \code{\textasciicircum} indicates that the match must be at the ``head'' of the string, and \code{\$} that the match should be at its ``tail''.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"^a[0123456789]"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{"ab"}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"a1out"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{" a3out"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "about"  "about"  " a3out"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The replacement can be an empty string.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"out$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{""}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "ab"     "a9"     "a3outx"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+A \code{.} matches any character. In this example we replace the last character with \code{""}.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{".$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{""}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "abou"  "a9ou"  "a3out"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{playground}
+  How would you modify the last code example to edit \code{c("about", "axout", "a3outx")} into \code{c("about", "axout", "a3out")}? Think of different ways of doing this using regular expressions.
+\end{playground}
+
+The number of matching characters can be indicated with \code{+} (match 1 or more times), \code{?} (match 0 or 1 times), \code{*} (match 0 or more times) or even numerically. Matching is in most cases ``greedy''.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"^.[0-9][a-z]*$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{"gone"}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "about" "gone"  "gone"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+With parentheses we can isolate part of the matched string and reuse it in the replacement with a numeric backreference. Up to a maximum of nine pairs of parentheses can be used.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"^.([0-9])[a-z]*$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{"gone with \textbackslash{}\textbackslash{}1"}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] "about"       "gone with 9" "gone with 3"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Several named classes of characters are predefined, for example \code{[:lower:]⁠} for lower case alphabetic characters according to the current locale.
+
+\begin{playground}
+Run the two statements below, study the returned values by creating variations of the patterns and explain why the returned values differ.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"^.+$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{""}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\hlkwd{gsub}\hlstd{(}\hlkwc{pattern} \hlstd{=} \hlstr{"^.?$"}\hlstd{,}
+     \hlkwc{replacement} \hlstd{=} \hlstr{""}\hlstd{,}
+     \hlkwc{x} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"about"}\hlstd{,} \hlstr{"a9out"}\hlstd{,} \hlstr{"a3outx"}\hlstd{))}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\end{playground}
+\index{regular expressions|)}
 \index{classes and modes!character|)}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
@@ -8237,11 +8467,11 @@ Addition of computed variables to a data frame using \Rfunction{within()} and se
 \end{alltt}
 \begin{verbatim}
 ##     x          y is.large    x4
-## 6   6  0.8046883     TRUE  1296
-## 7   7 -1.7319955     TRUE  2401
-## 8   8 -1.5537892     TRUE  4096
-## 9   9  0.1831670     TRUE  6561
-## 10 10 -0.6727795     TRUE 10000
+## 6   6  1.0100343     TRUE  1296
+## 7   7  0.7749310     TRUE  2401
+## 8   8 -0.9060896     TRUE  4096
+## 9   9  0.4636378     TRUE  6561
+## 10 10 -1.5028467     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8260,12 +8490,12 @@ Subset can be also used to select variables or columns from data frames and matr
   \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= _, is.large,} \hlkwc{select} \hlstd{=} \hlopt{-}\hlstd{x)}
 \end{alltt}
 \begin{verbatim}
-##              y is.large    x4
-## 6  -1.71722574     TRUE  1296
-## 7   2.31827308     TRUE  2401
-## 8  -0.77352095     TRUE  4096
-## 9  -1.04596297     TRUE  6561
-## 10  0.03114499     TRUE 10000
+##             y is.large    x4
+## 6  -1.2576203     TRUE  1296
+## 7   1.5791569     TRUE  2401
+## 8  -0.6638263     TRUE  4096
+## 9   1.0465797     TRUE  6561
+## 10  0.1672423     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8283,16 +8513,16 @@ Subset can be also used to select variables or columns from data frames and matr
 \end{alltt}
 \begin{verbatim}
 ##              y    x4
-## 1   1.03596176     1
-## 2   0.42847625    16
-## 3   0.06624938    81
-## 4  -0.67211745   256
-## 5  -0.36352554   625
-## 6  -2.50794827  1296
-## 7   0.13785582  2401
-## 8  -1.10935206  4096
-## 9  -0.20699419  6561
-## 10 -0.88294762 10000
+## 1   0.51009186     1
+## 2   1.30414620    16
+## 3  -0.20445708    81
+## 4  -0.33465368   256
+## 5  -0.59642688   625
+## 6  -0.06322849  1296
+## 7  -0.72975077  2401
+## 8   0.95443571  4096
+## 9  -0.07201063  6561
+## 10 -1.18072639 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8307,8 +8537,8 @@ Subset can be also used to select variables or columns from data frames and matr
 \end{alltt}
 \begin{verbatim}
 ##   group          y
-## 1    T1 -0.4353104
-## 2    T2  0.3648937
+## 1    T1 0.09736679
+## 2    T2 0.68186963
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8325,7 +8555,7 @@ Although the extraction operators are not accepted on the rhs of a pipe, functio
   \hlkwd{getElement}\hlstd{(}\hlstr{"y"}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.2572181  0.9815797
+## [1]  0.8374650 -0.2490016
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9306,7 +9536,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.25    0.01    0.27
+##    0.38    0.06    0.44
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -10449,7 +10679,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x000002f1b8f29678>
+## <bytecode: 0x000002f6ce73eab0>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -10534,7 +10764,7 @@ Next we print the definition of \Rlang's linear model fitting function \code{lm(
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x000002f1bad75570>
+## <bytecode: 0x000002f6ca7596c0>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -10669,7 +10899,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000002f1ba91f568>
+## <bytecode: 0x000002f6cac6d558>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -11133,7 +11363,7 @@ In the example above I used a data frame object, but the same mechanisms apply t
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000002f1ba91f568>
+## <bytecode: 0x000002f6cac6d558>
 ## <environment: namespace:base>
 \end{verbatim}
 \begin{alltt}
@@ -21085,9 +21315,9 @@ Base \Rlang provides several functions for portably working with files, and they
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2023-07-28 16:43:19 2023-07-28 16:43:19
+## xxx.txt    0 FALSE  666 2023-07-29 00:13:18 2023-07-29 00:13:18
 ##                       atime exe
-## xxx.txt 2023-07-28 16:43:19  no
+## xxx.txt 2023-07-29 00:13:18  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
