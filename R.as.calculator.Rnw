@@ -556,20 +556,418 @@ What does value truncation mean? Function \Rfunction{trunc()} truncates a numeri
 
 \index{classes and modes!numeric, integer, double|)}\index{numbers and their arithmetic|)}
 
+\section{Character values}\label{sec:calc:character}
+\index{character strings}\index{classes and modes!character|(}\qRclass{character}
+Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used as delimiters of \code{character} constants.
+
+<<char-1>>=
+a <- "A"
+a
+b <- 'A'
+b
+a == b
+@
+
+\begin{explainbox}
+In many computer languages, vectors of characters are distinct from vectors of character strings. In these languages, character vectors store at each index position a single character, while vectors of character strings store at each index position strings of characters of various lengths, such as words or sentences. If you are familiar with \Clang or \Cpplang, you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are not equivalent and that in \Rlang, \code{character} vectors are vectors of character strings. In contrast to these other languages, in \Rlang there is no predefined class for vectors of individual characters and character constants enclosed in double or single quotes are not different.
+\end{explainbox}
+
+Concatenating character vectors of length one does not yield a longer character string, it yields instead a longer vector.
+<<char-1a>>=
+a <- 'A'
+b <- "bcdefg"
+c <- "123"
+d <- c(a, b, c)
+d
+@
+
+Having two different delimiters available makes it possible to choose the type of quotes used as delimiters so that other quotes can be included in a string.
+
+<<char-3>>=
+a <- "He said 'hello' when he came in"
+a
+b <- 'He said "hello" when he came in'
+b
+@
+
+The\index{character string delimiters} outer quotes are not part of the string, they are ``delimiters'' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using ``escape sequences''. There are several of them, and here we will show just four, new line (\verb|\n|) and tab (\verb|\t|), \verb|\"| the escape code for a quotation mark within a string and \verb|\\| the escape code for a single backslash \verb|\|. We also show here the different behavior of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences and \Rfunction{print()} displaying them as entered.
+
+<<char-4>>=
+c <- "abc\ndef\tx\"yz\"\\\tm"
+print(c)
+cat(c)
+@
+
+The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. For example, the new-line escape (\verb|\n|) can be embedded in strings used for axis-label, title or label in a plot to split them over two or more lines.
+
+%\subsection{Character operations}\label{sec:calc:character:oper}
+
+Function\index{character strings!number of characters} \code{length()} applied to a \code{character} vector returns the number of member strings, not the number of characters in each member string. To query the ``length'' of individual character strings expressed as number of characters, we use function \Rfunction{nchar()}.
+
+<<char-nchar-01>>=
+nchar(x = "abracadabra")
+nchar(x = c("abracadabra", "workaholic"))
+@
+
+Function \Rfunction{trimstr()} trims a string a maximum number of characters or width.
+
+<<char-trim-01>>=
+strtrim(x = "abracadabra", width = 6)
+strtrim(x = "abra", width = 6)
+strtrim(x = c("abracadabra", "workaholic"), 6)
+strtrim(x = c("abracadabra", "workaholic"), c(6, 3))
+@
+
+Pasting together \code{character} strings has many uses, e.g., assembling informative messages to be printed, programmatically creating file names or file paths, etc. If we pass numbers, they are converted to \code{character} before pasting. The default separator is a space character, but this can be changed by passing a \code{character} string as argument for \code{sep}.
+
+<<char-paste-01>>=
+paste("n =", 3)
+paste("n", 3, sep = " = ")
+@
+
+Pasting constants, as shown above,  is of little practical use. In contrast, combining values stored in different variables is a very frequent operation when working with data. A simple use example follows. Assuming vector \code{friends} contains the names of friends and vector \code{fruits} the fruits they like to eat we can paste these values together into short sentences.
+
+<<char-paste-02>>=
+friends <- c("John", "Yan", "Juana", "Mary")
+fruits <- c("apples", "lichees", "oranges", "strawberries")
+paste(friends, "likes to eat ", fruits, ".", sep = "")
+@
+
+\begin{playground}
+ Why was necessary to pass \code{sep = ""} in the call to \Rfunction{paste()} in the example above? First try to predict what will happen and then remove \code{, sep = ""}it from the statement and run it to learn the correct answer. Try your own variations of the code until you understand the role of the separator string.
+\end{playground}
+
+We can pass an additional argument to tell that the vector resulting from the paste operation is to be collapsed into a single \code{character} string. The argument passed to collapse is used as the separator.
+
+<<char-paste-03>>=
+paste(friends, "likes to eat", fruits, collapse = ". ")
+@
+
+When the vectors are of different length, the shorter one is reused as many times as needed, which as in this example, is not be what we want. This can be solved by nesting two calls to paste, one of them using collapse.
+
+<<char-paste-04>>=
+paste("My friends like to eat", paste(fruits, collapse = ", "), "and other fruits.")
+@
+
+Trimming\index{character strings!whitespace trimming} leading and trailing white space is a frequent operation, and \Rlang function \Rfunction{trimws()} implements this operation.
+
+<<char-str-00a>>=
+trimws(x = " two words ")
+trimws(x = c("  eight words and a newline at the end\n", " two words "))
+@
+
+\begin{playground}
+Function \Rfunction{trimws()} has additional parameters that make it possible to select which end of the string is trimmed and which characters are considered whitespace. Use \code{help(trimws)} to access the help and study this documentation. Modify the example above so that only trailing white space is removed, and so that the newline character \verb!\n! is not considered whitespace, and thus not trimmed away.
+\end{playground}
+
+Within\index{character strings!position-based operations} \Rclass{character} strings, substrings can be extracted and replaced by position using \Rfunction{substring()} or \Rfunction{substr()}.
+
+For extraction we can pass to \code{x} a constant as shown below or a variable.
+
+<<char-str-01>>=
+substr(x = "abracadabra", start = 5, stop = 9)
+substr(x = c("abracadabra", "workaholic"), start = 5, stop = 11)
+@
+
+Substitution is done \emph{in place}, i.e., by reference, and the argument passed to \code{x} must be always variable. This is a pure substitution, not insertion, so the length of the string passed as argument to \code{x} remains unchanged.
+
+<<char-str-02>>=
+my.text <- c("abracadabra", "workaholic")
+substr(x = my.text, start = 5, stop = 9) <- "xxx"
+my.text
+@
+
+If we pass values to both \code{start} and \code{stop} then only part of the value on the \emph{rhs} of the assignment operator \code{<-} may be used.
+
+<<char-str-03>>=
+my.text <- c("abracadabra", "workaholic")
+substr(x = my.text, start = 5, stop = 6) <- "xxx"
+my.text
+@
+
+\begin{playground}
+Frequently, a very effective way of learning how a function behaves, is to experiment. In the example below, we set \code{start} and \code{stop} delimiting more characters than those in \code{"xxx"}. In this case, is \code{"xxx"} extended,
+or \code{start} or \code{stop} ignored? Run this ``toy example'' to find out the answer.
+
+<<char-str-04>>=
+my.text <- c("abracadabra", "workaholic")
+substr(x = my.text, start = 5, stop = 11) <- "xxx"
+my.text
+@
+
+\end{playground}
+
+As\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest.
+
+To replacing or substitute part of a \code{character} string, we can use functions \Rfunction{sub()} or \Rfunction{gsub()}. The first example uses three \code{character} constants, but values stored in variables can also be passed as arguments.
+
+<<char-regex-01>>=
+sub(pattern = "ab", replacement = "AB", x = "about")
+@
+
+The difference between \Rfunction{sub()} (substitution) and \Rfunction{gsub()} (global substitution) is that the first replaces only the first match found while the second replaces all matches.
+
+<<char-regex-02>>=
+sub(pattern = "ab", replacement = "x", x = "abracadabra")
+gsub(pattern = "ab", replacement = "x", x = "abracadabra")
+@
+
+\begin{playground}
+Functions \Rfunction{sub()} or \Rfunction{gsub()} accept character vectors as argument for parameter \code{x}. Run the two statements below and study how the values returned differ.
+
+<<char-regex-03, eval=eval_playground>>=
+sub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
+gsub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
+@
+
+\end{playground}
+
+Function \Rfunction{grep()} returns indices to the values in a vector matching a pattern, or alternatively, the matching values themselves.
+
+<<char-regex-04>>=
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), value = TRUE)
+grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
+@
+
+Function \Rfunction{grepl()} is a variation of \Rfunction{grep()} that returns a vector of \code{logical} values instead of numeric indices to the matching values in \code{x}.
+
+<<char-regex-05>>=
+grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
+grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
+@
+
+\index{regular expressions|(}%
+In the examples above we passed as arguments for \code{pattern} strings that matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
+
+<<char-regex-06>>=
+sub(pattern = "ab", replacement = "AB", x = "about", fixed = TRUE)
+@
+
+\begin{warningbox}
+Regular expressions are used in Unix and Linux shell scripts and programs, and are part of \perllang, \Cpplang and other languages in addition to \Rlang. This means that variations exist on the same idea, with \Rlang supporting two variations of the syntax. A description of \Rlang regular expressions can be accessed with \code{help(regex)}. We here describe \Rlang's default syntax.
+\end{warningbox}
+
+Regular expressions are concise, terse and extremely powerful. They are a language in themselves. However, the effort needed to learn their use more than pays back. I will show examples of the use, rather than systematically describe them. I will use \Rfunction{gsub()} for these examples, but several other \Rlang functions accept regular expressions as patterns.
+
+Within a regular expression \code{|} separates alternative matching patterns.
+
+<<char-regex-07>>=
+gsub(pattern = "ab|t", replacement = "123", x = "about")
+@
+
+Within a regular expression we can group characters within \code{[ ]} as alternative, e.g, \code{[0123456789]}, or \code{[0-9]} matches any digit.
+
+<<char-regex-08>>=
+gsub(pattern = "a[0123456789]",
+     replacement = "ab",
+     x = c("a1out", "a9out", "a3out"))
+@
+
+Character \code{\textasciicircum} indicates that the match must be at the ``head'' of the string, and \code{\$} that the match should be at its ``tail''.
+
+<<char-regex-09>>=
+gsub(pattern = "^a[0123456789]",
+     replacement = "ab",
+     x = c("a1out", "a9out", " a3out"))
+@
+
+The replacement can be an empty string.
+
+<<char-regex-10>>=
+gsub(pattern = "out$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+
+A dot (\code{.}) matches any character. In this example we replace the last character with \code{""}.
+
+<<char-regex-11>>=
+gsub(pattern = ".$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+
+\begin{playground}
+  How would you modify the last code example to edit \code{c("about", "axout", "a3outx")} into \code{c("about", "axout", "a3out")}? Think of different ways of doing this using regular expressions.
+\end{playground}
+
+The number of matching characters can be indicated with \code{+} (match 1 or more times), \code{?} (match 0 or 1 times), \code{*} (match 0 or more times) or even numerically. Matching is in most cases ``greedy''.
+
+<<char-regex-12>>=
+gsub(pattern = "^.[0-9][a-z]*$",
+     replacement = "gone",
+     x = c("about", "a9out", "a3outx"))
+@
+
+With parentheses we can isolate part of the matched string and reuse it in the replacement with a numeric backreference. Up to a maximum of nine pairs of parentheses can be used.
+
+<<char-regex-13>>=
+gsub(pattern = "^.([0-9])[a-z]*$",
+     replacement = "gone with \\1",
+     x = c("about", "a9out", "a3outx"))
+@
+
+Several named classes of characters are predefined, for example \code{[:lower:]⁠} for lower case alphabetic characters according to the current locale.
+
+\begin{playground}
+Run the two statements below, study the returned values by creating variations of the patterns and explain why the returned values differ.
+
+<<char-regex-14, eval=eval_playground>>=
+gsub(pattern = "^.+$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+gsub(pattern = "^.?$",
+     replacement = "",
+     x = c("about", "a9out", "a3outx"))
+@
+\end{playground}
+
+Splitting\index{character strings!splitting of} of character strings based on pattern matching is a frequently used operation, e..g., treatment labels containing information about two different treatment factors need to be split into their components before data analysis. Function \Rfunction{strsplit()} has an interface consistent with \code{grep()}. In the examples we will split strings containing date and time of day information in different ways.
+
+<<char-regex-20>>=
+strsplit(x = "2023-07-29 10:30", split = " ")
+@
+
+Using a simple regular expression we can extract individual strings representing the numbers.
+
+<<char-regex-21>>=
+strsplit(x = "2023-07-29 10:30", split = " |-|:")
+@
+
+The argument to \code{split} is by default interpreted as a regular expression, but as discussed above we can pass \code{fixed = TRUE} to prevent this.
+
+\begin{warningbox}
+One needs to be aware that the part of the string matched by the regular expression is not included in the returned vectors. If the regular expression matches more than what we consider a separator, the returned values may be surprising.
+
+<<char-regex-23>>=
+strsplit(x = "2023-07-29", split = "-[0-9]+$")
+@
+
+\end{warningbox}
+
+\begin{explainbox}
+When the argument passed to \code{x} is a vector with multiple member strings, the returned value is a list of \code{character} vectors, with one member vector for each member \code{x}. (Lists are described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists}.)
+
+<<char-regex-22>>=
+strsplit(x = c("2023-07-29 10:30", "2023-07-29 19:17"), split = " ")
+@
+
+\end{explainbox}
+\index{regular expressions|)}
+\index{classes and modes!character|)}
+
+\section{Logical values and Boolean algebra}\label{sec:calc:boolean}
+\index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
+What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). Logical values \code{TRUE} and \code{FALSE} should not be confused with text strings, they are names for the two conditions that can be stored. Logical values are always vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts'').
+
+Logical values are used mostly to keep track of binary conditions, like results from comparisons, and operate on them. In mathematics, Boolean algebra provides the rules of the logic used to combine multiple logical values. Boolean operators like AND and OR take as operands logical values and return a logical value as a result
+
+In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
+
+<<logical-1>>=
+a <- TRUE
+b <- FALSE
+mode(a)
+a
+!a # negation
+a && b # logical AND
+a || b # logical OR
+xor(a, b) # exclusive OR
+@
+
+%%%% index operators using verb!!
+The availability of two kinds of logical operators is one of the most troublesome aspects of the \Rlang language for beginners. Pairs of ``equivalent'' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names \Roperator{\&} and \Roperator{\textbar}, while the non-vectorized ones have double-character names \Roperator{\&\&} and \Roperator{\textbar\textbar}. There is only one version of the negation operator \Roperator{!} that is vectorized. In recent versions of \Rlang, an error is triggered when a non-vectorized operator is used with a vector with length $> 1$, which helps prevent mistakes.
+
+<<logical-2>>=
+a <- c(TRUE,FALSE)
+b <- c(TRUE,TRUE)
+a
+b
+a & b # vectorized AND
+a | b # vectorized OR
+@
+
+Functions \Rfunction{any()} and \Rfunction{all()} take zero or more logical vectors as their arguments, and return a single logical value ``summarizing'' the logical values in the vectors. Function \Rfunction{all()} returns \code{TRUE} only if all values in the vectors passed as arguments are \code{TRUE}, and \Rfunction{any()} returns \code{TRUE} unless all values in the vectors are \code{FALSE}.
+
+<<>>=
+any(a)
+all(a)
+any(a & b)
+all(a & b)
+@
+
+Another important thing to know about logical operators is that they ``short-cut'' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard protecting a later condition from being evaluated when it would trigger an error.
+
+<<logical-3>>=
+TRUE || NA
+FALSE || NA
+TRUE && NA
+FALSE && NA
+TRUE && FALSE && NA
+TRUE && TRUE && NA
+@
+
+When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained at each index position.
+
+<<logical-4>>=
+a & b & NA
+a & b & c(NA, NA)
+a | b | c(NA, NA)
+@
+
+\begin{playground}
+Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to devise several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
+
+<<logical-PG01,eval=eval_playground>>=
+x <- c(TRUE, FALSE, TRUE, NA)
+x & FALSE
+x | c(TRUE, FALSE)
+@
+
+\end{playground}
+
+\begin{faqbox}{How to check if an entire vector contains no values other than \code{NA} (or \code{NaN}) values?}
+<<faq-vectors-01>>=
+na.vec <- rep(NA, 5)
+all(is.na(na.vec))
+@
+
+\end{faqbox}
+
+\begin{faqbox}{How to check if a vector contains one or more \code{NA} (or \code{NaN}) values?}
+<<faq-vectors-02>>=
+na.vec <- rep(NA, 5)
+any(is.na(na.vec))
+@
+
+\end{faqbox}
+\index{logical values and their algebra|)}
+\index{classes and modes!logical|)}
+
 \section{Comparison operators and operations}\label{sec:calc:comparison}
 \index{comparison operators|(}\index{operators!comparison|(}\qRoperator{>}\qRoperator{<}\qRoperator{>=}\qRoperator{<=}\qRoperator{==}\qRoperator{!=}
-Comparison operators return vectors of \code{logical} values (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}),
-with values \code{TRUE} or \code{FALSE} depending on the outcome.
+Comparison operators return vectors of \code{logical} values (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}), with values \code{TRUE} or \code{FALSE} depending on the outcome.
 
+Equality (\code{==}) and inequality (\code{!=}) operators are defined not only for \code{numeric} values but also for \code{character} and most other atomic and many other values.
+
+<<comparison-0>>=
+# be aware that we use two = symbols
+"abc" == "ab" 
+"ABC" == "abc"
+"abc" != "ab"
+"ABC" != "abc"
+@
+
+In the case of \code{numeric} values additional comparisons are meaningful and additional operators are defined.
 <<comparison-1>>=
 1.2 > 1.0
 1.2 >= 1.0
-1.2 == 1.0 # be aware that here we use two = symbols
+1.2 == 1.0
 1.2 != 1.0
 1.2 <= 1.0
 1.2 < 1.0
 a <- 20
-a < 100 && a > 10
 @
 
 These operators can be used on vectors of any length, returning as a result a logical vector as long as the longest operand. In other words, they behave in the same way as the arithmetic operators described on page \pageref{par:vectorized:numeric}: their arguments are recycled when needed. Hint: if you do not know what to expect as a value for the vector returned by \code{1:10}, execute the statement \code{print(a)} after the first code statement below, or, alternatively, \code{1:10} without saving the result to a variable.
@@ -594,6 +992,31 @@ a > 2 + 3
 (a > 2) + 3
 @
 
+Individual comparisons can be useful, but their full role in data analysis and programming is realized when we combine multiple tests using the operations of the Boolean algebra described in section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}.
+
+For example to test if members of a numeric vector are within a range, in our example, -1 to +1, we can combine the results from two comparisons using the vectorizedlogical \emph{AND} operator \Roperator{\&}.
+
+<<logical-2a>>=
+c <- -2:3
+c >= -1 & c <= 1
+@
+
+If we want to find those values outside this same range, we can negate the test.
+
+<<logical-2b>>=
+c <- -2:3
+!(c >= -1 & c <= 1)
+@
+
+Or we can combine another two comparisons using the vectorized logical \emph{OR} operator \Roperator{\textbar}.
+
+<<logical-2c>>=
+c <- -2:3
+c < -1 | c > 1
+@
+
+In some cases an additional advantage is that \Rclass{logical} values require less space in memory for their storage than \code{numeric} values.
+
 \begin{playground}
 Use the statement below as a starting point in exploring how precedence works when logical and arithmetic operators are part of the same statement. \emph{Play} with the example by adding parentheses at different positions and based on the returned values, work out the default order of operator precedence used for the evaluation of the example given below.
 
@@ -603,7 +1026,7 @@ a > 3 | a + 2 < 3
 @
 \end{playground}
 
-Again, be aware of ``short-cut evaluation''. If the result does not depend on the missing value, then the result, \code{TRUE} or \code{FALSE} is returned. If the presence of the \code{NA} makes the end result unknown, then \code{NA} is returned.
+It is important to be aware of ``short-cut evaluation''. If the result does not depend on the missing value or values, then the result, \code{TRUE} or \code{FALSE} is returned. \code{NA} is returned only if the presence of one or more \code{NA} values in the input makes the result of the computation unknown.
 
 <<comparison-3>>=
 c <- c(a, NA)
@@ -727,121 +1150,6 @@ sin(2 * pi)
 \end{warningbox}
 
 \index{comparison operators|)}\index{operators!comparison|)}
-
-\section{Logical values and Boolean algebra}\label{sec:calc:boolean}
-\index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
-What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). Logical values \code{TRUE} and \code{FALSE} should not be confused with text strings, they are names for the two conditions that can be stored. Logical values are always vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts'').
-
-Logical values are used mostly to keep track of binary conditions, like results from comparisons, and operate on them. In mathematics, Boolean algebra provides the rules of the logic used to combine multiple logical values. Boolean operators like AND and OR take as operands logical values and return a logical value as a result
-
-In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
-
-<<logical-1>>=
-a <- TRUE
-b <- FALSE
-mode(a)
-a
-!a # negation
-a && b # logical AND
-a || b # logical OR
-xor(a, b) # exclusive OR
-@
-
-%%%% index operators using verb!!
-The availability of two kinds of logical operators is one of the most troublesome aspects of the \Rlang language for beginners. Pairs of ``equivalent'' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names \Roperator{\&} and \Roperator{\textbar}, while the non-vectorized ones have double-character names \Roperator{\&\&} and \Roperator{\textbar\textbar}. There is only one version of the negation operator \Roperator{!} that is vectorized. In recent versions of \Rlang, an error is triggered when a non-vectorized operator is used with a vector with length $> 1$, which helps prevent mistakes.
-
-<<logical-2>>=
-a <- c(TRUE,FALSE)
-b <- c(TRUE,TRUE)
-a
-b
-a & b # vectorized AND
-a | b # vectorized OR
-@
-
-\begin{explainbox}
-Obviously binary values can be also stored as 0's and 1's, or as any other two numbers, in a \code{numeric} vector, or as text strings in a \code{character} vector. The point of using \Rclass{logical} values is that they support the operations of the Boolean algebra.
-
-For example to test if members of a numeric vector are within a range, in our example, -1 to +1, we can combine the results from two comparisons using the vectorized logical AND operator \Roperator{\&}.
-
-<<logical-2a>>=
-c <- -2:3
-c >= -1 & c <= 1
-@
-
-If we want to find those values outside this same range, we can negate the test.
-
-<<logical-2b>>=
-c <- -2:3
-!(c >= -1 & c <= 1)
-@
-
-Or we can combine another two comparisons using the vectorized logical OR operator \Roperator{\textbar}.
-
-<<logical-2c>>=
-c <- -2:3
-c < -1 | c > 1
-@
-
-In some cases an additional advantage is that \Rclass{logical} values require less space in memory for their storage than \code{numeric} values.
-\end{explainbox}
-
-Functions \Rfunction{any()} and \Rfunction{all()} take zero or more logical vectors as their arguments, and return a single logical value ``summarizing'' the logical values in the vectors. Function \Rfunction{all()} returns \code{TRUE} only if all values in the vectors passed as arguments are \code{TRUE}, and \Rfunction{any()} returns \code{TRUE} unless all values in the vectors are \code{FALSE}.
-
-<<>>=
-any(a)
-all(a)
-any(a & b)
-all(a & b)
-@
-
-Another important thing to know about logical operators is that they ``short-cut'' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard protecting a later condition from being evaluated when it would trigger an error.
-
-<<logical-3>>=
-TRUE || NA
-FALSE || NA
-TRUE && NA
-FALSE && NA
-TRUE && FALSE && NA
-TRUE && TRUE && NA
-@
-
-When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained at each index position.
-
-<<logical-4>>=
-a & b & NA
-a & b & c(NA, NA)
-a | b | c(NA, NA)
-@
-
-\begin{playground}
-Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to devise several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
-
-<<logical-PG01,eval=eval_playground>>=
-x <- c(TRUE, FALSE, TRUE, NA)
-x & FALSE
-x | c(TRUE, FALSE)
-@
-
-\end{playground}
-
-\begin{faqbox}{How to check if an entire vector contains no values other than \code{NA} (or \code{NaN}) values?}
-<<faq-vectors-01>>=
-na.vec <- rep(NA, 5)
-all(is.na(na.vec))
-@
-
-\end{faqbox}
-
-\begin{faqbox}{How to check if a vector contains one or more \code{NA} (or \code{NaN}) values?}
-<<faq-vectors-02>>=
-na.vec <- rep(NA, 5)
-any(is.na(na.vec))
-@
-
-\end{faqbox}
-\index{logical values and their algebra|)}
-\index{classes and modes!logical|)}
 
 \section{Sets and set operations}
 \index{sets|(}\index{algebra of sets}\index{operators!set|(}
@@ -967,9 +1275,10 @@ setdiff(union(bakery, dairy), shopping)
 Sets describe membership as a binary property, thus when vectors are interpreted as sets, duplicate members are meaningless, although accepted as input and always simplified in the returned values.
 
 <<sets-00a>>=
-setequal(c("a", "a", "b"), c("b", "a", "b")) # sets compared
-identical(c("a", "a", "b"), c("b", "a", "b")) # objects compared
 union(c("a", "a", "b"), c("b", "a", "b")) # set operation
+setequal(c("a", "a", "b"), c("b", "a", "b")) # sets compared
+all.equal(c("a", "a", "b"), c("b", "a", "b")) # objects compared
+identical(c("a", "a", "b"), c("b", "a", "b")) # objects compared
 @
 \end{warningbox}
 
@@ -1110,179 +1419,6 @@ c(1, 5) %in% (1:10)^2
 \end{explainbox}
 \index{operators!set|)}
 \index{sets|)}
-
-\section{Character values}\label{sec:calc:character}
-\index{character strings}\index{classes and modes!character|(}\qRclass{character}
-Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used as delimiters of \code{character} constants.
-
-<<char-1>>=
-a <- "A"
-a
-b <- 'A'
-b
-a == b
-@
-
-\begin{explainbox}
-In many computer languages, vectors of characters are distinct from vectors of character strings. In these languages, character vectors store at each index position a single character, while vectors of character strings store at each index position strings of characters of various lengths, such as words or sentences. If you are familiar with \Clang or \Cpplang, you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are not equivalent and that in \Rlang, \code{character} vectors are vectors of character strings. In contrast to these other languages, in \Rlang there is no predefined class for vectors of individual characters and character constants enclosed in double or single quotes are not different.
-\end{explainbox}
-
-Concatenating character vectors of length one does not yield a longer character string, it yields instead a longer vector.
-<<char-1a>>=
-a <- 'A'
-b <- "bcdefg"
-c <- "123"
-d <- c(a, b, c)
-d
-@
-
-Having two different delimiters available makes it possible to choose the type of quotes used as delimiters so that other quotes can be included in a string.
-
-<<char-3>>=
-a <- "He said 'hello' when he came in"
-a
-b <- 'He said "hello" when he came in'
-b
-@
-
-The\index{character string delimiters} outer quotes are not part of the string, they are ``delimiters'' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using ``escape sequences''. There are several of them, and here we will show just four, new line (\verb|\n|) and tab (\verb|\t|), \verb|\"| the escape code for a quotation mark within a string and \verb|\\| the escape code for a single backslash \verb|\|. We also show here the different behavior of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences and \Rfunction{print()} displaying them as entered.
-
-<<char-4>>=
-c <- "abc\ndef\tx\"yz\"\\\tm"
-print(c)
-cat(c)
-@
-
-The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output. For example, the new-line escape (\verb|\n|) can be embedded in strings used for axis-label, title or label in a plot to split them over two or more lines.
-
-\subsection{Character matching and substitution}\label{sec:calc:character:oper}
-As\index{character strings!partial matching and substitution} in \Rlang each character value is a string comprised by zero to many characters, in addition to comparisons based on whole strings or values, partial matches among them are of interest.
-
-To replacing or substitute part of a \code{character} string, we can use functions \Rfunction{sub()} or \Rfunction{gsub()}. The first example uses three \code{character} constants, but values stored in variables can also be passed as arguments.
-
-<<char-regex-01>>=
-sub(pattern = "ab", replacement = "AB", x = "about")
-@
-
-The difference between \Rfunction{sub()} (substitution) and \Rfunction{gsub()} (global substitution) is that the first replaces only the first match found while the second replaces all matches.
-
-<<char-regex-02>>=
-sub(pattern = "ab", replacement = "x", x = "abracadabra")
-gsub(pattern = "ab", replacement = "x", x = "abracadabra")
-@
-
-\begin{playground}
-Functions \Rfunction{sub()} or \Rfunction{gsub()} accept character vectors as argument for parameter \code{x}. Run the two statements below and study how the values returned differ.
-
-<<char-regex-03, eval=eval_playground>>=
-sub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
-gsub(pattern = "ab", replacement = "x", x = c("abra", "cadabra"))
-@
-
-\end{playground}
-
-Function \Rfunction{grep()} returns indices to the values in a vector matching a pattern, or alternatively, the matching values themselves.
-
-<<char-regex-04>>=
-grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
-grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), value = TRUE)
-grep(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
-@
-
-Function \Rfunction{grepl()} is a variation of \Rfunction{grep()} that returns a vector of \code{logical} values instead of numeric indices to the matching values in \code{x}.
-
-<<char-regex-05>>=
-grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"))
-grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRUE)
-@
-
-\index{regular expressions|(}%
-In the examples above we passed as arguments for \code{pattern} strings that matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
-
-<<char-regex-06>>=
-sub(pattern = "ab", replacement = "AB", x = "about", fixed = TRUE)
-@
-
-\begin{warningbox}
-Regular expressions are used in Unix and Linux shell scripts and programs, and are part of \perllang, \Cpplang and other languages in addition to \Rlang. This means that variations exist on the same idea, with \Rlang supporting two variations of the syntax. A description of \Rlang regular expressions can be accessed with \code{help(regex)}. We here describe \Rlang's default syntax.
-\end{warningbox}
-
-Regular expressions are concise, terse and extremely powerful. They are a language in themselves. However, the effort needed to learn their use more than pays back. I will show examples of the use, rather than systematically describe them. I will use \Rfunction{gsub()} for these examples, but several other \Rlang functions accept regular expressions as patterns.
-
-Within a regular expression \code{|} separates alternative matching patterns.
- 
-<<char-regex-07>>=
-gsub(pattern = "ab|t", replacement = "123", x = "about")
-@
-
-Within a regular expression we can group characters within \code{[ ]} as alternative, e.g, \code{[0123456789]}, or \code{[0-9]} matches any digit.
-
-<<char-regex-08>>=
-gsub(pattern = "a[0123456789]", 
-     replacement = "ab", 
-     x = c("a1out", "a9out", "a3out"))
-@
-
-Character \code{\textasciicircum} indicates that the match must be at the ``head'' of the string, and \code{\$} that the match should be at its ``tail''.
-
-<<char-regex-09>>=
-gsub(pattern = "^a[0123456789]",
-     replacement = "ab",
-     x = c("a1out", "a9out", " a3out"))
-@
-
-The replacement can be an empty string.
-
-<<char-regex-10>>=
-gsub(pattern = "out$",
-     replacement = "",
-     x = c("about", "a9out", "a3outx"))
-@
-
-A \code{.} matches any character. In this example we replace the last character with \code{""}.
-
-<<char-regex-11>>=
-gsub(pattern = ".$",
-     replacement = "",
-     x = c("about", "a9out", "a3outx"))
-@
-
-\begin{playground}
-  How would you modify the last code example to edit \code{c("about", "axout", "a3outx")} into \code{c("about", "axout", "a3out")}? Think of different ways of doing this using regular expressions.
-\end{playground}
-
-The number of matching characters can be indicated with \code{+} (match 1 or more times), \code{?} (match 0 or 1 times), \code{*} (match 0 or more times) or even numerically. Matching is in most cases ``greedy''.
-
-<<char-regex-12>>=
-gsub(pattern = "^.[0-9][a-z]*$",
-     replacement = "gone",
-     x = c("about", "a9out", "a3outx"))
-@
-
-With parentheses we can isolate part of the matched string and reuse it in the replacement with a numeric backreference. Up to a maximum of nine pairs of parentheses can be used.
-
-<<char-regex-13>>=
-gsub(pattern = "^.([0-9])[a-z]*$",
-     replacement = "gone with \\1",
-     x = c("about", "a9out", "a3outx"))
-@
-
-Several named classes of characters are predefined, for example \code{[:lower:]⁠} for lower case alphabetic characters according to the current locale.
-
-\begin{playground}
-Run the two statements below, study the returned values by creating variations of the patterns and explain why the returned values differ.
-
-<<char-regex-14, eval=eval_playground>>=
-gsub(pattern = "^.+$",
-     replacement = "",
-     x = c("about", "a9out", "a3outx"))
-gsub(pattern = "^.?$",
-     replacement = "",
-     x = c("about", "a9out", "a3outx"))
-@
-\end{playground}
-\index{regular expressions|)}
-\index{classes and modes!character|)}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
 \index{objects!mode}
