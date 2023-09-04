@@ -36,7 +36,7 @@ Although all values manipulated in a digital computer are stored as \textit{bits
 
 In this chapter we will focus on individual program statements, the equivalent of sentences in natural language. In later chapters you will learn how to combine them to create compound statements, the equivalent of natural-language paragraphs, and scripts, the equivalent of essays. You will also learn how to define new verbs, user-defined functions and operators, and new nouns, user-defined classes.
 
-\section{Numeric values and arithmetic}
+\section{Numeric values and arithmetic}\label{sec:calc:numeric}
 \index{classes and modes!numeric, integer, double|(}\index{numbers and their arithmetic|(}\qRclass{numeric}\index{math operators}\index{math functions}\index{numeric values}\qRoperator{+}\qRoperator{-}\qRoperator{*}\qRoperator{/}
 When working in \Rlang with arithmetic expressions, the normal mathematical precedence rules are respected, but parentheses can be used to alter this order. Parentheses can be nested, but in contrast to the usual practice in mathematics, the same parenthesis symbol is used at all nesting levels.
 
@@ -113,7 +113,7 @@ print(a + 1)
 There are some syntactically legal assignment statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The ``backwards'' assignment operator \Roperator{->} and resulting code like \code{1 -> a}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{a}, \code{b} and \code{c} are being assigned the same value.
 
 <<numbers-3, tidy=FALSE, eval=eval_playground>>=
-a <- b <- c <- 0.0
+a <- b <- c <- 0
 a
 b
 c
@@ -126,7 +126,7 @@ a
 \end{playground}
 
 \begin{explainbox}\label{box:integer:float}
-In\index{numeric, integer and double values} \Rlang, all numbers belong to mode \Rclass{numeric} (we will discuss the concepts of \emph{mode} and \emph{class} in section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). We can query if the mode of an object is \Rclass{numeric} with function \Rfunction{is.numeric()}.
+In\index{numeric, integer and double values} \Rlang, all numbers belong to mode \Rclass{numeric} (we will discuss the concepts of \emph{mode} and \emph{class} in section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). We can query if the mode of an object is \Rclass{numeric} with function \Rfunction{is.numeric()}. The returned values are either TRUE or FALSE. These are logical values that will be discussed in section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}.
 
 <<classes-01>>=
 mode(1)
@@ -190,13 +190,13 @@ where $a_{1\ldots n}$ is the whole vector and $a_1$ its first member. The length
 
 As you have seen above, the results of calculations were printed preceded with \code{[1]}. This is the index or position in the vector of the first number (or other value) displayed at the head of the current line. As single values are vectors of length one, when they are printed, they are also preceded with \code{[1]}.\label{par:print:vec:index}
 
-One can use \Rmethod{c()} ``concatenate'' to create a vector from other vectors, including vectors of length 1, or even vectors of length 0, such as the \code{numeric} constants in the statements below. The first example shows an anonymous vector created, printed, and then automatically discarded.
+One\label{par:calc:concatenate} can use function \Rfunction{c()} ``concatenate'' to create a vector from other vectors, including vectors of length 1, or even vectors of length 0, such as the \code{numeric} constants in the statements below. The first example shows an anonymous vector created, printed, and then automatically discarded.
 
 <<numbers-4aann>>=
 c(3, 1, 2)
 @
 
-To be able to reuse the vector, we assign it to a variable, giving a name to it. The length of a vector can be queried with method \Rfunction{length()}. We show below \Rlang code followed by a diagram depicting the vector created.
+To be able to reuse the vector, we assign it to a variable, giving a name to it. The length of a vector can be queried with function \Rfunction{length()}. We show below \Rlang code followed by a diagram depicting the vector created.
 
 <<numbers-4aa>>=
 a <- c(3, 1, 2)
@@ -317,19 +317,17 @@ As shown earlier, values can be also printed at the \Rlang console. Here we show
 c(d, numeric())
 @
 
-Method \code{c()} accepts as arguments two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as \Rlang provides a function capable of directly doing this operation. Although it can be used to ``insert'' values, it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
+Function \code{c()} accepts as arguments two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as \Rlang provides a function capable of directly doing this operation. Although it can be used to ``insert'' values, it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
 
 <<numbers-4a>>=
 append(a, b)
 @
 
-The output above is the same as for \code{c(a, b)}, however, \Rfunction{append()} accepts as an argument an index position after which to ``append'' its second argument. This results in an \emph{insert} operation when the index points at any position different from the end of the vector.
+The output above is the same as for \code{c(a, b)}, however, \Rfunction{append()} accepts as an argument an index position after which to ``append'' its second argument. This results in an \emph{insert} operation when the index points at any position different from the end of the vector.\label{par:calc:append:end}
 
 <<numbers-4b>>=
-append(a, values = b, after = 2L)
+append(a, values = b, after = 2)
 @
-
-Both \code{c()} and \code{append()} can also be used with lists (described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists}).
 
 \begin{playground}\label{pg:seq:rep}
 One can create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case, I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
@@ -500,7 +498,7 @@ The last statement in the example immediately above, using the ``usual'' divisio
 1000000L * 1000000L
 @
 
-Both doubles and integers are considered numeric. In most situations, conversion is automatic and we do not need to worry about the differences between these two types of numeric values. The next chunk shows returned values that are either \Rconst{TRUE} or \Rconst{FALSE}. These are \code{logical} values that will be discussed in the next section.\index{numbers!double}\index{numbers!integer}
+Both doubles and integers are considered numeric. In most situations, conversion is automatic and we do not need to worry about the differences between these two types of numeric values. These functions return \code{logical} values (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}).\index{numbers!double}\index{numbers!integer}
 
 <<integers-2>>=
 is.numeric(1L)
@@ -1133,13 +1131,13 @@ We see next that the exponentiation operator \Roperator{\^{}} forces the promoti
 \index{comparison of floating point numbers|(}\index{inequality and equality tests|(}\index{loss of numeric precision}In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). Here we show how to gracefully handle rounding errors. As the example shows, rounding errors may accumulate, and in practice \verb|.Machine$double.eps| is not always a good value to safely use in tests for ``zero,'' and a larger value may be needed. Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then the tests should be done replacing tests like \verb|x == 1.0| with \verb|abs(x - 1.0) < eps|. Function \Rfunction{abs()} returns the absolute value, in simpler words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
 
 <<machine-eps-06>>=
-a == 0.0 # may not always work
+a == 0 # may not always work
 abs(a) < 1e-15 # is safer
 @
 
 <<machine-eps-06a>>=
-sin(pi) == 0.0 # angle in radians, not degrees!
-sin(2 * pi) == 0.0
+sin(pi) == 0 # angle in radians, not degrees!
+sin(2 * pi) == 0
 abs(sin(pi)) < 1e-15
 abs(sin(2 * pi)) < 1e-15
 sin(pi)
@@ -1437,7 +1435,7 @@ my_var <- "abc"
 mode(my_var)
 @
 
-While \emph{mode} is a fundamental property, and limited to those modes defined as part of the \Rlang language, the concept of \emph{class}, is different in that new classes can be defined in user code. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}, in relation to object-oriented programming in \Rlang. Method \Rfunction{class()} is used to query the class of an object, and method \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
+While \emph{mode} is a fundamental property, and limited to those modes defined as part of the \Rlang language, the concept of \emph{class}, is different in that new classes can be defined in user code. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching functions is discussed in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}, in relation to object-oriented programming in \Rlang. Function \Rfunction{class()} is used to query the class of an object, and function \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
 
 <<mode-2>>=
 class(my_var)
@@ -1965,9 +1963,9 @@ In mathematical notation the same generic matrix is represented as
 
 where $A$ represents the whole matrix, $m \times n$ its dimensions, and $a_{i,j}$ its elements, with $i$ indexing rows and $j$ indexing columns. The lengths of the two dimensions of the matrix are given by $m$ and $n$, for rows and columns.
 
-Vectors have a single dimension, and, as described on page \pageref{par:calc:vectors:diag} above, we can query this dimension, their length, with method \Rfunction{length()}. Matrices have two dimensions, which can be queried individually with \Rfunction{ncol()} and \Rfunction{nrow()}, and jointly with method \Rfunction{dim()}. As expected method \Rfunction{is.matrix()} can be used to query the class.
+Vectors have a single dimension, and, as described on page \pageref{par:calc:vectors:diag} above, we can query this dimension, their length, with function \Rfunction{length()}. Matrices have two dimensions, which can be queried individually with \Rfunction{ncol()} and \Rfunction{nrow()}, and jointly with \Rfunction{dim()}. As expected \Rfunction{is.matrix()} can be used to query the class.
 
-We can create a matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} must be a vector. Method \Rfunction{as.matrix()} is a conversion constructor, with specializations accepting as argument objects belonging to a few other classes.
+We can create a matrix using the \Rfunction{matrix()} or \Rfunction{as.matrix()} constructors. The first argument of \Rfunction{matrix()} must be a vector. Function \Rfunction{as.matrix()} is a conversion constructor, with specializations accepting as argument objects belonging to a few other classes.
 
 <<matrix-01>>=
 matrix(1:15, ncol = 3)
@@ -2088,7 +2086,7 @@ dim(no.elem.matrix)
 
 \end{explainbox}
 
-Arrays\index{matrix!dimensions}\index{arrays!dimensions} are similar to matrices, but can have one or more dimensions. The dimensions of an array can be queried with method \Rfunction{dim()}, similarly as with matrices. Whether an \Rlang object is an array can be found out with function \Rfunction{is.array()}. The diagram below depicts an array, $A$ with three dimensions giving a size equal to $l\times m \times n$, and individual values denoted by $a_{i,j,k}$.
+Arrays\index{matrix!dimensions}\index{arrays!dimensions} are similar to matrices, but can have one or more dimensions. The dimensions of an array can be queried with \Rfunction{dim()}, similarly as with matrices. Whether an \Rlang object is an array can be found out with \Rfunction{is.array()}. The diagram below depicts an array, $A$ with three dimensions giving a size equal to $l\times m \times n$, and individual values denoted by $a_{i,j,k}$.
 
 %\usetikzlibrary{matrix}
 \begin{center}
@@ -2202,7 +2200,7 @@ a2r <- array(v, dim = c(2, 5))
 
 Be aware that vectors and one-dimensional arrays are not the same thing, while two-dimensional arrays are matrices.
 \begin{enumerate}
-  \item Use the different constructors and query methods to explore this, and its consequences.
+  \item Use the different constructors and query functions to explore this, and its consequences.
   \item Convert a matrix into a vector using \Rfunction{unlist()} and \Rfunction{as.vector()} and compare the returned values.
 \end{enumerate}
 \end{playground}

@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'container-chunk')
 @
 
-\chapter{Base R: ``Collective Nouns''}\label{chap:R:}
+\chapter{Base R: ``Collective Nouns''}\label{chap:R:collective}
 
 \begin{VF}
 The information that is available to the computer consists of a selected set of \emph{data} about the real world, namely, that set which is considered relevant to the problem at hand, that set from which it is believed that the desired results can be derived. The data represent an abstraction of reality\ldots
@@ -174,7 +174,7 @@ Compare them again, and try to understand why \code{b.list} has changed as it di
 \end{playground}
 
 \begin{warningbox}
-Suprisingly, \code{a.list[[c(1, 3)]]} returns the value at position 3 in the first member of the list, an operation that normally would be written as \code{a.list[[1]][3]} using two extractions, one after another. In most cases statements like the one below will be entered by mistake rather than intentionally, but being valid in \Rlang, they will not trigger an error message.
+Surprisingly, \code{a.list[[c(1, 3)]]} returns the value at position 3 in the first member of the list, an operation that normally would be written as \code{a.list[[1]][3]} using two extractions, one after another. In most cases statements like the one below will be entered by mistake rather than intentionally, but being valid in \Rlang, they will not trigger an error message.
 
 <<lists-wb-xx>>=
 a.list[[c(1, 3)]]
@@ -189,10 +189,10 @@ list(a = 1, b = 2, c = 3)[-2]
 @
 \end{explainbox}
 
-Two frequent simple operations on lists are insertions and deletions.\index{lists!insert into}\index{lists!append to} In \Rlang, function \Rfunction{append()} can be used both to append elements at the end of a list and insert elements into the head or any position in the middle of a list.
+Three frequent operations on lists are concatenation, insertions and deletions.\index{lists!insert into}\index{lists!append to} The same functions as with vectors are used: functions \Rfunction{c()} for concatenation and \Rfunction{append()} to append and insert lists. Lists can be combined only with other lists (see pages \pageref{par:calc:concatenate}--\pageref{par:calc:append:end}).
 
 <<lists-1b>>=
-another.list <- append(a.list, list(yy = 1:10, zz = letters[5:1]), 2L)
+another.list <- append(a.list, list(yy = 1:10, zz = letters[5:1]), 2)
 another.list
 @
 
@@ -203,10 +203,11 @@ a.list$y <- NULL
 a.list
 @
 
-To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}), used above, is convenient, especially when lists have many members. The \code{print()} method for the structure formats lists more compactly than function \code{print()} applied directly to a list.\label{par:calc:str}
+To investigate the members contained in a list, function \Rfunction{str()} (\emph{structure}), used above, is convenient, especially when lists have many members. Structure formats lists more compactly than \code{print()} applied directly to a list.\label{par:calc:str}
 
 <<lists-1aa>>=
 print(a.list)
+str(a.list)
 @
 
 \index{lists!deletion and addition of members|)}\index{lists!member extraction|)}
@@ -380,7 +381,7 @@ Are \code{a.df} and \code{b.df} equal?
 
 \end{playground}
 
-With function \Rfunction{class()} we can query the class of an \Rlang object (see section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). As we saw in the previous chunk, \code{list} and \code{data.frame} objects belong to two different classes. However, their relationship is based on a hierarchy of classes. We say that class \Rclass{data.frame} is derived from class \code{list}. Consequently, data frames inherit the methods and characteristics of lists, as long as they have not been hidden by new ones defined for data frames.
+With function \Rfunction{class()} we can query the class of an \Rlang object (see section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}). As we saw in the previous chunk, \code{list} and \code{data.frame} objects belong to two different classes. However, their relationship is based on a hierarchy of classes. We say that class \Rclass{data.frame} is derived from class \code{list}. Consequently, data frames inherit the methods and characteristics of lists, as long as they have not been hidden by new ones defined for data frames (for an explanation of \emph{methods}, see section \ref{sec:methods} on page \pageref{sec:methods}).
 
 Extraction of individual member variables or ``columns'' can be done like in a list with operators \Roperator{[[ ]]} and \Roperator{\$}.
 
@@ -691,7 +692,7 @@ aggregate(x = iris[ , sapply(iris, is.numeric)], by = list(iris$Species), FUN = 
 For these data as the only non-numeric variable is \code{Species} we could have also used formula notation as shown below.
 \end{faqbox}
 
-There\index{data frames!summarizing} is also a formula-based \Rfunction{aggregate()} method available (\Rlang \emph{formulas} are described in depth in section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas}). When using this method, the left hand side (\emph{lhs}) of the formula indicates the variable to summarize and the right hand side (\emph{rhs}) the factor used to split the data before summarizing them.
+There\index{data frames!summarizing} is also a formula-based \Rfunction{aggregate()} method (or ``variant'') available (\Rlang \emph{formulas} are described in depth in section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas}). In \Rfunction{aggregate()}, the left hand side (\emph{lhs}) of the formula indicates the variable to summarize and the right hand side (\emph{rhs}) the factor used to split the data before summarizing them.
 
 <<data-frames-7d>>=
 aggregate(x1 ~ z, FUN = mean, data = a.df)
@@ -833,7 +834,7 @@ head(my_data_frame.df, 2)
 
 \begin{explainbox}
 Repeatedly pre-pending the name of a \emph{container} such as a list or data frame to the name of each member variable being accessed can make \Rlang code verbose and difficult to understand. Functions \Rscoping{attach()} and its matching \Rscoping{detach()} allow us to change where \Rlang looks for the names of objects we include in a code statement.
-When using a long name for a data frame, entering a simple calculation can easily result in a difficult to read statement. (Method \code{head()} is used here to limit the displayed value to the first two rows---\code{head()} is described in section \ref{sec:calc:looking:at:data} on page \pageref{sec:calc:looking:at:data}.)
+When using a long name for a data frame, entering a simple calculation can easily result in a difficult to read statement. (Function \code{head()} is used here to limit the displayed value to the first two rows---\code{head()} is described in section \ref{sec:calc:looking:at:data} on page \pageref{sec:calc:looking:at:data}.)
 
 <<data-frames-EB-10>>=
 my_data_frame.df <- data.frame(A = 1:10, B = 3)
@@ -855,7 +856,7 @@ head(my_data_frame.df, 2)
 Use of \Rscoping{attach()} and \Rscoping{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \Rscoping{attach()} is executed but before \Rscoping{detach()} is called, as cleanup is not automatic. In contrast, \Rscoping{with()} and \Rscoping{within()}, being self-contained, guarantee that cleanup takes place. Consequently, the usual recommendation is to give preference to the use of \Rscoping{with()} and \Rscoping{within()} over \Rscoping{attach()} and \Rscoping{detach()}. Use of these functions not only saves typing but also makes code more readable.
 \end{explainbox}
 
-\section{Reshaping data frames}\label{sec:calc:reshape}
+\section{Reshaping and editing data frames}\label{sec:calc:reshape}
 \index{data frames!long vs.\ wide shape}
 
 As mentioned above, in most cases in \Rlang data rows represent measurement events or observations possibly on multiple response variables and factors describing groupings, i.e., long shape. However, when measurements are repeated in time, columns rather frequently represent observations of the same response variable at different times, i.e., wide shape. Other cases exist where reshaping is needed. Function \Rfunction{reshape()} can convert wide data frames into long data frames and vice versa.
@@ -868,6 +869,13 @@ As mentioned above, in most cases in \Rlang data rows represent measurement even
 
 <<data-frames-cleanup,echo=FALSE,cache=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
+Methods \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are used interactively to display and edit \Rlang objects. IDEs like \RStudio and the use of scripts have made the interactive use of \Rpgrm at the console less frequent. \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are unusual in that their definitions and/or default arguments are dependent on the operating system and/or IDE from within which \Rpgrm is started. Output is not included for this chunk, as the use of these functions requires user interaction. Please, run these examples in \Rpgrm and in an IDE like \RStudio.
+
+<<exploring-dfs-0a, eval=FALSE>>=
+View(cars)
+edit(cars)
 @
 
 \section{Attributes of R objects}\label{sec:calc:attributes}
@@ -890,9 +898,9 @@ comment(a.df) <- "this is stored as a comment"
 comment(a.df)
 @
 
-Methods like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, and methods like \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Specific query and set methods do not exist for all attributes. Methods \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. With \Rfunction{attr()} we access, and with  \Rfunction{attr()<-} we set individual attributes by name. With \Rfunction{attributes()} we retrieve all attributes of an object as a named \code{list}. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
+Functions like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, whereas \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Dedicated query and set functions do not exist for all attributes. Functions \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. With \Rfunction{attr()} we query, and with  \Rfunction{attr()<-} we set individual attributes by name. With \Rfunction{attributes()} we retrieve all attributes of an object as a named \code{list}. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
 
-Continuing with the previous example, we can retrieve and set the comment using these functions. In the second statement we delete the value stored in the \code{"comment"} attribute by assigning \code{NULL} to it.
+Continuing with the previous example, we can retrieve and set the value stored in the \code{"comment"}  attribute using these functions. In the second statement we delete the value stored in the attribute by assigning \code{NULL} to it.
 
 <<attributes-01a>>=
 attr(a.df, "comment")
@@ -935,7 +943,7 @@ In this case we could have used \Rfunction{dim()} instead of \Rfunction{attr()}.
 \end{explainbox}
 
 \begin{warningbox}
-There is no restriction to the creation, setting, resetting and reading of attributes, but not all methods and operators that can be used to modify objects will preserve non-standard attributes. This can be a problem when using some \Rlang packages, such as the \pkgname{tidyverse}. So, using private attributes is a double-edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
+There is no restriction to the creation, setting, resetting and reading of attributes, but not all functions and operators that can be used to modify objects will preserve non-standard attributes. This can be a problem when using some \Rlang packages, such as the \pkgname{tidyverse}. So, using private attributes is a double-edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
 \end{warningbox}
 
 <<attributes-cleanup, include=FALSE>>=
@@ -1042,83 +1050,6 @@ As above, we clean up by deleting the file.
 <<rds-03>>=
 unlink("my-df.rds")
 @
-
-\section{Looking at data}\label{sec:calc:looking:at:data}
-\index{data!exploration at the R console|(}
-There are several functions in \Rlang that let us obtain different views into objects. Several of the methods discussed here have been described in previous sections. The two most frequently used are \Rfunction{print()} and \Rfunction{str()}. In some cases, such as model fit objects, \Rfunction{print()} shows only some aspects of the contents of the object. Method \Rfunction{str()}, or structure, in most cases shows all members of an object, including its attributes.
-
-In this section we use in code examples data frames from package \pkgname{datasets}, included in the \Rpgrm distribution. We print only the top five rows of the data frame \code{cars} and have a look at its structure.
-
-<<exploring-dfs-0>>=
-print(cars[1:5, ])
-str(cars)
-@
-
-\begin{infobox}
-\Rfunction{print()} and \Rfunction{str()} are generic methods with specializations for different classes of objects and can be defined/redefined by packages and user code.
-\end{infobox}
-
-\begin{advplayground}
-Methods \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are meant to be used interactively while IDEs like \RStudio and the use of scripts have made the interactive use of \Rpgrm less frequent. \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are unusual in that their definitions and/or default arguments are dependent on the operating system or IDE from within which \Rpgrm is started.
-
-<<exploring-dfs-0a, eval=FALSE>>=
-View(cars)
-edit(cars)
-edit(print)
-# your own examples
-@
-\end{advplayground}
-
-Method \Rfunction{print()} is most useful for small data sets, or objects. When using \Rlang interactively, results are displayed by an implicit call to \Rfunction{print()}.
-
-Especially in the case of large vectors, lists, matrices or data frames, by default \Rfunction{print()} will show the first 100 members or rows. If a data frame contains many rows of observations, or a vector is long, \Rfunction{head()} and \Rfunction{tail()} allow us to easily extract some rows or members.
-
-<<exploring-dfs-1>>=
-head(cars)
-tail(cars)
-@
-
-\begin{playground}
-Look up the help pages for \Rfunction{head()} and \Rfunction{tail()}, and edit the code above to print only the first two lines, or only the last three lines of \code{cars}, respectively.
-\end{playground}
-
-\begin{advplayground}
-Are \Rfunction{head()} and \Rfunction{tail()} most similar to \Rfunction{print()} or to the extraction operator \code{[ ]}?
-
-<<exploring-dfs-pgnd-1>>=
-z <- head(cars, n = 5)
-z
-@
-\end{advplayground}
-
-Functions \Rfunction{nrow()} and \Rfunction{ncol()} return the number of rows and columns in the data frame (also applicable to matrices but not to lists or vectors where we use \Rfunction{length()}). In the case of named components, we can obtain their names with \Rfunction{names()}, \Rfunction{colnames()}, and \Rfunction{rownames()}.
-
-<<exploring-dfs-1a>>=
-nrow(cars)
-ncol(cars)
-names(cars)
-colnames(cars)
-head(rownames(cars))
-@
-
-The class of an object can be queried with method \Rfunction{class()}. The members of data frames and lists are normal objects with their own modes and classes. The different columns of a data frame can be factors, or vectors of various modes (e.g., numeric, logical, character, etc.) (See section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}.) To explore the mode of the columns we can use an \emph{apply} function. In the present case, we apply function \code{class()} to each column of the data frame \code{cars}. (Apply functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}.)
-\qRloop{sapply()}
-
-<<exploring-dfs-2>>=
-sapply(X = chickwts, FUN = mode)
-@
-
-The statement above returns a named vector of character strings, with the mode of each column. The one below returns the class of each of the columns. For example factors have mode \code{"numeric"} but class \code{"factor"} (see section \ref{sec:calc:factors} or page \pageref{sec:calc:factors} for details about factors).
-
-<<exploring-dfs-3>>=
-sapply(X = chickwts, FUN = class)
-@
-
-Each element of the vector returned by \code{sapply()} is named according to the name of the corresponding column in the data frame, or member of a list.
-
-\begin{playground}
-Data sets \code{airquality} and \code{iris} contain data from air quality measurements in New York and for the size of flower parts of different species of irises. Repeat the steps above with them to learn what variables (columns) they contain, their classes, the number of rows, etc.
-\end{playground}
 
 \section{Plotting}
 \index{plots!base R graphics}
