@@ -1228,7 +1228,7 @@
 \newlength\section@toc@skip
 \section@toc@skip1.5em
 \newlength\SectionTOCWidth
-\SectionTOCWidth2.3em
+\SectionTOCWidth2.8em
 \def\l@section#1#2{%
   \toc@draw
   \gdef\toc@draw{\draw@section{#1}{#2}}}
@@ -1239,7 +1239,7 @@
 \subsection@toc@skip\section@toc@skip
 \advance\subsection@toc@skip\SectionTOCWidth
 \newlength\SubSectionTOCWidth
-\SubSectionTOCWidth3.2em
+\SubSectionTOCWidth3.7em
 \def\l@subsection#1#2{%
   \toc@draw
   \gdef\toc@draw{\draw@subsection{#1}{#2}}}
@@ -1505,7 +1505,7 @@
     \@starttoc{lof}%
     \if@restonecol\twocolumn\fi
     }
-\newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
+\newcommand*\l@figure{\@dottedtocline{1}{1.5em}{2.8em}}
 \newcommand\listoftables{%
     \if@twocolumn
       \@restonecoltrue\onecolumn
