@@ -44,14 +44,14 @@ When working in \Rlang with arithmetic expressions, the normal mathematical prec
 
 It is important to keep in mind that in \Rlang trigonometric functions interpret numeric values representing angles as being expressed in radians.
 
-The equivalent of the math expression\qRfunction{exp()}\qRfunction{sin()}\qRconst{pi}
+The equivalent of the math expression\qRfunction{exp()}\qRfunction{cos()}\qRconst{pi}
 $$
-\frac{3 + e^2}{\sin \pi}
+\frac{3 + e^2}{\cos \pi}
 $$
 is, in \Rlang, written as follows:
 
 <<numbers-0>>=
-(3 + exp(2)) / sin(pi)
+(3 + exp(2)) / cos(pi)
 @
 
 It can be seen above that mathematical constants and functions are part of the \Rlang language. One thing to remember when translating complex fractions as above into \Rlang code, is that in arithmetic expressions the bar of the fraction generates a grouping that alters the normal precedence of operations. In contrast, in an \Rlang expression this grouping must be explicitly signaled with additional parentheses.
@@ -76,9 +76,14 @@ In \emph{playgrounds} the output from running the code in \Rpgrm are not shown, 
 (2 + 10) / 5
 10^2 + 1
 sqrt(9)
-pi # whole precision not shown when printing
-print(pi, digits = 22)
-sin(pi) # oops! Read on for explanation.
+@
+
+Base \Rlang has \Rconst{pi} ($\pi = 3.1415\ldots$) predefined. In \Rlang angles are expressed in radians, thus $\sin(\pi) = 0$ according to trigonometry.
+
+<<numbers-1a, eval=eval_playground>>=
+pi # 15 digits shown when printing
+print(pi, digits = 15)
+sin(pi)
 log(100)
 log10(100)
 log2(8)
@@ -87,37 +92,38 @@ exp(1)
 
 \end{playground}
 
-Variables\index{variables}\index{assignment} are used to store values. After we \emph{assign} a value to a variable, we can use in our code the name of the variable in place of the stored value. The ``usual'' assignment operator is \Roperator{<-}. In \Rlang, all names, including variable names, are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be long in \Rlang although it is not a good idea to use very long names. Here I am using very short names, something that is usually also a very bad idea. However, in the examples in this chapter where the stored values have no connection to the real world, simple names emphasize their abstract nature. In the chunk below, \code{a.vec} and \code{b.vec} are arbitrarily chosen variable names; I should have used names like \code{height.cm} or \code{outside.temperature.C} if they had been useful to convey information. As a guide to readers, I end these names with \code{.vec} to remind readers that the objects stored in these variables are vectors.
+Variables\index{variables}\index{assignment} are used to store values. After we \emph{assign} a value to a variable, we can use in our code the name of the variable in place of the stored value. The ``usual'' assignment operator is \Roperator{<-}. In \Rlang, all names, including variable names, are case sensitive. Variables \code{a} and \code{A} are two different variables. Variable names can be long in \Rlang although it is not a good idea to use very long names. Here I am using very short names, something that is usually also a very bad idea. However, in the examples in this chapter where the stored values have no connection to the real world, simple names emphasize their abstract nature. In the chunk below, \code{vct1} and \code{vct2} are arbitrarily chosen variable names; I should have used names like \code{height.cm} or \code{outside.temperature.C} if they had been useful to convey information. As a guide to readers, I end these names with \code{.vec} to remind readers that the objects stored in these variables are vectors.
 
 <<numbers-2>>=
-a.vec <- 1
-a.vec + 1
-a.vec
-b.vec <- 10
-b.vec <- a.vec + b.vec
-b.vec
+vct1 <- 1
+vct1 + 1
+vct1
+vct2 <- 10
+vct2 <- vct1 + vct2
+vct2
 @
 
 Entering the name of a variable \emph{at the R console} implicitly calls function \code{print()} displaying the stored value on the console. The same applies to any other statement entered \emph{at the R console}: \code{print()} is implicitly called with the result of executing the statement as its argument.
 
 <<numbers-2a>>=
-a.vec
-print(a.vec)
-a.vec + 1
-print(a.vec + 1)
+vct1
+print(vct1)
+vct1 + 1
+print(vct1 + 1)
 @
 \begin{playground}
-There are some syntactically legal assignment statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The ``backwards'' assignment operator \Roperator{->} and resulting code like \code{1 -> a.vec}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{a.vec}, \code{b.vec} and \code{c.vec} are being assigned the same value.
+There are some syntactically legal assignment statements that are not very frequently used, but you should be aware that they are valid, as they will not trigger error messages, and may surprise you. The most important thing is to write code consistently. The ``backwards'' assignment operator \Roperator{->} and resulting code like \code{1 -> vct1}\index{assignment!leftwise} are valid but less frequently used. The use of the equals sign (\Roperator{=}) for assignment in place of \Roperator{<-} although valid is discouraged. Chaining\index{assignment!chaining} assignments as in the first statement below can be used to signal to the human reader that \code{vct1}, \code{vct2} and \code{vct3} are being assigned the same value.
 
 <<numbers-3, tidy=FALSE, eval=eval_playground>>=
-a.vec <- b.vec <- c.vec <- 0
-a.vec
-b.vec
-c.vec
-1 -> a.vec
-a.vec
-a.vec = 3
-a.vec
+VCT1 <- VCT2 <- VCT3 <- 0
+VCT1
+VCT2
+VCT3
+1 -> VCT1
+VCT1
+VCT1 = 3
+VCT1
+remove(VCT1, VCT2, VCT3) # cleanup
 @
 
 \end{playground}
@@ -127,8 +133,8 @@ In\index{numeric, integer and double values} \Rlang, all numbers belong to mode 
 
 <<classes-01>>=
 mode(1)
-a.vec <- 1
-is.numeric(a.vec)
+vct1 <- 1
+is.numeric(vct1)
 @
 
 Because numbers can be stored in different formats, most computing languages implement several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} values can be used everywhere that a number is expected. However, in some cases it has advantages to explicitly indicate that we will store or operate on whole numbers, in which case we can use class \Rclass{integer}, with integer constants indicated by a trailing capital ``L,'' as in  \code{32L}.
@@ -196,9 +202,9 @@ c(3, 1, 2)
 To be able to reuse the vector, we assign it to a variable, giving a name to it. The length of a vector can be queried with function \Rfunction{length()}. We show below \Rlang code followed by a diagram depicting the vector created.
 
 <<numbers-4aa>>=
-d.vec <- c(3, 1, 2)
-length(d.vec)
-d.vec
+vct4 <- c(3, 1, 2)
+length(vct4)
+vct4
 @
 
 \begin{center}
@@ -216,7 +222,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-3.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ d.vec\phantom{mmmm}}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ vct4\phantom{mm}}};
 \draw (array-1-3.east)--++(0:3mm) node [right]{\code{integer} positional indices};
 \draw (array-2-3.east)--++(0:3mm) node [right]{\code{numeric} values};
 %
@@ -225,8 +231,8 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \end{center}
 
 <<numbers-4bb>>=
-e.vec <- c(4, 5, 0)
-e.vec
+vct5 <- c(4, 5, 0)
+vct5
 @
 
 \begin{center}
@@ -244,7 +250,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-3.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ b\phantom{mmmm}}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ vct5\phantom{mm}}};
 \draw (array-1-3.east)--++(0:3mm) node [right]{\code{integer} positional indices};
 \draw (array-2-3.east)--++(0:3mm) node [right]{\code{numeric} values};
 %
@@ -253,8 +259,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \end{center}
 
 <<numbers-4cc>>=
-f.vec <- c(d.vec, e.vec)
-c
+vct6 <- c(vct4, vct5)
 @
 
 \begin{center}
@@ -272,7 +277,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-6.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ c\phantom{mmmm}}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ vct6\phantom{mm}}};
 \draw (array-1-6.east)--++(0:3mm) node [right]{\code{integer} positional indices};
 \draw (array-2-6.east)--++(0:3mm) node [right]{\code{numeric} values};
 %
@@ -281,8 +286,8 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \end{center}
 
 <<numbers-4dd>>=
-g.vec <- c(e.vec, d.vec)
-g.vec
+vct7 <- c(vct5, vct4)
+vct7
 @
 
 \begin{center}
@@ -300,7 +305,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-6.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ g.vec\phantom{mmmm}}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\strut\code{\ vct7\phantom{mm}}};
 \draw (array-1-6.east)--++(0:3mm) node [right]{\code{integer} positional indices};
 \draw (array-2-6.east)--++(0:3mm) node [right]{\code{numeric} values};
 %
@@ -311,33 +316,29 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 Here I\bigsqcup\bigsqcup show concatenation with a vector of the same class but with length zero.
 
 <<numbers-4ee>>=
-c(g.vec, numeric())
+c(vct7, numeric())
 @
 
 Function \code{c()} accepts as arguments two or more vectors and concatenates them, one after another. Quite frequently we may need to insert one vector in the middle of another. For this operation, \code{c()} is not useful by itself. One could use indexing combined with \code{c()}, but this is not needed as \Rlang provides a function capable of directly doing this operation. Although it can be used to ``insert'' values, it is named \code{append()}, and by default, it indeed appends one vector at the end of another.
 
 <<numbers-4a>>=
-append(d.vec, e.vec)
+append(vct4, vct5)
 @
 
 The output above is the same as for \code{c(a, b)}, however, \Rfunction{append()} accepts as an argument an index position after which to ``append'' its second argument. This results in an \emph{insert} operation when the index points at any position different from the end of the vector.\label{par:calc:append:end}
 
 <<numbers-4b>>=
-append(d.vec, values = e.vec, after = 2)
+append(vct4, values = vct5, after = 2)
 @
 
 \begin{playground}\label{pg:seq:rep}
 One can create sequences\index{sequence} using function \Rfunction{seq()} or the operator \Roperator{:}, or repeat values using function \Rfunction{rep()}. In this case, I leave to the reader to work out the rules by running these and his/her own examples, with the help of the documentation, available through \code{help(seq)} and \code{help(rep)}.
 
 <<numbers-5, eval=eval_playground>>=
-a <- -1:5
-a
-b <- 5:-1
-b
-c <- seq(from = -1, to = 1, by = 0.1)
-c
-d <- rep(-5, 4)
-d
+-1:5
+5:-1
+seq(from = -1, to = 1, by = 0.1)
+rep(-5, 4)
 @
 
 \end{playground}
@@ -345,22 +346,22 @@ d
 Next,\label{par:calc:vectorized:opers} something that makes \Rlang different from most other programming languages: vectorized arithmetic\index{vectorized arithmetic}. Operators and functions that are vectorized accept, as arguments, vectors of arbitrary length, in which case the result returned is equivalent to having applied the same function or operator individually to each element of the vector.\label{par:vectorized:numeric}
 
 <<numbers-6>>=
-d.vec + 1 # we add one to vector a defined above
-(d.vec + 1) * 2
-d.vec + e.vec
-d.vec - e.vec
+vct4 + 1 # we add one to vector a defined above
+(vct4 + 1) * 2
+vct4 + vct5
+vct4 - vct5
 @
 
-As it can be seen in the first line of code above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of vector arguments:\index{recycling of arguments} as vector \code{d.vec} is of length \Sexpr{length(d.vec)}, but the \code{numeric} constant 1 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
+As it can be seen in the first line of code above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of vector arguments:\index{recycling of arguments} as vector \code{vct4} is of length \Sexpr{length(vct4)}, but the \code{numeric} constant 1 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
 
 Make sure you understand what calculations are taking place in the chunk above, and also the one below. Vector recycling is a key feature of the \Rlang language. See the box on page \pageref{box:floats} for an in-depth explanation of vector recycling.
 
 <<numbers-6a>>=
-h.vec <- rep(1, 6)
-h.vec
-h.vec + 1:2
-h.vec + 1:3
-h.vec + 1:4
+vct8 <- rep(1, 6)
+vct8
+vct8 + 1:2
+vct8 + 1:3
+vct8 + 1:4
 @
 
 \begin{playground}
@@ -375,9 +376,9 @@ h.vec + 1:4
 As mentioned above, a vector can have a length of zero or more member values. Vectors of length zero may seem at first sight quite useless, but in fact they are very useful. They allow the handling of ``no input'' or ``nothing to do'' cases as normal cases, which in the absence of vectors of length zero would require to be treated as special cases. Constructors for \Rlang classes like \Rfunction{numeric()} return vectors of a length given by their first argument, which defaults to zero.
 
 <<>>=
-z.vec <- numeric(length = 0) # named argument
-z.vec
-length(z.vec)
+vct9 <- numeric(length = 0) # named argument
+vct9
+length(vct8)
 @
 
 <<>>=
@@ -387,8 +388,8 @@ numeric() # default argument
 Vectors of length zero, behave in most cases, as expected---e.g., they can be concatenated as shown here.
 
 <<>>=
-length(c(d.vec, z.vec, e.vec))
-length(c(d.vec, e.vec))
+length(c(vct4, vct9, vct5))
+length(c(vct4, vct5))
 @
 
 Many functions, such as \Rlang's maths functions and operators, will accept numeric vectors of length zero as valid input, returning also a vector of length zero, issuing neither a warning nor an error message. In other words, \emph{these are valid operations} in \Rlang.
@@ -409,65 +410,36 @@ numeric(length = 5)
 The length of a vector can be explicitly increased, with missing values filled automatically with \code{NA}, the marker for not available.
 
 <<>>=
-l.vec <- 1:5
-l.vec
-length(l.vec) <- 10
-l.vec
+vct10 <- 1:5
+length(vct10) <- 10
+vct10
 @
 
 If the length is decreased, the values in the \emph{tail} of the vector are discarded.
 
 <<>>=
-m.vec <- 1:10
-m.vec
-length(m.vec) <- 5
-m.vec
+vct11 <- 1:10
+vct11
+length(vct11) <- 5
+vct11
 @
 
 \end{explainbox}
 \label{par:numeric:vectors:end}\index{vectors!introduction|)}
 
-It\index{removing objects}\index{deleting objects|see {removing objects}} is possible to \emph{remove} named objects (or variables) from the workspace with \Rfunction{rm()}. Function \Rfunction{ls()} returns a \emph{list} of all objects visible in the current environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}.
-
-<<>>=
-any.object <- 1:4
-ls(pattern = "*.object")
-any.object
-rm(any.object)
-ls(pattern = "*.object")
-@
-
-In \pgrmname{RStudio} all objects are listed in the Environment tab and the search box of this tab can be used to find a given object.
-
-\begin{explainbox}
-Function \Rfunction{rm()} accepts both bare names of objects as in the chuck above and \code{character} strings corresponding to object names like in \code{rm("any.object")}. However, While \Rfunction{ls()} accepts patterns to be matched to object names, \Rfunction{rm()} does not. Because of this, these two functions have to be used together for removing all objects with names that match a pattern. The pattern can be given as a regular expression (see section \ref{sec:calc:character:oper} on page \pageref{sec:calc:character:oper}).
-
-List all objects with names ending in "vec".
-
-<<numbers-7>>=
-ls(pattern = ".*vec$")
-@
-
-The code below (not run) would remove all objects with names ending in "vec".
-
-<<numbers-7a, eval=FALSE>>=
-rm(list = ls(pattern = ".*vec$"))
-@
-\end{explainbox}
-
 There\index{special values!NA} are some special values available for numbers. \Rconst{NA} meaning ``not available'' is used for missing values. (\Rconst{NA}) values play a very important role in the analysis of data, as frequently some observations are missing from an otherwise complete data set due to ``accidents'' during the course of an experiment or survey. It is important to understand how to interpret \Rconst{NA} values: They are placeholders for something that is unavailable, in other words, whose value is \emph{unknown}. \Rconst{NA} values propagate when used, so that numerical computations yield \Rconst{NA} when one or more input of the values is unknown.
 
 <<numbers-8>>=
-A <- c(NA, 5)
-A
-A + 1
+vct12 <- c(NA, 5)
+vct12
+vct12 + 1
 @
 
 Calculations\index{special values!NaN}\label{par:special:values} can also yield the following values \Rconst{NaN} ``not a number'', \Rconst{Inf} and \Rconst{-Inf} for $\infty$ and $-\infty$. As you will see below, calculations yielding these values do \textbf{not} trigger errors or warnings, as they are arithmetically valid. \Rconst{Inf} and \Rconst{-Inf} are also valid numerical values for input and constants.
 
 <<numbers-8a>>=
-A + Inf
-Inf / A
+vct12 + Inf
+Inf / vct12
 -1 / 0
 1 / 0
 Inf / Inf
@@ -627,11 +599,11 @@ signif(0.0124567, digits = 3)
 round(1789.1234, digits = 3)
 signif(1789.1234, digits = 3)
 round(1789.1234, digits = -1)
-a <- 0.12345
-b <- round(a, digits = 2)
-a == b
-a - b
-b
+vct13 <- 0.12345
+vct14 <- round(vct13, digits = 2)
+vct13 == vct14
+vct13 - vct14
+vct14
 @
 
 \begin{explainbox}
@@ -660,46 +632,74 @@ What does value truncation mean? Function \Rfunction{trunc()} truncates a numeri
 
 \index{classes and modes!numeric, integer, double|)}\index{numbers and their arithmetic|)}
 
+It\index{removing objects}\index{deleting objects|see {removing objects}} is possible to \emph{remove} named objects (or variables) from the workspace with \Rfunction{remove()}. Function \Rfunction{objects()} returns a \code{character} vector containing the names of all objects visible in the current environment, or by supplying a \code{pattern} argument, only the objects with names matching the \code{pattern}.
+
+<<>>=
+any.object <- 1:4
+objects(pattern = "*.object")
+any.object
+remove(any.object)
+objects(pattern = "*.object")
+@
+
+In \pgrmname{RStudio} all objects are listed in the Environment tab and the search box of this tab can be used to find a given object.
+
+\begin{explainbox}
+Function \Rfunction{remove()} accepts both bare names of objects as in the chunk above and \code{character} strings corresponding to object names like in \code{remove("any.object")}. However, While \Rfunction{objects()} accept patterns to be matched to object names, \Rfunction{remove()} does not. Because of this, these two functions have to be used together for removing all objects with names that match a pattern. The pattern can be given as a regular expression (see section \ref{sec:calc:regex} on page \pageref{sec:calc:regex}).
+
+Both functions have are available under short names matching those used in \osnameNI{Linux} and \osnameNI{Unix} for managing files: \Rfunction{ls()} is a synonym of \Rfunction{objects()} and \Rfunction{rm()} of \Rfunction{remove()}.
+
+Using a simple pattern we obtain the names of all objects with names \code{"vct1"}, \code{"vct2"}, and so on. When using a pattern to remove objects, it is good to first use \Rfunction{objects()} on its own to get a list of the objects that would be deleted by calling \Rfunction{remove()} passing the names returned by \Rfunction{objects()} as argument for parameter \code{list}.
+
+<<numbers-7>>=
+objects(pattern = "^vec.*")
+@
+
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on. We do this at the end of the section before reusing the same names in the code examples of the next section.
+
+<<numbers-last>>=
+remove(list = objects(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
+
 \section{Character values}\label{sec:calc:character}
 \index{character strings}\index{classes and modes!character|(}\qRclass{character}
-Character variables can be used to store any character. Character constants are written by enclosing characters in quotes. There are three types of quotes in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used as delimiters of \code{character} constants.
+In spite of the the name \code{character}, values of this mode, are vectors of \emph{character strings"}. Character constants are written by enclosing characters strings in quotation marks, i.e., \code{"this is a character string"}. There are three types of quotation marks in the ASCII character set, double quotes \code{"}, single quotes \code{'}, and back ticks \code{`}. The first two types of quotes can be used as delimiters of \code{character} constants.
 
 <<char-1>>=
-a <- "A"
-a
-b <- 'A'
-b
-a == b
+vct1 <- "A"
+vct1
+vct2 <- 'A'
+vct2
+vct1 == vct2 # two variables holding character values, or named objects
+"A" == 'A' # two constant character values, or anonymous objects
 @
 
 \begin{explainbox}
-In many computer languages, vectors of characters are distinct from vectors of character strings. In these languages, character vectors store at each index position a single character, while vectors of character strings store at each index position strings of characters of various lengths, such as words or sentences. If you are familiar with \Clang or \Cpplang, you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are not equivalent and that in \Rlang, \code{character} vectors are vectors of character strings. In contrast to these other languages, in \Rlang there is no predefined class for vectors of individual characters and character constants enclosed in double or single quotes are not different.
+In many computer languages, vectors of characters are distinct from vectors of character strings. In these languages, character vectors store at each index position a single character, while vectors of character strings store at each index position strings of characters of various lengths, such as words or sentences. If you are familiar with \Clang or \Cpplang, you need to keep in mind that \Clang's \code{char} and \Rlang's \code{character} are not equivalent and that in \Rlang. In contrast to these other languages, in \Rlang there is no predefined class for vectors of individual characters and character constants enclosed in double or single quotes are not different.
 \end{explainbox}
 
-Concatenating character vectors of length one does not yield a longer character string, it yields instead a longer vector.
+Concatenating character vectors of length one does not yield a longer character string, it yields instead a longer vector of character strings.
 <<char-1a>>=
-a <- 'A'
-b <- "bcdefg"
-c <- "123"
-d <- c(a, b, c)
-d
+vct3 <- 'ABC'
+vct4 <- "bcdefg"
+vct5 <- c("123", "xyz")
+c(vct3, vct4, vct5)
 @
 
-Having two different delimiters available makes it possible to choose the type of quotes used as delimiters so that other quotes can be easily included in a string.
+Having two different delimiters available makes it possible to choose the type of quotation marks used as delimiters so that other quotation marks can be easily included in a string.
 
 <<char-3>>=
-a <- "He said 'hello' when he came in"
-a
-b <- 'He said "hello" when he came in'
-b
+"He said 'hello' when he came in"
+'He said "hello" when he came in'
 @
 
-The\index{character string delimiters} outer quotes are not part of the string, they are ``delimiters'' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using ``escape sequences''. There are several of them, and here we will show just four, new line (\verb|\n|) and tab (\verb|\t|), \verb|\"| the escape code for a quotation mark within a string and \verb|\\| the escape code for a single backslash \verb|\|. We also show here the different behavior of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences and \Rfunction{print()} displaying them as entered.
+The\index{character string delimiters} outer quotes are not part of the string, they are ``delimiters'' used to mark the boundaries. As you can see when \code{b} is printed special characters can be represented using ``escape codes''. There are several of them, and here we will show just four, new line (\verb|\n|) and tab (\verb|\t|), \verb|\"| the escape code for a quotation mark within a string and \verb|\\| the escape code for a single backslash \verb|\|. We also show here the different behavior of \Rfunction{print()} and \Rfunction{cat()}, with \Rfunction{cat()} \emph{interpreting} the escape sequences and \Rfunction{print()} displaying them as entered.
 
 <<char-4>>=
-c <- "abc\ndef\tx\"yz\"\\\tm"
-print(c)
-cat(c)
+vct6 <- "abc\ndef\tx\"yz\"\\\tm"
+print(vct6)
+cat(vct6)
 @
 
 The \textit{escape codes}\index{character escape codes} work only in some contexts, as when using \Rfunction{cat()} to generate the output.
@@ -768,10 +768,10 @@ paste(friends, "likes to eat ", fruits, ".", sep = "")
  Why was necessary to pass \code{sep = ""} in the call to \Rfunction{paste()} in the example above? First try to predict what will happen and then remove \code{, sep = ""} from the statement above and run it to learn the answer. Try your own variations of the code until you understand the role of the separator string.
 \end{playground}
 
-We can pass an additional argument to tell that the vector resulting from the paste operation is to be collapsed into a single \code{character} string. The argument passed to collapse is used as the separator.
+We can pass an additional argument to tell that the vector resulting from the paste operation is to be collapsed into a single \code{character} string. The argument passed to collapse is used as the separator. I use here \code{cat()} so that the newline character is obeyed in the display of the single character string.
 
 <<char-paste-03>>=
-paste(friends, "likes to eat", fruits, collapse = ". ")
+cat(paste(friends, "likes to eat ", fruits, collapse = ".\n", sep = ""))
 @
 
 \begin{explainbox}
@@ -823,17 +823,17 @@ substr(x = c("abracadabra", "workaholic"), start = 5, stop = 11)
 Replacement is done \emph{in place}, by having function \code{substr()} on the left hand side (lhs) of the assignment operator \code{<-}. Thus, the argument passed to parameter \code{x} of \code{substr()} must in this case be a variable rather than a constant. This is a substitution character by character, not insertion, so the number of characters in the string passed as argument to \code{x} remains unchanged, i.e., the value returned by \code{nchar()} does not change.
 
 <<char-str-02>>=
-my.text <- c("abracadabra", "workaholic")
-substr(x = my.text, start = 5, stop = 9) <- "xxx"
-my.text
+vct7 <- c("abracadabra", "workaholic")
+substr(x = vct7, start = 5, stop = 9) <- "xxx"
+vct7
 @
 
 If we pass values to both \code{start} and \code{stop} then only part of the value on the \emph{rhs} of the assignment operator \code{<-} may be used.
 
 <<char-str-03>>=
-my.text <- c("abracadabra", "workaholic")
-substr(x = my.text, start = 5, stop = 6) <- "xxx"
-my.text
+vct8 <- c("abracadabra", "workaholic")
+substr(x = vct8, start = 5, stop = 6) <- "xxx"
+vct8
 @
 
 \begin{playground}
@@ -841,9 +841,10 @@ Frequently, a very effective way of learning how a function behaves, is to exper
 or \code{start} or \code{stop} ignored? Run this ``toy example'' to find out the answer.
 
 <<char-str-04, eval=eval_playground>>=
-my.text <- c("abracadabra", "workaholic")
-substr(x = my.text, start = 5, stop = 11) <- "xxx"
-my.text
+VCT1 <- c("abracadabra", "workaholic")
+substr(x = VCT1, start = 5, stop = 11) <- "xxx"
+VCT1
+remove(VCT1) # clean up
 @
 
 \end{playground}
@@ -889,7 +890,7 @@ grepl(pattern = "C", x = c("R", "C++", "C", "Perl", "Pascal"), ignore.case = TRU
 @
 
 \index{regular expressions|(}%
-In the examples above the arguments for \code{pattern} strings matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
+In\label{sec:calc:regex} the examples above the arguments for \code{pattern} strings matched exactly their targets. In \Rlang and other languages \emph{regular expressions} are used to concisely describe more elaborate and conditional patterns. Regular expressions themselves are encoded as character strings, where some characters and character sequences have special meaning. This means that when a pattern should be interpreted literally rather than specially, \code{fixed = TRUE} should be passed in the call. This in addition, ensures faster computation. In the examples above, the patterns used contained no characters with special meaning, thus, the returned value is not affect by passing \code{fixed = TRUE} as done here.
 
 <<char-regex-06>>=
 sub(pattern = "ab", replacement = "AB", x = "about", fixed = TRUE)
@@ -1014,6 +1015,20 @@ strsplit(x = c("2023-07-29 10:30", "2023-07-29 19:17"), split = " ")
 \index{regular expressions|)}
 \index{classes and modes!character|)}
 
+\begin{warningbox}
+  The ASCII character set is the oldest and simplest in use. In contains only 128 characters including non-printable characters. These characters support the English language. Several different extended versions with 256 characters provided support for other languages, mostly by adding accented letters and some symbols. The 128 ASCII characters were for a long time the only consistently available across computers set up for different languages and countries (or \emph{locales}). Recently the use of much larger character sets like UTF8 has become common. Since \Rlang version 4.2.0 support for UTF8 is available under Windows 10. This makes it possible the processing of text data for many more languages than in the past. Even though now it is possible to use non-ASCII characters as part of object names, it is anyway safer to use only ASCII characters as this support is recent.
+  
+  The extended character sets include additional characters, that are distinct but may produce glyphs that look very similar to those in the ASCII set. One case are em-dash (---), en-dash (-), minus sign ($-$) and regular dash (-) which are all different characters, with only the last one recognized by \Rlang as the minus operator. For those copying and pasting text from a word-processor into \Rpgrm or \RStudio, a frequent difficulty is that even if one types in an ASCII quote character (\verb|"|), the opening and closing quotes in many languages are automatically replaced with non-ASCII ones (``and'') which \Rlang does not accept as character string delimiters. The best solution is to use a plain text editor instead of a word processor when writing scripts or editing text files containing data to be read as code statements or numerical data.
+\end{warningbox}
+
+\begin{explainbox}
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
+
+<<char-last>>=
+remove(list = ls(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
+
 \section{Logical values and Boolean algebra}\label{sec:calc:boolean}
 \index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
 What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). Logical values \code{TRUE} and \code{FALSE} should not be confused with text strings, they are names for the two conditions that can be stored. Logical values are always vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts'').
@@ -1023,35 +1038,33 @@ Logical values are used mostly to keep track of binary conditions, like results 
 In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
 
 <<logical-1>>=
-a <- TRUE
-b <- FALSE
-mode(a)
-a
-!a # negation
-a && b # logical AND
-a || b # logical OR
-xor(a, b) # exclusive OR
+vct1 <- TRUE
+mode(vct1)
+vct1
+!TRUE # negation
+TRUE && FALSE # logical AND
+TRUE || FALSE # logical OR
+xor(TRUE, FALSE) # exclusive OR
 @
 
 %%%% index operators using verb!!
 The availability of two kinds of logical operators can be troublesome for those new to \Rlang. Pairs of ``equivalent'' logical operators behave differently, use similar syntax and use similar symbols! The vectorized operators have single-character names, \Roperator{\&} and \Roperator{\textbar} (similarly to vectorized arithmetic operators like \code{+}), while the non-vectorized ones have double-character names, \Roperator{\&\&} and \Roperator{\textbar\textbar}. There is only one version of the negation operator \Roperator{!} that is vectorized. In recent versions of \Rlang, an error is triggered when a non-vectorized operator is used with a vector with length $> 1$, which helps prevent mistakes. In some situations, vectorized \code{logical} operators can replace non-vectorized ones, but it is important to use the ones that match the intention of the code, as this enables relevant checks for mistakes. Once the distinction is learnt, using the most appropriate operators also contributes to make code easier to read.
 
 <<logical-2>>=
-a <- c(TRUE,FALSE)
-b <- c(TRUE,TRUE)
-a
-b
-a & b # vectorized AND
-a | b # vectorized OR
+c(TRUE, FALSE) & c(TRUE,TRUE) # vectorized AND
+c(TRUE, FALSE) | c(TRUE,TRUE) # vectorized OR
 @
 
 Functions \Rfunction{any()} and \Rfunction{all()} take zero or more logical vectors as their arguments, and return a single logical value ``summarizing'' the logical values in the vectors. Function \Rfunction{all()} returns \code{TRUE} only if all values in the vectors passed as arguments are \code{TRUE}, and \Rfunction{any()} returns \code{TRUE} unless all values in the vectors are \code{FALSE}.
 
 <<>>=
-any(a)
-all(a)
-any(a & b)
-all(a & b)
+vct2 <- c(TRUE, FALSE, FALSE)
+any(vct2)
+all(vct2)
+any(c(TRUE, FALSE) & c(TRUE,TRUE))
+all(c(TRUE, FALSE) & c(TRUE,TRUE))
+any(c(TRUE, FALSE) | c(TRUE,TRUE))
+all(c(TRUE, FALSE) | c(TRUE,TRUE))
 @
 
 Another important thing to know about logical operators is that they ``short-cut'' evaluation. If the result is known from the first part of the statement, the rest of the statement is not evaluated. Try to understand what happens when you enter the following commands. Short-cut evaluation is useful, as the first condition can be used as a guard protecting a later condition from being evaluated when it would trigger an error.\label{par:calc:shortcut:eval}
@@ -1072,32 +1085,38 @@ TRUE && TRUE && NA
 When using the vectorized operators on vectors of length greater than one, `short-cut' evaluation still applies for the result obtained at each index position.
 
 <<logical-4>>=
-a & b & NA
-a & b & c(NA, NA)
-a | b | c(NA, NA)
+c(TRUE, FALSE) & c(TRUE,TRUE) & NA
+c(TRUE, FALSE) & c(TRUE,TRUE) & c(NA, NA)
+c(TRUE, FALSE) | c(TRUE,TRUE) | c(NA, NA)
 @
 
 \begin{playground}
 Based on the description of ``recycling'' presented on page \pageref{par:recycling:numeric} for \code{numeric} operators, explore how ``recycling'' works with vectorized logical operators. Create logical vectors of different lengths (including length one) and \emph{play} by writing several code statements with operations on them. To get you started, one example is given below. Execute this example, and then create and run your own, making sure that you understand why the values returned are what they are. Sometimes, you will need to devise several examples or test cases to tease out of \Rlang an understanding of how a certain feature of the language works, so do not give up early, and make use of your imagination!
 
 <<logical-PG01,eval=eval_playground>>=
-x <- c(TRUE, FALSE, TRUE, NA)
-x & FALSE
-x | c(TRUE, FALSE)
+c(TRUE, FALSE, TRUE, NA) & FALSE
+c(TRUE, FALSE, TRUE, NA) | c(TRUE, FALSE)
 @
 
 \end{playground}
 
-\begin{faqbox}{How to check if an entire vector contains no values other than \code{NA} (or \code{NaN}) values?}
+\begin{faqbox}{How to test if a vector contains no values other than \code{NA} (or \code{NaN}) values?}
+A call to \Rfunction{is.na()} returns a \code{logical} vector that we can pass to \Rfunction{all()}. We can save the intermediate vector \code{temp} and pass it as argument to \Rfunction{is.na()}, or alternatively nest the function calls.
 
 <<faq-vectors-01>>=
-na.vec <- rep(NA, 5)
-all(is.na(na.vec))
+vct2 <- rep(NA, 5) # toy data
+temp <- is.na(vct2)
+all(temp)
+@
+
+<<<faq-vectors-01a>>=
+all(is.na(vct2)) # nested call
 @
 
 \end{faqbox}
 
-\begin{faqbox}{How to check if a vector contains one or more \code{NA} (or \code{NaN}) values?}
+\begin{faqbox}{How to test if a vector contains one or more \code{NA} (or \code{NaN}) values?}
+See previous question. We only need to replace \code{all()} by \Rfunction{any()} to obtain the answer.
 
 <<faq-vectors-02>>=
 na.vec <- rep(NA, 5)
@@ -1105,8 +1124,17 @@ any(is.na(na.vec))
 @
 
 \end{faqbox}
+
 \index{logical values and their algebra|)}
 \index{classes and modes!logical|)}
+
+\begin{explainbox}
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
+
+<<logical-last>>=
+remove(list = ls(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
 
 \section{Comparison operators and operations}\label{sec:calc:comparison}
 \index{comparison operators|(}\index{operators!comparison|(}\qRoperator{>}\qRoperator{<}\qRoperator{>=}\qRoperator{<=}\qRoperator{==}\qRoperator{!=}
@@ -1136,16 +1164,16 @@ In the case of \code{numeric} values additional comparisons are meaningful and a
 These operators can be used on vectors of any length, returning as a result a logical vector as long as the longest operand. In other words, they behave in the same way as the arithmetic operators described on page \pageref{par:vectorized:numeric}: their arguments are recycled when needed. Hint: if you do not know what value is stored in numeric vector \code{a}, use \code{print(a)} after the first code statement below to see its contents.
 
 <<comparison-2>>=
-a <- 1:10
-a > 5
-a < 5
-a == 5
-all(a > 5)
-any(a > 5)
-b <- a > 5
-b
-any(b)
-all(b)
+vct3 <- 1:10
+vct3 > 5
+vct3 < 5
+vct3 == 5
+all(vct3 > 5)
+any(vct3 > 5)
+vct4 <- vct3 > 5
+vct4
+any(vct4)
+all(vct4)
 @
 
 Individual comparisons can be useful, but their full role in data analysis and programming is realized when we combine multiple tests using the operations of the Boolean algebra described in section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}.
@@ -1153,22 +1181,20 @@ Individual comparisons can be useful, but their full role in data analysis and p
 For example to test if members of a numeric vector are within a range, in our example, -1 to +1, we can combine the results from two comparisons using the vectorized logical \emph{AND} operator \Roperator{\&}, and use parentheses to override the default order of precedence of the operations.
 
 <<logical-2a>>=
-c <- -2:3
-c >= -1 & c <= 1
+vct5 <- -2:3
+vct5 >= -1 & vct5 <= 1
 @
 
 If we want to find those values outside this same range, we can negate the test.
 
 <<logical-2b>>=
-c <- -2:3
-!(c >= -1 & c <= 1)
+!(vct5 >= -1 & vct5 <= 1)
 @
 
 Or we can combine another two comparisons using the vectorized logical \emph{OR} operator \Roperator{\textbar}.
 
 <<logical-2c>>=
-c <- -2:3
-c < -1 | c > 1
+vct5 < -1 | vct5 > 1
 @
 
 In some cases an additional advantage is that \Rclass{logical} values require less space in memory for their storage than \code{numeric} values.
@@ -1177,8 +1203,8 @@ In some cases an additional advantage is that \Rclass{logical} values require le
 Use the statement below as a starting point in exploring how precedence works when logical and arithmetic operators are part of the same statement. \emph{Play} with the example by adding parentheses at different positions and based on the returned values, work out the default order of operator precedence used for the evaluation of the example given below.
 
 <<comparison-PG00, eval=eval_playground>>=
-a <- 1:10
-a > 3 | a + 2 < 3
+vct6 <- 1:10
+vct6 > 3 | vct6 + 2 < 3
 @
 \end{playground}
 
@@ -1186,22 +1212,17 @@ It is important to be aware of the consequences of ``short-cut evaluation'' (des
 The behavior of many of base-\Rlang's functions when \code{NA}s are present in their input arguments can be modified. \code{TRUE} passed as an argument to parameter \code{na.rm}, results in \code{NA} values being \emph{removed} from the input \textbf{before} the function is applied.
 
 <<comparison-4>>=
-c <- c(1:10, NA)
-all(c < 20)
-any(c > 20)
-all(c < 20, na.rm=TRUE)
-any(c > 20, na.rm=TRUE)
+vct7 <- c(1:10, NA)
+all(vct7 < 20)
+any(vct7 > 20)
+all(vct7 < 20, na.rm=TRUE)
+any(vct7 > 20, na.rm=TRUE)
 @
 
 \begin{warningbox}
 \index{comparison of floating point numbers|(}\index{inequality and equality tests|(}\index{loss of numeric precision}In many situations, when writing programs one should avoid testing for equality of floating point numbers (`floats'). This is because of how numbers are stored in computers (see the box on page \pageref{box:floats} for an in-depth explanation). Here I show how to gracefully handle rounding errors when using comparison operators. As rounding errors may accumulate, in practice \code{.Machine\$double.eps} is frequently too small a value to safely use in tests for ``zero.''. Whenever possible according to the logic of the calculations, it is best to test for inequalities, for example using \verb|x <= 1.0| instead of \verb|x == 1.0|. If this is not possible, then equality tests should be done by replacing tests like \verb|x == 1.0| with \verb|abs(x - 1.0) < k|, where \verb|k| is a number larger than \code{eps}. Function \Rfunction{abs()} returns the absolute value, in simpler words, makes all values positive or zero, by changing the sign of negative values, or in mathematical notation $|x| = |-x|$.
 
 <<machine-eps-06>>=
-a == 0 # may not always work
-abs(a) < 1e-15 # is safer
-@
-
-<<machine-eps-06a>>=
 sin(pi) == 0 # angle in radians, not degrees!
 sin(2 * pi) == 0
 abs(sin(pi)) < 1e-15
@@ -1215,10 +1236,18 @@ sin(2 * pi)
 
 \index{comparison operators|)}\index{operators!comparison|)}
 
+\begin{explainbox}
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
+
+<<comp-last>>=
+remove(list = ls(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
+
 \section{Sets and set operations}
 \index{sets|(}\index{algebra of sets}\index{operators!set|(}
 
-The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to make use of character vectors of gene tags. Set algebra operations and their equivalents in mathematical notation and corresponding \Rlang functions are: \emph{union}, $\cup$, \code{union()}; \emph{intersection}, $\cap$, \code{intersect()}; \emph{difference (asymmetrical)}, $-$, \code{setdiff()}; \emph{equality test} \code{setequal()}; \emph{membership}, \code{is.element()} and \code{\%in\%}. The first three operations return a vector of the same mode as their inputs, and the last three a \code{logical} vector. The action of the first three operations is most easily illustrated with Venn diagrams, where the returned value (or result of the operation) is depicted in darker grey.\vspace{1ex}
+The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to make use of character vectors of gene tags. Set algebra operations and their equivalents in mathematical notation and corresponding \Rlang functions are: \emph{union}, $\cup$, \code{union()}; \emph{intersection}, $\cap$, \code{intersect()}; \emph{difference (asymmetrical)}, $-$, \code{setdiff()}; \emph{equality test} \code{setequal()}; \emph{membership}, \code{is.element()} and operator \code{\%in\%}. The first three operations return a vector of the same mode as their inputs, and the last three a \code{logical} vector. The action of the first three operations is most easily illustrated with Venn diagrams, where the returned value (or result of the operation) is depicted in darker grey.\vspace{1ex}
 
 \begin{footnotesize}
 \hfill%
@@ -1332,7 +1361,8 @@ intersect(dairy, shopping)
 "lemon" %in% dairy
 "lemon" %in% fruits
 dairy %in% shopping
-setdiff(union(bakery, dairy), shopping)
+union(bakery, dairy)
+setdiff(union(bakery, dairy), shopping) # nested call
 @
 
 \begin{warningbox}
@@ -1341,39 +1371,39 @@ Sets describe membership as a binary property, thus when vectors are interpreted
 <<sets-00a>>=
 union(c("a", "a", "b"), c("b", "a", "b")) # set operation
 setequal(c("a", "a", "b"), c("b", "a", "b")) # sets compared
-all.equal(c("a", "a", "b"), c("b", "a", "b")) # objects compared
-identical(c("a", "a", "b"), c("b", "a", "b")) # objects compared
+all.equal(c("a", "a", "b"), c("b", "a", "b")) # vectors compared
+identical(c("a", "a", "b"), c("b", "a", "b")) # vectors compared
 @
 \end{warningbox}
 
 We construct and save a character vector to use in the next examples.
 
 <<sets-01>>=
-my.set <- c("a", "b", "c", "b")
+vct1 <- c("a", "b", "c", "b")
 @
 
 To test if a given value belongs to a set, we use operator \Roperator{\%in\%} or its function equivalent \Rfunction{is.element()}. In the algebra of sets notation, this is written $a \in A$, where $A$ is a set and $a$ a member. The second statement shows that the \code{\%in\%} operator is vectorized on its left-hand-side (lhs) operand, returning a logical vector.
 
 <<sets-02>>=
-is.element("a", my.set)
-"a" %in% my.set
-c("a", "a", "z") %in% my.set
+is.element("a", vct1)
+"a" %in% vct1
+c("a", "a", "z") %in% vct1
 @
 
 \begin{explainbox}
 Keep in mind that inclusion, implemented in operator \verb|%in%|, is an asymmetrical (not reflective) operation among a vector and a set. The right-hand-side (rhs) argument is interpreted as a set, while the left-hand-side (lhs) argument is interpreted as a vector of values to test for membership in the set. In other words, any duplicate member in the lhs operand is retained and tested while the rhs operand is interpreted as a set of unique values. The returned logical vector has the same length as the lhs operand.
 
 <<sets-02a>>=
-my.set %in% "a"
+vct1 %in% "a"
 @
 \end{explainbox}
 
 The negation of inclusion is $a \not\in A$, and coded in \Rlang by applying the negation operator \Roperator{!} to the result of the test done with \Roperator{\%in\%} or function \Rfunction{is.element()}.
 
 <<sets-02b>>=
-!is.element("a", my.set)
-!"a" %in% my.set
-!c("a", "a", "z") %in% my.set
+!is.element("a", vct1)
+!"a" %in% vct1
+!c("a", "a", "z") %in% vct1
 @
 
 Although inclusion is a set operation, it is also very useful for the simplification of \code{if () \ldots\ else} statements by replacing multiple tests for alternative constant values of the same \code{mode} chained by multiple \Roperator{|} operators. A useful property of \Roperator{\%in\%} and \Rfunction{is.element()} is that they never return \code{NA}.
@@ -1389,8 +1419,8 @@ In some cases, such as when accepting partial character strings as input, the ai
 Use operator \Roperator{\%in\%} to write more concisely the following comparisons. Hint: see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean} for the difference between \code{|} and \code{||} operators.
 
 <<sets-PG00, eval=FALSE>>=
-x <- c("a", "a", "z")
-x == "a" | x == "b" | x == "c" | x == "d"
+vct2 <- c("a", "a", "z")
+vct2 == "a" | vct2 == "b" | vct2 == "c" | xvct2 == "d"
 @
 
 Convert the \code{logical} vectors of length 3 into a vector of length one. Hint: see help for functions \code{all()} and \code{any()}.
@@ -1399,21 +1429,21 @@ Convert the \code{logical} vectors of length 3 into a vector of length one. Hint
 With \Rfunction{unique()} we convert a vector of possibly repeated values into a set of unique values. In the algebra of sets, a certain object belongs or not to a set. Consequently, in a set, multiple copies of the same object or value are meaningless.
 
 <<sets-03>>=
-unique(my.set)
+unique(vct1)
 @
 
 Function \Rfunction{unique()} is frequently useful, for example when we want determine the number of distinct values in a vector.
 
 <<sets-03a>>=
-length(unique(my.set))
+length(unique(vct1))
 @
 
 \begin{playground}
   Do the values returned by these two statements differ?
 
 <<sets-03b, eval=eval_playground>>=
-c("a", "a", "z") %in% my.set
-c("a", "a", "z") %in% unique(my.set)
+c("a", "a", "z") %in% vct1
+c("a", "a", "z") %in% unique(vct1)
 @
 
 \end{playground}
@@ -1422,8 +1452,8 @@ c("a", "a", "z") %in% unique(my.set)
 Function \Rfunction{duplicated()} is the counterpart of \Rfunction{unique()}, returning a logical vector indicating which values in a vector are duplicates of values already present at positions with a lower index.
 
 <<sets-expl-01>>=
-duplicated(my.set)
-anyDuplicated(my.set)
+duplicated(vct1)
+anyDuplicated(vct1)
 @
 
 The \Rlang language includes many functions that simplify tasks related to data analysis. Some are well known like \code{unique()}, but others may need to be searched for in the documentation.
@@ -1433,9 +1463,9 @@ The \Rlang language includes many functions that simplify tasks related to data 
 What do you expect to be the difference between the values returned by the three statements in the code chunk below? Before running them, write down your expectations about the value each one will return. Only then run the code. Independently of whether your predictions were correct or not, write down an explanation of what each statement's operation is.
 
 <<sets-PG01, eval=eval_playground>>=
-union(c("a", "a", "z"), my.set)
-c(c("a", "a", "z"), my.set)
-c("a", "a", "z", my.set)
+union(c("a", "a", "z"), vct1)
+c(c("a", "a", "z"), vct1)
+c("a", "a", "z", vct1)
 @
 
 Are set union and concatenation of vectors equivalent operations? why or why not?
@@ -1446,9 +1476,9 @@ Are set union and concatenation of vectors equivalent operations? why or why not
 All set algebra examples above use character vectors and character constants. This is just the most frequent use case. Sets operations are valid on vectors of any atomic class, including \code{integer}, and computed values can be part of statements. In the second and third statements in the next chunk, we need to use additional parentheses to alter the default order of precedence between arithmetic and set operators.
 
 <<sets-EB01>>=
-9L %in% 2L:4L
-9L %in% ((2L:4L) * (2L:4L))
-c(1L, 16L) %in% ((2L:4L) * (2L:4L))
+9 %in% 2:4
+9 %in% ((2:4) * (2:4))
+c(1, 16) %in% ((2:4) * (2:4))
 @
 
 \emph{Empty sets} are an important component of the algebra of sets, in \Rlang they are represented as vectors of zero length. These vectors do belong to a class such as \Rclass{numeric} or \Rclass{character} and must be compatible with other operands in an expression.
@@ -1459,9 +1489,17 @@ character() %in% c("a", "b", "c")
 union("ab", character())
 @
 
-Although set operators are defined for \Rclass{numeric} vectors, rounding errors in `floats' can result in unexpected results (see section \ref{box:floats} on page \pageref{box:floats}).
-
 \end{explainbox}
+
+\begin{warningbox}
+  Although set operators are defined for \Rclass{numeric} vectors, rounding errors in `floats' can result in unexpected results (see section \ref{box:floats} on page \pageref{box:floats}).
+  
+<<sets-warn-flt1>>=
+c(cos(pi), sin(pi)) %in% c(0, -1)
+c(cos(pi), sin(pi))
+@
+
+\end{warningbox}
 
 \begin{advplayground}
 In the algebra of sets notation $A \subseteq B$, where $A$ and $B$ are sets, indicates that $A$ is a subset or equal to $B$. For a true subset, the notation is $A \subset B$. The operators with the reverse direction are $\supseteq$ and $\supset$. Implement these four operations in four \Rlang statements, and test them on sets (represented by \Rlang vectors) with different ``overlap'' among set members.
@@ -1469,30 +1507,59 @@ In the algebra of sets notation $A \subseteq B$, where $A$ and $B$ are sets, ind
 \index{operators!set|)}
 \index{sets|)}
 
+\begin{explainbox}
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
+<<sets-last>>=
+remove(list = ls(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
+
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
 \index{objects!mode}
-Variables have a \emph{mode} that depends on what is stored in them. But different from other languages, assignment to a variable of a different mode is allowed and in most cases its mode changes together with its contents. However, there is a restriction that all elements in a vector, array or matrix, must be of the same mode. While this is not required for lists, which can be heterogenous. In practice this means that we can assign an object, such as a vector, with a different \code{mode} to a name already in use, but we cannot use indexing to assign an object of a different mode to individual members of a vector, matrix or array. Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}. Function \Rfunction{mode()} returns the mode of an object, as a character string and \Rfunction{typeof()} returns R's internal type or storage mode.\qRfunction{is.character()}\qRfunction{is.numeric()}\qRfunction{is.logical()}
+Classes are abstractions, they determine the ``meaning'' and behavior of objects belonging to them. New classes can be defined in user code as well as new methods, i.e., functions or operators tailored to fit them. The \emph{class} is like a ``tag'' that tells how the value in an object should be interpreted and operated upon.
+
+Variables (names given to objects) have a \emph{class} that depends on the object stored in them. In contrast to some other languages in \Rlang assignment to a variable already in use to store an object belonging to a different class is allowed. There is a restriction that all elements in a vector, array or matrix, must be of the same mode (these are called atomic, as they contain homogeneous members). Lists and data frames can be heterogenous (to be described in chapter \ref{chap:R:collective}). In practice this means that we can assign an object, such as a vector, with a different \code{class} to a name already in use, but we cannot use indexing to assign an object of a different mode to individual members of a vector, matrix or array.
+
+Function \Rfunction{class()} is used to query the class of an object, and function \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
 
 <<mode-1>>=
-my_var <- 1:5
-mode(my_var) # no distinction of integer or double
-typeof(my_var)
-is.numeric(my_var) # no distinction of integer or double
-is.double(my_var)
-is.integer(my_var)
-is.logical(my_var)
-is.character(my_var)
-my_var <- "abc"
-mode(my_var)
+vct1 <- 1:5
+class(vct1)
+inherits(vct1, "character")
+inherits(vct1, "numeric")
 @
 
-While \emph{mode} is a fundamental property, and limited to those modes defined as part of the \Rlang language, the concept of \emph{class}, is different in that new classes can be defined in user code. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. The use of classes for dispatching methods (a kind of functions) is discussed in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}, in relation to object-oriented programming. Function \Rfunction{class()} is used to query the class of an object, and function \Rfunction{inherits()} is used to test if an object belongs to a specific class or not (including ``parent'' classes, to be later described).
+Functions with names starting with \code{is.} are tests returning a logical value, \code{TRUE}, \code{FALSE} or \code{NA}.\qRfunction{is.character()}\qRfunction{is.numeric()}\qRfunction{is.logical()}
 
 <<mode-2>>=
-class(my_var)
-inherits(my_var, "character")
-inherits(my_var, "numeric")
+is.numeric(vct1) # no distinction of integer or double
+is.double(vct1)
+is.integer(vct1)
+is.logical(vct1)
+is.character(vct1)
 @
+
+\begin{explainbox}
+The \emph{mode} of an object is a fundamental property, and limited to those modes defined as part of the \Rlang language. In particular, different \Rlang objects of a given mode, such as \code{numeric}, can belong to different \code{class}es. Classes and the dispatch of methods are discussed in section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods}, together with object-oriented programming.
+
+<<mode-3>>=
+mode(c(1, 2, 3)) # no distinction of integer or double
+typeof(c(1, 2, 3))
+class(c(1, 2, 3))
+mode(c(1L, 2L, 3L)) # no distinction of integer or double
+typeof(c(1L, 2L, 3L))
+class(c(1L, 2L, 3L))
+mode(factor(c("a", "b", "c"))) # no distinction of integer or double
+typeof(factor(c("a", "b", "c")))
+class(factor(c("a", "b", "c")))
+mode(c("a", "b", "c"))
+typeof(c("a", "b", "c"))
+class(c("a", "b", "c"))
+mode(c(TRUE, FALSE))
+typeof(c(TRUE, FALSE))
+class(c(TRUE, FALSE))
+@
+\end{explainbox}
 
 \section{`Type' conversions}\label{sec:calc:type:conversion}
 \index{type conversion|(}
@@ -1540,12 +1607,12 @@ Compare the values returned by \Rfunction{trunc()} and \Rfunction{as.integer()} 
 Using conversions, the difference between the length of a \code{character} vector and the number of characters composing each member ``string'' within a vector is obvious.\qRfunction{length()}\qRfunction{as.numeric()}
 
 <<convert-2>>=
-f <- c("1", "2", "3")
-length(f)
-g <- "123"
-length(g)
-as.numeric(f)
-as.numeric(g)
+vct1 <- c("1", "2", "3")
+length(vct1)
+vct2 <- "123"
+length(vct2)
+as.numeric(vct1)
+as.numeric(vct2)
 @
 \end{explainbox}
 
@@ -1555,12 +1622,12 @@ Other\index{formatted character strings from numbers} functions relevant to the 
 When using \Rfunction{format()}, the format used to display numbers is set by passing arguments to several different parameters. As \Rfunction{print()} calls \Rfunction{format()} to make numbers \emph{pretty} it accepts the same options.
 
 <<convert-5>>=
-x = c(123.4567890, 1.0)
-format(x) # using defaults
-format(x[1]) # using defaults
-format(x[2]) # using defaults
-format(x, digits = 3, nsmall = 1)
-format(x, digits = 3, scientific = TRUE)
+vct2 = c(123.4567890, 1.0)
+format(vct2) # using defaults
+format(vct2[1]) # using defaults
+format(vct2[2]) # using defaults
+format(vct2, digits = 3, nsmall = 1)
+format(vct2, digits = 3, scientific = TRUE)
 @
 
 Function \Rfunction{sprintf()} is similar to \Clang's function of the same name. The user interface is rather unusual, but very powerful, once one learns the syntax. All the formatting is specified using a \code{character} string as template. In this template, placeholders for data and the formatting instructions are embedded using special codes. These codes start with a percent character. We show in the example below the use of some of these: \code{f} is used for \code{numeric} values to be formatted according to a ``fixed point,'' while \code{g} is used when we set the number of significant digits and \code{e} for exponential or \emph{scientific} notation.
@@ -1582,14 +1649,14 @@ Function \Rfunction{format()} may be easier to use, in some cases, but \Rfunctio
 We have above described \Rconst{NA} as a single value ignoring modes, but in reality \Rconst{NA}s come in various flavors. \Rconst{NA\_real\_}, \Rconst{NA\_character\_}, etc. and \Rconst{NA} defaults to an \Rconst{NA} of class \Rclass{logical}. \Rconst{NA} is normally converted on the fly to other modes when needed, so in general \Rconst{NA} is all we need to use.
 
 <<nas-01>>=
-a <- c(1, NA)
-is.numeric(a[2])
+vct3 <- c(1, NA)
+is.numeric(vct3[2])
 is.numeric(NA)
 @
 
 <<nas-01a>>=
-b <- c("abc", NA)
-is.character(b[2])
+vct4 <- c("abc", NA)
+is.character(vct4[2])
 @
 
 <<nas-01b>>=
@@ -1599,18 +1666,26 @@ class(NA_character_)
 @
 
 <<nas-01c>>=
-c <- NA
-c(c, 2:3)
+vct5 <- NA
+c(vct5, 2:3)
 @
 
 However, even the statement below works transparently.
 
 <<nas-02>>=
-a[3] <- b[2]
+vct3[3] <- vct4[2]
 @
 \end{explainbox}
 
 \index{type conversion|)}
+
+\begin{explainbox}
+The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
+
+<<type-last>>=
+remove(list = ls(pattern = "^vct[[:digit:]]?"))
+@
+\end{explainbox}
 
 \section{Vector manipulation}\label{sec:vectors}\label{sec:calc:indexing}
 \index{vectors!indexing|(}\index{vectors!member extraction}
@@ -1621,8 +1696,8 @@ In this section we are going to see how to extract or retrieve, replace, and mov
 We extract the first 10 elements of the vector \code{letters}.
 
 <<vectors-1a>>=
-a <- letters[1:10]
-a
+vct1 <- letters[1:10]
+vct1
 @
 
 \begin{center}
@@ -1641,7 +1716,7 @@ row 1 column 2/.style={nodes={draw}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-10.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut\ a\phantom{mmmm}}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut\ vct1\phantom{mm}}};
 %\draw (array-1-2.north)--++(90:3mm) node [above] (first) {Index};
 \draw (array-1-10.east)--++(0:3mm) node [right]{\code{integer} positional indices};
 \draw (array-2-10.east)--++(0:3mm) node [right]{\code{character} values};
@@ -1653,7 +1728,7 @@ row 1 column 2/.style={nodes={draw}}}]
 \end{center}
 
 <<vectors-1>>=
-a[2]
+vct1[2]
 @
 
 \begin{explainbox}
@@ -1675,11 +1750,12 @@ month.name[length(month.name)]
 @
 
 \end{faqbox}
+
 It is possible to extract a subset of the elements of a vector in a single operation, using a vector of indexes. The positions of the extracted elements in the result (``returned value'') are determined by the ordering of the members of the vector of indexes---easier to demonstrate than to explain.
 
 <<vectors-2>>=
-a[c(3, 2)]
-a[10:1]
+vct1[c(3, 2)]
+vct1[10:1]
 @
 
 \begin{playground}
@@ -1687,10 +1763,10 @@ The length of the indexing vector is \emph{not} restricted by the length of the 
 
 <<vectors-PG1, eval=eval_playground>>=
 length(a)
-a[c(3, 3, 3, 3)]
-a[c(10:1, 1:10)]
-a[c(1, 11)]
-a[11]
+vct1[c(3, 3, 3, 3)]
+vct1[c(10:1, 1:10)]
+vct1[c(1, 11)]
+vct1[11]
 @
 
 Have you tried some of your own examples? If not yet, do \emph{play} with additional variations of your own before continuing.
@@ -1700,34 +1776,34 @@ Have you tried some of your own examples? If not yet, do \emph{play} with additi
 Negative indexes have a special meaning; they indicate the positions at which values should be excluded. Be aware that it is \emph{illegal} to mix positive and negative values in the same indexing operation.
 
 <<vectors-3>>=
-a[-2]
-a[-c(3,2)]
-a[-3:-2]
+vct1[-2]
+vct1[-c(3,2)]
+vct1[-3:-2]
 @
 
 \begin{advplayground}
 Results from indexing with special values and zero may be surprising. Try to build a rule from the examples below, a rule that will help you remember what to expect next time you are confronted with similar statements using ``subscripts'' which are special values instead of integers larger or equal to one---this is likely to happen sooner or later as these special values can be returned by different \Rlang expressions depending on the value of operands or function arguments, some of them described earlier in this chapter.
 
 <<vectors-5, eval=eval_playground>>=
-a[ ]
-a[0]
-a[numeric(0)]
-a[NA]
-a[c(1, NA)]
-a[NULL]
-a[c(1, NULL)]
+vct1[ ]
+vct1[0]
+vct1[numeric(0)]
+vct1[NA]
+vct1[c(1, NA)]
+vct1[NULL]
+vct1[c(1, NULL)]
 @
 \end{advplayground}
 
 Another way of indexing, which is very handy, but not available in most other programming languages, is indexing with a vector of \code{logical} values. The \code{logical} vector used for indexing is usually of the same length as the vector from which elements are going to be selected. However, this is not a requirement, because if the \code{logical} vector of indexes is shorter than the indexed vector, it is ``recycled'' as discussed above in relation to other operators.
 
 <<vectors-6>>=
-a[TRUE]
-a[FALSE]
-a[c(TRUE, FALSE)]
-a[c(FALSE, TRUE)]
-a > "c"
-a[a > "c"]
+vct1[TRUE]
+vct1[FALSE]
+vct1[c(TRUE, FALSE)]
+vct1[c(FALSE, TRUE)]
+vct1 > "c"
+vct1[vct1 > "c"]
 @
 
 Indexing with logical vectors is very frequently used in \Rlang because comparison operators are vectorized. Comparison operators, when applied to a vector, return a \code{logical} vector, a vector that can be used to extract the elements for which the result of the comparison test was \code{TRUE}.
@@ -1736,21 +1812,21 @@ Indexing with logical vectors is very frequently used in \Rlang because comparis
 The examples in this text box demonstrate additional uses of logical vectors: 1) the logical vector returned by a vectorized comparison can be stored in a variable, and the variable used as a ``selector'' for extracting a subset of values from the same vector, or from a different vector.
 
 <<vectors-PG6, eval=eval_playground>>=
-a <- letters[1:10]
-b <- 1:10
-selector <- a > "c"
+vct1 <- letters[1:10]
+vct2 <- 1:10
+selector <- vct1 > "c"
 selector
-a[selector]
-b[selector]
+vct1[selector]
+vct2[selector]
 @
 
 Numerical indexes can be obtained from a logical vector by means of function \code{which()}.
 
 <<vectors-PG6a, eval=eval_playground>>=
-indexes <- which(a > "c")
+indexes <- which(vct1 > "c")
 indexes
-a[indexes]
-b[indexes]
+vct1[indexes]
+vct2[indexes]
 @
 
 Make sure to understand the examples above. These constructs are very widely used in \Rlang because they allow for concise code that is easy to understand once one is familiar with the indexing rules. However, if one does not command these rules, many of these terse statements become unintelligible.
@@ -1826,43 +1902,43 @@ It is more common to use named members with lists than with vectors, but in \Rla
 Indexing can be used on either side of an assignment expression. In the chunk below, we use the extraction operator on the left-hand side of the assignments to replace values only at selected positions in the vector. This may look rather esoteric at first sight, but it is just a simple extension of the logic of indexing described above. It works, because the low precedence of the \Roperator{<-} operator results in both the left-hand side and the right-hand side being fully evaluated before the assignment takes place. To make the changes to the vectors easier to follow, we use identical vectors with different names for each of these examples.
 
 <<vectors-7>>=
-a <- 1:10
-a
-a[1] <- 99
-a
+vct2 <- 1:10
+vct2
+vct2[1] <- 99
+vct2
 
-b <- 1:10
-b[c(2,4)] <- -99 # recycling
-b
+vct2 <- 1:10
+vct2[c(2,4)] <- -99 # recycling
+vct2
 
-c <- 1:10
-c[c(2,4)] <- c(-99, 99)
-c
+vct2 <- 1:10
+vct2[c(2,4)] <- c(-99, 99)
+vct2
 
-d <- 1:10
-d[TRUE] <- 1 # recycling
-d
+vct2 <- 1:10
+vct2[TRUE] <- 1 # recycling
+vct2
 
-e <- 1:10
-e <- 1  # no recycling
-e
+vct2 <- 1:10
+vct2 <- 1  # no recycling
+vct2
 @
 
 We can also use subscripting on both sides of the assignment operator, for example, to swap two elements.
 
 <<vectors-8>>=
-a <- letters[1:10]
-a[1:2] <- a[2:1]
-a
+vct3 <- letters[1:10]
+vct3[1:2] <- vct3[2:1]
+vct3
 @
 
 \begin{playground}
 Do play with subscripts to your heart's content, really grasping how they work and how they can be used, will be very useful in anything you do in the future with \Rlang. Even the contrived example below follows the same simple rules, just study it bit by bit. Hint: the second statement in the chunk below, modifies \code{a}, so, when studying variations of this example you will need to recreate \code{a} by executing the first statement, each time you run a variation of the second statement.
 
 <<vectors-8a, eval=eval_playground>>=
-a <- letters[1:10]
-a[5:1] <- a[c(TRUE,FALSE)]
-a
+VCT1 <- letters[1:10]
+VCT1[5:1] <- VCT1[c(TRUE,FALSE)]
+VCT1
 @
 
 \end{playground}
@@ -1871,23 +1947,23 @@ a
 In \Rlang, indexing with positional indexes can be done with \Rclass{integer} or \Rclass{numeric} values. Numeric values can be floats, but for indexing, only integer values are meaningful. Consequently, \Rclass{double} values are converted into \code{integer} values when used as indexes. The conversion is done invisibly, but it does slow down computations slightly. When working on big data sets, explicitly using \code{integer} values can improve performance.
 
 <<vectors-9>>=
-b <- LETTERS[1:10]
-b
-b[1]
-b[1.1]
-b[1.9999] # surprise!!
-b[2]
+vct4 <- LETTERS[1:10]
+vct4
+vct4[1]
+vct4[1.1]
+vct4[1.9999] # surprise!!
+vct4[2]
 @
 
 From this experiment, we can learn that if positive indexes are not whole numbers, they are truncated to the next smaller integer.
 
 <<vectors-9a>>=
-b <- LETTERS[1:10]
-b
-b[-1]
-b[-1.1]
-b[-1.9999]
-b[-2]
+vct4 <- LETTERS[1:10]
+vct4
+vct4[-1]
+vct4[-1.1]
+vct4[-1.9999]
+vct4[-2]
 @
 
 From this experiment, we can learn that if negative indexes are not whole numbers, they are truncated to the next larger (less negative) integer. In conclusion, \code{double} index values behave as if they where sanitized using function \code{trunc()}.
@@ -1899,36 +1975,40 @@ This example also shows how one can tease out of \Rlang its rules through experi
 A\index{vectors!sorting} frequent operation on vectors is sorting them into an increasing or decreasing order. The most direct approach is to use \Rfunction{sort()}.
 
 <<vectors-10>>=
-my.vector <- c(10, 4, 22, 1, 4)
-sort(my.vector)
-sort(my.vector, decreasing = TRUE)
+vct5 <- c(10, 4, 22, 1, 4)
+sort(vct5)
+sort(vct5, decreasing = TRUE)
 @
 
 An indirect way of sorting a vector, possibly based on a different vector, is to generate with \Rfunction{order()} a vector of numerical indexes that can be used to achieve the ordering.
 
 <<vectors-11>>=
-order(my.vector)
-my.vector[order(my.vector)]
-another.vector <- c("ab", "aa", "c", "zy", "e")
-another.vector[order(my.vector)]
+order(vct5)
+vct5[order(vct5)]
+vct6 <- c("ab", "aa", "c", "zy", "e")
+vct6[order(vct5)]
 @
 
 \begin{explainbox}
 A problem linked to sorting that we may face is counting how many copies of each value are present in a vector. We need to use two functions \Rfunction{sort()} and \Rfunction{rle()}\index{vector!run length encoding}. The second of these functions computes \emph{run length} as used in \emph{run length encoding} for which \emph{rle} is an abbreviation. A \emph{run} is a series of consecutive identical values. As the objective is to count the number of copies of each value present, we need first to sort the vector.
 
 <<vectors-EB21>>=
-my.letters <- letters[c(1,5,10,3,1,4,21,1,10)]
-my.letters
-sort(my.letters)
-rle(sort(my.letters))
+vct7 <- letters[c(1, 5, 10, 3, 1, 4, 21, 1, 10)]
+vct7
+sort(vct7)
+rle(sort(vct7))
 @
 
 The second and third statements are only to demonstrate the effect of each step. The last statement uses nested function calls to compute the number of copies of each value in the vector.
 \end{explainbox}
 
-<<vector-cleanup, include=FALSE>>=
-rm(list = setdiff(ls(pattern="*"), to.keep))
+\begin{explainbox}
+The code below removes all objects except those whose names are in vector \code{to.keep}.
+
+<<vector-last>>=
+remove(list = setdiff(ls(pattern="*"), to.keep))
 @
+\end{explainbox}
 
 \index{vectors!indexing|)}
 
@@ -2049,33 +2129,33 @@ matrix(1:15, ncol = 2)
 Subscripting of matrices and arrays is consistent with that used for vectors; we only need to supply an indexing vector, or leave a blank space, for each dimension. A matrix has two dimensions, so to access an element or group of elements, we use two indices. The first index value selects rows, and the second one, columns.
 
 <<matrix-10>>=
-A <- matrix(1:20, ncol = 4)
-A
-A[1, 2]
+mat1 <- matrix(1:20, ncol = 4)
+mat1
+mat1[1, 2]
 @
 
 Remind yourself of how indexing of vectors works in \Rlang (see section \ref{sec:vectors} on page \pageref{sec:vectors}). We will now apply the same rules in two dimensions to extract and replace values. The first or leftmost indexing vector corresponds to rows and the second one to columns, so \Rlang uses a rows-first convention for indexing. Missing indexing vectors are interpreted as meaning \emph{extract all rows} and \emph{extract all columns}, respectively.
 
 <<matrix-11>>=
-A[1, ]
-A[ , 1]
-A[2:3, c(1,3)]
-A[3, 4] <- 99
-A
-A[4:3, 2:1] <- A[3:4, 1:2]
-A
+mat1[1, ]
+mat1[ , 1]
+mat1[2:3, c(1,3)]
+mat1[3, 4] <- 99
+mat1
+mat1[4:3, 2:1] <- mat1[3:4, 1:2]
+mat1
 @
 
 \begin{explainbox}
 Vectors are simpler than matrices, and by default when possible the ``slice'' extracted from a matrix it is simplified into a vector by dropping one dimension. By passing \code{drop = FALSE}, we can prevent this.
 
 <<matrix-11a>>=
-is.matrix(A[1, ])
-is.matrix(A[1:2, 1:2])
-is.vector(A[1, ])
-is.vector(A[1:2, 1:2])
-is.matrix(A[1, , drop = FALSE])
-is.matrix(A[1:2, 1:2, drop = FALSE])
+is.matrix(mat1[1, ])
+is.matrix(mat1[1:2, 1:2])
+is.vector(mat1[1, ])
+is.vector(mat1[1:2, 1:2])
+is.matrix(mat1[1, , drop = FALSE])
+is.matrix(mat1[1:2, 1:2, drop = FALSE])
 @
 
 \end{explainbox}
@@ -2083,34 +2163,34 @@ is.matrix(A[1:2, 1:2, drop = FALSE])
 Matrices, like vectors, can be assigned names that function as ``nicknames'' for indices for assignment and extraction. Matrices can have row names and/or column names.
 
 <<matrix-12>>=
-colnames(A)
-rownames(A)
-colnames(A) <- c("a", "b", "c", "d")
-A
-A[ , c("b", "a")]
-colnames(A) <- NULL
-A
+colnames(mat1)
+rownames(mat1)
+colnames(mat1) <- c("a", "b", "c", "d")
+mat1
+mat1[ , c("b", "a")]
+colnames(mat1) <- NULL
+mat1
 @
 
 \begin{warningbox}
 Matrices can be indexed as vectors, without triggering an error or warning.
 
 <<matrix-13>>=
-A <- matrix(1:20, ncol = 4)
-A
-dim(A)
-A[10]
-A[5, 2]
+mat1 <- matrix(1:20, ncol = 4)
+mat1
+dim(mat1)
+mat1[10]
+mat1[5, 2]
 @
 
 The next code example demonstrates that indexing as a vector with a single index, always works column-wise even if matrix \code{B} was created by assigning vector elements by row.
 
 <<matrix-14>>=
-B <- matrix(1:20, ncol = 4, byrow = TRUE)
-B
-dim(B)
-B[10]
-B[5, 2]
+mat2 <- matrix(1:20, ncol = 4, byrow = TRUE)
+mat2
+dim(mat2)
+mat2[10]
+mat2[5, 2]
 @
 \end{warningbox}
 
@@ -2118,8 +2198,8 @@ B[5, 2]
 In \Rlang, a \Rclass{matrix} can have a single row, a single column, a single element or no elements. However, in all cases, a \code{matrix} will have as \emph{dimensions} attribute an \code{integer} vector of length two.
 
 <<dimensions-box-01>>=
-my.vector <- 1:6
-dim(my.vector)
+vct1 <- 1:6
+dim(vct1)
 @
 
 <<dimensions-box-02>>=
@@ -2222,9 +2302,9 @@ Arrays\index{matrix!dimensions}\index{arrays!dimensions} are similar to matrices
 When calling the constructor \Rfunction{array()}, dimensions are specified with the argument passed to parameter \code{dim}.
 
 <<matrix-21>>=
-B <- array(1:27, dim = c(3, 3, 3))
-B
-B[2, 2, 2]
+ary1 <- array(1:27, dim = c(3, 3, 3))
+ary1
+ary1[2, 2, 2]
 @
 
 In the chunk above, the length of the supplied vector is the product of the dimensions, $27 = 3 \times 3 \times 3 = 3^3$. Arrays are printed in slices, with slices across 3rd and higher dimensions printed separately, with their corresponding indexes above each slice and the first two dimensions on the margins of the individual slices, similarly to how matrices are displayed.
@@ -2233,18 +2313,17 @@ In the chunk above, the length of the supplied vector is the product of the dime
   How do you use indexes to extract the second element of the original vector, in each of the following matrices and arrays?
 
 <<matrix-PG01, eval=eval_playground>>=
-v <- 1:10
-m2c <- matrix(v, ncol = 2)
-m2cr <- matrix(v, ncol = 2, byrow = TRUE)
-m2r <- matrix(v, nrow = 2)
-m2rc <- matrix(v, nrow = 2, byrow = TRUE)
+VCT2 <- 1:10
+MAT1 <- matrix(VCT2, ncol = 2)
+MAT2 <- matrix(VCT2, ncol = 2, byrow = TRUE)
+MAT3 <- matrix(VCT2, nrow = 2)
+MAT4 <- matrix(VCT2, nrow = 2, byrow = TRUE)
 @
 
 <<matrix-PG02, eval=eval_playground>>=
-v <- 1:10
-a2c <- array(v, dim = c(5, 2))
-a2c <- array(v, dim = c(5, 2), dimnames = list(NULL, c("c1", "c2")))
-a2r <- array(v, dim = c(2, 5))
+ARY1 <- array(VCT2, dim = c(5, 2))
+ARY2 <- array(VCT2, dim = c(5, 2), dimnames = list(NULL, c("c1", "c2")))
+ARY3 <- array(VCT2, dim = c(2, 5))
 @
 
 Be aware that vectors and one-dimensional arrays are not the same thing, while two-dimensional arrays are matrices.
@@ -2259,32 +2338,37 @@ Be aware that vectors and one-dimensional arrays are not the same thing, while t
 Operators for matrices are available in \Rlang, as matrices are used in many statistical algorithms. We will not describe them all here, only \Rfunction{t()} and some specializations of arithmetic operators. Function \Rfunction{t()} transposes\index{matrix!transpose} a matrix, by swapping columns and rows.
 
 <<matrix-31>>=
-A <- matrix(1:20, ncol = 4)
-A
-t(A)
+mat3 <- matrix(1:20, ncol = 4)
+mat3
+t(mat3)
 @
 
 As with vectors, recycling applies to arithmetic operators when applied to matrices.\index{matrix!operations with vectors}
 
 <<matrix-32>>=
-A + 2
-A * 0:1
-A * 1:0
+mat3 + 2
+mat3 * 0:1
+mat3 * 1:0
 @
 
 In the examples above with the usual multiplication operator \code{*}, the operation described is not a matrix product, but instead, the products between individual elements of the matrix and vectors. Operators and functions implementing the operations of matrix algebra are available. Matrix algebra gives the rules for operations where both operands are matrices. For example, matrix multiplication is indicated by operator \Roperator{\%*\%}. \index{matrix!multiplication}
 
 <<matrix-33>>=
-B <- matrix(1:16, ncol = 4)
-B * B
-B %*% B
+mat4 <- matrix(1:16, ncol = 4)
+mat4 * mat4
+mat4 %*% mat4
 @
 
 Other operators and functions for matrix algebra like cross-product (\Rfunction{crossprod()}), extracting or replacing the diagonal (\Rfunction{diag()}) are available in base \Rlang. Packages, including \pkgname{matrixStats}, provide additional functions and operators for matrices.
 
-<<matrix-cleanup, include=FALSE>>=
+\begin{explainbox}
+The code below removes all objects except those whose names are in vector \code{to.keep}.
+
+<<matrix-last, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
+
+\end{explainbox}
 \index{matrix!operators|)}
 
 \index{matrices|)}
@@ -2319,14 +2403,14 @@ gl(n = 2, k = 1, length = 10, labels = c("A", "B"))
 It is always preferable to use meaningful labels for levels, even if \Rlang does not require it. Here the vector is stored in a variable named \code{my.vector}. In a real data analysis situation in most cases the vector would have been read from a file on disk and would be longer.
 
 <<factors-2>>=
-my.vector <- c("treated", "treated", "control", "control", "control", "treated")
-factor(my.vector)
+vct1 <- c("treated", "treated", "control", "control", "control", "treated")
+factor(vct1)
 @
 
 The ordering of levels is established at the time a factor is created, and by default is alphabetical. This default ordering of levels is frequently not the one needed. We can pass an argument to parameter \code{levels} of function \Rfunction{factor()} to set a different ordering of the levels.
 
 <<factors-3>>=
-factor(x = my.vector, levels = c("treated", "control"))
+factor(x = vct1, levels = c("treated", "control"))
 @
 
 The\index{factors!labels}\index{factors!levels} labels (``names'') of the levels can be set when calling \Rfunction{factor()}. Two vectors are passed as arguments to parameters \code{levels} and \code{labels} with levels and matching labels in the same position. The argument passed to \code{levels} determines the order of the levels based on their old names or values, and the argument passed to \code{labels} gives new names to the levels.\label{par:calc:factor:rename:levels}
@@ -2344,11 +2428,11 @@ factor(x = c("a", "a", "b", "b", "b", "a"), labels = c(a = "treated", b = "contr
 In the examples above we passed a numeric vector or a character vector as an argument for parameter \code{x} of function \Rfunction{factor()}. It is also possible to pass a \code{factor} as an argument to parameter \code{x}. This makes it possible to modify the ordering of levels or replace the labels in a factor.
 
 <<factors-5>>=
-my.factor <- factor(x = my.vector)
-my.factor
-factor(x = my.factor, levels = c("treated", "control"))
-factor(x = my.factor, labels = c(control = "cooled", treated = "heated"))
-factor(x = my.factor,
+fct1 <- factor(x = vct1)
+fct1
+factor(x = fct1, levels = c("treated", "control"))
+factor(x = fct1, labels = c(control = "cooled", treated = "heated"))
+factor(x = fct1,
        levels = c("treated", "control"),
        labels = c("heated", "cooled"))
 @
@@ -2356,9 +2440,9 @@ factor(x = my.factor,
 \textbf{Merging factor levels.}\index{factors!merge levels} We use \Rfunction{factor()} as shown below, setting the same label for the levels we want to merge.
 
 <<factors-eb3>>=
-my.factor1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
-my.factor1
-factor(my.factor1,
+fct2 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
+fct2
+factor(fct2,
        levels = c("A", "B", "F", "Z"),
        labels = c("A", "B", "C", "C"))
 @
@@ -2370,15 +2454,15 @@ factor(my.factor1,
 We can use indexing on factors in the same way as with vectors. In the next example, we use a test returning a logical vector to extract all ``controls.'' We use function \Rfunction{levels()} to look at the levels of the factors, as with vectors, \code{lengtgh()} to query the number of values stored.
 
 <<factors-6>>=
-my.factor
-levels(my.factor)
-length(my.factor)
-control.factor <- my.factor[my.factor == "control"]
-control.factor
-levels(control.factor) # same as in my.factor
-length(control.factor) # shorter than my.factor
-control.factor <- factor(control.factor)
-levels(control.factor) # the unused level was dropped
+fct1
+levels(fct1)
+length(fct1)
+fct1.control <- fct1[fct1 == "control"]
+fct1.control
+levels(fct1.control) # same as in my.factor
+length(fct1.control) # shorter than my.factor
+fct1.control <- factor(fct1.control)
+levels(fct1.control) # the unused level was dropped
 @
 
 It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.\index{factors!drop unused levels}
@@ -2387,12 +2471,12 @@ It can be seen above that subsetting does not drop unused factor levels, and tha
 How to convert factors into numeric vectors is not obvious, even when the factor was created from a \code{numeric} vector.
 
 <<factors-7>>=
-my.vector2 <- rep(3:5, 4)
-my.vector2
-my.factor2 <- factor(my.vector2)
-my.factor2
-as.numeric(my.factor2)
-as.numeric(as.character(my.factor2))
+vct3 <- rep(3:5, 4)
+vct3
+fct3 <- factor(vct3)
+fct3
+as.numeric(fct3)
+as.numeric(as.character(fct3))
 @
 \end{warningbox}
 
@@ -2400,9 +2484,9 @@ as.numeric(as.character(my.factor2))
 \textbf{Why is a double conversion needed?}\index{factors!convert to numeric} Internally, factor values are  are stored as running integers starting from one, each distinct integer value corresponding to a level. These underlying integer values are returned by \Rfunction{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels for each of the values stored in the factor. If these character strings represent numbers, they can be converted, in a second step, using \Rfunction{as.numeric()} into the original numeric values. Use of \code{class} and \code{mode} is described on section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}, and \code{str()} on page \pageref{par:calc:str}.
 
 <<factors-eb2>>=
-class(my.factor2)
-mode(my.factor2)
-str(my.factor2)
+class(fct3)
+mode(fct3)
+str(fct3)
 @
 
 \end{explainbox}
@@ -2417,37 +2501,37 @@ Create a factor with levels labeled with words. Create another factor with the l
 Reverse previous order using \Rfunction{rev()}.
 
 <<factors-10>>=
-my.factor2 <- factor(c("treated", "treated", "control", "control", "control", "treated"))
-levels(my.factor2)
-my.factor2 <- factor(my.factor2, levels = rev(levels(my.factor2)))
-levels(my.factor2)
+fct4 <- factor(c("treated", "treated", "control", "control", "control", "treated"))
+levels(fct4)
+fct4 <- factor(fct4, levels = rev(levels(fct4)))
+levels(fct4)
 @
 
 Sort in decreasing order, i.e., opposite to default.
 
 <<factors-11>>=
-my.factor2 <- factor(my.factor2,
-                     levels = sort(levels(my.factor2), decreasing = TRUE))
-levels(my.factor2)
+fct5 <- factor(fct4,
+               levels = sort(levels(fct4), decreasing = TRUE))
+levels(fct5)
 @
 
 Alter ordering using subscripting; especially useful with three or more levels.
 
 <<factors-12>>=
-my.factor2 <- factor(my.factor2, levels = levels(my.factor2)[c(2, 1)])
-levels(my.factor2)
+fct6 <- factor(fct4, levels = levels(fct4)[c(2, 1)])
+levels(fct6)
 @
 
 Reordering the levels of a factor based on summary quantities from data stored in a numeric vector is very useful, especially when plotting. Function \Rfunction{reorder()} can be used in this case. It defaults to using \code{mean()} for summaries, but other suitable summary functions, such as \code{median()} can be supplied in its place.
 
 <<factors-13>>=
-my.factor3 <- gl(2, 5, labels = c("A", "B"))
-my.vector3 <- c(5.6, 7.3, 3.1, 8.7, 6.9, 2.4, 4.5, 2.1, 1.4, 2.0)
-my.factor3
-my.factor3ord <- reorder(my.factor3, my.vector3)
-levels(my.factor3ord)
-my.factor3rev <- reorder(my.factor3, -my.vector3) # a simple trick
-levels(my.factor3rev)
+fct7 <- gl(2, 5, labels = c("A", "B"))
+vct4 <- c(5.6, 7.3, 3.1, 8.7, 6.9, 2.4, 4.5, 2.1, 1.4, 2.0)
+fct7
+fct7ord <- reorder(fct7, vct4)
+levels(fct7ord)
+fct7rev <- reorder(fct7, -vct4) # a simple trick: change sign
+levels(fct7rev)
 @
 
 In the last statement, using the unary negation operator, which is vectorized, allows us to easily reverse the ordering of the levels, while still using the default function, \code{mean()}, to summarize the data.
@@ -2459,22 +2543,22 @@ In the last statement, using the unary negation operator, which is vectorized, a
 
 <<factors-ADVPG-11, eval=eval_playground>>=
 # gl() keeps order of levels
-my.factor4 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
-my.factor4
-as.integer(my.factor4)
+FCT1 <- gl(4, 3, labels = c("A", "F", "B", "Z"))
+FCT1
+as.integer(FCT1)
 # factor() orders levels alphabetically
-my.factor5 <- factor(rep(c("A", "F", "B", "Z"), rep(3,4)))
-my.factor5
-as.integer(my.factor5)
-levels(my.factor5)[as.integer(my.factor5)]
+FCT2 <- factor(rep(c("A", "F", "B", "Z"), times = rep(3, times = 4))) # nested calls
+FCT2
+as.integer(FCT2)
+levels(FCT2)[as.integer(FCT2)]
 @
 
 We see above that the integer values by which levels in a factor are stored, are equivalent to indices or ``subscripts'' referencing the vector of labels. Function \Rfunction{sort()} operates on the values' underlying integers and sorts according to the order of the levels while \Rfunction{order()} operates on the values' labels and returns a vector of indices that arrange the values alphabetically.
 
 <<factors-ADVPG-12, eval=eval_playground>>=
-sort(my.factor4)
-my.factor4[order(my.factor4)]
-my.factor4[order(as.integer(my.factor4))]
+sort(FCT2)
+FCT2[order(FCT2)]
+FCT2[order(as.integer(FCT2))]
 @
 
 Run the examples in the chunk above and work out why the results differ.
