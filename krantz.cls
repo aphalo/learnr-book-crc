@@ -1228,7 +1228,7 @@
 \newlength\section@toc@skip
 \section@toc@skip1.5em
 \newlength\SectionTOCWidth
-\SectionTOCWidth2.8em
+\SectionTOCWidth3.2em
 \def\l@section#1#2{%
   \toc@draw
   \gdef\toc@draw{\draw@section{#1}{#2}}}
@@ -1239,7 +1239,7 @@
 \subsection@toc@skip\section@toc@skip
 \advance\subsection@toc@skip\SectionTOCWidth
 \newlength\SubSectionTOCWidth
-\SubSectionTOCWidth3.7em
+\SubSectionTOCWidth4.3em
 \def\l@subsection#1#2{%
   \toc@draw
   \gdef\toc@draw{\draw@subsection{#1}{#2}}}

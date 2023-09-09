@@ -34,7 +34,9 @@ Any \Rlang object can have attributes, allowing objects to carry along additiona
 
 \section{Lists}\label{sec:calc:lists}
 \index{lists|(}\qRclass{list}
-\emph{Lists'} main difference from vectors is, in \Rlang, that they can be heterogeneous. While the member elements of a vector must be \emph{atomic} values, any \Rlang object can be a list member. In \Rlang, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as members of vectors. Members of a list as well as members of a vector can be named, and retrieved (indexed) through their names. In practice, named lists are more frequently used than named vectors. Lists are created using function \Rfunction{list()} similarly as \Rfunction{c()} is used for vectors. Members of a list can be objects differing both in their class and in their size. Lists can be nested to construct lists of lists.
+In \Rlang, objects of class \Rclass{list} are in several respects similar the vectors described in chapter \ref{chap:R:as:calc} but differently to vectors, the members they contain can be heterogeneous, i.e., different members of the same list can belong to different classes. In addition, while the member elements of a vector must be \emph{atomic} values like numbers or character strings, any \Rlang object can be a list member including other lists.
+
+In \Rlang, the members of a list can be considered as following a sequence, and accessible through numerical indexes, the same as the members of vectors. Members of a list as well as members of a vector can be named, and retrieved (indexed) through their names. In practice, named lists are more frequently used than named vectors. Lists are created using function \Rfunction{list()} similarly as \Rfunction{c()} is used for vectors.
 
 \begin{explainbox}
   In \Rlang lists can have as members not only objects storing data on observations and categories, but also function definitions, model formulas, unevaluated expressions, matrices, arrays, and objects of user defined classes.
@@ -315,7 +317,8 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames|(}\qRclass{data.frame}
 \index{worksheet@`worksheet'|see{data frame}}
-Data frames are a special type of list, in which each element is a vector or a factor of the same length (or rarely a matrix with the same number of rows as the enclosing data frame). They are central to most data manipulation and analysis procedures in \Rlang. They are commonly used to store observations, so that some columns (or member variables) are numeric vectors containing values from measurements and others are factors describing membership into a category, such as a treatment or genotype. Columns can also be date-, time-, character-, or logical vectors. In the diagram below column \code{treatment} is a factor with two levels encoding two conditions, \code{hot} and \code{cold}. Columns \code{height} and \code{weight} are numeric vectors containing measurements.
+Data frames are a special type of list, in which all members have the same length, giving origin to a matrix-like object, in which columns can belong to different classes. Most commonly the member ``columns'' are vectors or factors, but they can also be matrices with the same number of rows as the enclosing data frame, or lists with the same number of members as rows in the enclosing data frame. 
+Data frames are central to most data manipulation and analysis procedures in \Rlang. They are commonly used to store observations, with \code{numeric} columns holding data for continuous variables and \code{factor} columns data for categorical variables. Binary variables can be stored in \code{logical} columns. Text data can be stored in \code{character} columns. Date and time can be stored in columns of specific classes, such as \code{POSIXct}. In the diagram below, column \code{treatment} is a factor with two levels encoding two conditions, \code{hot} and \code{cold}. Columns \code{height} and \code{weight} are numeric vectors containing measurements.
 
 \begin{center}
 \begin{footnotesize}
@@ -367,6 +370,8 @@ mode(a.df)
 is.data.frame(a.df)
 is.list(a.df)
 @
+
+We can see above that when printed each row of a \code{data.frame} is preceded by a row name. Row names are character strings, just like column names. The \Rfunction{data.frame()} constructor adds by default row names representing running numbers. Default row names are rarely of much use, except to track insertions and deletions of rows during debugging.
 
 \begin{playground}
 As the expectation is that all member variables (or ``columns'') have equal length, if vectors of different lengths are supplied as arguments, the shorter vector(s) is/are recycled, possibly several times, until the required full length is reached, as shown below for \code{treatment}.
@@ -853,7 +858,7 @@ detach(my_data_frame.df)
 head(my_data_frame.df, 2)
 @
 
-Use of \Rscoping{attach()} and \Rscoping{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \Rscoping{attach()} is executed but before \Rscoping{detach()} is called, as cleanup is not automatic. In contrast, \Rscoping{with()} and \Rscoping{within()}, being self-contained, guarantee that cleanup takes place. Consequently, the usual recommendation is to give preference to the use of \Rscoping{with()} and \Rscoping{within()} over \Rscoping{attach()} and \Rscoping{detach()}. Use of these functions not only saves typing but also makes code more readable.
+Use of \Rscoping{attach()} and \Rscoping{detach()}, which function as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \Rscoping{attach()} is executed but before \Rscoping{detach()} is called, as the attached object is not detached. In contrast, \Rscoping{with()} and \Rscoping{within()}, being self-contained, guarantee that cleanup takes place. Consequently, the usual recommendation is to give preference to the use of \Rscoping{with()} and \Rscoping{within()} over \Rscoping{attach()} and \Rscoping{detach()}. Use of these functions not only saves typing but also makes code more readable.
 \end{explainbox}
 
 \section{Reshaping and editing data frames}\label{sec:calc:reshape}
@@ -928,12 +933,18 @@ attributes(a.df)
 \begin{explainbox}
 The attributes used internally by \Rlang can be directly modified by user code. In most cases this is unnecessary as \Rlang provides pairs of functions to query and set the relevant attributes. This is true for the attributes \code{dim}, \code{names} and \code{levels}. In the example below we read the attributes from a matrix.
 
-<<attibutes-ebx-01>>=
+<<attibutes-ebx-01a>>=
 M <- matrix(1:10, ncol = 2)
 M
+@
+
+<<attibutes-ebx-01b>>=
 attr(M, "dim")
 attr(M, "dim") <- c(2, 5)
 M
+@
+
+<<attibutes-ebx-01c>>=
 attr(M, "dim") <- NULL
 is.vector(M)
 M
