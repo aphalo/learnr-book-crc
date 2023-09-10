@@ -72,7 +72,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-3.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut a.list}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut lst1}};
 \draw (array-2-1.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-11.5mm, yshift=-2.7mm, above] (nameh) {\rotatebox{90}{x\strut}};
 \draw (array-2-2.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-11.5mm, yshift=-2.7mm, above] (namec) {\rotatebox{90}{y\strut}};
 \draw (array-2-3.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-11.5mm, yshift=-2.7mm, above] (namew) {\rotatebox{90}{z\strut}};
@@ -87,7 +87,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
     {``ab''\strut};
   \node [my shape=2, fill=yellow!20] at (1.3,-.25)
     {TRUE\strut\nodepart{two}FALSE\strut};
-%\draw (-0.6,+0.65) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut a.list}};
+%\draw (-0.6,+0.65) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut lst1}};
 \end{tikzpicture}
 \end{footnotesize}
 \end{center}
@@ -107,12 +107,20 @@ Lists can behave as vectors with heterogeneous elements as members, as we will d
 %  grow via three points={one child at (0.5,-0.55) and
 %  two children at (0.5,-0.55) and (0.5,-1.1)},
 %  edge from parent path={(\tikzparentnode.south) |- (\tikzchildnode.west)}]
-%  \node [root] {a.list}
+%  \node [root] {lst1}
 %      child { node {\$ x: int [1:6] 1 2 3 4 5 6}}
 %      child { node {\$ y: chr "a"}}
 %      child { node {\$ z: logi [1:2] TRUE FALSE}};
 %\end{tikzpicture}
 %}
+
+\begin{faqbox}{How to create an empty list?}
+  In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction(liste()) by default creates a \code{list} with no members.
+
+<<list-empty-faq>>=
+list()
+@
+\end{faqbox}
 
 \subsection{Member extraction, deletion and insertion}
 
@@ -131,7 +139,7 @@ lst1[-1]
 lst1[c(-1, -3)]
 @
 
-Using operator \Roperator{[[ ]]} (double square brackets) for indexing a list extracts the element stored in the list, in its original mode. In the example below, \code{a.list[["x"]]} and \code{a.list[[1]]} return a numeric vector. We might say that extraction operator \Roperator{[[ ]]} reaches ``deeper'' into the list than operator \Roperator{[ ]}. Operator \Roperator{\$}, used in the second statement below, provides a shorthand notation, equivalent to using \Roperator{[[ ]]} with a constant \code{character} value as argument.
+Using operator \Roperator{[[ ]]} (double square brackets) for indexing a list extracts the element stored in the list, in its original mode. In the example below, \code{lst1[["x"]]} and \code{lst1[[1]]} return a numeric vector. We might say that extraction operator \Roperator{[[ ]]} reaches ``deeper'' into the list than operator \Roperator{[ ]}. Operator \Roperator{\$}, used in the second statement below, provides a shorthand notation, equivalent to using \Roperator{[[ ]]} with a constant \code{character} value as argument.
 
 <<lists-1>>=
 lst1$x
@@ -155,7 +163,7 @@ lst1[[vct1]]
 @
 
 When using \Roperator{\$}, the name is entered as a constant, without quotation marks, and cannot be a variable or a number.
- 
+
 <<index-partial-1a>>=
 lst1$abcd
 lst1$ab
@@ -174,14 +182,13 @@ is.vector(lst1[[1]])
 is.list(lst1[[1]])
 @
 
-The operators can be used together as shown below, with \code{lst1[[1]]} extracting the vector from \code{lst1} and \code{[3]} extracting the member at position 3 of the vector.
+The two extraction operators can be used together as shown below, with \code{lst1[[1]]} extracting the vector from \code{lst1} and \code{[3]} extracting the member at position 3 of the vector.
 
 <<lists-1ax>>=
 lst1[[1]][3]
 @
 
-\begin{playground}
-Operators can be used on the lhs as well as on the rhs of an assignment, and lists can be empty, i.e, be of length zero. The example below makes use of this to build a list step by step.
+Extraction\label{par:calc:list:member:assign} operators can be used on the \emph{lhs} as well as on the \emph{rhs} of an assignment, and lists can be empty, i.e, be of length zero. The example below makes use of this to build a list step by step.
 
 <<lists-pg-01, eval=eval_playground>>=
 lst2 <- list()
@@ -190,14 +197,12 @@ lst2[["y"]] <- "ab"
 lst2[["z"]] <- c(TRUE, FALSE)
 @
 
-Compare \code{b.list} to \code{a.list}, used for the examples above.
+\begin{playground}
+Compare \code{lst2} to \code{lst1}, used for the examples above. Then run the code below and compare them again. Try to understand why \code{lst2} has changed as it did. Pay also attention to possible changes to the members' names.
 
 <<lists-pg-02, eval=eval_playground>>=
 lst2[["y"]] <- lst2[["x"]]
 @
-
-Compare them again, and try to understand why \code{lst2} has changed as it did. Pay also attention to possible changes to the members' names.
-
 \end{playground}
 
 \begin{explainbox}
@@ -260,7 +265,7 @@ str(lst8)
 @
 
 \begin{explainbox}
-The logic behind extraction of members of nested lists using indexing is the same as for simple lists, but applied recursively---e.g., \code{nested.list[[2]]} extracts the second member of the outermost list, which is another list. As, this is a list, its members can be extracted using again the extraction operator: \code{nested.list[[2]][[1]]}. It is important to remember that these concatenated extraction operations are written so that the leftmost operator is applied to the outermost list.
+The logic behind extraction of members of nested lists using indexing is the same as for simple lists, but applied recursively---e.g., \code{lst7[[2]]} extracts the second member of the outermost list, which is another list. As, this is a list, its members can be extracted using again the extraction operator: \code{lst7[[2]][[1]]}. It is important to remember that these concatenated extraction operations are written so that the leftmost operator is applied to the outermost list.
 
 The example above uses the \Roperator{[[ ]]} operator, but the left to right precedence also applies to concatenated calls to \Roperator{[ ]} and to calls combining both operators.
 \end{explainbox}
@@ -325,11 +330,11 @@ Function \Rfunction{unname()} can be used to remove names safely---i.e., without
 unname(vct1)
 unname(lst10)
 @
+\index{lists|)}
 
 <<lists-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\index{lists|)}
 
 \section{Data frames}\label{sec:R:data:frames}
 \index{data frames|(}\qRclass{data.frame}
@@ -353,7 +358,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
 \fill[blue!10] (array-1-1.north west) rectangle (array-1-3.south east);
 \end{scope}
 
-\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut a.df}};
+\draw (array-2-1.west) node [signal, draw, fill=codeshadecolor, minimum size=6mm, line width=1.5pt, left] (first) {\code{\strut df1}};
 \draw (array-2-1.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-17mm, yshift=-3mm, above] (nameh) {\rotatebox{180}{treatment\strut}};
 \draw (array-2-2.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-14.4mm, yshift=-3mm, above] (namec) {\rotatebox{180}{height\strut}};
 \draw (array-2-3.north) node [signal, draw, fill=codeshadecolor, minimum size=5mm, rotate=-90, xshift=-14.5mm, yshift=-3mm, above] (namew) {\rotatebox{180}{weight\strut}};
@@ -433,8 +438,40 @@ LST1$x2 <- 6:1
 LST1$x3 <- "b"
 str(LST1)
 @
-
 \end{playground}
+
+\begin{faqbox}{How to make a list of data frames?}
+We create a list of data frames in the same way as we create a nested list of lists, or in fact of a list of any other \Rlang objects. See page section \ref{sec:calc:lists:nested} on page \pageref{sec:calc:lists:nested}.
+
+<<data-frame-listof-faq>>=
+list(df1, df2)
+@
+\end{faqbox}
+
+\begin{faqbox}{How to create an empty data frame?}
+In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction(data.frame()) by default creates a \code{data.frame} with zero rows and no columns.
+
+<<data-frame-empty-faq>>=
+data.frame()
+@
+\end{faqbox}
+
+\begin{faqbox}{How to add new column to a data frame (to the front and end)?}
+In the same way as me can assign a new member to a list using the extraction operator \Roperator{[[ ]]}, we can add a new column to a data frame (see page \pageref{par:calc:list:member:assign}). In this case, if the column name does not already exist, the assigned vector or factor is appended as the last column (no recycling applied to short vectors or factors unless of length one).
+
+<<data-frame-add-co1l-faq>>=
+DF1 <- data.frame(A = 1:5, B = factor(5:1))
+DF1[["C"]] <- 11:15
+DF1
+@
+
+To add a column at the front, we can use function \Rfunction{cbind()} (column bind).
+
+<<data-frame-add-col2-faq>>=
+DF2 <- data.frame(A = 1:5, B = factor(5:1))
+cbind(C = 11:15, DF2)
+@
+\end{faqbox}
 
 Being two dimensional and rectangular in shape, data frames, in relation to indexing and dimensions behave similarly to a matrix. They have two margins, rows and columns, and two indices identify the location of a member ``cell''. We provide some examples here, but please consult section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing} and section \ref{sec:matrix:array} on page \pageref{sec:matrix:array} for additional details.
 
@@ -447,7 +484,7 @@ df1[2:3, 1:2]
 <<data-frames-3>>=
 # first column, df1[[1]] preferred
 df1[ , 1]
-# first column, df1[["x"]] or a.df$x preferred
+# first column, df1[["x"]] or df1$x preferred
 df1[ , "treatment"]
 # first row
 df1[1, ]
@@ -580,17 +617,23 @@ When do extraction operators applied to data frames return a vector or factor, a
 \begin{explainbox}
 In the case of \Rfunction{subset()} we can select columns directly as shown below, while for most other functions, extraction using operators \Roperator{[ ]}, \Roperator{[[ ]]} or \Roperator{\$} is needed.
 
-<<data-frames-5a>>=
+<<data-frames-5aa>>=
 subset(df8, x > 3, select = 2)
+@
+
+<<data-frames-5ab>>=
 subset(df8, x > 3, select = x)
+@
+
+<<data-frames-5ac>>=
 subset(df8, x > 3, select = "x")
 @
 \end{explainbox}
 
-None of the examples in the last four code chunks alters the original data frame \code{a.df}. We can store the returned value using a new name if we want to preserve \code{a.df} unchanged, or we can assign the result to \code{a.df}, deleting in the process, the previously stored value.
+None of the examples in the last four code chunks alters the original data frame \code{df8}. We can store the returned value using a new name if we want to preserve \code{df8} unchanged, or we can assign the result to \code{df8}, deleting in the process, the previously stored value.
 
 \begin{warningbox}
-In the examples above, the names in the expression passed as the second argument to \code{subset()} were searched within \code{ad.df} and found. However, if not found in the data frame, objects with matching names are searched for in the global environment (as variables outwith the data frame, visible from the user's workspace). There being no variable \code{A} in the data frame \code{a.df}, vector \code{A} from the environment is silently used in the chunk below resulting in a returned data frame with no rows as \code{A > 3} returns \code{FALSE}.
+In the examples above, the names in the expression passed as the second argument to \code{subset()} were searched within \code{df8} and found. However, if not found in the data frame, objects with matching names are searched for in the global environment (as variables outwith the data frame, visible from the user's workspace). There being no variable \code{A} in the data frame \code{df8}, vector \code{A} from the environment is silently used in the chunk below resulting in a returned data frame with no rows as \code{A > 3} returns \code{FALSE}.
 
 <<data-frames-5b>>=
 A <- 1
@@ -797,7 +840,7 @@ Add a variable named \code{genotype} to the data frame below so that for individ
 
 <<data-frames-11, eval=eval_playground>>=
 DF1 <- data.frame(individual = rep(c(2, 4, 1), 2),
-                    value = c(1.5, 3.2, 4.5, 8.2, 7.4, 6.2))
+                  value = c(1.5, 3.2, 4.5, 8.2, 7.4, 6.2))
 @
 \end{advplayground}
 
@@ -844,7 +887,7 @@ df14$D <- df14$A / df14$B + 1
 head(df14, 2)
 @
 
-Using\index{data frames!attaching} \Rscoping{attach()} we can alter where \Rlang looks up names and consequently simplify the statement. With \Rscoping{detach()} we can restore the original state. It is important to remember that here we can only simplify the right-hand side of the assignment, while the ``destination'' of the result of the computation still needs to be fully specified on the left-hand side of the assignment operator. We include below only one statement between \Rscoping{attach()} and \Rscoping{detach()} but multiple statements are allowed. Furthermore, if variables with the same name as the columns exist in the search path, these will take precedence, something that can result in bugs or crashes, or as seen below, a message warns that variable \code{A} from the global environment will be used instead of column \code{A} of the attached \code{my\_data\_frame.df}. The returned value is, of course, not the desired one.
+Using\index{data frames!attaching} \Rscoping{attach()} we can alter where \Rlang looks up names and consequently simplify the statement. With \Rscoping{detach()} we can restore the original state. It is important to remember that here we can only simplify the right-hand side of the assignment, while the ``destination'' of the result of the computation still needs to be fully specified on the left-hand side of the assignment operator. We include below only one statement between \Rscoping{attach()} and \Rscoping{detach()} but multiple statements are allowed. Furthermore, if variables with the same name as the columns exist in the search path, these will take precedence, something that can result in bugs or crashes, or as seen below, a message warns that variable \code{A} from the global environment will be used instead of column \code{A} of the attached \code{df17}. The returned value is, of course, not the desired one.
 
 <<data-frames-EB-11a>>=
 df17 <- data.frame(A = 1:10, B = 3)
@@ -865,46 +908,88 @@ head(df17, 2)
 Use of \Rscoping{attach()} and \Rscoping{detach()}, which work as a pair of ON and OFF switches, can result in an undesired after-effect on name lookup if the script terminates after \Rscoping{attach()} is executed but before \Rscoping{detach()} is called, as the attached object is not detached. In contrast, \Rscoping{with()} and \Rscoping{within()}, being self-contained, guarantee that cleanup takes place. Consequently, the usual recommendation is to give preference to the use of \Rscoping{with()} and \Rscoping{within()} over \Rscoping{attach()} and \Rscoping{detach()}.
 \end{explainbox}
 
-\section{Reshaping and editing data frames}\label{sec:calc:reshape}
-\index{data frames!long vs.\ wide shape}
-
-As mentioned above, in most cases in \Rlang data rows represent measurement events or observations possibly on multiple response variables and factors describing groupings, i.e., long shape. However, when measurements are repeated in time, columns rather frequently represent observations of the same response variable at different times, i.e., wide shape. Other cases exist where reshaping is needed. Function \Rfunction{reshape()} can convert wide data frames into long data frames and vice versa.
-
-<<data-frames-reshape-01>>=
-## reshape() example needed
-@
-
-\index{data frames|)}
-
-<<data-frames-cleanup,echo=FALSE,cache=FALSE>>=
+<<include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
 
-Methods \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are used interactively to display and edit \Rlang objects. IDEs like \RStudio and the use of scripts have made the interactive use of \Rpgrm at the console less frequent. \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are unusual in that their definitions and/or default arguments are dependent on the operating system and/or IDE from within which \Rpgrm is started. Output is not included for this chunk, as the use of these functions requires user interaction. Please, run these examples in \Rpgrm and in an IDE like \RStudio.
+\section{Reshaping and editing data frames}\label{sec:calc:reshape}
+\index{data frames!long vs.\ wide shape}
+
+As mentioned above, in most cases in \Rlang data rows represent measurement events or observations possibly on multiple response variables and factors describing groupings, i.e., a ``long'' shape. However, when measurements are repeated in time, columns rather frequently represent observations of the same response variable at different times, i.e., a ``wide'' shape. Other cases exist where reshaping is needed. Function \Rfunction{reshape()} can convert wide data frames into long data frames and vice versa. See section \ref{sec:data:reshape} on page \pageref{sec:data:reshape} on package \pkgnameNI{tidyr} for an alternative approach to reshaping data with a friendlier user interface.
+
+We start by creating a data frame of hypothetical data measured on two occasions. With these data, for example if we wish to compute growth of each subject, by computing the difference in \code{weight} and in \code{height} between the two times, one approach is to reshape the data frame into a wider shape and subsequently subtract the columns.
+
+<<data-frames-reshape-01>>=
+# artifical data
+df1 <- data.frame(id = rep(1:4, rep(2,4)),
+                  Time = factor(rep(c("Before","After"), 4)),
+                  Weight = rnorm(n = 4, mean = c(20.1, 30.8)), 
+                  Height = rnorm(n = 4, mean = c(9.5, 14.2)))
+df1
+# make it wider
+df2 <- reshape(df1, timevar = "Time", idvar = "id", direction = "wide")
+df2
+# possible further calculation
+within(df2, 
+       {
+        Height.growth <- Height.After - Height.Before
+        Weight.growth <- Weight.After - Weight.Before
+       })
+@
+
+Alternatively, we may want to convert \code{df1} into a longer shape, with a single column with measurements, and a new column indicating whether the measured variable was \code{height} or \code{weight}. For this operation to succeed, we need to add a column with a unique value for each row in \code{df1}, and one easy way is to copy row names into a column. The names of the parameters of function \Rfunction{reshape()} are meaningful only when dealing with time. Thus, reading the code below becomes rather difficult. It is also to note that the user is responsible of passing the values to \code{times} in the correct order.
+
+<<data-frames-reshape-02>>=
+df1$ID <- rownames(df1) # unique ID for each row
+# make it longer
+reshape(df1,
+        idvar = "ID",
+        timevar = "Quantity",
+        times = c("Weight", "Height"),
+        v.names = "Value",
+        direction = "long",
+        varying = c("Weight", "Height"))
+@
+
+To edit a data frame programmatically, one can use the approaches already discussed, using the extraction operators \Roperator{[ ]} or \Roperator{[[ ]]} on the \emph{lhs} of \Roperator{<-} to replace member elements. This in combination with functions like \Rfunction{gsub()} makes it possible to ``edit'' the contents of data frames.
+
+Methods \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} can be used interactively to display and edit \Rlang objects. When using \Rpgrm from within IDEs like \RStudio, calling these functions with a data frame as argument opens in most cases the IDE's own worksheet-like data editors, and for other types of objects a text editor pane. Output is not included for this chunk, as the use of these functions requires user interaction. Please, run these examples in \Rpgrm and in an IDE like \RStudio.
 
 <<exploring-dfs-0a, eval=FALSE>>=
 View(cars)
 edit(cars)
 @
 
+\begin{explainbox}
+These functions can be used at the \Rlang console also when \Rpgrm is used on its own, but the editors activated are different ones. In any case, the use of scripts has made the interactive use of \Rpgrm at the console less frequent and the need to edit \Rlang objects previously saved in the user's current workspace nearly disappear. \Rfunction{View()}, \Rfunction{edit()} and \Rfunction{fix()} are unusual in that their definitions are dependent on system variables that at least when using \Rpgrm on its own, can be modified by the user.
+\end{explainbox}
+
+\index{data frames|)}
+
+<<echo=FALSE,cache=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
 \section{Attributes of \Rlang objects}\label{sec:calc:attributes}
 \index{attributes|(}
 
-\Rlang objects can have attributes. Attributes are named slots normally used to store ancillary data such as object properties. There are no restrictions on the class of what is assigned to an attribute. They are used by \Rlang itself to store things like column names in data frames and labels of factor levels. All these attributes are visible to user code, and user code can read and write objects' attributes. However, they are rarely displayed explicitly when an object is printed. They can be also used to store metadata accompanying the data stored in an object, which is important for reproducible research and data sharing.
+\Rlang objects can have attributes. Attributes are named \emph{slots} normally used to store ancillary data such as object properties functioning as additional fields where to store additional information in any \Rlang object. There are no restrictions on the class of what is assigned to an attribute. They can be used to store metadata accompanying the data stored in an object, which is important for reproducible research and data sharing. They can be set and read by user code and they are also used internally by \Rlang among other things to store the class an object belongs to, column and row names in data frames and matrices and the labels of levels in factors. Although most \Rlang objects have attributes, they are rarely displayed explicitly when an object is printed, while the structure of objects as displayed by function \Rfunction{str()} includes them.
 
 Although we rarely need to set or extract values stored in attributes explicitly, many of the features of \Rlang that we take for granted are implemented using attributes: columns names in data frames are stored in an attribute. Matrices are vectors with additional attributes.
 
 <<attributes-00>>=
-a.df <- data.frame(x = 1:6, y = c("a", "b"), z = c(TRUE, FALSE, NA))
-attributes(a.df)
+df1 <- data.frame(x = 1:6, y = c("a", "b"), z = c(TRUE, FALSE, NA))
+df1
+attributes(df1)
+str(df1)
 @
 
 Attribute \code{"comment"} is meant to be set by users to store a character string---e.g., to store metadata as text together with data. As comments are frequently used, \Rlang has functions for accessing and setting comments. \qRfunction{comment()}\qRfunction{comment()<-}
 
 <<attributes-01>>=
-comment(a.df)
-comment(a.df) <- "this is stored as a comment"
-comment(a.df)
+comment(df1)
+comment(df1) <- "this is stored as a comment"
+comment(df1)
 @
 
 Functions like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} return values retrieved from attributes stored in \Rlang objects, whereas \Rfunction{names()<-}, \Rfunction{dim()<-} or \Rfunction{levels()<-} set (or unset with \code{NULL}) the value of the respective attributes. Dedicated query and set functions do not exist for all attributes. Functions \Rfunction{attr()}, \Rfunction{attr()<-} and \Rfunction{attributes()} can be used with any attribute. With \Rfunction{attr()} we query, and with  \Rfunction{attr()<-} we set individual attributes by name. With \Rfunction{attributes()} we retrieve all attributes of an object as a named \code{list}. In addition, method \Rfunction{str()} displays all components and structure of \Rlang objects including their attributes.
@@ -912,46 +997,46 @@ Functions like \Rfunction{names()}, \Rfunction{dim()} or \Rfunction{levels()} re
 Continuing with the previous example, we can retrieve and set the value stored in the \code{"comment"}  attribute using these functions. In the second statement we delete the value stored in the attribute by assigning \code{NULL} to it.
 
 <<attributes-01a>>=
-attr(a.df, "comment")
-attr(a.df, "comment") <- NULL
-attr(a.df, "comment")
-comment(a.df) # same as previous line
+attr(df1, "comment")
+attr(df1, "comment") <- NULL
+attr(df1, "comment")
+comment(df1) # same as previous line
 @
 
-The \code{"names"} attribute of \code{a.df} was set by the \code{data.frame()} constructor when it was created above. In the next example, in the first statement we retrieve the names, and implicitly print them. In the second statement, read from right to left, we retrieve the names, convert them to upper case and save them back to the same attribute.
+The \code{"names"} attribute of \code{df1} was set by the \code{data.frame()} constructor when it was created above. In the next example, in the first statement we retrieve the names, and implicitly print them. In the second statement, read from right to left, we retrieve the names, convert them to upper case and save them back to the same attribute.
 
 <<attributes-02>>=
-names(a.df)
-names(a.df) <- toupper(names(a.df))
-names(a.df)
-attr(a.df, "names") # same as previous line
+names(df1)
+names(df1) <- toupper(names(df1))
+names(df1)
+attr(df1, "names") # same as previous line
 @
 
 We can add a new attribute, under our own control, as long as its name does not clash with that of existing attributes.
 
 <<attributes-02a>>=
-attr(a.df, "my.attribute") <- "this is stored in my attribute"
-attributes(a.df)
+attr(df1, "my.attribute") <- "this is stored in my attribute"
+attributes(df1)
 @
 
 \begin{explainbox}
 The attributes used internally by \Rlang can be directly modified by user code. In most cases this is unnecessary as \Rlang provides pairs of functions to query and set the relevant attributes. This is true for the attributes \code{dim}, \code{names} and \code{levels}. In the example below we read the attributes from a matrix.
 
 <<attibutes-ebx-01a>>=
-M <- matrix(1:10, ncol = 2)
-M
+mat1 <- matrix(1:10, ncol = 2)
+mat1
 @
 
 <<attibutes-ebx-01b>>=
-attr(M, "dim")
-attr(M, "dim") <- c(2, 5)
-M
+attr(mat1, "dim")
+attr(mat1, "dim") <- c(2, 5)
+mat1
 @
 
 <<attibutes-ebx-01c>>=
-attr(M, "dim") <- NULL
-is.vector(M)
-M
+attr(mat1, "dim") <- NULL
+is.vector(mat1 )
+mat1
 @
 
 In this case we could have used \Rfunction{dim()} instead of \Rfunction{attr()}.
@@ -961,7 +1046,7 @@ In this case we could have used \Rfunction{dim()} instead of \Rfunction{attr()}.
 There is no restriction to the creation, setting, resetting and reading of attributes, but not all functions and operators that can be used to modify objects will preserve non-standard attributes. This can be a problem when using some \Rlang packages, such as the \pkgname{tidyverse}. So, using private attributes is a double-edged sword that usually is worthwhile considering only when designing a new class together with the corresponding methods for it. A good example of extensive use of class-specific attributes are the values returned by model fitting functions like \Rfunction{lm()} (see section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}).
 \end{warningbox}
 
-<<attributes-cleanup, include=FALSE>>=
+<<include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
 
@@ -970,7 +1055,7 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 \section{Saving and loading data}
 
 \subsection{Data sets in \Rlang and packages}
-\index{data!loading data sets|(}
+\index{data!loading data sets|(}\index{data!saving data sets|(}
 To be able to present more meaningful examples, we need some real data. Here we use \code{cars}, one of the many data sets included in base \Rpgrm. Function \Rfunction{data()} is used to load data objects that are included in \Rlang or contained in packages (whether a call to \Rfunction{data()} is needed or not depends on how the package where the data is defined was configured). It is also possible to import data saved in files with \textit{foreign} formats, defined by other software or commonly used for data exchange. Package \pkgname{foreign}, included in the \Rlang distribution, as well as contributed packages make available functions capable of reading and decoding various foreign formats. How to read or import ``foreign'' data is discussed in \Rlang documentation in \emph{R Data Import/Export}, and in this book, in chapter \ref{chap:R:data:io} on page \pageref{chap:R:data:io}. It is also good to keep in mind that in \Rlang, URLs (Uniform Resource Locators) are accepted as arguments to the \code{file} or \code{path} parameter of many functions (see section \ref{sec:files:remote} on page \pageref{sec:files:remote}).
 
 In the next example we load data available in \Rlang package \pkgname{datasets} as \Rlang objects by calling function \Rfunction{data()}. The loaded \Rlang object \code{cars} is a data frame. (Package \pkgname{datasets} is part of the \Rpgrm distribution and always available).
@@ -984,29 +1069,29 @@ data(cars)
 
 \subsection{.rda files}\label{sec:data:rda}
 
-By default, at the end of a session, the current workspace containing the results of one's work is saved into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format (with file name tag \code{.rda} or \code{.Rda}). One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace with their original names. These files are portable across most \Rlang versions---i.e., old formats can be read and written by newer versions of \Rpgrm, although the newer, default format may be not readable with earlier \Rpgrm versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters, allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
+By\index{file formats!RDA ``R data, multiple objects''} default, at the end of a session, the current workspace containing the results of one's work is saved into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format (with file name tag \code{.rda} or \code{.Rda}). One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace with their original names. These files are portable across most \Rlang versions---i.e., old formats can be read and written by newer versions of \Rpgrm, although the newer, default format may be not readable with earlier \Rpgrm versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters, allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
 
-We create a data frame object and then save it to a file.
+We create a data frame object and then save it to a file. The file name used can be any valid one in the operating system, however to ensure compatibility with multiple operating systems, it is good to use only ASCII characters. Although not enforced, using the name tag \code{.rda} or \code{.Rda} is recommended. 
 
 <<rda-01>>=
-my.df <- data.frame(x = 1:5, y = 5:1)
-my.df
-save(my.df, file = "my-df.rda")
+df1 <- data.frame(x = 1:5, y = 5:1)
+df1
+save(df1, file = "df1.rda")
 @
 
 We delete the data frame object and confirm that it is no longer present in the workspace (see page \pageref{par:calc:remove} for details about \Rfunction{remove()} and \Rfunction{objects()}).
 
 <<rda-02>>=
-remove(my.df)
-objects(pattern = "my.df")
+remove(df1)
+objects(pattern = "df1")
 @
 
 We read the file we earlier saved to restore the object.\qRfunction{load()}
 
 <<rda-03>>=
-load(file = "my-df.rda")
-objects(pattern = "my.df")
-my.df
+load(file = "df1.rda")
+objects(pattern = "df1")
+df1
 @
 
 The default format used is binary and compressed, which results in smaller files.
@@ -1018,57 +1103,77 @@ In the example above, only one object was saved, but one can simply give the bar
 Sometimes it is easier to supply the names of the objects to be saved as a vector of \code{character} strings passed as an argument to parameter \code{list} (in spite of the name the argument passed must be a \code{vector}, not a \code{list}). One use case is saving a group of objects based on their names. In this case one can use \Rfunction{ls()} to obtain a vector of \code{character} strings with the names of objects matching a simple \code{pattern} or a complex \emph{regular expression} (see section \ref{sec:calc:regex} on page \pageref{sec:calc:regex}). The example below uses this approach in two steps, first saving in variable \code{objcts} a \code{character} \code{vector} with the names of the objects matching a pattern, and then using this saved vector as an argument to parameter \code{list} in the call to \Rfunction{save()}.
 
 <<rda-04>>=
-objcts <- ls(pattern = "*.df")
-save(list = objcts, file = "my-df1.rda")
+dfs <- ls(pattern = "*.df")
+save(list = dfs, file = "my-dfs.rda")
 @
 
 The two statements above can be combined into a single statement by nesting the function calls.
 
 <<rda-05>>=
-save(list = ls(pattern = "*.df"), file = "my-df1.rda")
+save(list = ls(pattern = "*.df"), file = "my-dfs.rda")
 @
 
 \begin{playground}
-Practice using different patterns with \Rfunction{óbjects()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
+Practice using different patterns with \Rfunction{objects()}. You do not need to save the objects to a file. Just have a look at the list of object names returned.
 \end{playground}
 
 As a coda, I show how to clean up by deleting the two files we created. Function \Rfunction{file.remove()} can be used to delete files stored in the operating system file system, usually on a hard disk drive or a solid state drive, as long as the user has enough rights. No confirmation is requested, so care not to delete valuable files is required. Function \Rfunction{unlink()}, is not an exact equivalent, as it can also delete folders and supports recursion through nested folders. The name \emph{unlink} is borrowed from that of the equivalent function in \osnameNI{Unix} and \osnameNI{Linux}.
 
 <<rda-06>>=
-file.remove(c("my-df.rda", "my-df1.rda"))
+file.remove(c("my-dfs.rda", "df1.rda"))
 @
 
 \subsection{.rds files}\label{sec:data:rds}
 
-The RDS format can be used to save individual objects instead of multiple objects (usually using file name tag \code{.rds}). They are read and saved with functions \Rfunction{readRDS()} and \Rfunction{saveRDS()}, respectively. The value returned by a call to  \Rfunction{readRDS()} is the object read from the file on disk. When RDS files are read, different from when RDA files are loaded, assigning the object read to a name is frequently the first step. This name can be any valid \Rlang name. Of course, it is also possible to use the object returned by \Rfunction{readRDS()} as an argument to a function by nesting the function calls.
+The\index{file formats!RDS ``R data, single object''} RDS format can be used to save individual objects instead of multiple objects (usually using file name tag \code{.rds}). They are read and saved with functions \Rfunction{readRDS()} and \Rfunction{saveRDS()}, respectively. The value returned by a call to  \Rfunction{readRDS()} is the object read from the file on disk. When RDS files are read, different from when RDA files are loaded, assigning the object read to a name is frequently the first step. This name can be any valid \Rlang name. Of course, it is also possible to use the object returned by \Rfunction{readRDS()} as an argument to a function by nesting the function calls.
 
 <<rds-1>>=
-saveRDS(my.df, "my-df.rds")
+saveRDS(df1, "df1.rds")
 @
 
 If we read the file at the \Rpgrm console, by default the read \Rlang object will be printed at the console.
 
 <<rds-1a>>=
-readRDS("my-df.rds")
+readRDS("df1.rds")
 @
 
 If we assign the read object to a different name, it is possible to check if the object read is identical to the one saved.
 
 <<rds-2>>=
-my_read.df <- readRDS("my-df.rds")
-identical(my.df, my_read.df)
+df2 <- readRDS("df1.rds")
+identical(df1, df2)
 @
 
 As above, we clean up by deleting the file.
 
 <<rds-03>>=
-file.remove("my-df.rds")
+file.remove("df1.rds")
+@
+
+\subsection{\code{dput()}}
+
+In\index{file formats!R data ``deparsed object''} general the use of \code{.rda} and {.rds} files is preferred. Function \Rfunction{dput()} is sometimes used to share data as part of a code chunk at StackOverflow, mostly as a convenient way of converting a data frame or list into plain text that can be pasted into the code chunk listing to reconstruct the object. If no argument is passed to parameter \code{file}, the result of deparsing an object is printed at the \Rlang console.
+
+<<dput-01>>=
+dput(df1)
+@
+
+There exists a companion function \Rfunction{dget()} to recreate the object.
+\index{data!saving data sets|)}\index{data!loading data sets|)}
+
+\begin{warningbox}
+  Output to, and input from, text-based file formats as well as to and from various binary formats \emph{foreign} to \Rlang is described in chapter \ref{chap:R:data:io} on page \pageref{chap:R:data:io}.
+\end{warningbox}
+
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
 
 \section{Plotting}
 \index{plots!base R graphics}
 In most cases the most effective way of obtaining and overview of a data set is by plotting it using multiple approaches. The base-\Rlang generic method \Rfunction{plot()} can be used to plot different data. It is a generic method that has specializations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section we only very briefly demonstrate the use of the most common base-\Rlang graphics functions. They are well described in the book \citebooktitle{Murrell2019} \autocite{Murrell2019}. We will not describe the Lattice (based on S's Trellis) approach to plotting \autocite{Sarkar2008}. Instead we describe in detail the use of the \emph{layered grammar of graphics} and plotting with package \ggplot in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}.
 
+\subsection{Plotting data}
 It is possible to pass two variables (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of \Rfunction{plot()}.
 
 <<plot-0, include=FALSE, cache=FALSE>>=
@@ -1097,15 +1202,17 @@ Within \Rlang there exist different specializations, or ``flavors,'' of method \
 plot(weight ~ feed, data = chickwts)
 @
 
-Method \Rfunction{plot()} and variants defined in \Rlang, when used for plotting return their graphical output to a \emph{graphical output device}.
+\subsection{Graphical output}
+Graphical\index{file formats!PDF}\index{file formats!PNG} output, such as produced by \Rfunction{plot()}, is rendered by means of \emph{graphical output devices}.
+When \Rlang is used interactively, a software device is opened automatically to output the graphical output to a physical device, usually the computer screen. The name of the \Rlang software device used may depend on the operating system (e.g., \osname{MS-Windows} or \osname{Linux}), or on the IDE (e.g., \RStudio).
 
-When \Rlang is used interactively, a software device is opened automatically to output the graphical output to a physical device, usually the computer screen. The name of the \Rlang software device used may depend on the operating system (e.g.,  \osname{MS-Windows} or \osname{Linux}), or on the IDE (e.g., \RStudio).
+In \Rlang, software graphical devices not necessarily generate output on a physical device like a printer, as several of these devices translate the plotting commands into a file format and save it to disk. Several different graphical devices are available in \Rlang and they differ in the kind of output they produce: raster or bitmap files (e.g., TIFF, PNG and JPEG formats), vector graphics files (e.g., SVG, EPS and PDF), or output to a physical device like the screen of a computer. Additional devices are available through contributed \Rlang packages.
 
-In \Rlang, software graphical devices not necessarily generate output on a physical device like a printer, as several of these devices translate the plotting commands into a file format and save it to disk. Several different graphical devices are available in \Rlang and they differ in the kind of output they produce: raster files (e.g., TIFF, PNG and JPEG formats), vector graphics files (e.g., SVG, EPS and PDF), or output to a physical device like the screen of a computer. Additional devices are available through contributed \Rlang packages.
+\RStudio makes it possible to export plots into graphic files through a menu-based interface in the \emph{Plots} viewer tab. This interface uses some of the \Rlang devices that are available at the console and through scripts. For the sake of reproducibility, it is preferable to include the \Rlang commands used to export plots in the scripts used for data analysis.
 
-Devices follow the paradigm of ON and OFF switches, opening and closing a destination for \code{print()}, \code{plot()} and related functions. Some devices producing a file as output, can save their output one plot at a time to single-page graphic files or only when the device is closed, possibly as a multi-page file.
+Devices follow the paradigm of ON and OFF switches, opening and closing a destination for \code{print()}, \code{plot()} and related functions. Some devices producing a file as output, save their output one plot at a time to single-page graphic files while others write the file only when the device is closed, possibly as a multi-page file.
 
-When opening a device the user supplies additional information. For the PDF device that produces output in a vector-graphics format, width and height of the output are specified in \emph{inches}. A default file name is used unless we pass a \code{character} string as an argument to parameter \code{file}.
+When opening a device the user supplies additional information. For the PDF and SVG devices that produce output in a vector-graphics format, width and height of the output are specified in \emph{inches}. A default file name is used unless we pass a \code{character} string as an argument to parameter \code{file}.
 
 <<gr-devices-01, message=FALSE>>=
 pdf(file = "output/my-file.pdf", width = 6, height = 5, onefile = TRUE)
@@ -1114,7 +1221,7 @@ plot(weight ~ feed, data = chickwts)
 dev.off()
 @
 
-Raster devices return bitmaps and \code{width} and \code{height} are specified in \emph{pixels}.
+Raster devices return bitmaps and \code{width} and \code{height} are specified in most cases in \emph{pixels}.
 
 <<gr-devices-02, message=FALSE>>=
 png(file = "output/my-file.png", width = 600, height = 500)
@@ -1122,8 +1229,7 @@ plot(weight ~ feed, data = chickwts)
 dev.off()
 @
 
-The approach of direct output to a software device is used in base \Rlang,
-and the addition of plot components, as shown below, is done directly to the output device.
+The approach of direct output to a software device is used in base \Rlang by \Rfunction{plot()} and its companions \Rfunction{text()}, \Rfunction{lines()}, and \Rfunction{points()}. \Rfunction{plot()} outputs a graphs onto the other three functions can add to. The addition of plot components, as shown below, is done directly to the output device, i.e., when output is to the computer screen the partial plot is visible at each step.
 
 <<gr-devices-03, message=FALSE>>=
 png(file = "output/my-file.png", width = 600, height = 500)
@@ -1132,20 +1238,17 @@ text(x = 10, y = 110, labels = "some texts to be added")
 dev.off()
 @
 
-\begin{infobox}
-This is not the only approach available. As we will see in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}, an alternative approach is to build a \emph{plot object} as a list of member components that is later rendered as a whole on a graphical device by calling \code{print()} once.
-\end{infobox}
+This is not the only approach available in \Rpgrm for building complex plotys. As we will see in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}, an alternative approach is to build a \emph{plot object} as a list of member components, that can be saved as any other \Rlang object. This object is later rendered as a whole on a graphical device by calling \code{print()} once.
+
 \index{data!exploration at the R console|)}
+\index{data sets!their storage|)}
 
 \section{Further reading}
-For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter,
- I suggest the books \citetitle{Peng2022} \autocite{Peng2022} and \citetitle{Matloff2011} \autocite{Matloff2011}.
+For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter, I suggest  the book \citetitle{Matloff2011} \autocite{Matloff2011}, with emphasis on the \Rlang language and programming. An in depth description of plotting and graphic devices in \Rlang is available in the book \citetitle{Murrell2019} \autocite{Murrell2019}.
 
 <<container-chapter-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-
-\index{data sets!their storage|)}
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()

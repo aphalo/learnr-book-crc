@@ -144,7 +144,7 @@ vct1 <- 1
 is.numeric(vct1)
 @
 
-Because numbers can be stored in different formats, most computing languages implement several different types of numbers. In most cases \Rpgrm's \Rfunction{numeric()} values can be used everywhere that a number is expected. However, in some cases it has advantages to explicitly indicate that we will store or operate on whole numbers, in which case we can use class \Rclass{integer}, with integer constants indicated by a trailing capital ``L,'' as in  \code{32L}.
+Because numbers can be stored in different formats, most computing languages implement several different types of numbers. In most cases \Rpgrm's \code{numeric} values can be used everywhere that a number is expected. However, in some cases it has advantages to explicitly indicate that we will store or operate on whole numbers, in which case we can use class \Rclass{integer}, with integer constants indicated by a trailing capital ``L,'' as in  \code{32L}.
 
 <<classes-02>>=
 is.numeric(1L)
@@ -325,6 +325,13 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=5mm}}}]
 \end{footnotesize}
 %\end{center}
 
+\begin{faqbox}{How to create an empty vector?}
+
+<<numeric-empty-faq>>=
+numeric()
+@
+\end{faqbox}
+
 Next I show concatenation with a vector of the same class with length zero.
 
 <<numbers-4ee>>=
@@ -350,10 +357,25 @@ One can create sequences\index{sequence} using function \Rfunction{seq()} or the
 -1:5
 5:-1
 seq(from = -1, to = 1, by = 0.1)
-rep(-5, 4)
+rep(-5, times = 4)
+rep(1:2, length.out = 4)
 @
 
 \end{playground}
+
+\begin{faqbox}{How to create a vector of zeros?}
+
+<<numeric-zeros1-faq>>=
+numeric(length = 10)
+@
+
+or
+
+<<numeric-zeros2-faq>>=
+rep(0, times = 10)
+@
+
+\end{faqbox}
 
 Next,\label{par:calc:vectorized:opers} something that makes \Rlang different from most other programming languages: vectorized arithmetic\index{vectorized arithmetic}. Operators and functions that are vectorized accept, as arguments, vectors of arbitrary length, in which case the result returned is equivalent to having applied the same function or operator individually to each element of the vector.\label{par:vectorized:numeric}
 
@@ -660,6 +682,10 @@ cmp2^2
 
 \index{classes and modes!numeric, integer, double|)}\index{numbers and their arithmetic|)}
 
+\begin{warningbox}
+  Instants in time and periods of time in computers are usually encoded as classes derived from \code{integer}, and thus considered in \Rlang as atomic classes and the objects vectors. Some of these encodings are standardized and supported by \Rlang classes \Rclass{POSIXlt} and \Rclass{POSIXct}. The computations based on times and dates are difficult because the relationship between local time at a given location and Universal Time Coordinates (UTC) has changed in time, as well as with changes in national borders. Packages \pkgname{lubridate} and \pkgname{anytime} support operations among time-related data and conversions between character strings and time and date classes easier and less error prone than when using base \Rlang functions. Thus I describe classes and operations related to dates and times in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
+\end{warningbox}
+
 It\index{removing objects}\index{deleting objects|see {removing objects}}\label{par:clac:remove} is good to \emph{remove} from the workspace objects that are no longer needed. We use function \Rfunction{remove()} to delete objects stored in the current workspace.
 
 Arguments passed to \Rfunction{remove()} can be bare object names as shown here.
@@ -704,11 +730,9 @@ The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and 
 <<numbers-last>>=
 remove(list = objects(pattern = "^vct[[:digit:]]?"))
 @
-\end{explainbox}
 
-\begin{warningbox}
-  Instants in time and periods of time in computers are usually encoded as classes derived from \code{integer}, and thus considered in \Rlang as atomic classes and the objects vectors. Some of these encodings are standardized and supported by \Rlang classes \Rclass{POSIXlt} and \Rclass{POSIXct}. The computations based on times and dates are difficult because the relationship between local time at a given location and Universal Time Coordinates (UTC) has changed in time, as well as with changes in national borders. Packages \pkgname{lubridate} and \pkgname{anytime} support operations among time-related data and conversions between character strings and time and date classes easier and less error prone than when using base \Rlang functions. Thus I describe classes and operations related to dates and times in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
-\end{warningbox}
+Similar code chunks are included at the end of each section throughout the book to ensure that code examples are self-contained by section. The chunk about is shown above as an example, but kept hidden in later sections.
+\end{explainbox}
 
 \section{Character values}\label{sec:calc:character}
 \index{character strings}\index{classes and modes!character|(}\qRclass{character}
@@ -755,11 +779,15 @@ The \textit{escape codes}\index{character escape codes} work only in some contex
 
 %\subsection{Character operations}\label{sec:calc:character:oper}
 
-Function\index{character strings!number of characters} \code{length()} applied to a \code{character} vector returns the number of member strings, not the number of characters in each member string. To query the ``length'' of individual character strings expressed as number of characters, we use function \Rfunction{nchar()}.
+\begin{faqbox}{How to find the length of a character string?}
+  While\index{character strings!number of characters} function \code{length()} returns the number of member \code{character} strings in a vector, function \Rfunction{nchar()} returns the number of characters in each string in the vector (see below for examples).
+\end{faqbox}
+
+In the example below, function \Rfunction{nchar()} returns the number of characters in each member string.
 
 <<char-nchar-01>>=
 nchar(x = "abracadabra")
-nchar(x = c("abracadabra", "workaholic"))
+nchar(x = c("abracadabra", "workaholic", ""))
 @
 
 To convert a string into upper case or lower case we use functions \Rfunction{toupper()} and \Rfunction{tolower()}, respectively.
@@ -778,7 +806,11 @@ strtrim(x = c("abracadabra", "workaholic"), 6)
 strtrim(x = c("abracadabra", "workaholic"), c(6, 3))
 @
 
-Function \Rfunction{strwrap()} edits a string to a maximum number of characters or width.
+\begin{faqbox}{How to Wrap long strings?}
+  Use \Rlang function \Rfunction{strwrap()} (see below for examples).
+\end{faqbox}
+
+Function \Rfunction{strwrap()} edits a string to a maximum number of characters or width, by inserting new line characters.
 
 <<char-wrap-01>>=
 strwrap(x = "This is a long sentence used to show how line wrapping works.", width = 20)
@@ -797,6 +829,10 @@ cat(wrapped_sentence, "\n")
 @
 
 \end{advplayground}
+
+\begin{faqbox}{How to create a single character string from multiple shorter strings?}
+  While function \code{c()} is used to concatenate \code{character} vectors into longer vectors, function \Rfunction{paste()} is used to concatenate character strings into a single longer string (see below for examples). 
+\end{faqbox}
 
 Pasting together \code{character} strings has many uses, e.g., assembling informative messages to be printed, programmatically creating file names or file paths, etc. If we pass numbers, they are converted to \code{character} before pasting. The default separator is a space character, but this can be changed by passing a \code{character} string as argument for \code{sep}.
 
@@ -849,7 +885,11 @@ strrep(x = c("ABC", "X"), times = 2)
 strrep(x = c("ABC", "X"), times = c(2, 5))
 @
 
-Trimming\index{character strings!whitespace trimming} leading and trailing white space is a frequent operation, and \Rlang function \Rfunction{trimws()} implements this operation.
+\begin{faqbox}{How to trim leading and/or trailing white space in character strings?}
+Use function \Rfunction{trimws()} (see below for examples).
+\end{faqbox}
+
+Trimming\index{character strings!whitespace trimming} leading and trailing white space is a frequent operation. \Rlang function \Rfunction{trimws()} implements this operation as shown below.
 
 <<char-str-00a>>=
 trimws(x = " two words ")
@@ -1072,21 +1112,17 @@ strsplit(x = c("2023-07-29 10:30", "2023-07-29 19:17"), split = " ")
   A locale definition determines not only the language, and character set, but also date, time, and currency formats.
 \end{warningbox}
 
-\begin{explainbox}
-The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
-
-<<char-last>>=
-remove(list = ls(pattern = "^vct[[:digit:]]?"))
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\end{explainbox}
 
 \section{Logical values and Boolean algebra}\label{sec:calc:boolean}
 \index{classes and modes!logical|(}\index{logical operators}\index{logical values and their algebra|(}\index{Boolean arithmetic}
 What in Mathematics are usually called Boolean values, are called \Rclass{logical} values in \Rlang. They can have only two values \code{TRUE} and \code{FALSE}, in addition to \code{NA} (not available). Logical values \code{TRUE} and \code{FALSE} should not be confused with text strings, they are names for the two conditions that can be stored. Logical values are always vectors as all other atomic types in \Rlang (by \emph{atomic} we mean that each value is not composed of ``parts'').
 
-Logical values are used mostly to keep track of binary conditions, like results from comparisons, and operate on them. In mathematics, Boolean algebra provides the rules of the logic used to combine multiple logical values. Boolean operators like AND and OR take as operands logical values and return a logical value as a result
+Logical values are rarely used to store data from experiments or surveys. They are used mostly to keep track of binary conditions, like results from comparisons in a script and to operate on them. Most frequent uses of \code{logical} values do not involve their storage in user-created variables. Most comparisons or tests return a \code{logical} value and Boolean algebra makes it possible to combine the results from multiple tests or conditions into a single combined outcome or binary decision, i.e., TRUE or False, Yes or No. (See section \ref{sec:calc:comparison} on page \pageref{sec:calc:comparison} for examples.) 
 
-In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
+In mathematics, Boolean algebra provides the rules of the logic used to combine multiple logical values. Boolean operators like AND and OR take as operands logical values and return a logical value as a result. In \Rlang there are two ``families'' of Boolean operators, vectorized and not vectorized. Vectorized operators accept logical vectors of any length as operands, while non vectorized ones accept only logical vectors of length one as operands. In the chunk below we use non-vectorized operators with two \Rclass{logical} vectors of length one, \code{a} and \code{b}, as operands.
 
 <<logical-1>>=
 vct1 <- TRUE
@@ -1152,12 +1188,12 @@ c(TRUE, FALSE, TRUE, NA) | c(TRUE, FALSE)
 \end{playground}
 
 \begin{faqbox}{How to test if a vector contains no values other than \code{NA} (or \code{NaN}) values?}
-A call to \Rfunction{is.na()} returns a \code{logical} vector that we can pass to \Rfunction{all()}. We can save the intermediate vector \code{temp} and pass it as argument to \Rfunction{is.na()}, or alternatively nest the function calls.
+A call to \Rfunction{is.na()} returns a \code{logical} vector that we can pass to \Rfunction{all()}. We can save the intermediate vector \code{temp} and pass it as argument to \Rfunction{is.na()}, or alternatively nest the function calls. The name \code{tmp}, for \emph{temporary}, is frequently used for variables whose value is retrieved only once.
 
 <<faq-vectors-01>>=
 vct2 <- rep(NA, 5) # toy data
-temp <- is.na(vct2)
-all(temp)
+tmp <- is.na(vct2) # tmp for temporary
+all(tmp)
 @
 
 <<<faq-vectors-01a>>=
@@ -1170,8 +1206,8 @@ all(is.na(vct2)) # nested call
 See previous question. We only need to replace \code{all()} by \Rfunction{any()} to obtain the answer.
 
 <<faq-vectors-02>>=
-na.vec <- rep(NA, 5)
-any(is.na(na.vec))
+vct2 <- rep(NA, 5)
+any(is.na(vct2))
 @
 
 \end{faqbox}
@@ -1179,13 +1215,9 @@ any(is.na(na.vec))
 \index{logical values and their algebra|)}
 \index{classes and modes!logical|)}
 
-\begin{explainbox}
-The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
-
-<<logical-last>>=
-remove(list = ls(pattern = "^vct[[:digit:]]?"))
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\end{explainbox}
 
 \section{Comparison operators and operations}\label{sec:calc:comparison}
 \index{comparison operators|(}\index{operators!comparison|(}\qRoperator{>}\qRoperator{<}\qRoperator{>=}\qRoperator{<=}\qRoperator{==}\qRoperator{!=}
@@ -1287,19 +1319,16 @@ sin(2 * pi)
 
 \index{comparison operators|)}\index{operators!comparison|)}
 
-\begin{explainbox}
-The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
-
-<<comp-last>>=
-remove(list = ls(pattern = "^vct[[:digit:]]?"))
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\end{explainbox}
 
 \section{Sets and set operations}
 \index{sets|(}\index{algebra of sets}\index{operators!set|(}
 
-The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to make use of character vectors of gene tags. Set algebra operations and their equivalents in mathematical notation and corresponding \Rlang functions are: \emph{union}, $\cup$, \code{union()}; \emph{intersection}, $\cap$, \code{intersect()}; \emph{difference (asymmetrical)}, $-$, \code{setdiff()}; \emph{equality test} \code{setequal()}; \emph{membership}, \code{is.element()} and operator \code{\%in\%}. The first three operations return a vector of the same mode as their inputs, and the last three a \code{logical} vector. The action of the first three operations is most easily illustrated with Venn diagrams, where the returned value (or result of the operation) is depicted in darker grey.\vspace{1ex}
+The \Rlang language supports set operations on vectors. They can be useful in many different contexts when manipulating and comparing vectors of values. In Bioinformatics it is usual, for example, to make use of character vectors of gene tags. Algebra sets is implemented with functions \code{union()}, \code{intersect()}, \code{setdiff()}, \code{setequal()}, \code{is.element()} and operator \code{\%in\%} (Figure \ref{fig:set:opers}). The first three operations return a vector of the same mode as their inputs, and the last three a \code{logical} vector. The action of the first three operations is most easily illustrated with Venn diagrams, where the returned value (or result of the operation) is depicted in darker grey.\vspace{1ex}
 
+\begin{figure}
 \begin{footnotesize}
 \hfill%
 \begin{tikzpicture}[thick,
@@ -1398,8 +1427,10 @@ The \Rlang language supports set operations on vectors. They can be useful in ma
 \hfill%
 \end{footnotesize}
 \vspace{1ex}
+  \caption[Boolean algebra]{Boolean algebra. Venn diagrams for algebra of sets operations: \emph{union}, $\cup$, \code{union()}; \emph{intersection}, $\cap$, \code{intersect()}; \emph{difference (asymmetrical)}, $-$, \code{setdiff()}; \emph{equality test} \code{setequal()}; \emph{membership}, \code{is.element()} and operator \code{\%in\%}}\label{fig:set:opers}
+\end{figure}
 
-The remaining operations are easier to exemplify using vectors with values representing a mundane example, grocery shopping, only later followed by more abstract examples.
+Set operations applied to vectors with values representing a mundane example, grocery shopping, demonstrate them.
 
 <<sets-00>>=
 fruits <- c("apple", "pear", "orange", "lemon", "tangerine")
@@ -1421,6 +1452,9 @@ Sets describe membership as a binary property, thus when vectors are interpreted
 
 <<sets-00a>>=
 union(c("a", "a", "b"), c("b", "a", "b")) # set operation
+@
+
+<<sets-0ba>>=
 setequal(c("a", "a", "b"), c("b", "a", "b")) # sets compared
 all.equal(c("a", "a", "b"), c("b", "a", "b")) # vectors compared
 identical(c("a", "a", "b"), c("b", "a", "b")) # vectors compared
@@ -1558,12 +1592,9 @@ In the algebra of sets notation $A \subseteq B$, where $A$ and $B$ are sets, ind
 \index{operators!set|)}
 \index{sets|)}
 
-\begin{explainbox}
-The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
-<<sets-last>>=
-remove(list = ls(pattern = "^vct[[:digit:]]?"))
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\end{explainbox}
 
 \section{The `mode' and `class' of objects}\label{sec:rlang:mode}
 \index{objects!mode}
@@ -1621,6 +1652,10 @@ class(c(TRUE, FALSE))
 @
 \end{explainbox}
 
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
+
 \section{`Type' conversions}\label{sec:calc:type:conversion}
 \index{type conversion|(}
 By type conversion we mean converting a value from one class into a value expressed in a different class. usually the meaning can be retained, at least in part. We can for example convert character strings into numeric values, but this conversion is possible only for character strings conformed by digits, like \code{"100"}. Most conversions, such as the conversion of \code{character} value \code{"100"} into \code{numeric} value \code{100} are obvious. Type conversions involving logical values are less intuitive. By convention, functions used to convert objects from one mode or class to a different one have names starting with \code{as.}\footnote{Except for some packages in the \pkgnameNI{tidyverse} that use names starting with \code{as\_} instead of \code{as.}.}.\qRfunction{as.character()}\qRfunction{as.numeric()}\qRfunction{as.logical()}
@@ -1670,18 +1705,25 @@ Compare the values returned by \Rfunction{trunc()} and \Rfunction{as.integer()} 
 \end{playground}
 
 \begin{explainbox}
-Using conversions, the difference between the length of a \code{character} vector and the number of characters composing each member ``string'' within a vector is obvious.\qRfunction{length()}\qRfunction{as.numeric()}
+Using conversions, the difference between the length of a \code{character} vector and the number of characters composing each member ``string'' within a vector becomes clear.\qRfunction{length()}\qRfunction{as.numeric()}
 
-<<convert-2>>=
+<<convert-2a>>=
 vct1 <- c("1", "2", "3")
 length(vct1)
+@
+
+<<convert-2b>>=
 vct2 <- "123.1"
 length(vct2)
+@
+
+<<convert-2c>>=
 as.numeric(vct1)
 as.numeric(vct2)
 as.integer(vct1)
 as.integer(vct2)
 @
+
 \end{explainbox}
 
 \sloppy
@@ -1747,13 +1789,9 @@ vct3[3] <- vct4[2]
 
 \index{type conversion|)}
 
-\begin{explainbox}
-The code below removes all objects with names \code{"vct1"}, \code{"vct2"}, and so on.
-
-<<type-last>>=
-remove(list = ls(pattern = "^vct[[:digit:]]?"))
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\end{explainbox}
 
 \section{Vector manipulation}\label{sec:vectors}\label{sec:calc:indexing}
 \index{vectors!indexing|(}\index{vectors!member extraction}
@@ -2070,16 +2108,11 @@ rle(sort(vct7))
 
 The second and third statements are only to demonstrate the effect of each step. The last statement uses nested function calls to compute the number of copies of each value in the vector.
 \end{explainbox}
-
-\begin{explainbox}
-The code below removes all objects except those whose names are in vector \code{to.keep}.
-
-<<vector-last>>=
-remove(list = setdiff(ls(pattern="*"), to.keep))
-@
-\end{explainbox}
-
 \index{vectors!indexing|)}
+
+<<include=FALSE>>=
+rm(list = setdiff(ls(pattern="*"), to.keep))
+@
 
 \section{Matrices and multidimensional arrays}\label{sec:matrix:array}
 \index{matrices|(}\index{arrays|(}\qRclass{matrix}\qRclass{array}
@@ -2278,13 +2311,22 @@ vct1 <- 1:6
 dim(vct1)
 @
 
-<<dimensions-box-02>>=
+<<dimensions-box-02a>>=
 one.col.matrix <- matrix(1:6, ncol = 1)
 dim(one.col.matrix)
+@
+
+<<dimensions-box-02b>>=
 two.col.matrix <- matrix(1:6, ncol = 2)
 dim(two.col.matrix)
+@
+
+<<dimensions-box-02c>>=
 one.elem.matrix <- matrix(1, ncol = 1)
 dim(one.elem.matrix)
+@
+
+<<dimensions-box-02d>>=
 no.elem.matrix <- matrix(numeric(), ncol = 0)
 dim(no.elem.matrix)
 @
@@ -2462,15 +2504,9 @@ solve(mat6)
 
 Additional operators and functions for matrix algebra like cross-product (\code{crossprod()}) and Cholesky root (\code{chol()}) are available in base \Rlang. Packages, including \pkgname{matrixStats}, provide additional functions and operators for matrices.
 
-\begin{explainbox}
-The code below removes all objects except those whose names are in vector \code{to.keep}.
-
-<<matrix-last, include=FALSE>>=
+<<include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-
-\end{explainbox}
-\index{matrix!operators|)}
 
 \index{matrices|)}
 
@@ -2562,14 +2598,19 @@ fct1.control <- fct1[fct1 == "control"]
 fct1.control
 levels(fct1.control) # same as in my.factor
 length(fct1.control) # shorter than my.factor
+@
+
+\begin{faqbox}{How to drop unused levels in a factor?}
+  It can be seen above that subsetting does not drop unused factor levels. Constructor function \code{factor()} can be used to explicitly drop the unused factor levels.\index{factors!drop unused levels}
+  
+<<factor-drop-faq>>=
 fct1.control <- factor(fct1.control)
 levels(fct1.control) # the unused level was dropped
 @
+\end{faqbox}
 
-It can be seen above that subsetting does not drop unused factor levels, and that \code{factor()} can be used to explicitly drop the unused factor levels.\index{factors!drop unused levels}
-
-\begin{warningbox}
-How to convert factors into numeric vectors is not obvious, even when the factor was created from a \code{numeric} vector.
+\begin{faqbox}{How to convert a factor into a vector with matching values?}
+This operation is not obvious, specially when the factor was created from a \code{numeric} vector.
 
 <<factors-7>>=
 vct3 <- rep(3:5, 4)
@@ -2579,7 +2620,7 @@ fct3
 as.numeric(fct3)
 as.numeric(as.character(fct3))
 @
-\end{warningbox}
+\end{faqbox}
 
 \begin{explainbox}
 \textbf{Why is a double conversion needed?}\index{factors!convert to numeric} Internally, factor values are  are stored as running integers starting from one, each distinct integer value corresponding to a level. These underlying integer values are returned by \Rfunction{as.numeric()} when applied to a factor. The labels of the factor levels are always stored as character strings, even when these characters are digits. In contrast to \Rfunction{as.numeric()}, \Rfunction{as.character()} returns the character labels of the levels for each of the values stored in the factor. If these character strings represent numbers, they can be converted, in a second step, using \Rfunction{as.numeric()} into the original numeric values. Use of \code{class} and \code{mode} is described on section \ref{sec:rlang:mode} on page \pageref{sec:rlang:mode}, and \code{str()} on page \pageref{par:calc:str}.
@@ -2671,23 +2712,21 @@ Run the examples in the chunk above and work out why the results differ.
 \begin{explainbox}
   Factors encode levels as \code{integer} values in a vector. In many cases, statistical computations, require the same information to be encoded as binary values using multiple \emph{dummy variables}. Factors are much friendlier for the user to manage. They are converted into the equivalent dummy variables when a model formula is translated into a \emph{model matrix}. This is handled transparently by most functions implementing fitting of statistical models to data (see sections \ref{sec:stat:mf} and \ref{sec:stat:formulas} on pages \pageref{sec:stat:mf} and \pageref{sec:stat:formulas}).
 \end{explainbox}
+\index{factors|)}
 
 <<factors-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
 @
-\index{factors|)}
-
 % !Rnw root = appendix.main.Rnw
 
 <<echo=FALSE, include=FALSE>>=
 opts_chunk$set(opts_fig_wide)
 opts_knit$set(concordance=TRUE)
-opts_knit$set(unnamed.chunk.label = 'calculator-chunk')
+# opts_knit$set(unnamed.chunk.label = 'calculator-chunk')
 @
 
 \section{Further reading}
-For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter,
- I suggest the books \citetitle{Peng2022} \autocite{Peng2022} and \citetitle{Matloff2011} \autocite{Matloff2011}.
+For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter, I suggest the book \citetitle{Matloff2011} \autocite{Matloff2011}.
 
 <<calculator-chapter-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
