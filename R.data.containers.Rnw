@@ -46,7 +46,7 @@ In \Rlang, the members of a list can be considered as following a sequence, and 
 List and list-like objects are widely used in \Rlang because they make it possible to keep, for example, the data, instructions for operations and results from operations together in a single \Rlang object that can saved, copied, etc. as a unit. This avoids the proliferation of multiple disconnected objects with their interrelations being encoded only by their names, or even worse in separate notes or even in a person'd memory, all approaches that are error prone. Model fit functions described in chapter \ref{chap:R:statistics} are good examples of this approach. Objects used to store the instructions to build plots with multiple layers as described in chapter \ref{chap:R:plotting} are also good examples.
 \end{explainbox}
 
-Our first list has as its members three different vectors, each one belonging to a different class: \code{numeric}, \code{character} and \code{logical}. The three vectors also differ in their length: 6, 1, and 2, respectively.
+Our first list has as its members three different vectors, each one belonging to a different class: \code{numeric}, \code{character} and \code{logical}. The three vectors also differ in their length: 6, 1, and 2, respectively.\qRfunction{list()}\qRfunction{names()}
 
 <<lists-0>>=
 lst1 <- list(x = 1:3, y = "ab", z = c(TRUE, FALSE))
@@ -115,7 +115,7 @@ Lists can behave as vectors with heterogeneous elements as members, as we will d
 %}
 
 \begin{faqbox}{How to create an empty list?}
-  In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction(liste()) by default creates a \code{list} with no members.
+  In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction{list()} by default creates a \code{list} object with no members.
 
 <<list-empty-faq>>=
 list()
@@ -298,7 +298,7 @@ str(lst8, max.level = 1)
 
 Sometimes we need to flatten a list\index{lists!flattening}\index{lists!nested}, or a nested structure of lists within lists. Function \Rfunction{unlist()} is what should be normally used in such cases.
 
-The list \code{lst10} is a nested system of lists, but all the ``terminal'' members are character strings. In other words, terminal nodes are all of the same mode, allowing the list to be ``flattened'' into a character vector.
+The list \code{lst10} is a nested system of lists, but all the ``terminal'' members are character strings. In other words, terminal nodes are all of the same mode, allowing the list to be ``flattened'' into a character vector.\qRfunction{is.list()}
 
 <<lists-5>>=
 lst10 <- list(A = list("a", "aa", "aaa"), B = list("b", "bb"))
@@ -378,7 +378,7 @@ row 1/.style={nodes={draw=none, fill=none, minimum size=1mm}}}]
 \end{footnotesize}
 \end{center}
 
-Data frames are created with constructor function \Rfunction{data.frame()} with a syntax similar to that used for lists.
+Data frames are created with constructor function \Rfunction{data.frame()} with a syntax similar to that used for lists.\qRfunction{colnames()}\qRfunction{rownames()}\qRfunction{is.data.frame()}
 
 <<data-frames-0>>=
 df1 <- data.frame(treatment = factor(rep(c("hot", "cold"), 3)),
@@ -449,7 +449,7 @@ list(df1, df2)
 \end{faqbox}
 
 \begin{faqbox}{How to create an empty data frame?}
-In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction(data.frame()) by default creates a \code{data.frame} with zero rows and no columns.
+In the same way as \code{numeric()} by default creates a \code{numeric} vector of length zero, \Rfunction{data.frame()} by default creates a \code{data.frame} with zero rows and no columns.
 
 <<data-frame-empty-faq>>=
 data.frame()
@@ -772,7 +772,7 @@ head(df11, 2)
 
 \begin{warningbox}
 When using the extraction operator \Roperator{[ ]} on both the left-hand-side and right-hand-side with a \code{numeric} vector as argument to swap two columns, the vectors or factors are swapped, while the names of the columns are not!
-To retain the correspondence between column naming and column contents after swapping or rearranging the columns \emph{using numeric indices}, we need to separately move the names of the columns. This may seem counter intuitive, unless we think in terms of positions being named rather than the contents of the columns being linked to the names.
+To retain the correspondence between column naming and column contents after swapping or rearranging the columns \emph{using numeric indices}, we need to separately move the names of the columns. This may seem counter intuitive, unless we think in terms of positions being named rather than the contents of the columns being linked to the names.\qRfunction{colnames()}\qRfunction{colnames()<-}
 
 <<data-frames-8ax>>=
 df11 <- data.frame(A = 1:10, B = 3, C = c("A", "B"))
@@ -923,14 +923,14 @@ We start by creating a data frame of hypothetical data measured on two occasions
 # artifical data
 df1 <- data.frame(id = rep(1:4, rep(2,4)),
                   Time = factor(rep(c("Before","After"), 4)),
-                  Weight = rnorm(n = 4, mean = c(20.1, 30.8)), 
+                  Weight = rnorm(n = 4, mean = c(20.1, 30.8)),
                   Height = rnorm(n = 4, mean = c(9.5, 14.2)))
 df1
 # make it wider
 df2 <- reshape(df1, timevar = "Time", idvar = "id", direction = "wide")
 df2
 # possible further calculation
-within(df2, 
+within(df2,
        {
         Height.growth <- Height.After - Height.Before
         Weight.growth <- Weight.After - Weight.Before
@@ -1003,16 +1003,44 @@ attr(df1, "comment")
 comment(df1) # same as previous line
 @
 
-The \code{"names"} attribute of \code{df1} was set by the \code{data.frame()} constructor when it was created above. In the next example, in the first statement we retrieve the names, and implicitly print them. In the second statement, read from right to left, we retrieve the names, convert them to upper case and save them back to the same attribute.
+The \code{"names"} attribute of \code{df1} was set by the \code{data.frame()} constructor when it was created above. In the next example, in the first statement we retrieve the names, and implicitly print them. In the second statement, read from right to left, we retrieve the names, convert them to upper case and save them back to the same attribute. \qRfunction{colnames()}\qRfunction{colnames()<-}
 
 <<attributes-02>>=
 names(df1)
-names(df1) <- toupper(names(df1))
-names(df1)
+colnames(df1) # same as names()
+colnames(df1) <- toupper(colnames(df1))
+colnames(df1)
 attr(df1, "names") # same as previous line
 @
 
-We can add a new attribute, under our own control, as long as its name does not clash with that of existing attributes.
+\begin{advplayground}
+  In general, \Rlang objects do not have by default names assigned to members. As seen on page \pageref{par:calc:vector:map} we can give names to vector members during construction with a call to \Rfunction{c()} or we can assign names (set attribute \code{names}) with function \Rfunction{names()<-} to existing vectors. Lists behave almost the same as vectors, although members of nested objects can also be named. Data frames have attributes \code{names} and \code{row.names}, that can be accessed with functions \Rfunction{names()} or \Rfunction{colnames()}, and function \Rfunction{rownames()}, respectively. The attributes can be set with functions \Rfunction{names()<-} or \Rfunction{colnames()<-}, and \Rfunction{rownames()<-}. The \Rfunction{data.frame()} constructor sets (column) names and row names by default. The \Rfunction{matrix()} constructor by default does not set \code{dimnames} or \code{names} attributes. When names are assigned to a \code{matrix} with \Rfunction{names()<-}, the matrix behaves like a vector, and the names are assigned to individual members. Functions \Rfunction{dimnames()<-}, \Rfunction{colnames()<-} and \Rfunction{rownames()<-} are used to assign names to columns and rows. The matching functions \Rfunction{dimnames()}, \Rfunction{colnames()} and \Rfunction{rownames()} are used to access these values.
+  
+  When no names have been set, \Rfunction{names()}, \Rfunction{colnames()}, \Rfunction{rownames()}, and \Rfunction{dimnames()} return \code{NULL}. In contrast, \Rfunction{labels()}, intended to be used for printing, returns made-up names based on positions.
+  
+  Run the examples below and write similar examples for \code{list} and \code{data.frame}. For \code{matrix}, write an additional statement that uses \Rfunction{dimnames()<-} to set row and column names simultaneously.
+  
+<<attributes-names-ebx-01, eval=eval_playground>>=
+VCT1 <- 5:10
+names(VCT1)
+labels(VCT1)
+names(VCT1) <- letters[5:10]
+names(vct1)
+labels(VCT1)
+@
+
+<<attibutes-names-ebx-02, eval=eval_playground>>=
+MAT1 <- matrix(1:10, ncol = 2)
+dimnames(MAT1)
+labels(MAT1)
+colnames(MAT1) <- c("a", "b")
+colnames(MAT1)
+dimnames(MAT1)
+labels(MAT1)
+@
+\end{advplayground}
+
+We can add a new attribute, under our own control, as long as its name does not clash with those of existing attributes.
 
 <<attributes-02a>>=
 attr(df1, "my.attribute") <- "this is stored in my attribute"
@@ -1024,6 +1052,13 @@ The attributes used internally by \Rlang can be directly modified by user code. 
 
 <<attibutes-ebx-01a>>=
 mat1 <- matrix(1:10, ncol = 2)
+attributes(mat1)
+dim(mat1)
+dimnames(mat1)
+@
+
+<<attibutes-ebx-01aa>>=
+labels(mat1)
 mat1
 @
 
@@ -1071,7 +1106,7 @@ data(cars)
 
 By\index{file formats!RDA ``R data, multiple objects''} default, at the end of a session, the current workspace containing the results of one's work is saved into a file called \code{.RData}. In addition to saving the whole workspace, it is possible to save one or more \Rlang objects present in the workspace to disk using the same file format (with file name tag \code{.rda} or \code{.Rda}). One or more objects, belonging to any mode or class can be saved into a single file using function \Rfunction{save()}. Reading the file restores all the saved objects into the current workspace with their original names. These files are portable across most \Rlang versions---i.e., old formats can be read and written by newer versions of \Rpgrm, although the newer, default format may be not readable with earlier \Rpgrm versions. Whether compression is used, and whether the ``binary'' data is encoded into ASCII characters, allowing maximum portability at the expense of increased size can be controlled by passing suitable arguments to \Rfunction{save()}.
 
-We create a data frame object and then save it to a file. The file name used can be any valid one in the operating system, however to ensure compatibility with multiple operating systems, it is good to use only ASCII characters. Although not enforced, using the name tag \code{.rda} or \code{.Rda} is recommended. 
+We create a data frame object and then save it to a file. The file name used can be any valid one in the operating system, however to ensure compatibility with multiple operating systems, it is good to use only ASCII characters. Although not enforced, using the name tag \code{.rda} or \code{.Rda} is recommended.
 
 <<rda-01>>=
 df1 <- data.frame(x = 1:5, y = 5:1)
