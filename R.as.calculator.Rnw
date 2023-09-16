@@ -379,16 +379,41 @@ rep(0, times = 10)
 
 Next,\label{par:calc:vectorized:opers} something that makes \Rlang different from most other programming languages: vectorized arithmetic\index{vectorized arithmetic}. Operators and functions that are vectorized accept, as arguments, vectors of arbitrary length, in which case the result returned is equivalent to having applied the same function or operator individually to each element of the vector.\label{par:vectorized:numeric}
 
-<<numbers-6>>=
-vct4 + 1 # we add one to vector a defined above
-(vct4 + 1) * 2
-vct4 + vct5
-vct4 - vct5
+<<numbers-6aa>>=
+log10(100)
+log10(c(10, 5, 100, 200))
 @
 
-As it can be seen in the first line of code above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of vector arguments:\index{recycling of arguments} as vector \code{vct4} is of length \Sexpr{length(vct4)}, but the \code{numeric} constant 1 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
+Function \Rfunction{sum()} accepts vectors of different lengths as input but is not vectorized, as it always returns a vector of length one as result.
 
-Make sure you understand what calculations are taking place in the chunk above, and also the one below. Vector recycling is a key feature of the \Rlang language. See the box on page \pageref{box:floats} for an in-depth explanation of vector recycling.
+<<numbers-6ab>>=
+sum(100)
+sum(c(10, 5, 100, 200))
+@
+
+A vectorized sum, also called a parallel sum of  vectors, to differentiate it from obtaining the sum of the members of a vector, as computed above with function \Rfunction{sum()}, is the usual way in which operators like \Roperator{+} and other arithmetic operators and functions work in \Rlang.
+
+<<numbers-6ac>>=
+c(3, 1, 2) + c(1, 2, 31)
+@
+
+Vectorized\index{recycling of arguments}\index{recycling of operands} functions and operators that operate on more than one vector simultaneously, in many cases accept vectors of mismatched length as arguments or operands. When two or more vectors are of different length these functions and operators recycle the shorter vector(s) to match the length of the longest one. The two statements below are equivalent, in the first statement, the short vector \code{1} is recycled into \code{c(1, 1, 1)} and then the vectorized addition is done of the members at the same positions in the two vectors.
+
+<<numbers-6ad>>=
+c(3, 1, 2) + 1
+c(3, 1, 2) + c(1, 1, 1)
+@
+
+In the second code statement (line) below, \code{vct4} is of length \Sexpr{length(vct4)}, but the \code{numeric} constant 2 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
+
+<<numbers-6>>=
+vct4 <- c(3, 1, 2)
+(vct4 + 1) * 2
+vct4 * 0:1
+vct4 - vct4
+@
+
+Make sure you understand what calculations are taking place in the chunk above, and also the one below. Vectorization and vector recycling are key features of the \Rlang language.
 
 <<numbers-6a>>=
 vct8 <- rep(1, 6)
@@ -403,7 +428,7 @@ vct8 + 1:4
 \end{playground}
 
 \begin{warningbox}
-  Most functions defined in base \Rlang apply recycling to vectors passed as argument to at least some of their parameters. When recycling is supported, the conditions triggering warnings or errors are consistent with those you discovered in the playground above. However, if and how recycling is applied depends on how functions have been defined. Thus, there is variation, specially, but not only, in the case of functions and operators defined in contributed extension packages. For example, package \pkgname{tibble} and some other packages in the \pkgname{tidyverse} support recycling but some boundary cases that trigger a warning in base \Rlang functions, trigger an error in functions defined in these packages. See section \ref{sec:data:tibble} on page \pageref{sec:data:tibble} about package \pkgname{tibble}.
+  Most functions defined in base \Rlang apply recycling to vectors passed as argument to at least some of their parameters. When recycling is supported, the conditions triggering warnings or errors are consistent with those you discovered in the playground above. However, if and how recycling is applied depends on how functions have been defined. Thus, there is variation, especially, but not only, in the case of functions and operators defined in contributed extension packages. For example, package \pkgname{tibble} and some other packages in the \pkgname{tidyverse} support recycling but some boundary cases that trigger a warning in base \Rlang functions, trigger an error in functions defined in these packages. See section \ref{sec:data:tibble} on page \pageref{sec:data:tibble} about package \pkgname{tibble}.
 \end{warningbox}
 
 \begin{explainbox}

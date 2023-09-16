@@ -160,7 +160,7 @@ An additional change is in my view about some of the packages in the \pkgname{ti
 Re-reading myself the book after some time allowed me to think of other improvements. I have updated the book accordingly making it more accessible to readers with no previous experience in computer programming. I have added diagrams and flowcharts to facilitate comprehension of common programming abstractions. I also edited the text from the first edition to fix all errors and outdated examples or explanations known to me.
 
 \section*{Acknowledgements}
-I thank Jaakko Heinonen for introducing me to the then new \Rlang. Along the way many well known and not so famous experts have answered my questions in usenet and more recently in \stackoverflow. I wish to warmly thank members of my own research group, students participating in the courses I have taught, colleagues I have collaborated with, authors of the books I have read and people I have only met online or at conferences. All of them have made it possible for me to write this book. I am indebted to Tarja Lehto, Titta Kotilainen, Tautvydas Zalnierius, Fang Wang, Yan Yan, Neha Rai, Markus Laurel, Brett Cooper, Viivi Lindholm, colleagues, students and anonymous reviewers for many very helpful comments on the draft manuscript and/or the published first edition. Rob Calver, editor of both editions, provided encouragement with great patience, Shashi Kumar, Lara Spieker, Vaishali Singh, Sherry Thomas, and Paul Boyd for their help with different aspects of this project.
+I thank Jaakko Heinonen for introducing me to the then new \Rlang. Along the way many well known and not so famous experts have answered my questions in usenet and more recently in \stackoverflow. I wish to warmly thank members of my own research group, students participating in the courses I have taught, colleagues I have collaborated with, authors of the books I have read and people I have only met online or at conferences. All of them have made it possible for me to write this book. I am indebted to Tarja Lehto, Titta Kotilainen, Tautvydas Zalnierius, Fang Wang, Yan Yan, Neha Rai, Markus Laurel, Brett Cooper, Viivi Lindholm, Zuzana Svarna, colleagues, students and anonymous reviewers for many very helpful comments on the draft manuscript and/or the published first edition. Rob Calver, editor of both editions, provided encouragement with great patience, Shashi Kumar, Lara Spieker, Vaishali Singh, Sherry Thomas, and Paul Boyd for their help with different aspects of this project.
 
 I was able to work intensively for a few months on the writing of this 2nd edition thanks to a sabbatical granted by my employer, the Faculty of Biological and Environmental Sciences of the University of Helsinki, Finland. I thank Prof.\ Kurt Fagerstedt for his support.
 
@@ -1233,35 +1233,100 @@ Next,\label{par:calc:vectorized:opers} something that makes \Rlang different fro
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{vct4} \hlopt{+} \hlnum{1} \hlcom{# we add one to vector a defined above}
+\hlkwd{log10}\hlstd{(}\hlnum{100}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 2
+\end{verbatim}
+\begin{alltt}
+\hlkwd{log10}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{5}\hlstd{,} \hlnum{100}\hlstd{,} \hlnum{200}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] 1.00000 0.69897 2.00000 2.30103
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Function \Rfunction{sum()} accepts vectors of different lengths as input but is not vectorized, as it always returns a vector of length one as result.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sum}\hlstd{(}\hlnum{100}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 100
+\end{verbatim}
+\begin{alltt}
+\hlkwd{sum}\hlstd{(}\hlkwd{c}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{5}\hlstd{,} \hlnum{100}\hlstd{,} \hlnum{200}\hlstd{))}
+\end{alltt}
+\begin{verbatim}
+## [1] 315
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+A vectorized sum, also called a parallel sum of  vectors, to differentiate it from obtaining the sum of the members of a vector, as computed above with function \Rfunction{sum()}, is the usual way in which operators like \Roperator{+} and other arithmetic operators and functions work in \Rlang.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{2}\hlstd{,} \hlnum{31}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1]  4  3 33
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Vectorized\index{recycling of arguments}\index{recycling of operands} functions and operators that operate on more than one vector simultaneously, in many cases accept vectors of mismatched length as arguments or operands. When two or more vectors are of different length these functions and operators recycle the shorter vector(s) to match the length of the longest one. The two statements below are equivalent, in the first statement, the short vector \code{1} is recycled into \code{c(1, 1, 1)} and then the vectorized addition is done of the members at the same positions in the two vectors.
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{+} \hlnum{1}
 \end{alltt}
 \begin{verbatim}
 ## [1] 4 2 3
 \end{verbatim}
 \begin{alltt}
+\hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)} \hlopt{+} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{1}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 4 2 3
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+In the second code statement (line) below, \code{vct4} is of length 3, but the \code{numeric} constant 2 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{vct4} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{3}\hlstd{,} \hlnum{1}\hlstd{,} \hlnum{2}\hlstd{)}
 \hlstd{(vct4} \hlopt{+} \hlnum{1}\hlstd{)} \hlopt{*} \hlnum{2}
 \end{alltt}
 \begin{verbatim}
 ## [1] 8 4 6
 \end{verbatim}
 \begin{alltt}
-\hlstd{vct4} \hlopt{+} \hlstd{vct5}
+\hlstd{vct4} \hlopt{*} \hlnum{0}\hlopt{:}\hlnum{1}
 \end{alltt}
-\begin{verbatim}
-## [1] 7 6 2
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning in vct4 * 0:1: longer object length is not a multiple of shorter object length}}\begin{verbatim}
+## [1] 0 1 0
 \end{verbatim}
 \begin{alltt}
-\hlstd{vct4} \hlopt{-} \hlstd{vct5}
+\hlstd{vct4} \hlopt{-} \hlstd{vct4}
 \end{alltt}
 \begin{verbatim}
-## [1] -1 -4  2
+## [1] 0 0 0
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
 
-As it can be seen in the first line of code above, another peculiarity of \Rpgrm, is what is frequently called ``recycling'' of vector arguments:\index{recycling of arguments} as vector \code{vct4} is of length 3, but the \code{numeric} constant 1 is a vector of length 1, this short constant vector is extended, by recycling (replicating) its value, into a longer vector of ones---i.e., a vector of the same length as the longest vector in the statement, \code{a}.\label{par:recycling:numeric}
-
-Make sure you understand what calculations are taking place in the chunk above, and also the one below. Vector recycling is a key feature of the \Rlang language. See the box on page \pageref{box:floats} for an in-depth explanation of vector recycling.
+Make sure you understand what calculations are taking place in the chunk above, and also the one below. Vectorization and vector recycling are key features of the \Rlang language.
 
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{1, 1, 1}\color{fgcolor}\begin{kframe}
@@ -1300,7 +1365,7 @@ Make sure you understand what calculations are taking place in the chunk above, 
 \end{playground}
 
 \begin{warningbox}
-  Most functions defined in base \Rlang apply recycling to vectors passed as argument to at least some of their parameters. When recycling is supported, the conditions triggering warnings or errors are consistent with those you discovered in the playground above. However, if and how recycling is applied depends on how functions have been defined. Thus, there is variation, specially, but not only, in the case of functions and operators defined in contributed extension packages. For example, package \pkgname{tibble} and some other packages in the \pkgname{tidyverse} support recycling but some boundary cases that trigger a warning in base \Rlang functions, trigger an error in functions defined in these packages. See section \ref{sec:data:tibble} on page \pageref{sec:data:tibble} about package \pkgname{tibble}.
+  Most functions defined in base \Rlang apply recycling to vectors passed as argument to at least some of their parameters. When recycling is supported, the conditions triggering warnings or errors are consistent with those you discovered in the playground above. However, if and how recycling is applied depends on how functions have been defined. Thus, there is variation, especially, but not only, in the case of functions and operators defined in contributed extension packages. For example, package \pkgname{tibble} and some other packages in the \pkgname{tidyverse} support recycling but some boundary cases that trigger a warning in base \Rlang functions, trigger an error in functions defined in these packages. See section \ref{sec:data:tibble} on page \pageref{sec:data:tibble} about package \pkgname{tibble}.
 \end{warningbox}
 
 \begin{explainbox}
@@ -8282,14 +8347,14 @@ We start by creating a data frame of hypothetical data measured on two occasions
 \end{alltt}
 \begin{verbatim}
 ##   id   Time   Weight    Height
-## 1  1 Before 20.69111  9.519329
-## 2  1  After 29.96023 15.154534
-## 3  2 Before 21.28135  9.722952
-## 4  2  After 32.60323 14.669620
-## 5  3 Before 20.69111  9.519329
-## 6  3  After 29.96023 15.154534
-## 7  4 Before 21.28135  9.722952
-## 8  4  After 32.60323 14.669620
+## 1  1 Before 19.65589 10.664214
+## 2  1  After 30.48915 16.462137
+## 3  2 Before 19.95472  8.989014
+## 4  2  After 30.55991 14.805486
+## 5  3 Before 19.65589 10.664214
+## 6  3  After 30.48915 16.462137
+## 7  4 Before 19.95472  8.989014
+## 8  4  After 30.55991 14.805486
 \end{verbatim}
 \begin{alltt}
 \hlcom{# make it wider}
@@ -8298,10 +8363,10 @@ We start by creating a data frame of hypothetical data measured on two occasions
 \end{alltt}
 \begin{verbatim}
 ##   id Weight.Before Height.Before Weight.After Height.After
-## 1  1      20.69111      9.519329     29.96023     15.15453
-## 3  2      21.28135      9.722952     32.60323     14.66962
-## 5  3      20.69111      9.519329     29.96023     15.15453
-## 7  4      21.28135      9.722952     32.60323     14.66962
+## 1  1      19.65589     10.664214     30.48915     16.46214
+## 3  2      19.95472      8.989014     30.55991     14.80549
+## 5  3      19.65589     10.664214     30.48915     16.46214
+## 7  4      19.95472      8.989014     30.55991     14.80549
 \end{verbatim}
 \begin{alltt}
 \hlcom{# possible further calculation}
@@ -8313,15 +8378,15 @@ We start by creating a data frame of hypothetical data measured on two occasions
 \end{alltt}
 \begin{verbatim}
 ##   id Weight.Before Height.Before Weight.After Height.After Weight.growth
-## 1  1      20.69111      9.519329     29.96023     15.15453      9.269121
-## 3  2      21.28135      9.722952     32.60323     14.66962     11.321881
-## 5  3      20.69111      9.519329     29.96023     15.15453      9.269121
-## 7  4      21.28135      9.722952     32.60323     14.66962     11.321881
+## 1  1      19.65589     10.664214     30.48915     16.46214      10.83326
+## 3  2      19.95472      8.989014     30.55991     14.80549      10.60518
+## 5  3      19.65589     10.664214     30.48915     16.46214      10.83326
+## 7  4      19.95472      8.989014     30.55991     14.80549      10.60518
 ##   Height.growth
-## 1      5.635206
-## 3      4.946667
-## 5      5.635206
-## 7      4.946667
+## 1      5.797924
+## 3      5.816472
+## 5      5.797924
+## 7      5.816472
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -8343,22 +8408,22 @@ Alternatively, we may want to convert \code{df1} into a longer shape, with a sin
 \end{alltt}
 \begin{verbatim}
 ##          id   Time ID Quantity     Value
-## 1.Weight  1 Before  1   Weight 20.691109
-## 2.Weight  1  After  2   Weight 29.960230
-## 3.Weight  2 Before  3   Weight 21.281349
-## 4.Weight  2  After  4   Weight 32.603229
-## 5.Weight  3 Before  5   Weight 20.691109
-## 6.Weight  3  After  6   Weight 29.960230
-## 7.Weight  4 Before  7   Weight 21.281349
-## 8.Weight  4  After  8   Weight 32.603229
-## 1.Height  1 Before  1   Height  9.519329
-## 2.Height  1  After  2   Height 15.154534
-## 3.Height  2 Before  3   Height  9.722952
-## 4.Height  2  After  4   Height 14.669620
-## 5.Height  3 Before  5   Height  9.519329
-## 6.Height  3  After  6   Height 15.154534
-## 7.Height  4 Before  7   Height  9.722952
-## 8.Height  4  After  8   Height 14.669620
+## 1.Weight  1 Before  1   Weight 19.655886
+## 2.Weight  1  After  2   Weight 30.489146
+## 3.Weight  2 Before  3   Weight 19.954724
+## 4.Weight  2  After  4   Weight 30.559907
+## 5.Weight  3 Before  5   Weight 19.655886
+## 6.Weight  3  After  6   Weight 30.489146
+## 7.Weight  4 Before  7   Weight 19.954724
+## 8.Weight  4  After  8   Weight 30.559907
+## 1.Height  1 Before  1   Height 10.664214
+## 2.Height  1  After  2   Height 16.462137
+## 3.Height  2 Before  3   Height  8.989014
+## 4.Height  2  After  4   Height 14.805486
+## 5.Height  3 Before  5   Height 10.664214
+## 6.Height  3  After  6   Height 16.462137
+## 7.Height  4 Before  7   Height  8.989014
+## 8.Height  4  After  8   Height 14.805486
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9508,12 +9573,12 @@ Addition of computed variables to a data frame using \Rfunction{within()} (see s
   \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= _, is.large)}
 \end{alltt}
 \begin{verbatim}
-##     x         y is.large    x4
-## 6   6 1.2220008     TRUE  1296
-## 7   7 0.6845629     TRUE  2401
-## 8   8 0.6525105     TRUE  4096
-## 9   9 0.8123223     TRUE  6561
-## 10 10 0.3174665     TRUE 10000
+##     x           y is.large    x4
+## 6   6  0.50747277     TRUE  1296
+## 7   7 -0.18716289     TRUE  2401
+## 8   8 -0.08574864     TRUE  4096
+## 9   9 -0.29931751     TRUE  6561
+## 10 10 -0.74285761     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9546,12 +9611,12 @@ Subset can be also used to select variables or columns from data frames and matr
   \hlkwd{subset}\hlstd{(}\hlkwc{x} \hlstd{= _, is.large,} \hlkwc{select} \hlstd{=} \hlopt{-}\hlstd{x)}
 \end{alltt}
 \begin{verbatim}
-##               y is.large    x4
-## 6   0.953161992     TRUE  1296
-## 7   0.004879628     TRUE  2401
-## 8   0.595307025     TRUE  4096
-## 9  -0.288234349     TRUE  6561
-## 10  1.595894115     TRUE 10000
+##             y is.large    x4
+## 6  -2.1298065     TRUE  1296
+## 7  -1.5771629     TRUE  2401
+## 8   0.8785017     TRUE  4096
+## 9  -0.2827295     TRUE  6561
+## 10 -0.5060771     TRUE 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9569,16 +9634,16 @@ Subset can be also used to select variables or columns from data frames and matr
 \end{alltt}
 \begin{verbatim}
 ##              y    x4
-## 1   0.99539026     1
-## 2  -0.18479802    16
-## 3   0.06658398    81
-## 4   0.83912265   256
-## 5   0.44544952   625
-## 6  -1.88337829  1296
-## 7   0.23681036  2401
-## 8   0.22632303  4096
-## 9  -1.08283931  6561
-## 10  1.08775173 10000
+## 1  -0.13220738     1
+## 2   1.12770043    16
+## 3  -0.84577906    81
+## 4  -0.38138518   256
+## 5  -0.58841681   625
+## 6   0.82512844  1296
+## 7   0.07611132  2401
+## 8   0.60133307  4096
+## 9   1.07374942  6561
+## 10  1.60326211 10000
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9592,9 +9657,9 @@ Subset can be also used to select variables or columns from data frames and matr
   \hlkwd{aggregate}\hlstd{(}\hlkwc{data} \hlstd{= _, y} \hlopt{~} \hlstd{group, mean)}
 \end{alltt}
 \begin{verbatim}
-##   group         y
-## 1    T1 0.5719860
-## 2    T2 0.3345471
+##   group           y
+## 1    T1  0.04140281
+## 2    T2 -0.40576480
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -9611,7 +9676,7 @@ The extraction operators are accepted on the \emph{rhs} of a pipe only starting 
   \hlstd{_[[}\hlstr{"y"}\hlstd{]]}
 \end{alltt}
 \begin{verbatim}
-## [1] -0.75863507  0.02532526
+## [1] 0.07643653 0.75527280
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -10592,7 +10657,7 @@ Execution speed needs to be balanced against the effort invested in writing fast
 \end{alltt}
 \begin{verbatim}
 ##    user  system elapsed 
-##    0.36    0.02    0.37
+##    0.32    0.02    0.34
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -11739,7 +11804,7 @@ We first print (implicitly) the definition of our function from earlier in this 
 ##  }
 ##  sqrt(var(x)/length(x))
 ## }
-## <bytecode: 0x000001736e30e128>
+## <bytecode: 0x0000014b369e95c0>
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
@@ -11824,7 +11889,7 @@ Next we print the definition of \Rlang's linear model fitting function \code{lm(
 ##         z$qr <- NULL
 ##     z
 ## }
-## <bytecode: 0x0000017368c4d328>
+## <bytecode: 0x0000014b37470f60>
 ## <environment: namespace:stats>
 \end{verbatim}
 \end{kframe}
@@ -11959,7 +12024,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001736e1e6ee8>
+## <bytecode: 0x0000014b33d57010>
 ## <environment: namespace:base>
 \end{verbatim}
 \end{kframe}
@@ -12240,7 +12305,7 @@ In the example above, the two variables are not defined in the same scope. In th
 \index{extensions to R}
 The most elegant way of adding new features or capabilities to \Rlang is through packages. This is without doubt the best mechanism when these extensions to \Rlang need to be shared. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
 
-Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was 19860.
+Packages can be shared as source or binary package files, sent for example through e-mail. However, for sharing packages widely, it is best to submit them to a repository. The largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the package and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing was 19868.
 
 A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for R packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the ROpenScience website (\url{https://ropensci.org/}). In some cases you may need or want to install less stable code from Git repositories such as versions still under development not yet submitted to \CRAN. Using the package \pkgname{devtools} we can install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. Installations from code repositories are always installations from sources (see below). It is of course also possible to install packages from local files (e.g.,  after a manual download).
 
@@ -12423,7 +12488,7 @@ In the example above I used a data frame object, but the same mechanisms apply t
 \begin{verbatim}
 ## function (x, ...) 
 ## UseMethod("mean")
-## <bytecode: 0x000001736e1e6ee8>
+## <bytecode: 0x0000014b33d57010>
 ## <environment: namespace:base>
 \end{verbatim}
 \begin{alltt}
@@ -13009,7 +13074,9 @@ Although there is some variation, especially for fitted model classes defined in
 \index{linear models|(}
 \index{LM|see{linear models}}
 
-Function \Rfunction{lm()} is used to fit linear models. If the explanatory variable is continuous, the fit is a regression. If the explanatory variable is a factor, the fit is an analysis of variance (ANOVA) in broad terms. However, there is another meaning of ANOVA, referring only to the tests of significance rather to an approach to model fitting. Consequently, rather confusingly, results for tests of significance for fitted parameter estimates can both in the case of regression and ANOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
+Regression, analysis of variance (ANOVA) and analysis of covariance (ANCOVA) are all linear models, differing only on the type of explanatory variables included in the statistical model fitted. If in the fitted model all explanatory variables are continuous, i.e., \code{numeric}, vectors, the model is a regression model. If all explanatory variables are discrete, i.e., \code{factors}, the model is ANOVA. Finally, if the model contains but \code{numeric} variables and \code{factors} it is named ANCOVA. As in all cases the fitting approach is the same, based on ordinary least squares (OLS), in \Rlang, they are all implemented in function \Rfunction{lm()}.
+
+There is another meaning of ANOVA, referring only to the tests of significance rather than to an approach to model fitting. Consequently, rather confusingly, results for tests of significance can both in the case of regression, ANOVA and ANCOVA, be presented in an ANOVA table. In this second, stricter meaning, ANOVA means a test of significance based on the ratios between pairs of variances.
 
 \begin{warningbox}
 If you do not clearly remember the difference between numeric vectors and factors, or how they can be created, please, revisit chapter \ref{chap:R:as:calc} on page \pageref{chap:R:as:calc}.
@@ -13511,7 +13578,7 @@ Predict using both \code{fm1} and \code{fm2} the distance required to stop cars 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 %\index{analysis of variance}
 \index{analysis of variance|see{linear models, analysis of variance}}\index{linear models!analysis of variance}
-\index{ANOVA|see{analysis of variance}}
+\index{ANOVA|see{linear models, analysis of variance}}
 We use here the \Rdata{InsectSprays} data set, giving insect counts in plots sprayed with different insecticides. In these data, \code{spray} is a factor with six levels.%
 \label{xmpl:fun:lm:fm4}
 
@@ -13747,7 +13814,7 @@ Contrasts and their interpretation are discussed in detail by \citeauthor{Venabl
 %\index{analysis of covariance}
 \index{analysis of covariance|see{linear models, analysis of covariance}}
 \index{linear models!analysis of covariance}
-\index{ANCOVA|see{analysis of covariance}}
+\index{ANCOVA|see{linear models, analysis of covariance}}
 
 When a linear model includes both explanatory factors and continuous explanatory variables, we may call it \emph{analysis of covariance} (ANCOVA). The formula syntax is the same for all linear models and, as mentioned in previous sections, what determines the type of analysis is the nature of the explanatory variable(s). As the formulation remains the same, no specific example is given. The main difficulty of ANCOVA is in the selection of the covariate and the interpretation of the results of the analysis \autocite[e.g.][]{Smith1957}.
 \index{linear models|)}
@@ -22375,9 +22442,9 @@ Base \Rlang provides several functions for portably working with files, and they
 \end{alltt}
 \begin{verbatim}
 ##         size isdir mode               mtime               ctime
-## xxx.txt    0 FALSE  666 2023-09-14 20:55:21 2023-09-14 20:55:21
+## xxx.txt    0 FALSE  666 2023-09-17 00:54:11 2023-09-17 00:54:11
 ##                       atime exe
-## xxx.txt 2023-09-14 20:55:21  no
+## xxx.txt 2023-09-17 00:54:11  no
 \end{verbatim}
 \begin{alltt}
 \hlkwd{file.rename}\hlstd{(}\hlstr{"xxx.txt"}\hlstd{,} \hlstr{"zzz.txt"}\hlstd{)}
