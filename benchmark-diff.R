@@ -108,7 +108,7 @@ fig.rel <-
   geom_point() +
   geom_line() +
   scale_x_log10(name = "Vector length") +
-  scale_y_log10(name = "Time (s)",
+  scale_y_log10(name = "Time (relative to shortest)",
                 breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
   scale_color_discrete(name = "Iteration\napproach") +
   theme_bw() # + theme(legend.position = "none")
@@ -116,11 +116,18 @@ fig.rel
 
 diff.benchmark.fig <-
 fig.seconds / fig.rel + plot_layout(guides = "collect")
+diff.benchmark.fig
+
+# save(diff.benchmark.fig,
+#      fig.seconds,
+#      fig.rel,
+#      summaries,
+#      rel.summaries,
+#      file = "benchmarks.pantera.Rda")
 
 save(diff.benchmark.fig,
      fig.seconds,
      fig.rel,
      summaries,
      rel.summaries,
-     file = "benchmarks.pantera.Rda")
-
+     file = "benchmarks.carbonilla.Rda")
