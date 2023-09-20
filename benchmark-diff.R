@@ -114,5 +114,13 @@ fig.rel <-
   theme_bw() # + theme(legend.position = "none")
 fig.rel
 
+diff.benchmark.fig <-
 fig.seconds / fig.rel + plot_layout(guides = "collect")
+
+save(diff.benchmark.fig,
+     fig.seconds,
+     fig.rel,
+     summaries,
+     rel.summaries,
+     file = "benchmarks.pantera.Rda")
 
