@@ -21,75 +21,86 @@ This chapter aims to give the reader an introduction to the approach used in bas
 %\emph{At present I use several examples adapted from the help pages for the functions described. I may revise this before publication.}
 \section{Statistical summaries}
 \index{functions!base R}\index{summaries!statistical}
-Being the main focus of the \Rlang language in data analysis and statistics, \Rlang provides functions for both simple and complex calculations, going from means and variances to fitting very complex models. Below are examples of functions implementing the calculation of the frequently used data summaries mean or average (\Rfunction{mean()}), variance (\Rfunction{var()}), standard deviation (\Rfunction{sd()}), median (\Rfunction{median()}), mean absolute deviation (\Rfunction{mad()}), mode (\Rfunction{mode()}), maximum (\Rfunction{max()}), minimum (\Rfunction{min()}), range (\Rfunction{range()}), quantiles (\Rfunction{quantile()}), length (\Rfunction{length()}), and all-encompassing summaries (\Rfunction{summary()}). All these methods accept numeric vectors and matrices as an argument. Some of them also have definitions for other classes such as data frames in the case of \Rfunction{summary()}. (The \Rlang language does not define a function for calculation of the standard error of the mean. Please, see section \ref{sec:functions:sem} on page \pageref{sec:functions:sem} for how to define your own.)
+Being the main focus of the \Rlang language in data analysis and statistics, \Rlang provides functions both for simple and complex calculations, going from means and variances to fitting very complex models. Table \ref{tab:stat:summaries} lists some frequently used functions.  All these methods accept numeric vectors and/or matrices as arguments. In addition function \Rfunction{quantile()} can be used to simultaneously compute multiple arbitrary quantiles for a vector of observations, and method \Rfunction{summary()} produces a summary that depends on the class of the argument passed to it. Please, see section \ref{sec:functions:sem} on page \pageref{sec:functions:sem} for how to define your own functions.)
 
-<<stat-fun-1, eval=eval_playground>>=
-x <- 1:20
-mean(x)
-var(x)
-sd(x)
-median(x)
-mad(x)
-mode(x)
-max(x)
-min(x)
-range(x)
-quantile(x)
-length(x)
-summary(x)
-@
-
-\begin{playground}
-  In contrast to many other examples in this book, the summaries computed with the code in the previous chunk are not shown. You should \emph{run} them, using vector \code{x} as defined above, and then play with other real or artificial data that you may find interesting.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
-\end{playground}
+\begin{table}
+  \centering
+  \caption[Functions for simple statistical summaries.]{Frequently used simple statistical summaries and the corresponding \Rlang functions.\vspace{1ex}}\label{tab:stat:summaries}
+  \begin{tabular}{llll}
+     \toprule
+     Function & Symbol & Formulation & Name \\
+     \midrule
+     \Rfunction{mean()} & $\bar{x}$ & $\sum x / n$ & mean \\
+     \Rfunction{var()} & $s^2$ & $\sum (x_i - \hat{x})^2 / (n - 1)$ & sample variance \\
+     \Rfunction{sd()} & $s$ & $\sqrt[2]{s^2}$ & sample standard deviation \\
+     \Rfunction{median()} & M or $\tilde{x}$ &  & median \\
+     \Rfunction{mad()} & MAD & median $|x_i - \hat{x}|$ & median absolute deviation \\
+     \Rfunction{mode()} & MOD &  & mode \\
+     \Rfunction{max()} & $x_\mathrm{max}$ &  & maximum \\
+     \Rfunction{min()} & $x_\mathrm{min}$ &  & minimum \\
+     \Rfunction{range()} & $x_\mathrm{min}, x_\mathrm{max}$ &  & range \\
+     \bottomrule
+   \end{tabular}
+\end{table}
 
 By default, if the argument contains \code{NAs} these functions return \code{NA}. The logic behind this is that if one value exists but is unknown, the true result of the computation is unknown (see page \pageref{par:special:values} for details on the role of \code{NA} in \Rlang). However, an additional parameter called \code{na.rm} allows us to override this default behavior by requesting any \code{NA} in the input to be removed (or discarded) before calculation,
 
-<<stat-fun-2>>=
+<<stat-fun-1>>=
 x <- c(1:20, NA)
 mean(x)
 mean(x, na.rm = TRUE)
 @
 
-Other more advanced functions are also available, such as \Rfunction{boxplot.stats()} that computes the values needed to draw a boxplot.
+Function \Rfunction{mean()} can be used to compute the mean from all values, as in the example above, as well as trimmed means, i.e., means computed after discarding extreme values. The argument passed to parameter \code{trim} decides the fraction of the observations to discard at \emph{each extreme} of the vector of values after ordering them from smallest to largest.
+
+<<stat-fun-2>>=
+x <- c(1:20, 100)
+mean(x)
+mean(x, trim = 0.05)
+@
+
+\begin{playground}
+  In contrast to the use of other functions, I do not provide examples of the use of all the functions listed in Table \ref{tab:stat:summaries}. Construct \code{numeric} vectors with artificial data or use real data to play with the remaining functions. Study the help pages to learn about the different parameters and their uses.% Later in the book, only the output from certain examples will be shown, with the expectation, that other examples will be run by readers.
+\end{playground}
+
+Other more advanced functions are also available in \Rlang, such as \Rfunction{boxplot.stats()} that computes the values needed to draw boxplots (see section \ref{sec:boxplot} on page \pageref{sec:boxplot}).
 
 \begin{infobox}
-  In many cases you will want to compute statistical summaries by group or treatment in addition or instead of for a whole data set or vector. See section \ref{sec:calc:df:aggregate} on page \pageref{sec:calc:df:aggregate} for details on how to compute summaries of data stored in data frames.
+  In many cases you will want to compute statistical summaries by group or treatment in addition or instead of for a whole data set or vector. See section \ref{sec:calc:df:aggregate} on page \pageref{sec:calc:df:aggregate} for details on how to compute summaries of data stored in data frames using base \Rlang functions, and section \ref{sec:dplyr:manip} on page \pageref{sec:dplyr:manip} for alternative functions from contributed packages.
 \end{infobox}
 
-\section{Distributions}\label{sec:prob:dist}
+\section{Standard probability distributions}\label{sec:prob:dist}
 \index{distributions|(}\index{Normal distribution}
-Density, distribution functions, quantile functions and generation of pseudo-random values for several different distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will open a help page describing all the distributions available in base \Rlang. For each distribution the different functions contain the same ``root'' in their names: \code{norm} for the normal distribution, \code{unif} for the uniform distribution, and so on. The ``head'' of the name indicates the type of values returned: ``d'' for density, ``q'' for quantile, ``r'' (pseudo-)random draws, and ``p'' for probabilities (Table \ref{tab:prob:funs}).
+Density, distribution functions, quantile functions and generation of pseudo-random values for several different standard (theoretical) probability distributions are part of the \Rlang language. Entering \code{help(Distributions)} at the \Rlang prompt will open a help page describing all the distributions available in base \Rlang. For each distribution the different functions contain the same ``root'' in their names: \code{norm} for the normal distribution, \code{unif} for the uniform distribution, and so on. The ``head'' of the name indicates the type of values returned: ``\code{d}'' for density, ``\code{q}'' for quantile, ``\code{r}'' (pseudo-)random draws, and ``\code{p}'' for probability (Table \ref{tab:prob:funs}).
 
 \begin{table}[h]
   \centering
-    \caption[Functions related to theoretical probability distributions]{Theoretical probability distributions in \Rlang. Partial list of base \Rlang functions related to probability distributions. The full list can be obtained by executing the command \code{help(Distributions)}.\vspace{1ex}}\label{tab:prob:funs}
+    \caption[Functions for standard probability distributions]{Standard probability distributions in \Rlang. Partial list of base \Rlang functions related to probability distributions. The full list can be obtained by executing the command \code{help(Distributions)}.\vspace{1ex}}\label{tab:prob:funs}
 
   \begin{tabular}{llllll}
      \toprule
-     Distribution & symbol & density & $P$ & quantiles & draws \\
+     Distribution & Symbol & Density & $P$-value & Quantiles & Draws \\
      \midrule
-     normal & $N$ & \Rfunction{dnorm()} & \Rfunction{pnorm()} & \Rfunction{qnorm()} & \Rfunction{rnorm()} \\
+     Normal & $N$ & \Rfunction{dnorm()} & \Rfunction{pnorm()} & \Rfunction{qnorm()} & \Rfunction{rnorm()} \\
      Student's & $t$ & \Rfunction{dt()} & \Rfunction{pt()} & \Rfunction{qt()} & \Rfunction{rt()}\\
      F & $F$ & \Rfunction{df()} & \Rfunction{pf()} & \Rfunction{qf()} & \Rfunction{rf()} \\
      binomial & $B$ & \Rfunction{dbinom()} & \Rfunction{pbinom()} & \Rfunction{qbinom()} & \Rfunction{rbinom()} \\
      multinomial & $M$ & \Rfunction{dmultinom()} & \Rfunction{pmultinom()} & \Rfunction{qmultinom()} & \Rfunction{rmultinom()} \\
      Poisson &   & \Rfunction{dpois()} & \Rfunction{ppois()} & \Rfunction{qpois()} & \Rfunction{rpois()} \\
      $\Chi$-squared & $\Chi^2$ & \Rfunction{dchisq()} & \Rfunction{pchisq()} & \Rfunction{qchisq()} & \Rfunction{rchisq()} \\
-     log-normal &  & \Rfunction{dlnorm()} & \Rfunction{plnorm()} & \Rfunction{qlnorm()} & \Rfunction{rlnorm()} \\
+     lognormal &  & \Rfunction{dlnorm()} & \Rfunction{plnorm()} & \Rfunction{qlnorm()} & \Rfunction{rlnorm()} \\
      uniform &  & \Rfunction{dunif()} & \Rfunction{punif()} & \Rfunction{qunif()} & \Rfunction{runif()} \\
      \bottomrule
    \end{tabular}
 \end{table}
 
-Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} controlling location and \emph(standard deviation) (or its square, the \emph{variance}) controlling the spread around the center of the distribution. The four different functions differ in which values are calculated (the unknowns) and which values are supplied as arguments (the known inputs).
+Theoretical distributions are defined by mathematical functions that accept parameters that control the exact shape and location. In the case of the Normal distribution, these parameters are the \emph{mean} (\code{mean}) controlling location and \emph(standard deviation) (\code{sd}) controlling the spread around the center of the distribution. The four different functions differ in which values are calculated (the unknowns) and which values are supplied as arguments (the known inputs).
 
 In what follows we use the normal distribution as an example, but with differences in their parameters, the functions for other theoretical distributions follow a similar naming pattern.
 
 \subsection{Density from parameters}\label{sec:prob:dens}
 \index{distributions!density from parameters}
 To obtain a single point from the distribution curve we pass a vector of length one as an argument for \code{x}.
-
 <<distrib-01>>=
 dnorm(x = 1.5, mean = 1, sd = 0.5)
 @
@@ -181,6 +192,46 @@ It is impossible to generate truly random sequences of numbers by means of a det
 \begin{advplayground}
 Execute the statement \code{rnorm(3)}\qRfunction{rnorm()} by itself several times, paying attention to the values obtained. Repeat the exercise, but now executing \code{set.seed(98765)}\qRfunction{set.seed()} immediately before each call to \code{rnorm(3)}, again paying attention to the values obtained. Next execute \code{set.seed(98765)}, followed by \code{c(rnorm(3), rnorm(3))}, and then execute \code{set.seed(98765)}, followed by \code{rnorm(6)} and compare the output. Repeat the exercise using a different argument in the call to \code{set.seed()}. analyze the results and explain how \code{setseed()} affects the generation of pseudo-random numbers in \Rlang.
 \end{advplayground}
+
+\section{Observed probability distributions}
+
+It is common to estimate the value of the parameters for a standard distribution like Student's $t$ or Normal distributions from observational data, assuming a priori the suitability of the distribution. If we compute the and standard deviation for a large sample, these two parameters define a specific Normal distribution curve. If we add the estimate of the degrees of freedom, $v = n - 1$, the three parameters define a specific $t$-distribution curve. Thus it is possible to use the functions described in section \ref{sec:prob:dist} on page \ref{sec:prob:dist}, in statistical inference.
+
+\begin{explainbox}
+Package \pkgname{mixtools} provides tools for fitting and analysing \emph{mixture models} such as the mix of two or more univariate Normal distributions. An example of its use could be to estimate mean and standard deviations for males and females in a dataset where the gender was not recorded at the time of observation.
+\end{explainbox}
+
+It is also possible to describe the observed shape of the distribution, or empirical distribution, for a data set without relying on a standard distribution. The fitted empirical distribution can later be used to compute probabilities, quantiles, and random draws similarly as from standard distributions. This also allows statistical inference, using methods such as the bootstrap or some additive models.
+
+Function \Rfunction{density()} computes kernel density estimates, using different methods. A curve is used to describe the shape, and the bandwith determines how flexible this curve is. The curve is a flexible smoother that adapts to the observed shape. The object returned is a complex list that can be used to plot the estimate shape.
+
+In the example below we estimate the empirical distribution for the waiting time in minutes between eruptions of the Old Faithful geyser at Yelowstone, a dataset from \Rlang.
+
+<<density-01>>=
+d <- density(faithful$waiting, bw = "sj")
+@
+
+\begin{explainbox}
+Using \Rfunction{str()} we can explore the structure of the object returned by function \Rfunction{density()}.
+
+<<density-02>>=
+str(d)
+@
+
+The object saved as \code{d} is a \code{list} with seven members. The two numeric vectors, \code{x} and \code{y} describe the estimated probability distribution and produce the curve in the plot below. The numerical bandwidth estimated using method \code{"sj"} is in \code{bw}, and the length of vector \code{faithful\$waiting}, the data used, is in \code{n}. Member \code{call} is the command used to call the function, the remaining two members have self explanatory names. The returned object belongs to class \Rclass{density}. The overall pattern is similar, but simpler than for the model fitting functions that we will see later in the chapter. The class name of the object is the same as the name of the function that created it, \code{call} provides a \emph{trace} of how the object was created. Other members, facilitate computation of derived quantities and plotting. Being a list, the individual members can be extracted by name.
+
+<<density-03>>=
+d$n
+@
+\end{explainbox}
+
+As a \Rmethod{plot()} method is available for class \Rclass{density} we can easily produce a plot of the estimated empirical density distribution. In this case a bimodal curve, with two maxima, and thus, far from Normal.
+
+<<desnity-04>>=
+plot(d)
+@
+
+Observed probability distributions, especially empirical ones, nowadays play a central role in data visualization including 1D and 2D empirical density plots based on the use of functions like \Rfunction{density()}, as well as traditional histograms (see section \ref{sec:plot:density} on page \pageref{sec:plot:density} for examples of more elaborate and elegant plots).
 
 \section{``Random'' sampling}
 \index{random sampling|see{pseudo-random sampling}}%
@@ -290,6 +341,15 @@ Function \Rfunction{cor.test()}, described above, also allows the choice of meth
 Repeat the exercise in the playground immediately above, but now using non-parametric methods. How does the information stored in the returned \code{matrix} differ depending on the method, and how can we extract information about the method used for calculation of the correlation from the returned object.
 \end{playground}
 \index{correlation|)}
+
+\section{$t$-test}
+\index{t-test|(}
+The $t$-test is based on Student's $t$-distribution. It can be applied to any parameter estimate for which its standard deviation is available, and the $t$-distribution is a plausible assumption. It is most frequently used to compare an estimate of the mean against a constant value, or the estimate of a difference between two means and a target difference, usually no difference. In \Rlang these can be computed manually using functions \Rfunction{mean()}, \Rfunction{sd()}, and \Rfunction{pt()} or with \Rfunction{t.test()}.
+
+<<ttest-01>>=
+% to be filled in
+@
+\index{t-test|)}
 
 \section[Model fitting in R]{Model fitting in \Rlang}\label{sec:stat:mf}
 \index{models fitting|(}
