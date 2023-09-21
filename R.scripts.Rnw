@@ -1135,12 +1135,14 @@ Although \code{repeat} loop constructs are easier to read if they have a single 
 \subsection{Nesting of loops}\label{sec:nested:loops}
 \index{iteration!nesting of loops}\index{nested iteration loops}\index{loops!nested}
 
-All the execution-flow control statements seen above can be nested. We will show an example with two \code{for} loops. We first create a matrix of data to work with:
+All the execution-flow control statements seen above can be nested. I show an example with two \code{for} loops using a \code{matrix} create as follows.
 
 <<nested-1>>=
-A <- matrix(1:50, 10)
+A <- matrix(1:50, nrow = 10)
 A
 @
+
+The nested loops below compute the sum for each row of the matrix.
 
 <<nested-22>>=
 row.sum <- numeric()
@@ -1152,146 +1154,15 @@ for (i in 1:nrow(A)) {
 print(row.sum)
 @
 
-The code above is very general, it will work with any two-dimensional matrix with at least one column and one row. However, sometimes we need more specific calculations. \code{A[1, 2]} selects one cell in the matrix, the one on the first row of the second column. \code{A[1, ]} selects row one, and  \code{A[ , 2]} selects column two. In the example above, the value of \code{i} changes for each iteration of the outer loop. The value of \code{j} changes for each iteration of the inner loop, and the inner loop is run in full for each iteration of the outer loop. The inner loop index \code{j} changes fastest.
+The nested loops above work correctly with any two-dimensional matrix with at least one column and one row, but \emph{crash} with an empty matrix (\code{matrix()} or \code{matrix(numeric())}). Thus it is safer to enclose the \Rloop{for} loop in an \Rcontrol{if} statement with \code{!is.null(dim(A)) \&\& !any(dim(A) == 0} as its \code{logical} condition.
+
+In the example above, the value of \code{i} changes for each iteration of the outer loop. The value of \code{j} changes for each iteration of the inner loop, and the inner loop is run in full for each iteration of the outer loop. The inner loop index \code{j} changes fastest.
 
 \begin{advplayground}
-1) Modify the code in the example in the last chunk above so that it sums the values only in the first three columns of \code{A}, 2) modify the same example so that it sums the values only in the last three rows of \code{A}, 3) modify the code so that matrices with dimensions equal to zero (as reported by \code{ncol()} and \code{nrow()}).
+1) Modify the code in the example in the last chunk above so that it sums the values only in the first three columns of \code{A}, and 2) modify the same example so that it sums the values only in the last three rows of \code{A}.
 
-Will the code you wrote continue working as expected if the number of rows in \code{A} changed? What if the number of columns in \code{A} changed, and the required results still needed to be calculated for relative positions? What would happen if \code{A} had fewer than three columns? Try to think first what to expect based on the code you wrote. Then create matrices of different sizes and test your code. After that, think how to improve the code, so that wrong results are not produced.
+Does the code you wrote work as expected if the number of rows in \code{A} changed? and if the number of columns in \code{A} changed? What would happen if \code{A} had fewer than three columns? Try to think first what to expect based on the code you wrote. Then create matrices of different sizes and test your code. After that, think how to improve the code, so that wrong results are not produced.
 \end{advplayground}
-
-\begin{explainbox}
-If the total number of iterations is large and the code executed at each iteration runs fast, the overhead added by the loop code can make a big contribution to the total running time of a script.
-When dealing with nested loops, as the inner loop is executed most frequently, this is the best place to look for ways of reducing execution time. In this example, vectorization can be achieved easily for the inner loop, as \Rlang has a function \code{sum()} which returns the sum of a vector passed as its argument. Replacing the inner loop by an efficient function can be expected to improve performance significantly.
-
-<<nested-3>>=
-row.sum <- numeric(nrow(A)) # faster
-for (i in 1:nrow(A)) {
-  row.sum[i] <- sum(A[i, ])
-}
-print(row.sum)
-@
-
-\code{A[i, ]} selects row \code{i} and all columns. Reminder: in \Rlang the row index comes first.
-
-Both\index{apply functions} explicit loops can be eliminated if we use an \emph{apply} function, such as \Rloop{apply()}, \Rloop{lapply()} or \Rloop{sapply()}, in place of the outer \code{for} loop. See section \ref{sec:data:apply} below %on page \pageref{sec:data:apply}
-for details on the use of the different \emph{apply} functions.
-
-<<nested-4>>=
-row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 indicates rows
-print(row.sum)
-@
-Calculating row sums is a frequent operation, so \Rlang has a built-in function for this. As earlier with \code{diff()}, it is always worthwhile to check if there is an existing \Rlang function, optimized for performance, capable of doing the computations we need. In this case, using \code{rowSums()} simplifies the nested loops into a single function call, both improving performance and readability.
-
-<<nested-5>>=
-rowSums(A)
-@
-
-\end{explainbox}
-
-\begin{playground}
-1) How would you change this last example, so that only the last three columns are added up? (Think about use of subscripts to select a part of the matrix.)
-2) To obtain column sums, one could modify the nested loops (think how), transpose the matrix and use \code{rowSums()} (think how), or look up if there is in \Rlang a function for this operation. A good place to start is with \code{help(rowSums)} as similar functions may share the same help page, or at least be listed in the ``See also'' section. Do try this, and explore other help pages in search for some function you may find useful in the analysis of your own data.
-\end{playground}
-
-\subsection{Explicit loops can be slow in \Rlang}\label{sec:loops:slow}
-\index{vectorization}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
-If you have written programs in other languages, it will feel natural to you to use loops (\Rloop{for}, \Rloop{while}, and \Rloop{repeat}) for many of the things for which in \Rlang one would normally use vectorization. In \Rlang, using vectorization when possible keeps scripts shorter and easier to understand (at least for those with experience in \Rlang). More importantly, as \Rlang is mostly an interpreted language, vectorized arithmetic tends to be faster than the use of explicit iteration. In recent versions of \Rpgrm, byte-compilation is used by default and loops may be compiled on the fly, which relieves part of the burden of repeated interpretation. However, even byte-compiled loops are usually slower to execute than efficiently coded vectorized functions and operators. Vectorized arithmetic specified using vectorized operators tends to be fast, but for operations that are frequent \Rlang also provides functions with even better performance.
-
-I used as an example the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference is huge between loops and vectorization for vectors with up 1000 numbers, but the total times are very short. For these vectors, pre-allocation of a vector to collect the results makes almost no difference and using the extraction operator \Roperator{[]} together with the minus \Roperator{-} is fastest. For longer vectors there is only a small advantage of using function \Rfunction{diff()} over this approach. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results makes an important difference, especially in the second case. However, vectorized operators and functions remain a lot faster than explicit loops. Because of the computation, \Rfunction{apply()} and relatives cannot be used for this example.
-
-\begin{figure}
-\centering
-
-<<include=FALSE, cache=FALSE>>=
-opts_chunk$set(opts_fig_wide_square)
-@
-
-<<bench-diff-01, echo=FALSE>>=
-library(ggplot2)
-library(patchwork)
-
-load("benchmarks.pantera.Rda")
-
-fig.seconds <-
-  ggplot(summaries, aes(size, median*1e-3, color = loop)) +
-  geom_point() +
-  geom_line() +
-  scale_x_log10(name = "Vector length (n)") +
-  scale_y_log10(name = "Time (s)") +
-  scale_color_discrete(name = "Iteration\napproach") +
-  theme_bw(14)
-
-fig.rel <-
-  ggplot(rel.summaries, aes(size, median, color = loop)) +
-  geom_point() +
-  geom_line() +
-  scale_x_log10(name = "Vector length (n)") +
-  scale_y_log10(name = "Time (relative to shortest)",
-                breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
-  scale_color_discrete(name = "Iteration\napproach") +
-  theme_bw(14)
-
-print(fig.seconds / fig.rel + plot_layout(guides = "collect"))
-@
-
-<<include=FALSE, cache=FALSE>>=
-opts_chunk$set(opts_fig_narrow)
-@
-
-\caption[Benchmark results for different approaches to computing running differences.]{Benchmark results for different approaches to computing running differences in numeric (double) vector of different lengths. The script used is included in the \pkgname{learnrbook} \Rlang package. The data in this figure were obtained in a computer with a Xenon processor with four cores and 32 GB of RAM, Windows 10 and \Rpgrm 4.3.1.}\label{fig:diff:benchmarks}
-\end{figure}
-
-Execution speed needs to be balanced against the effort invested in writing faster code. However, using vectorization and specific \Rlang functions requires little effort once one is familiar with them.\qRloop{for}
-
-\begin{explainbox}
-When\label{box:vectorization:perf} working with large data sets, or many similar data sets, one needs to take performance into account. As vectorization usually also makes code simpler, it is good style to use vectorization whenever possible. For operations that are frequently used, \Rlang includes specific functions. It is thus important to consider not only vectorization of operators but also check for the availability of performance-optimized functions for specific cases. The chunks below show the code for the six approaches compared in Figure \ref{fig:diff:benchmarks}, where \code{a} was a numeric vector constructed with function \code{rnorm()}.
-
-<<loops-while-0, eval=FALSE>>=
-b <- numeric() # do not pre-allocate memory
-i <- 1
-while (i < length(a)) {
-  b[i] <- a[i+1] - a[i]
-  i <- i + 1
-}
-@
-
-<<loops-while-1, eval=FALSE>>=
-b <- numeric(length(a)-1) # pre-allocate memory
-i <- 1
-while (i < length(a)) {
-  b[i] <- a[i+1] - a[i]
-  i <- i + 1
-}
-@
-
-<<loops-for-2, eval=FALSE>>=
-b <- numeric() # do not pre-allocate memory
-for(i in seq(along.with = b)) {
-  b[i] <- a[i+1] - a[i]
-}
-@
-
-<<loops-for-2a, eval=FALSE>>=
-b <- numeric(length(a)-1) # pre-allocate memory
-for(i in seq(along.with = b)) {
-  b[i] <- a[i+1] - a[i]
-}
-@
-
-<<loops-vectorized-, eval=FALSE>>=
-# vectorized using extraction operators
-b <- a[2:length(a)] - a[1:length(a)-1]
-@
-
-<<loops-r-function-2, eval=FALSE>>=
-# vectorized function diff()
-b <- diff(a)
-@
-
-The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. See package \pkgname{microbenchmark}, used for the benchmarks shown, for better-time-resolution.
-\end{explainbox}
-\index{loops!faster alternatives|)}
 
 \section[Apply functions]{\emph{Apply} functions}\label{sec:data:apply}
 
@@ -1486,88 +1357,46 @@ str(z)
 @
 
 \begin{explainbox}
-\textbf{Apply functions vs.\ loop constructs} Apply functions cannot always replace explicit loops as they are less flexible. A simple example is the accumulation pattern, where we ``walk'' through a collection that stores a partial result between iterations. A similar case is a pattern where calculations are done over a ``window'' that moves at each iteration. The simplest and probably most frequent calculation of this kind is the calculation of differences between successive members. Other examples are moving window summaries such as a moving median (see page \pageref{box:vectorization:perf} for other alternatives to the use of explicit iteration loops).
+\textbf{Apply functions vs.\ loop constructs} Apply functions cannot always replace explicit loops as they are less flexible. A simple example is the accumulation pattern, where we ``walk'' through a collection that stores a partial result between iterations. A similar case is a pattern where calculations are done over a ``window'' that moves at each iteration. The simplest and probably most frequent calculation of this kind is the calculation of differences between successive members as used to demonstrate differences in performance in section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}.
 \end{explainbox}
 
-\section{Functions that replace loops}
+\section{Functions that replace loops}\label{sec:vectorized:functions}
 
 \begin{table}
-  \caption{Vectorized functions that can replace iteration loops.\vspace{1ex}}\label{tab:vectorized:functions}
+  \caption[Functions that replace loops]{\Rlang functions that can substitute for iteration loops. They accept vectors as argument, except for \Rfunction{rowSums()}, \Rfunction{colSums()}, \Rfunction{rowMeans()}, and \Rfunction{colMeans()} which accept \code{matrix} objects as argument. Only those functions that return a value with the same dimensions as the argument passed as input to then are vectorized in the sense used in this book.\vspace{1ex}}\label{tab:vectorized:functions}
   \centering
 \noindent
 \begin{tabular}{lll}
   \toprule
-  Function & Computation & Value, length \\
+  Function & Computation & Returned class, length \\
   \midrule
-  \Rfunction{sum()} & $\sum_{i=1}^n x_i$ & numeric, 1 \\
-  \Rfunction{prod()} & $\prod_{i=1}^n x_i$ & numeric, 1 \\
-  \Rfunction{cumsum()} & $\sum_{i=1}^1 x_i, \cdots \sum_{i=1}^j x_i, \cdots \sum_{i=1}^n x_i$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{cumprod()} & $\prod_{i=1}^1 x_i, \cdots \prod_{i=1}^j x_i, \cdots \prod_{i=1}^n x_i$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{cummax()} & cumulative maximum & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{cummin()} & cumulative minimum & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{runmed()} & running median & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{diff()} & $x_2 - x_1, \cdots x_i - x_{i-1}, \cdots x_n - x_{n-1}$ & numeric, $n_\mathrm{out} = n_\mathrm{in}-1$ \\
-  \Rfunction{diffinv()} & inverse of diff & numeric, $n_\mathrm{out} = n_\mathrm{in}+1$ \\
-  \Rfunction{factorial()} & $x!$ & numeric, $n_\mathrm{out} = n_\mathrm{in}$ \\
-  \Rfunction{rle()} & run-length encoding & $n_\mathrm{out} < n_\mathrm{in}$ \\
-  \Rfunction{inverse.rle()} & run-length decoding & $n_\mathrm{out} > n_\mathrm{in}$ \\
+  \Rfunction{sum()}\strut & $\sum_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{rowSums()}\strut & $\sum_{j=1}^l x_i$ & \code{numeric}, $n$ \\
+  \Rfunction{colSums()}\strut & $\sum_{i=1}^n x_j$ & \code{numeric}, $l$ \\
+  \Rfunction{mean()}\strut & $\sum_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{rowMeans()}\strut & $\sum_{j=1}^l x_i / l$ & \code{numeric}, $n$ \\
+  \Rfunction{colMeans()}\strut & $\sum_{i=1}^n x_j / n$ & \code{numeric}, $l$ \\
+  \Rfunction{prod()}\strut & $\prod_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{cumsum()}\strut & $\sum_{i=1}^1 x_i, \cdots \sum_{i=1}^j x_i, \cdots \sum_{i=1}^n x_i$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cumprod()}\strut & $\prod_{i=1}^1 x_i, \cdots \prod_{i=1}^j x_i, \cdots \prod_{i=1}^n x_i$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummax()}\strut & cumulative maximum & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummin()}\strut & cumulative minimum & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{runmed()}\strut & running median & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{diff()}\strut & $x_2 - x_1, \cdots x_i - x_{i-1}, \cdots x_n - x_{n-1}$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}-1$ \\
+  \Rfunction{diffinv()}\strut & inverse of diff & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}+1$ \\
+  \Rfunction{factorial()}\strut & $x!$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{rle()}\strut & run-length encoding & \code{rle}, $n_\mathrm{out} < n_\mathrm{in}$ \\
+  \Rfunction{inverse.rle()}\strut & run-length decoding & \code{vector}, $n_\mathrm{out} > n_\mathrm{in}$ \\
   \bottomrule
 \end{tabular}
 \end{table}
 
-\Rlang provides several functions that can be used to avoid writing iterative loops in \Rlang. The most frequently used are taken for granted: \Rfunction{mean()}, \Rfunction{var()} (variance), \Rfunction{sd()} (standard deviation), \Rfunction{max()}, and \Rfunction{min()}. Replacing code implementing an iterative algorithm by a single function call simplifies the script's code and can make it easier to understand. These functions are written in \Clang and compiled, so even when iterative algorithms are used, they are fast. Table \ref{tab:vectorized:functions} lists additional functions available in base \Rlang that implement iterative algorithms is provided below. All these functions take a vector of arbitrary length as their first argument, except for \Rfunction{inverse.rle()}.\vspace{2ex}
+\Rlang provides several functions that can be used to avoid writing iterative loops in \Rlang. The most frequently used are taken for granted: \Rfunction{mean()}, \Rfunction{var()} (variance), \Rfunction{sd()} (standard deviation), \Rfunction{max()}, and \Rfunction{min()}. Replacing code implementing an iterative algorithm by a single function call simplifies the script's code and can make it easier to understand. These functions are written in \Clang and compiled, so even when iterative algorithms are used, they are fast (see section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}). Table \ref{tab:vectorized:functions} lists several functions from base \Rlang that implement iterative algorithms. All these functions take a vector of arbitrary length as their first argument, except for \Rfunction{inverse.rle()}.\vspace{2ex}
 
 \begin{playground}
   Build a \code{numeric} vector such as \code{x <- c(1, 9, 6, 4, 3)} and pass it as argument to the functions in the table above. Do the corresponding computations manually until you are sure to understand what each function calculates.
 \end{playground}
-
-\section{Object names and character strings}
-
-In\index{object names}\index{object names!as character strings} all assignment examples before this section, we have used object names included as literal character strings in the code expressions. In other words, the names are ``decided'' as part of the code, rather than at run time. In scripts or packages, the object name to be assigned may need to be decided at run time and, consequently, be available only as a character string stored in a variable. In this case, function \Rfunction{assign()} must be used instead of the operators \code{<-} or \code{->}. The statements below demonstrate its use.
-
-First using a \code{character} constant.
-
-<<assignx-01>>=
-assign("a", 9.99)
-a
-@
-Next using a \code{character} value stored in a variable.
-
-<<assignx-01a>>=
-name.of.var <- "b"
-assign(name.of.var, 9.99)
-b
-@
-
-The two toy examples above do not demonstrate why one may want to use \Rfunction{assign()}. Common situations where we may want to use character strings to store (future or existing) object names are 1) when we allow users to provide names for objects either interactively or as \code{character} data, 2) when in a loop we transverse a vector or list of object names, or 3) we construct at runtime object names from multiple character strings based on data or settings. A common case is when we import data from a text file and we want to name the object according to the name of the file on disk, or a character string read from the header at the top of the file.
-
-Another case is when \code{character} values are the result of a computation.
-
-<<assignx-02>>=
-for (i in 1:5) {
-   assign(paste("zz_", i, sep = ""), i^2)
-}
-ls(pattern = "zz_*")
-@
-
-The complementary operation of \emph{assigning} a name to an object is to \emph{get} an object when we have available its name as a character string. The corresponding function is \Rfunction{get()}.
-
-<<assignx-03>>=
-get("a")
-get("b")
-@
-
-If we have available a character vector containing object names and we want to create a list containing these objects we can use function \Rfunction{mget()}. In the example below we use function \code{ls()} to obtain a character vector of object names matching a specific pattern and then collect all these objects into a list.
-
-<<assignx-04>>=
-obj_names <- ls(pattern = "zz_*")
-obj_lst <- mget(obj_names)
-str(obj_lst)
-@
-
-\begin{advplayground}
-Think of possible uses of functions \Rfunction{assign()}, \Rfunction{get()} and \Rfunction{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
-\end{advplayground}
+\index{loops!faster alternatives|)}
 
 \section{The multiple faces of loops}\label{sec:R:faces:of:loops}
 
@@ -1634,7 +1463,257 @@ str(results, max.level = 1)
 do.call(anova, results)
 @
 
-\subsubsection{Clean-up}
+\section{Iteration when performance is important}\label{sec:loops:slow}
+\index{vectorization}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
+When working with large data sets, or many smaller data sets, one frequently needs to take performance into account. In \Rlang explicit \Rloop{for}, \Rloop{while} and \Rloop{repeat} are considered to be slow to run. Vectorized operations perform in general comparatively faster. As vectorization (see page \pageref{par:calc:vectorized:opers}) usually also makes code simpler, it is good style to use vectorization whenever possible. Depending on the case, loops can be replaced using vectorized arithmetic operators, \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) and functions implementing frequently used operations (see section \ref{sec:vectorized:functions} on page \pageref{sec:vectorized:functions}). Improved performance needs to be balanced against the effort invested in writing faster code, as in most cases our own time is more valuable than computer running time. However, using vectorized operators and optimized functions becomes nearly effortless once one is familiar with them.\qRloop{for}
+
+To demonstrate the differences in performance I used as a first example the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference is huge between loops and vectorization for vectors of up to 1000 numbers (near $\times 500$), but the total times are very short ($5 \times 10^{-3}$\,s vs.\ $10 \times 10^{-6}$\,s). For these vectors, pre-allocation of a vector to collect the results makes almost no difference and vectorization with the extraction operator \Roperator{[]} together with the minus arithmetic operator \Roperator{-} is fastest. There seems to be a significant overhead for explicit loops, as the running time is nearly independent of the length of these short vectors.
+
+For vectors of 10\,000 or more numbers there is only a very small advantage of using function \Rfunction{diff()} over using vectorized arithmetic and extraction operators. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results makes an important difference ($\times 2$ to $\times 3$), larger in the case of \Rloop{for}. However, vectorized operators and functions remain nearly $\times 10$ faster than the fastest explicit loop. For the longer vectors the time increases linearly with their length, with similar slopes for the different approaches. Because of the computation used for the example, function \Rfunction{apply()} and relatives could not be used.
+
+\begin{figure}
+\centering
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<bench-diff-01, echo=FALSE>>=
+library(scales)
+library(ggplot2)
+library(patchwork)
+
+load("benchmarks.pantera.Rda")
+
+fig.seconds <-
+  ggplot(summaries, aes(size, median*1e-3, color = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Vector length (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (s)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  expand_limits(y = 1e-6) +
+  theme_bw(14)
+
+fig.rel <-
+  ggplot(rel.summaries, aes(size, median, color = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Vector length (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (relative to shortest)",
+                breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  theme_bw(14)
+
+print(fig.seconds / fig.rel + plot_layout(guides = "collect"))
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+\caption[Benchmark results for different approaches to computing running differences.]{Benchmark results for different approaches to computing running differences in numeric (double) vector of different lengths. The data in this figure were obtained in a computer with a 12-years old Xenon E3-1235 CPU with four cores, 32\,GB of RAM, Windows 10 and \Rpgrm 4.3.1.}\label{fig:diff:benchmarks}
+\end{figure}
+
+\begin{explainbox}
+The chunks below show the code for the six approaches compared in Figure \ref{fig:diff:benchmarks}, where \code{a} was a numeric vector constructed with function \code{rnorm()}.
+
+<<loops-while-0, eval=FALSE>>=
+b <- numeric() # do not pre-allocate memory
+i <- 1
+while (i < length(a)) {
+  b[i] <- a[i+1] - a[i]
+  i <- i + 1
+}
+@
+
+<<loops-while-1, eval=FALSE>>=
+b <- numeric(length(a)-1) # pre-allocate memory
+i <- 1
+while (i < length(a)) {
+  b[i] <- a[i+1] - a[i]
+  i <- i + 1
+}
+@
+
+<<loops-for-2, eval=FALSE>>=
+b <- numeric() # do not pre-allocate memory
+for(i in seq(along.with = b)) {
+  b[i] <- a[i+1] - a[i]
+}
+@
+
+<<loops-for-2a, eval=FALSE>>=
+b <- numeric(length(a)-1) # pre-allocate memory
+for(i in seq(along.with = b)) {
+  b[i] <- a[i+1] - a[i]
+}
+@
+
+<<loops-vectorized-, eval=FALSE>>=
+# vectorized using extraction operators
+b <- a[2:length(a)] - a[1:length(a)-1]
+@
+
+<<loops-r-function-2, eval=FALSE>>=
+# vectorized function diff()
+b <- diff(a)
+@
+\end{explainbox}
+
+In the case of nested iteration loops it is most important to vectorize or otherwise enhance the performance of the innermost loop as it is the one executed most frequently. In the code example for nested loops (section \ref{sec:nested:loops} on page \pageref{sec:nested:loops}) it is possible to remove the explicit use of nested \Rloop{for} loops. As for the example above with vectors, for this second case I show different approaches, and give timings for square \code{matrix} objects with dimensions (rows $\times$ columns) ranging from $10 \times 10$, size = $10^2$, to $10\,000 \times 10\,000$, size = $10^8$ (Figure \ref{fig:rowsums:benchmarks}).
+
+In the case of this second example, \Rfunction{rowSums()} is between $\times 5$ and $\times 20$ faster than the second fastest approach. As the largest vector of row sums has a length of 1000, that its pre-allocation does not enhance performance is in agreement with the benchmarks for the first example. The two nested loops always take the longest to run. A single loop over rows with use of a call to \Rfunction{sum()} for each row, improves performance compared to nested loops, most clearly for large matrices. This approach is out-performed by \Rfunction{apply()} only for smaller matrices, from which we can infer that \Rfunction{apply()} has a much smaller overhead than an explicit \Rloop{for} loop.
+
+\begin{figure}
+\centering
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<bench-rowsums-01, echo=FALSE>>=
+#library(scales)
+#library(ggplot2)
+#library(patchwork)
+
+load("benchmarks-rowSums-pantera.Rda")
+
+fig.seconds <-
+  ggplot(summaries, aes(size, median*1e-3, color = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Matrix size (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (s)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  expand_limits(y = 1e-6) +
+  theme_bw(14)
+
+fig.rel <-
+  ggplot(rel.summaries, aes(size, median, color = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Matrix size (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (relative to shortest)",
+                breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  theme_bw(14)
+
+print(fig.seconds / fig.rel + plot_layout(guides = "collect"))
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+\caption[Benchmark results for different approaches to computing row sums.]{Benchmark results for different approaches to computing row sums of square numeric (double) matrices of different sizes. The data in this figure were obtained in a computer with a 12-years old Xenon E3-1235 CPU with four cores, 32\,GB of RAM, Windows 10 and \Rpgrm 4.3.1.}\label{fig:rowsums:benchmarks}
+\end{figure}
+
+\begin{explainbox}
+The chunks below show the code for the six approaches compared in Figure \ref{fig:rowsums:benchmarks}, where \code{a} was a numeric vector constructed with function \code{rnorm()}.
+
+Vectorization can be achieved easily for the inner loop with function \code{sum()} which returns the sum of a vector. In this example \code{A} is a numeric \code{matrix}, and \code{A[i, ]} selects row \code{i} in whole.
+
+<<nested-22, eval=FALSE>>=
+@
+
+<<nested-3, eval=FALSE>>=
+row.sum <- numeric(nrow(A)) # faster
+for (i in 1:nrow(A)) {
+  row.sum[i] <- sum(A[i, ])
+}
+@
+
+The\index{apply functions} outer loop can be replaced by a call to \Rfunction{apply()} (see section \ref{} on page \pageref{sec:data:apply}).
+
+<<nested-4, eval=FALSE>>=
+row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 indicates rows
+@
+
+Calculating row sums is a frequent operation, so \Rlang has a built-in function for this.
+
+<<nested-5, eval=FALSE>>=
+rowSums(A)
+@
+
+The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. Package \pkgname{microbenchmark}, used for the benchmarks shown in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks}, provides finer time resolution.
+\end{explainbox}
+
+As in these examples the computations in the body of the loop are very simple, the overhead of the iterative loops is very noticeable in the benchmarks. When the computations at each iteration are time consuming, the overhead of using explicit iteration loops gets diluted in the longer total time required for computations. Thus, removing explicit use of iteration is most helpful, when it is easier to implement vectorized arithmetic or find optimized functions.
+
+\begin{warningbox}
+  The timings in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks} are only valid for a specific computer configuration, operating system and \Rpgrm version. They provide only an approximate guide to what maybe expected in different conditions. The scripts used are included in package \pkgname{learnrbook} in case readers wish to run them on their computers. As replication is used, the total run time for the script is relatively long.
+\end{warningbox}
+
+\begin{explainbox}
+  You may be wandering: how do the faster approaches manage to avoid the overhead of iteration? Of course they do not really avoid iteration, but the loops in functions written in \Clang, \Cpplang, or \langname{FORTRAN} are compiled into machine code as part of \Rpgrm itself or when packages binaries are created. In simpler words, the time required to convert and optimize the code written in these languages into machine code is spent during compilation, usually before we download and install \Rlang or packages. Instead, a loop coded in \Rlang is interpreted into machine code each time we source our script, and in some cases for each iteration. The \Rlang interpreter does some compilation into virtual machine code, as a preliminary stage which helps to some extent improve performance.
+\end{explainbox}
+
+The examples in this section use numbers and arithmetic operations, but vectorization and \emph{apply} functions can be also used with vectors of other modes, such as vectors of \code{character} strings or \code{logical} values.
+
+With modern computer processors, or CPUs, splitting the tasks across multiple cores for concurrent execution can enhance performance. To some extent this happens invisibly due to optimizations in the translation into machine code. Explicit approaches are available in package \pkgname{parallel} included in the \Rlang distribution and contributed packages such as \pkgname{future}. Parallelization is also possible across interconnected computers. However, how to enhance performance based on parallel or distributed execution is beyond the scope of this book.
+
+\section{Object names as character strings}
+
+In\index{object names}\index{object names!as character strings} all assignment examples before this section, we have used object names included as literal character strings in the code expressions. In other words, the names are ``decided'' as part of the code, rather than at run time. In scripts or packages, the object name to be assigned may need to be decided at run time and, consequently, be available only as a character string stored in a variable. In this case, function \Rfunction{assign()} must be used instead of the operators \code{<-} or \code{->}. The statements below demonstrate its use.
+
+First using a \code{character} constant.
+
+<<assignx-01>>=
+assign("a", 9.99)
+a
+@
+Next using a \code{character} value stored in a variable.
+
+<<assignx-01a>>=
+name.of.var <- "b"
+assign(name.of.var, 9.99)
+b
+@
+
+The two toy examples above do not demonstrate why one may want to use \Rfunction{assign()}. Common situations where we may want to use character strings to store (future or existing) object names are 1) when we allow users to provide names for objects either interactively or as \code{character} data, 2) when in a loop we transverse a vector or list of object names, or 3) we construct at runtime object names from multiple character strings based on data or settings. A common case is when we import data from a text file and we want to name the object according to the name of the file on disk, or a character string read from the header at the top of the file.
+
+Another case is when \code{character} values are the result of a computation.
+
+<<assignx-02>>=
+for (i in 1:5) {
+   assign(paste("zz_", i, sep = ""), i^2)
+}
+ls(pattern = "zz_*")
+@
+
+The complementary operation of \emph{assigning} a name to an object is to \emph{get} an object when we have available its name as a character string. The corresponding function is \Rfunction{get()}.
+
+<<assignx-03>>=
+get("a")
+get("b")
+@
+
+If we have available a character vector containing object names and we want to create a list containing these objects we can use function \Rfunction{mget()}. In the example below we use function \code{ls()} to obtain a character vector of object names matching a specific pattern and then collect all these objects into a list.
+
+<<assignx-04>>=
+obj_names <- ls(pattern = "zz_*")
+obj_lst <- mget(obj_names)
+str(obj_lst)
+@
+
+\begin{advplayground}
+Think of possible uses of functions \Rfunction{assign()}, \Rfunction{get()} and \Rfunction{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
+\end{advplayground}
+
+\section{Clean-up}
 
 Sometimes we need to make sure that clean-up code is executed even if the execution of a script or function is aborted by the user or as a result of an error condition. A typical example is a script that temporarily sets a disk folder as the working directory or uses a file as temporary storage. Function \Rfunction{on.exit()} can be used to record that a user supplied expression needs to be executed when the current function, or a script, exits. Function \Rfunction{on.exit()} can also make code easier to read as it keeps creation and clean-up next to each other in the body of a function or in the listing of a script.
 
@@ -1644,5 +1723,13 @@ on.exit(file.remove("temp.file"))
 # code that makes use of the file goes here
 @
 
+Function \Rfunction{library()} attaches the namespace of the loaded packages and in some special cases one may want to detach them at the end of a script. We can use \Rfunction{detach()} similarly as with attached \code{data.frame} objects (see page \pageref{par:calc:attach}). As an example we detach the packages used in section \ref{sec:loops:slow}. It is important to remember that the order in which they can be detached is determined by their interdependencies.
+
+<<cleanup-02>>=
+detach(package:patchwork)
+detach(package:ggplot2)
+detach(package:scales)
+@
+
 \section{Further reading}
-For\index{further reading!the R language} further readings on the aspects of \Rlang discussed in the current chapter, I suggest the books \citetitle{Matloff2011} (\citeauthor{Matloff2011}) and \citetitle{Wickham2019} (\citeauthor{Wickham2019}).
+For\index{further reading!the R language} further readings on the aspects of \Rlang discussed in the current chapter, I suggest the books \citetitle{Matloff2011} \autocite{Matloff2011} and \citetitle{Wickham2019} \autocite{Wickham2019}.
