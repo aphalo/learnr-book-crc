@@ -114,11 +114,11 @@ dnorm(x = seq(from = -1, to = 1, length.out = 5), mean = 1, sd = 0.5)
 With 50 equally spaced values for $x$ we can plot a line (\code{type = "l"}) that shows that the 50 generated data points give the illusion of a continuous curve. We also add a point showing the value for $x = 1.5$ calculated above.
 
 <<distrib-01b>>=
-my.x <- seq(from = -1, to = 3, length.out = 50)
+vct1 <- seq(from = -1, to = 3, length.out = 50)
 
-my.data <- data.frame(x = my.x,
-                      y = dnorm(x = my.x, mean = 1, sd = 0.5))
-plot(y~x, data = my.data, type = "l")
+df1 <- data.frame(x = vct1,
+                  y = dnorm(x = vct1, mean = 1, sd = 0.5))
+plot(y~x, data = df1, type = "l")
 points(x = 1.5, y = dnorm(x = 1.5, mean = 1, sd = 0.5))
 @
 
@@ -289,9 +289,9 @@ cor(cars)
 When the data frame or matrix contains more than two numeric vectors, the returned value is a matrix of estimates of pairwise correlations between columns. We here use \Rfunction{rnorm()} described above to create a long vector of pseudo-random values drawn from the Normal distribution and \Rfunction{matrix()} to convert it into a matrix with three columns (see page \pageref{sec:matrix:array} for details about \Rlang matrices).
 
 <<cor-02a>>=
-my.mat <- matrix(rnorm(54), ncol = 3,
-                 dimnames = list(rows = 1:18, cols = c("A", "B", "C")))
-cor(my.mat)
+mat1 <- matrix(rnorm(54), ncol = 3,
+               dimnames = list(rows = 1:18, cols = c("A", "B", "C")))
+cor(mat1)
 @
 
 \begin{playground}
@@ -314,10 +314,10 @@ cor.test(formula = ~ speed + dist, data = cars)
 Functions \Rfunction{cor()} and \Rfunction{cor.test()} return \Rlang objects, that when using \Rlang interactively get automatically ``printed'' on the screen. One should be aware that \Rfunction{print()} methods do not necessarily display all the information contained in an \Rlang object. This is almost always the case for complex objects like those returned by \Rlang functions implementing statistical tests. As with any \Rlang object we can save the result of an analysis into a variable. As described in section \ref{sec:calc:lists} on page \pageref{sec:calc:lists} for lists, we can peek into the structure of an object with method \Rfunction{str()}. We can use \Rfunction{class()} and \Rfunction{attributes()} to extract further information. Run the code in the chunk below to discover what is actually returned by \Rfunction{cor()}.
 
 <<cor-PG01, eval=eval_playground>>=
-a <- cor(cars)
-class(a)
-attributes(a)
-str(a)
+mat1 <- cor(cars)
+class(mat1)
+attributes(mat1a)
+str(mat1)
 @
 
 Methods \Rfunction{class()}, \Rfunction{attributes()} and \Rfunction{str()} are very powerful tools that can be used when we are in doubt about the data contained in an object and/or how it is structured. Knowing the structure allows us to retrieve the data members directly from the object when predefined extractor methods are not available.
@@ -346,14 +346,45 @@ Repeat the exercise in the playground immediately above, but now using non-param
 \index{t-test|(}
 The $t$-test is based on Student's $t$-distribution. It can be applied to any parameter estimate for which its standard deviation is available, and the $t$-distribution is a plausible assumption. It is most frequently used to compare an estimate of the mean against a constant value, or the estimate of a difference between two means and a target difference, usually no difference. In \Rlang these can be computed manually using functions \Rfunction{mean()}, \Rfunction{sd()}, and \Rfunction{pt()} or with \Rfunction{t.test()}.
 
+Although rarely presented is such a way, the $t$-test can be thought of as a special case of a linear model fit. Consistently with functions used to fit models to observations we can use a \emph{formula} to describe a $t$-test. A formula such as \code{y\,\char"007E\,x} is read as $y$ is explained by $x$. We use \emph{lhs} (left-hand-side) and \emph{rhs} (right-hand-side) to signify all terms to the left and right of the tilde (\code{\,\char"007E\,}), respectively (\code{<lhs>\,\char"007E\,<rhs>}). See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of model formulas.
+
 <<ttest-01>>=
-# to be filled in
+df1 <- data.frame(some.size = c(rnorm(10, mean = 2.5), rnorm(10, mean = 2.0)),
+                  group = factor(rep(c("A", "B"), each = 10)))
 @
+
+Comparison of the estimate of the mean ($\bar{x}$) against a constant value for mean of the sampled population, here $H_0: \mu = 2$. The default of \Rfunction{t.test()} is \code{mu = 0}. The formula \code{some.size\,\char"007E\,1} is read as ``the mean of variable \code{some.size} is explained by a constant value'', and we compare this value against our null hypothesis for $\mu$.
+
+<<ttest-02>>=
+t.test(some.size ~ 1, mu = 1, data = df1)
+@
+
+The same step by step, in this case not needed, but useful when we have a parameter estimate (not just mean) and its standard deviation available, as in model fits.
+
+<<ttest-02a>>=
+sem = sqrt(var(df1$some.size) / nrow(df1))
+t_value = (mean(df1$some.size) - 2) / sem # Ho: mu = 2
+p.value <- pt(t_value, df = nrow(df1) - 1, lower.tail = FALSE) * 2 # two tails
+signif(c(t = t_value, df = nrow(df1) - 1, P = p.value), 4) # 4 digits
+@
+
+Comparison of two groups means, $H_o: {\mu}_A - {\mu}_B = 0$, not assuming equal variances. We read the formula \code{some.size\,\char"007E\,group} as ``differences in \code{some.size} are explained by factor \code{group}''. In practice, difference between the means for the two groups is estimated and compared against the hypothesis. (In this case, the value of the argument passed to \code{mu}, zero by default, describes this difference.)
+
+<<ttest-03>>=
+t.test(some.size ~ group, data = df1)
+@
+
+and assuming homogeneous variance.
+
+<<ttest-03a>>=
+t.test(some.size ~ group, var.equal = TRUE, data = df1)
+@
+
 \index{t-test|)}
 
 \section[Model fitting in R]{Model fitting in \Rlang}\label{sec:stat:mf}
 \index{models fitting|(}
-The general approach to model fitting in \Rlang is to separate the actual fitting of a model from the inspection of the fitted model. A model fitting function minimally requires a description of the model to fit, as a model \code{formula} and a data frame or vectors with the data or observations to which to fit the model. These functions in \Rlang return a model fit object. This object contains the data, the model formula, call and the result of fitting the model. To inspect this model several methods are available. In the diagram we show the overall approach used fit models to data.
+The general approach to model fitting in \Rlang is to separate the actual fitting of a model from the inspection of the fitted model. A model fitting function minimally requires a description of the model to fit, as a model \code{formula} and a data frame or vectors with the data or observations to which to fit the model. These functions in \Rlang return a model fit object. This object contains the data, the model formula, call and the result of fitting the model. Several methods are available for querying it. The diagram summarises the approach used in \Rlang for data analysis based on fitted models.
 
 \begin{center}
 \begin{small}
@@ -371,7 +402,7 @@ The general approach to model fitting in \Rlang is to separate the actual fittin
 \end{small}
 \end{center}
 
-Models are described using model formulas such as \verb|y ~ x| which we read as $y$ is explained by $x$. We use lhs (left-hand-side) and rhs (right-hand-side) to signify all terms to the left and right of the tilde (\verb|~|), respectively (\verb|<lhs> ~ <rhs>|). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of model formulas.
+Models are described using model formulas such as \code{y\,\char"007E\,x} which we read as $y$ is explained by $x$. We use \emph{lhs} (left-hand-side) and \emph{rhs} (right-hand-side) to signify all terms to the left and right of the tilde (\code{\,\char"007E\,}), respectively (\code{<lhs>\,\char"007E\,<rhs>}). Model formulas are used in different contexts: fitting of models, plotting, and tests like $t$-test. The syntax of model formulas is consistent throughout base \Rlang and numerous independently developed packages. However, their use is not universal, and several packages extend the basic syntax to allow the description of specific types of models. As most things in \Rlang, model formulas are objects and can be stored in variables. See section \ref{sec:stat:formulas} on page \pageref{sec:stat:formulas} for a detailed discussion of model formulas.
 
 Although there is some variation, especially for fitted model classes defined in extension packages, in most cases the \textsl{query functions} bulked together in the rightmost box in the diagram include methods \Rfunction{summary()}, \Rfunction{anova()} and \Rfunction{plot()}, with several other methods such as \Rfunction{coef()}, \Rfunction{residuals()}, \Rfunction{fitted()}, \Rfunction{predict()}, \Rfunction{AIC()}, \Rfunction{BIC()} usually also available. Additional methods may be available. However, as model fit objects are derived from class \code{list}, these and other components can be extract or computed programmatically when needed. Consequently, the examples in this chapter can be adapted to the fitting of types of models not described here.
 
@@ -422,22 +453,22 @@ The observations are stored in a data frame, one case or event per row, with val
 response or explanatory, and when explanatory how they contribute to the estimated response.
 
 \begin{explainbox}
-Weights are multiplicative factors used to alter the \emph{weight} given to individual residuals when fitting a model to observations that are not equally  informative. A frequent case is fitting a model using \emph{y} or response values that are each a mean calculated from drastically different numbers of individual measurements. Some model fit functions compute the weights, but in most cases they are supplied as an argument to parameter \code{weights}. By default, \code{weights} have a value of \code{1} and thus do not affect the resulting model fit.
+Weights are multiplicative factors used to alter the \emph{weight} given to individual residuals when fitting a model to observations that are not equally informative. A frequent case is fitting a model to observations that are means of drastically different numbers of individual measurements. Some model fit functions compute the weights, but in most cases they are supplied as an argument to parameter \code{weights}. By default, \code{weights} have a value of \code{1} and thus do not affect the resulting model fit, when supplied or computed, the weights are saved to the model fit object.
 \end{explainbox}
 
 \subsection{Regression}
 %\index{linear regression}
 \index{linear regression|see{linear models, linear regression}}\index{linear models!linear regression}
-In this section we continue using the \Rdata{cars} data set, which contains to \code{numeric} variables.
+In this section we continue using the \Rdata{cars} data set, which contains two \code{numeric} variables.
 
-We fit a simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \verb|dist ~ 1 + speed|. We save the fitted model as \code{fm1} (a mnemonic for fitted-model one).\label{chunk:lm:models1}
+We fit a simple linear model $y = \alpha \cdot 1 + \beta \cdot x$ where $y$ corresponds to stopping distance (\code{dist}) and $x$ to initial speed (\code{speed}). Such a model is formulated in \Rlang as \code{dist \char"007E\ 1 + speed}. We save the fitted model object as \code{fm1} (a mnemonic for fitted-model one).\label{chunk:lm:models1}
 
 <<models-1>>=
 fm1 <- lm(dist ~ 1 + speed, data=cars)
 class(fm1)
 @
 
-The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably close to being fulfilled? In \Rlang it is most common to use plots to this end. We show here only one of the four plots normally produced. This quantile vs.\ quantile plot allows us to assess how much the residuals deviate from being normally distributed.
+The next step is diagnosis of the fit. Are assumptions of the linear model procedure used reasonably close to being fulfilled? In \Rlang it is most common to use plots to this end. We show here only one of the plots normally produced. This quantile vs.\ quantile plot allows us to assess how much the residuals deviate from being normally distributed.
 
 <<models-1a>>=
 plot(fm1, which = 2)
@@ -449,11 +480,11 @@ In the case of a regression, calling \Rfunction{summary()} with the fitted model
 summary(fm1)
 @
 
-Let's\index{linear models!summary table} look at the printout of the summary, section by section. Under ``Call:'' we find, \verb|dist ~ 1 + speed| or the specification of the model fitted, plus the data used. Under ``Residuals:'' we find the extremes, quartiles and median of the residuals, or deviations between observations and the fitted line. Under ``Coefficients:'' we find the estimates of the model parameters and their variation plus corresponding $t$-tests. At the end of the summary there is information on degrees of freedom and overall coefficient of determination ($R^2$).
+Let's\index{linear models!summary table} look at the printout of the summary, section by section. Under ``Call:'' we find, \code{dist\ \char"007E\ 1 + speed} or the specification of the model fitted, plus the data used. Under ``Residuals:'' we find the extremes, quartiles and median of the residuals, or deviations between observations and the fitted line. Under ``Coefficients:'' we find the estimates of the model parameters and their variation plus corresponding $t$-tests. At the end of the summary there is information on degrees of freedom and overall coefficient of determination ($R^2$).
 
 If we return to the model formulation, we can now replace $\alpha$ and $\beta$ by the estimates obtaining $y = -17.6 + 3.93 x$. Given the nature of the problem, we \emph{know based on first principles} that stopping distance must be zero when speed is zero. This suggests that we should not estimate the value of $\alpha$ but instead set $\alpha = 0$, or in other words, fit the model $y = \beta \cdot x$.
 
-However, in \Rlang models, the intercept is always implicitly included, so the model fitted above can be formulated as \verb|dist ~ speed|---i.e., a missing \code{+ 1} does not change the model. To exclude the intercept from the previous model, we need to specify it as \verb|dist ~ speed - 1| (or its equivalent \verb|dist ~ speed + 0|), resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
+However, in \Rlang models, the intercept is always implicitly included, so the model fitted above can be formulated as \code{dist\ \char"007E\ speed}---i.e., a missing \code{+ 1} does not change the model. To exclude the intercept from the previous model, we need to specify it as \code{dist\ \char"007E\ speed - 1} (or its equivalent \code{dist\ \char"007E\ speed + 0}), resulting in the fitting of a straight line passing through the origin ($x = 0$, $y = 0$).
 
 Now there is no estimate for the intercept in the summary, only an estimate for the slope.
 
@@ -1138,7 +1169,7 @@ my.formula <- dist ~ 1 + speed
 fm1 <- lm(my.formula, data=cars)
 @
 
-In some situations, e.g., calculation of correlations, models lacking a \emph{lhs} term (a term on the left hand side of \verb|~|) are used. At least one term must be present in the rhs of model formulas, as an expression ending in \code{~} is syntactically incomplete.
+In some situations, e.g., calculation of correlations, models lacking a \emph{lhs} term (a term on the left hand side of \code{\,\char"007E\,}) are used. At least one term must be present in the \emph{rhs} of model formulas, as an expression ending in \code{\,\char"007E\,} is syntactically incomplete.
 
 <<mformulas-intro-5>>=
 class(~ x + y)
@@ -1147,7 +1178,7 @@ is.empty.model(~ x + y)
 @
 
 \begin{explainbox}
-Some details of \Rlang formulas can be important in advanced scripts. Two kinds of ``emptiness'' are possible for formulas. As with other classes, empty objects or vectors of length zero are valid and can be created with the class constructor. In the case of formulas there is an additional kind of emptiness, a formula describing a model with no explanatory terms on its rhs.
+Some details of \Rlang formulas can be important in advanced scripts. Two kinds of ``emptiness'' are possible for formulas. As with other classes, empty objects or vectors of length zero are valid and can be created with the class constructor. In the case of formulas there is an additional kind of emptiness, a formula describing a model with no explanatory terms on its \emph{rhs}.
 
 An ``empty'' object of class \Rclass{formula} can be created by a call to \code{formula()} with no arguments, similarly as a numeric vector of length zero is created by the call \code{numeric()}. The last, commented out, statement in the code below triggers an error as the argument passed to \Rfunction{is.empty.model()} is of length zero. (This behaviour is not consistent with \Rclass{numeric} vectors of length zero; see for example the value returned by \code{is.finite(numeric())}.)
 
@@ -1158,7 +1189,7 @@ length(formula())
 # is.empty.model(formula())
 @
 
-A model formula describing a model with no explanatory terms on the rhs, is considered empty even if it is a valid object of class \Rclass{formula} and, thus, not missing. While \verb|y ~ 1| describes a model with only an intercept (estimating $a = \bar{x}$), \verb|y ~ 0| or its equivalent \verb|y ~ -1|, describes an empty model that cannot be fitted to data.
+A model formula describing a model with no explanatory terms on the rhs, is considered empty even if it is a valid object of class \Rclass{formula} and, thus, not missing. While \code{y\ \char"007E\ 1} describes a model with only an intercept (estimating $a = \bar{x}$), \code{y\ \char"007E\ 0} or its equivalent \code{y\,\char"007E\,-1}, describes an empty model that cannot be fitted to data.
 
 <<mformulas-intro-4>>=
 class(y ~ 0)
