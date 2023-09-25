@@ -39,9 +39,7 @@ In any design, there is a tension between opposing goals. In software for data a
 Package \pkgname{dplyr}, and much of the \pkgname{tidyverse}, relies on a similar approach as subset to enhance convenience at the expense of ambiguity. Package \pkgname{dplyr} has undergone quite drastic changes during its development history with respect to how to handle the dilemma caused by ``guessing'' of the environment where names should be looked up. There is no easy answer; a simplified syntax leads to ambiguity, and a fully specified syntax is verbose. Recent versions of the package introduced a terse syntax to achieve a concise way of specifying where to look up names. I do appreciate the advantages of the grammar of data that is implemented in the \pkgname{tidyverse}. However, the actual implementation, can result in ambiguities and subtleties that are even more difficult to deal by inexperienced or occasional users than those caused by inconsistencies in base \Rlang. My opinion is that for code that needs to be highly reliable and produce reproducible results in the future, we should for the time being prefer base \Rlang constructs. For code that is to be used once, or for which reproducibility can depend on the use of a specific (old or soon to become old) version of packages like \pkgname{dplyr}, or which is not a burden to thoroughly test and update regularly, the conciseness and power of the new syntax can be an advantage.
 \end{explainbox}
 
-\begin{infobox}
 Package \pkgname{poorman} re-implements many of the functions in \pkgname{dplyr} and a few from \pkgname{tidyr} using pure \Rlang code instead of compiled \Cpplang code and with no dependencies on other extension packages. This light-weight approach can be useful when \Rlang's data frames rather than tibbles are preferred or when the possible enhanced performance with large data sets is not needed.
-\end{infobox}
 
 \section{Packages used in this chapter}
 
@@ -90,7 +88,7 @@ Being newer and not part of the \Rlang language, the packages in the \pkgname{ti
 That it has been possible to define tibbles as objects of a class derived from \Rclass{data.frame} reveals one of the drawbacks of the simple implementation of S3 object classes in \Rlang. Allowing this is problematic because the promise of compatibility implicit in a derived class is not always fulfilled. An independently developed method designed for data frames will not necessarily work correctly with tibbles, but in the absence of a specialized method for tibbles it will be used (dispatched) when the generic method is called with a tibble as argument.
 \end{explainbox}
 
-\begin{infobox}
+\begin{warningbox}
 One should be aware that although the constructor \Rfunction{tibble()} and conversion function \Rfunction{as\_tibble()}, as well as the test \Rfunction{is\_tibble()} use the name \Rclass{tibble}, the class attribute is named \code{tbl}. This is inconsistent with base \Rlang conventions, as it is the use of an underscore instead of a dot in the name of these methods.
 
 <<tibble-info-01>>=
@@ -101,7 +99,7 @@ class(my.tb)
 @
 
 Furthermore, to support tibbles based on different underlying data sources such as \code{data.table} objects or databases, a further derived class is needed. In our example, as our tibble has an underlying \code{data.frame} class, the most derived class of \code{my.tb} is \Rclass{tbl\_df}.
-\end{infobox}
+\end{warningbox}
 
 We define a function that concisely reports the class of the object passed as argument and of its members (\emph{apply} functions are described in section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
 
@@ -294,7 +292,6 @@ data.in %>% sqrt(.) %>% sum(.) -> data3.out
 all.equal(data0.out, data3.out)
 @
 
-\begin{infobox}
 To use operator \Roperator{\textbar >} from \Rlang, we need to edit the code using (\code{\_}) as placeholder and passing it as argument to parameters by name in the function calls on the \textit{rhs}.
 
 <<pipes-x05b>>=
@@ -308,8 +305,6 @@ We can, in this case, simply use no placeholder, and pass the arguments by posit
 data.in |> sqrt() |> sum() -> data4.out
 all.equal(data0.out, data4.out)
 @
-
-\end{infobox}
 
 The \index{pipes!expressions in rhs} dot-pipe operator \Roperator{\%.>\%} from \pkgname{wrapr} allows us to use the placeholder \code{.} in expressions on the \emph{rhs} of operators in addition to in function calls.
 
@@ -435,9 +430,9 @@ long_iris.tb <-
 long_iris.tb
 @
 
-\begin{infobox}
+\begin{warningbox}
   Differently to base \Rlang, in most functions from the \pkgname{tidyverse} packages we can use bare column names preceded by a minus sign to signify ``all other columns''.
-\end{infobox}
+\end{warningbox}
 
 Function \Rfunction{pivot\_wider()} does not directly implement the exact inverse operation of \Rfunction{pivot\_longer()}. With multiple rows with shared codes, i.e., replication, in our case within each species and flower part, the returned tibble has columns that are lists of vectors. We need to expand these columns with function \Rfunction{unnest()} in a second step.
 
@@ -617,9 +612,9 @@ If we replace \code{tibble} by \code{data.frame} in the first statement, and rer
 \end{warningbox}
 \index{group-wise operations on data|)}
 
-\begin{infobox}
+\begin{warningbox}
   In early 2023, package \pkgname{dplyr} version 1.1.0 added support for per-operation grouping by adding to functions a new parameter (\code{by} or \code{.by}). This is still considered an experimental feature that may change. Anyway, it is important to keep in mind that this approach to grouping is not persistent like that described above.
-\end{infobox}
+\end{warningbox}
 
 \subsection{Joins}
 \index{joins between data sources|(}
