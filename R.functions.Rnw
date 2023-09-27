@@ -28,9 +28,36 @@ The main role of functions is that of providing an abstraction allowing us to av
 
 How do we, in practice, avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and later we \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book; what we will next tackle is how to define new functions of our own.
 
-We saw in section \ref{sec:script:compound:statement} on page \pageref{sec:script:compound:statement} a diagram of a compound statement. A function is like a compound statement with the difference that statements within the function usually do not affect directly any variable defined outside the function.  Even tough the statements within the function body do have access to the environment in which the function is called, it is safest to pass all input through the function parameters, and return all values to the caller.
+We saw in section \ref{sec:script:compound:statement} on page \pageref{sec:script:compound:statement} a diagram of a compound statement. A function is a code statement, simple or compound, that is partly isolated from the enclosing environment. The \emph{function} abstraction relies on formal parameters working as placeholders for arguments within the function body. When the function is called (or ``used'') values are passed as arguments to the parameters, and used when executing the code within the function.
 
-\begin{center}
+New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rlang by assignment to a variable name. In the example below, \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called.
+
+Function \code{my.prod()} has two formal parameters, \code{x} and \code{y}.
+
+<<fun-00a>>=
+fun1 <- function(x, y){x * y}
+@
+
+When we call \code{fun1()} with \code{4} and \code{3} as arguments, the computation that takes place is \code{4 * 3} and the value returned is \code{12}. In this example it is printed, but we could have assigned it to a variable or used it in further computations within the calling statement.
+
+<<fun-00b>>=
+fun1(x = 4, y = 3)
+@
+
+\begin{playground}
+What is the computation that takes places in this function call?
+
+<<fun-00c, eval=eval_playground>>=
+fun1(x = 10, y = 50)
+@
+\end{playground}
+
+\begin{warningbox}
+Even though the statements within the function body do have access to the environment in which the function is called, it is safest to pass all input through the function parameters, and return all values to the caller. This ensures that the users of the function can treat it a black box with no side effects.
+\end{warningbox}
+
+\begin{figure}
+  \centering
 \begin{small}
 \begin{tikzpicture}[node distance=1.7cm]
 \node (call) [startstop] {\textsl{arguments $\to$ \textcolor{blue}{parameters}}};
@@ -43,11 +70,13 @@ We saw in section \ref{sec:script:compound:statement} on page \pageref{sec:scrip
 \draw [arrow, color = blue] (stat2) -- (return);
 \end{tikzpicture}
 \end{small}
-\end{center}
+  \caption[Diagram of function with no side effects]{Diagram of function with no side effects, seen as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run.}\label{fig:function:diagram}
+\end{figure}
 
-The diagram above represents a function that has no \emph{side effects}, as it does not affect its environment, it only returns a value to the caller. A value on which the caller has full control. The statement that calls the function ``decides'' what to do with the value received from the function. When a function has a side effect, the caller is no longer in control. Side effects can be actions that do not alter any object in the calling code, like when a call to \Rfunction{print()} displays text or numbers. Side effects can also be an assignment that modifies an object in the caller's environment, such as assigning a new value to a variable in the caller's environment.
+In \Rlang, statements within the function usually do not affect directly any variable defined outside the function, the result from the computation is returned as a value. The diagram in Figure \ref{fig:function:diagram} describes a function that has no \emph{side effects}, as it does not affect its environment, it only returns a value to the caller. A value on which the caller has full control. The statement that calls the function ``decides'' what to do with the value received from the function.
 
-\begin{center}
+\begin{figure}
+  \centering
 \begin{small}
 \begin{tikzpicture}[node distance=1.7cm]
 \node (call) [startstop] {\textsl{arguments $\to$ \textcolor{blue}{parameters}}};
@@ -62,14 +91,10 @@ The diagram above represents a function that has no \emph{side effects}, as it d
 \draw [arrow, color = blue] (stat2) -- (return);
 \end{tikzpicture}
 \end{small}
-\end{center}
+  \caption[Diagram of function with side effects]{Diagram of function as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run.}\label{fig:function:side:effect:diagram}
+\end{figure}
 
-New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rpgrm by assignment to a variable name. In the example below, \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called. One can think of parameter names as placeholders for actual values to be supplied as arguments when calling the function.
-
-<<fun-00>>=
-my.prod <- function(x, y){x * y}
-my.prod(4, 3)
-@
+When a function has a side effect, the caller is no longer in full control (Figure \ref{fig:function:side:effect:diagram}). Side effects can be actions that do not alter any object in the calling code, like when a call to \Rfunction{print()} displays text or numbers. Side effects can also be an assignment that modifies an object in the caller's environment, such as assigning a new value to a variable in the caller's environment, i.e., ``outside the function''.
 
 \begin{warningbox}
 In base \Rlang, arguments\index{functions!arguments} to functions are passed by copy. This is something very important to remember. Whatever code in a function's body does to modify an argument passed through a formal parameter, its value outside the function will remain (almost) always unchanged. (In other computer languages, arguments can also be passed by reference, meaning that assignments to a formal parameter within the body of the function are back-referenced to the argument and modify it. It is possible to imitate such behavior in \Rlang using some language trickery and consequently, some packages such as \pkgname{data.table} do define functions that use passing of arguments by reference.)
@@ -81,10 +106,9 @@ my.change(a)
 a
 @
 
-In general, results that need to be made available outside the function are \emph{returned} by the function to the caller.
+\end{warningbox}
 
 A function can only return a single object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, a class derived from class \Rclass{list}.
-\end{warningbox}
 
 \begin{playground}
 When function \Rcontrol{return()} is called within a function, flow of execution within the function stops and the argument passed
