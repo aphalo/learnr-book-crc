@@ -70,7 +70,7 @@ Even though the statements within the function body do have access to the enviro
 \draw [arrow, color = blue] (stat2) -- (return);
 \end{tikzpicture}
 \end{small}
-  \caption[Diagram of function with no side effects]{Diagram of function with no side effects, seen as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run.}\label{fig:function:diagram}
+  \caption[Diagram of function with no side effects]{Diagram of function with no side effects, seen as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run. The body of the function is represented by the filled box.}\label{fig:function:diagram}
 \end{figure}
 
 In \Rlang, statements within the function usually do not affect directly any variable defined outside the function, the result from the computation is returned as a value. The diagram in Figure \ref{fig:function:diagram} describes a function that has no \emph{side effects}, as it does not affect its environment, it only returns a value to the caller. A value on which the caller has full control. The statement that calls the function ``decides'' what to do with the value received from the function.
@@ -82,7 +82,7 @@ In \Rlang, statements within the function usually do not affect directly any var
 \node (call) [startstop] {\textsl{arguments $\to$ \textcolor{blue}{parameters}}};
 \node (enc) [enclosure, color = blue, fill = blue!5, below of=call, yshift=-0.85cm] {\ };
 \node (stat1) [process, color = blue, fill = blue!15, below of=call] {\code{<statement A>}};
-\node (sideeff) [process, color = black, right of=stat2, xshift=3cm] {\textsl{\textcolor{blue}{side effect}}};
+\node (sideeff) [process, color = black, fill = yellow!20, right of=stat2, xshift=3cm] {\textsl{\textcolor{blue}{side effect}}};
 \node (stat2) [process, color = blue, fill = blue!15, below of=stat1] {\code{<statement B>}};
 \node (return) [startstop, below of=stat2] {\textsl{\textcolor{blue}{returned  value} $\to$ caller}};
 \draw [arrow, color = blue] (call) -- (stat1);
@@ -91,55 +91,82 @@ In \Rlang, statements within the function usually do not affect directly any var
 \draw [arrow, color = blue] (stat2) -- (return);
 \end{tikzpicture}
 \end{small}
-  \caption[Diagram of function with side effects]{Diagram of function as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run.}\label{fig:function:side:effect:diagram}
+  \caption[Diagram of function with side effects]{Diagram of function as a compound code statement receiving its input as arguments passed to its formal parameters and returning an object or value to the statement from where it was called or run. The body of the function is represented by the box filled in blue, while the side effect of the code in the function directly outside is represented by the box filled in yellow.}\label{fig:function:side:effect:diagram}
 \end{figure}
 
 When a function has a side effect, the caller is no longer in full control (Figure \ref{fig:function:side:effect:diagram}). Side effects can be actions that do not alter any object in the calling code, like when a call to \Rfunction{print()} displays text or numbers. Side effects can also be an assignment that modifies an object in the caller's environment, such as assigning a new value to a variable in the caller's environment, i.e., ``outside the function''.
 
-\begin{warningbox}
-In base \Rlang, arguments\index{functions!arguments} to functions are passed by copy. This is something very important to remember. Whatever code in a function's body does to modify an argument passed through a formal parameter, its value outside the function will remain (almost) always unchanged. (In other computer languages, arguments can also be passed by reference, meaning that assignments to a formal parameter within the body of the function are back-referenced to the argument and modify it. It is possible to imitate such behavior in \Rlang using some language trickery and consequently, some packages such as \pkgname{data.table} do define functions that use passing of arguments by reference.)
-
-<<fun-01>>=
-my.change <- function(x){x <- NA}
-a <- 1
-my.change(a)
-a
-@
-
-\end{warningbox}
-
-A function can only return a single object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, a class derived from class \Rclass{list}.
+A function can return only one object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, and its mode is \Rclass{list}.
 
 \begin{playground}
-When function \Rcontrol{return()} is called within a function, flow of execution within the function stops and the argument passed
-to \Rcontrol{return()} is the value returned by the function call. In contrast, if function \Rcontrol{return()} is not explicitly
-called, the value returned by the function call is that returned by the last statement \emph{executed} within the body of the function.
+When function \Rcontrol{return()} is called within a function, flow of execution within the function stops and the argument passed to \Rcontrol{return()} is the value returned by the function call. In contrast, if function \Rcontrol{return()} is not explicitly called, the value returned by the function call is that returned by the last statement \emph{executed} within the body of the function. Run these examples, and your own variations. 
 
 \label{chunck:print:funs}
-<<fun-02>>=
-print.x.1 <- function(x){print(x)}
-print.x.1("test")
-print.x.2 <- function(x){print(x); return(x)}
-print.x.2("test")
-print.x.3 <- function(x){return(x); print(x)}
-print.x.3("test")
-print.x.4 <- function(x){return(); print(x)}
-print.x.4("test")
-print.x.5 <- function(x){x}
-print.x.4("test")
+<<fun-02, eval=eval_playground>>=
+FN1 <- function(x) print("prn")
+FN1("arg")
+FN2 <- function(x){print("prn")
+                   return(x)}
+FN2("arg")
+FN3 <- function(x){return(x)
+                   print("prn")}
+FN3("arg")
+FN4 <- function(x){return()
+                   print("prn")}
+FN4("arg")
+FN5 <- function(x){return(print(x))
+                   print("prn")}
+FN5("arg")
 @
 \end{playground}
 
-\begin{advplayground}
-Test the behavior of functions \code{print.x.1()} and \code{print.x.5()}, as defined above, both at the command prompt, and in a script. The behavior of one of these functions will be different when the script is sourced than at the command prompt. Explain why.
-\end{advplayground}
+In base \Rlang, arguments\index{functions!arguments} to functions are passed by copy. This is something important to remember. If code in a function's body modifies the value of a parameter (the placeholder for an argument), its value outside the function is not affected, e.g., if the argument passed was a variable. 
 
-Functions have their own scope. Any names created by normal assignment within the body of a function are visible only within the body of the function and disappear when the function returns from the call. In normal use, functions in \Rlang do not affect their environment through side effects. They receive input through arguments and return a value as the result of the call. This value can be either printed or assigned as we have seen when using functions earlier.
+<<fun-01>>=
+fn2 <- function(x){x <- 99}
+a <- 1
+fn2(a)
+a
+@
+
+\begin{warningbox}
+In some other computer languages, arguments can be passed by reference, meaning that assignments to a formal parameter within the body of the function are back-referenced to the argument and modify it. It is possible to imitate such behavior in \Rlang using some language trickery and consequently, occasionally functions in \Rlang use this approach.
+\end{warningbox}
+
+Functions have their own \emph{scope}. Any new variables created by normal assignment within the body of a function are visible only within the body of the function and are destroyed when the function returns from the call. In normal use, functions in \Rlang do not affect their environment through side effects.
+
+\subsection{Scope of names}
+\index{names and scoping}\index{scoping rules}\index{namespaces}
+Scoping in \Rlang is implemented using \emph{environments} and \emph{name spaces}. We can think of environments as having a boundary with asymmetric visibility. The code within a function runs in its own environment, in isolation from the calling environment in relation to assignments, but the values stored in objects in the calling environment can be retrieved. This protects from unintentional side effects by making difficult to overwrite object definitions in the calling environment. It is possible to override this protection with operator \Roperator{<<-} or with function \Rfunction{assign()}. When used, assignment as side effects, can make the code much more difficult to read and debug, so its best to avoid them.
+
+The visibility of names is determined by the \emph{scoping rules} of a language. The clearest, but not the only situation when scoping rules matter, is when objects with the same name coexist. In such a situation one will be accessible by its unqualified name and the other hidden but possibly accessible by qualifying the name with the namespace where it is defined.
+
+As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of language. For example \code{pi} is a constant defined in \Rlang with the value of the mathematical constant $\pi$. If we use the same name for one of our variables, the original definition becomes hidden.
+
+<<scope-01>>=
+pi
+pi <- "apple pie"
+pi
+rm(pi)
+pi
+exists("pi")
+@
+
+In the example above, the two variables are not defined in the same scope. In the example below we assign a new value to a variable we have earlier created within the same scope, and consequently the second assignment overwrites, rather than hides, the existing definition.\qRscoping{exists()}
+
+<<scope-02>>=
+my.pie <- "raspberry pie"
+my.pie
+my.pie <- "apple pie"
+my.pie
+rm(my.pie)
+exists("my.pie")
+@
+
+Name spaces play an important role in avoiding name clashes when contributed packages are attached (see section \ref{sec:packages:work} on page \pageref{sec:packages:work}).
 
 \begin{explainbox}
-Scoping in \Rlang is implemented using \emph{environments} and \emph{name spaces}. We can think of environments as having a boundary with asymmetric visibility. The code within a function runs in it own environment, in isolation from the calling environment in relation to assignments, but the values stored in objects in the calling environment can be retrieved. This protects from unintentional side effects by making difficult to overwrite object definitions in the calling environment. It is possible to override this protection with operator \Roperator{<<-} or with function \Rfunction{assign()}, this should be only used as a last resource as it makes the code much more difficult to read and debug.
-
-Environments can be explicitly created with function \Rfunction{environment()}. However, \Rfunction{environment()} is rarely used in scripts while it can be useful within packages. Name spaces are briefly described in section \ref{sec:packages:work} on page \pageref{sec:packages:work}.
+Environments can be explicitly created with function \Rfunction{environment()}. However, \Rfunction{environment()} is rarely used in scripts while it can be useful within packages.
 \end{explainbox}
 
 \subsection{Ordinary functions}\label{sec:functions:sem}\label{sec:ordinary:functions}
@@ -196,7 +223,7 @@ In the definition of \code{sem()} we set a default argument for parameter \code{
 Define your own function to calculate the mean in a similar way as \Rfunction{SEM()} was defined above. Hint: function \Rfunction{sum()} could be of help.
 \end{playground}
 
-Functions can have much more complex and larger compound statements as their body than those in the examples above. Within an expression, a function name followed by parentheses is interpreted as a call to the function. The bare name of a function instead gives access to its definition.
+Within an expression, a function name followed by parentheses is interpreted as a call to the function, while the bare name of a function, returns its definition (similarly to any other \Rlang object). If the name is entered as a statement at the \Rpgrm console, its value is printed.
 
 We first print (implicitly) the definition of our function from earlier in this section.
 
@@ -204,13 +231,15 @@ We first print (implicitly) the definition of our function from earlier in this 
 sem
 @
 
-Next we print the definition of \Rlang's linear model fitting function \code{lm()}. (Use of \code{lm()} is described in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}.)
+Next we print the definition of \Rlang's standard deviation function \code{sd()}.
 
 <<fun-08>>=
-lm
+sd
 @
 
-As can be seen at the end of the listing, this function written in the \Rlang language has been byte-compiled so that it executes faster. Functions that are part of the \Rlang language, but that are not coded using the \Rlang language, are called primitives and their full definition cannot be accessed through their name (c.f., \code{sem()} defined above).
+As can be seen at the end of the printouts, these functions written in the \Rlang language have been byte-compiled so that they executes faster. We can also see that the definition of \code{sd()} resides in \code{namespace:stats} because it has been attached from package \pkgname{stats}.
+
+Functions that are part of the \Rlang language, but that are not coded using the \Rlang language, are called primitives and their full definition cannot be accessed through their name (c.f., \code{sem()} defined above and \code{sd}, with \code{list()} below).
 
 <<fun-09>>=
 list
@@ -276,7 +305,7 @@ what class of object they are.
 
 We say that specific methods are \emph{dispatched} based on the class of the argument passed. This, together with the loose type checks of \Rlang, allows writing code that functions as expected on different types of objects, e.g., character and numeric vectors.
 
-\Rlang has good support for the object-oriented programming paradigm, but as a system that has evolved over the years, currently \Rlang supports multiple approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a name like ``plot'' can be used as a generic name, and that the specific version of \Rfunction{plot()} called depends on the arguments of the call. Using computing terms we could say that the \emph{generic} of \Rfunction{plot()} dispatches the original call to different specific versions of \Rfunction{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions, the specializations of a generic are recognized/identified only by their name. And the class of an object by a character string stored as an attribute to the object.
+\Rlang has good support for the object-oriented programming paradigm, but as a system that has evolved over the years, currently \Rlang supports multiple approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a name like ``plot'' can be used as a generic name, and that the specific version of \Rfunction{plot()} called depends on the arguments of the call. Using computing terms we could say that the \emph{generic} of \Rfunction{plot()} dispatches the original call to different specific versions of \Rfunction{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions, the specializations of a generic are recognized/identified only by their name. And the class of an object by a character string stored as an attribute to the object (see section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes} about attributes).
 
 We first explore one of the methods already available in \Rlang. The definition of \code{mean} shows that it is the generic for a method.
 
@@ -296,6 +325,7 @@ We can also use \Rfunction{methods()} to query all methods, including operators,
 methods(class = "list")
 @
 
+\begin{explainbox}
 S3 class information is stored as a character vector in an attribute named \code{"class"}. The most basic approach to creation of an object of a new S3 class, is to add the new class name to the class attribute of the object. As the implied class hierarchy is given by the order of the members of the character vector, the name of the new class must be added at the head of the vector. Even though this step can be done as shown here, in practice this step would normally take place within a \emph{constructor} function and the new class, if defined within a package, would need to be registered. We show here this bare-bones example to demonstrate how S3 classes are implemented in \Rlang.
 
 <<explain-object-classes-01>>=
@@ -319,86 +349,61 @@ Once a specialized method exists for a class, it will be used for objects of thi
 print(a)
 print(as.numeric(a))
 @
-
-\begin{explainbox}
- The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather ``fragile'' in that most of the responsibility for consistency and correctness of the design---e.g., not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc., is not checked by the \Rlang interpreter.
-
-Defining a new S3 generic\index{generic method!S3 class system} is also quite simple. A generic method and a default method need to be created.
-
-<<explain-object-classes-04>>=
-my_print <- function (x, ...) {
-   UseMethod("my_print", x)
- }
-
-my_print.default <- function(x, ...) {
-   print(class(x))
-   print(x, ...)
-}
-@
-
-<<explain-object-classes-05>>=
-my_print(123)
-my_print("abc")
-@
-
-Up to now, \Rfunction{my\_print()}, has no specialization. We now write one for data frames.
-
-<<explain-object-classes-06>>=
-my_print.data.frame <- function(x, rows = 1:5, ...) {
-   print(x[rows, ], ...)
-   invisible(x)
-}
-@
-
-We add the second statement so that the function invisibly returns the whole data frame, rather than the lines printed. We now do a quick test of the function.
-
-<<explain-object-classes-07>>=
-my_print(cars)
-@
-
-<<explain-object-classes-07a>>=
-my_print(cars, 8:10)
-@
-
-<<explain-object-classes-07b>>=
-b <- my_print(cars)
-str(b)
-nrow(b) == nrow(cars) # was the whole data frame returned?
-@
-
-%\begin{playground}
-%1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
-%2) How would you modify the code of your \code{my\_print.matrix()} so that also the columns to print can be selected?
-%\end{playground}
-%
 \end{explainbox}
 
-\section{Scope of names}
-\index{names and scoping}\index{scoping rules}\index{namespaces}
+\begin{warningbox}
+ The S3 class system is ``lightweight'' in that it adds very little additional computation load, but it is rather ``fragile'' in that most of the responsibility for consistency and correctness of the design---e.g., not messing up dispatch by redefining functions or loading a package exporting functions with the same name, etc., is not checked by the \Rlang interpreter.
+\end{warningbox}
 
-The visibility of names is determined by the \emph{scoping rules} of a language. The clearest, but not the only situation when scoping rules matter, is when objects with the same name coexist. In such a situation one will be accessible by its unqualified name and the other hidden but possibly accessible by qualifying the name with its name space.
-
-As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of language. For example \code{pi} is a constant defined in \Rlang with the value of the mathematical constant $\pi$. If we use the same name for one of our variables, the original definition becomes hidden.
-
-<<scope-01>>=
-pi
-pi <- "apple pie"
-pi
-rm(pi)
-pi
-exists("pi")
-@
-
-In the example above, the two variables are not defined in the same scope. In the example below we assign a new value to a variable we have earlier created within the same scope, and consequently the second assignment overwrites, rather than hides, the existing definition.\qRscoping{exists()}
-
-<<scope-02>>=
-my.pie <- "raspberry pie"
-my.pie
-my.pie <- "apple pie"
-my.pie
-rm(my.pie)
-exists("my.pie")
-@
+%Defining a new S3 generic\index{generic method!S3 class system} is also simple. A generic method and a default method need to be created.
+%
+%<<explain-object-classes-04>>=
+%my_print <- function (x, ...) {
+%   UseMethod("my_print", x)
+% }
+%
+%my_print.default <- function(x, ...) {
+%   print(class(x))
+%   print(x, ...)
+%}
+%@
+%
+%<<explain-object-classes-05>>=
+%my_print(123)
+%my_print("abc")
+%@
+%
+%Up to now, \Rfunction{my\_print()}, has no specialization. We now write one for data frames.
+%
+%<<explain-object-classes-06>>=
+%my_print.data.frame <- function(x, rows = 1:5, ...) {
+%   print(x[rows, ], ...)
+%   invisible(x)
+%}
+%@
+%
+%We add the second statement so that the function invisibly returns the whole data frame, rather than the lines printed. We now do a quick test of the function.
+%
+%<<explain-object-classes-07>>=
+%my_print(cars)
+%@
+%
+%<<explain-object-classes-07a>>=
+%my_print(cars, 8:10)
+%@
+%
+%<<explain-object-classes-07b>>=
+%b <- my_print(cars)
+%str(b)
+%nrow(b) == nrow(cars) # was the whole data frame returned?
+%@
+%
+%%\begin{playground}
+%%1) What would be the most concise way of defining a \code{my\_print()} specialization for \code{matrix}? Write one, and test it.
+%%2) How would you modify the code of your \code{my\_print.matrix()} so that also the columns to print can be selected?
+%%\end{playground}
+%%
+%\end{explainbox}
 
 \section{Packages}\label{sec:script:packages}
 
