@@ -82,26 +82,34 @@ eval_plots_all <- FALSE
 \section{The components of a plot}
 I start by briefly presenting concepts central to data visualisation, following the \citetitle{Koponen2019} \autocite{Koponen2019}. Plots are a medium used to convey information, like text. It is worthwhile keeping this in mind. As with text, the design of plots needs to consider what we want to highlight, what is the take home message we want to convey. The style of the plot should match the expectations and the plot-reading abilities of the expected audience. One needs to be careful to avoid ambiguities and most importantly of all not to miss-inform. Data visualisations like text need to be planned, revised, commented upon, revised again until the best way of expressing our message is found. As we will see through this chapter, the flexibility of the grammar of graphics supports very well this approach to designing and producing high quality data visualizations for different audiences.
 
-Of course, when exploring data we do not need fancy details of graphical design, but we still need the flexibility that allows looking at the same data from many differing angles, highlighting different aspects of them. In the same way as boiler-plate text and text templates have specific but limited uses, all-in-one functions for producing plots do not support well the design of original data visualizations. They tend to get the job done, but lack the flexibility needed to do the best job of communicating with readers. Being this a book about languages, the focus of this chapter is in the layered grammar of graphics.
+Of course, when exploring data we do not need fancy details of graphical design, but we still need the flexibility that allows looking at the same data from many differing angles, highlighting different aspects of them. In the same way as boiler-plate text and text templates have specific but limited uses, all-in-one functions for producing plots do not support well the design of original data visualizations. They tend to get the job done, but lack the flexibility needed to do the best job of communicating information. Being this a book about languages, the focus of this chapter is in the layered grammar of graphics.
 
-The plots we will describe in this chapter are classified as \emph{statistical graphics} within the larger field of data visualisation which is broader. Plots such as scatter plots include points (geometric objects) that by their position, shape, colour or some other property directly convey information. If we consider these points their location in the plot ``canvas'' or ``plotting area'' is given by the values of their coordinates and any alteration to these coordinates is wrong. Such alterations would break the correspondence between coordinates and observed values thus conveying wrong/false information to the audience. A \emph{data label} is connected to an observation but its position can be displaced as long as its link to the corresponding observation can be inferred, e.g., by the direction of an arrow or even simple proximity. \emph{Annotations}, are additions to a plot that have no connection to individual observations, but rather with all observations taken together, e.g., a text like n = 200 indicating the number of observations included in a corner of a plot. These three elements convey information about observations. The axis labels, legends and keys included in the visualisation make it possible for the reader to retrieve the original values represented in the plot by graphical elements. Other elements in a visualisation even when not carrying additional information still affect the easy with which a plot can be read. These include the size of text and symbols, thickness of lines, font face, the choice of colour palette, etc. In general plots designed to be included in books and journals are unsuitable for oral presentations, and vice versa, mainly because of the different length of time available for the audience to read them. It is important to be aware of the roles played by different plot components when designing a data visualisation and when implementing it using the grammar of graphics.
+The plots described in this chapter are classified as \emph{statistical graphics} within the broader field of data visualisation. Plots such as scatter plots include points (geometric objects) that by their position, shape, colour or some other property directly convey information. If we consider these points their location in the plot ``canvas'' or ``plotting area'' is given by the values of their coordinates and any alteration to these coordinates is misleading. Such alterations break the correspondence between coordinates and observed values thus conveying wrong/false information to the audience.
+
+A \emph{data label} is connected to an observation but its position can be displaced as long as its link to the corresponding observation can be inferred, e.g., by the direction of an arrow or even simple proximity. Data labels provide ancillary information, such as the name of a gene or place.
+
+\emph{Annotations}, are additions to a plot that have no connection to individual observations, but rather with all observations taken together, e.g., a text like n = 200 indicating the number of observations, usually included in a corner or margin of a plot free of observations.
+
+Axis and tick labels, legends and keys make it possible for the reader to retrieve the original values represented in the plot as graphical elements. Other features of visualisations even when not carrying additional information affect the easy with which a plot can be read and accessibility to readers with visual constraints such as colour blindness. These features include the size of text and symbols, thickness of lines, choice of font face, choice of colour palette, etc.
+
+Because of the different length of time available for the audience to interact with visualizations, in general, plots designed to be included in books and journals are unsuitable for oral presentations, and vice versa. It is important to keep in mind the role played by plots in informing the audience, and what information can be expected to be on interest to different audiences and under different situations. The grammar of graphics and its extensions provide enough flexibility to tailor the design of plots to different uses and also to easily create variations of a given plot.
 
 \section{The grammar of graphics}\label{sec:plot:intro}
 \index{grammar of graphics!elements|(}
-What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a layered grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of package \pkgname{ggplot2}). What is meant by grammar in this case is that plots are assembled piece by piece using different ``nouns'' and ``verbs'' \autocite{Cleveland1985}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantics-based and to a large extent, how plots look when printed, displayed, or exported to a bitmap or vector-graphics file is controlled by themes.
+What separates \ggplot from base \Rlang and trellis/lattice plotting functions is the use of a layered grammar of graphics\index{grammar of graphics} (the reason behind `gg' in the name of package \pkgname{ggplot2}). What is meant by grammar in this case is that plots are assembled piece by piece using different ``nouns'' and ``verbs'' \autocite{Cleveland1985,Wickham2010}. Instead of using a single function with many arguments, plots are assembled by combining different elements with operators \code{+} and \verb|%+%|. Furthermore, the construction is mostly semantics-based and to a large extent, how plots look when printed, displayed, or exported to a bitmap or vector-graphics file is controlled by themes.
 
 We can think of plotting as translating or mapping the observations or data into a graphical language. We use properties of graphical (or geometrical) objects to represent different aspects of our data. An observation can consist of multiple recorded values. Say an observation of air temperature may be defined by a position in 3-dimensional space and a point in time, in addition to the temperature itself. An observation for the size and shape of a plant can consist of height, stem diameter, number of leaves, size of individual leaves, length of roots, fresh mass, dry mass, etc. If we are interested in the relationship between height and stem diameter, we may want to use cartesian coordinates\index{grammar of graphics!cartesian coordinates}, \emph{mapping} stem diameter to the $x$ dimension of the plot and the height to the $y$ dimension. The observations could be represented on the plot by points.
 
 The grammar of graphics allows us to design plots by combining various elements in ways that are nearly orthogonal. In other words, the majority of the possible combinations of ``words'' yield valid plots as long as we assemble them respecting the rules of the grammar. This flexibility makes \ggplot extremely powerful as we can build plots and even types of plots which were not even considered while designing the \ggplot package.
 
 \begin{warningbox}
-When a ggplot is built, the whole plot and its components are created as \Rlang objects that can be saved in the workspace or written to a file as objects. These objects encode a recipe for constructing the plot, not its final graphical representation. The graphical representation is generated when the object is printed, explicitly or automatically. Thus, the same \code{"gg"} plot object can be rendered into different bitmap and vector graphic formats for display or printing.
+When a ggplot is built, the whole plot and its components are created as \Rlang objects that can be saved in the workspace or written to a file as \Rlang objects. These objects encode a recipe for constructing the plot, not its final graphical representation. The graphical representation is generated when the object is printed, explicitly or not. Thus, the same \code{"gg"} plot object can be rendered into different bitmap and vector graphic formats for display and/or printing.
 \end{warningbox}
 
-The transformation of a set of data or observations into a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information, but also as a sequence of actions. However, what avoids that the flexibility becomes a burden is that if we do not explicitly mention all steps in our code, in most cases adequate defaults for them will be used instead. The recipe to build a plot needs to specify a) the data to use, b) which variable to map to which graphical property (or aesthetic), c) which layers to add and which geometric representation to use, d) the scales that establish the link between data values and aesthetic values, e) a coordinate system (affecting only aesthetics $x$, $y$ and possibly $z$), f) a theme to use. The result from constructing a plot object using the grammar of graphics is an \Rlang object containing a ``recipe for a plot'', including the data, which behaves similarly to other \Rlang objects.
+The transformation of a set of data or observations into a rendered graphic with package \pkgname{ggplot2} can be represented as a flow of information, but also as a sequence of actions. However, what avoids that the flexibility becomes a burden is that if we do not explicitly add instructions for all steps in our code in most cases adequate defaults are used instead. The recipe to build a plot needs to specify a) the data to use, b) which variable to map to which graphical property (or aesthetic), c) which layers to add and which geometric representation to use, d) the scales that establish the link between data values and aesthetic values, e) a coordinate system (affecting only aesthetics $x$, $y$ and possibly $z$), f) a theme to use. The result from constructing a plot object using the grammar of graphics is an \Rlang object containing a ``recipe for a plot'', including the data, which behaves similarly to other \Rlang objects.
 
 \subsection{The words of the grammar}
-Before building a plot step by step, I introduce next the different components of a ggplot recipe, or the words in the grammar.
+Before building a plot step by step, I introduce the different components of a ggplot recipe, or the words of the grammar of graphics.
 
 \paragraph{Data}
 The\index{grammar of graphics!data} data to be plotted must be available as a \code{data.frame} or \code{tibble}, with data stored so that each row represents a single observation event, and the columns are different values observed in that single event. In other words, in long form (so-called ``tidy data'') as described in chapter \ref{chap:R:data}. The variables to be plotted can be \code{numeric}, \code{factor}, \code{character}, and time or date stored as \code{POSIXct}. (Some extensions to \pkgname{ggplot2} add support for other types of data such as time series).
@@ -355,21 +363,16 @@ Each of the elements of the grammar exemplified above has several different memb
 
 \subsection{Plots as \Rlang objects}\label{sec:plot:objects}
 \index{grammar of graphics!plots as R objects|(}
-We can manipulate \code{"gg"} plot objects and their components in the same way as other \Rlang objects. We can operate on them using the operators and methods defined for the \code{"gg"} class they belong to. We start by saving, similarly as above, a \code{"gg"} plot object in variable \code{p1}.
+\code{"gg"} plot objects and their components behave as other \Rlang objects. Operators and methods have been defined for the \code{"gg"} class. Similarly as above, a \code{"gg"} plot object saved in variable \code{p1} is used for examples.
 
 <<ggplot-basics-04-wb1>>=
 @
 
-When we used in the previous section operator \code{+} to assemble the plots, we were operating on ``anonymous'' \Rlang objects. In the same way, we can operate on saved or ``named'' objects.
+In the previous section operator \code{+} was used to assemble the plots from ``anonymous'' \Rlang objects. Saved or ``named'' objects can also be combined with operator \code{+}.
 
 <<ggplot-objects-02>>=
-p1 +
-  stat_smooth(geom = "line", method = "lm", formula = y ~ x)
+p1 + stat_smooth(geom = "line", method = "lm", formula = y ~ x)
 @
-
-\begin{playground}
-  Reproduce the examples in the previous section, using \code{p} defined above as a basis instead of building each plot from scratch.
-\end{playground}
 
 \begin{explainbox}
   In the examples above we have been adding elements one by one, using the \code{+} operator. It is also possible to add multiple components in a single operation using a list. This is useful, when we want to save sets of components in a variable so as to reuse them in multiple plots. This saves typing, ensures consistency and can make alterations to a set of similar plots much easier.
@@ -377,14 +380,17 @@ p1 +
 <<ggplot-objects-info-01>>=
 p.ls <- list(
   stat_smooth(geom = "line", method = "lm", formula = y ~ x),
-  scale_x_log10())
+  scale_y_log10())
 @
 
 <<ggplot-objects-info-02>>=
-p1 + 
-  p.ls
+p1 + p.ls
 @
 \end{explainbox}
+
+\begin{playground}
+  Reproduce the examples in the previous section, using \code{p1} defined above as a basis instead of building each plot from scratch.
+\end{playground}
 
 \begin{warningbox}
 \index{grammar of graphics!structure of plot objects|(}
@@ -419,29 +425,61 @@ How many layers are present in this case?
 \index{grammar of graphics!structure of plot objects|)}
 \index{grammar of graphics!plots as R objects|)}
 
-\subsection{Mappings in detail}\label{sec:plot:mappings}
+\subsection{Scales and mappings}\label{sec:plot:mappings}
 \index{grammar of graphics!mapping of data|(}
 \index{grammar of graphics!aesthetics(}
-In the case of simple plots, based on data contained in a single data frame, the usual style is to code a plot as described above, passing an argument, \code{mtcars} in these examples, to the \code{data} parameter of \Rfunction{ggplot()}. Data passed in this way becomes the default for all layers in the plot. The same applies to the argument passed to \code{mapping}.\qRfunction{aes()}
+In \ggplot a \emph{mapping} describes which variable in \code{data} is mapped to which \code{aesthetic},  or graphic feature of a plot, such as $x$, $y$, color, fill, shape, linewidth, etc. In \ggplot a \emph{scale} describes the correspondence between \emph{values} in the mapped variable and values of the graphic feature. Using \code{color} as an example, we map the numeric variable \code{cyl} to the color aesthetic. As the variable is \code{numeric} a continuous color scale is used. Out of the multiple continuous color scales available, \ggscale{scale\_color\_continuous()} is used by default.
 
-<<ggplot-basics-12, eval=eval_plots_all>>=
+<<ggplot-basics-12a>>=
+p2 <-
+  ggplot(data = mtcars,
+         mapping = aes(x = disp, y = mpg, color = cyl)) +
+  geom_point()
+p2
+@
+
+Without changing the \code{mapping} we can change the scale used, and further adjust the colours use by passing arguments to some of its parameters.
+
+<<ggplot-basics-12b>>=
+p2 + scale_color_viridis_c(option = "magma", end = 0.85)
+@
+
+Changing the scale used for the color aesthetic, conceptually does not modify the plot, except for the colours used. There is a separation between the semantic structure of the plot and its graphic design. Still, how the audience interacts and perceives the plot depends on both of these concerns.
+
+Some scales, like those for \code{color}, exist in multiple ``flavors,'' suitable for numeric variables (continuous) or for factors (discrete) values. If we convert \code{cyl} into a \code{factor}, a discrete color scale is used instead of a continuous one. Out of the different discrete scales \ggscale{scale\_color\_discrete()} is used by default.
+
+<<ggplot-basics-12c>>=
 ggplot(data = mtcars,
-       mapping = aes(x = disp, y = mpg)) +
+       mapping = aes(x = disp, y = mpg, color = factor(cyl))) +
   geom_point()
 @
 
-However, the grammar of graphics contemplates the possibility of data and mappings restricted to individual layers, passed to statistics or geometries through their \code{mapping} formal parameter. In this case, those mappings set in the call to \Rfunction{ggplot()}, if present,  are overridden by arguments passed to individual layers, making it possible to code the same plot as follows.
+If we convert \code{cyl} into an \code{ordered} factor, an ordinal color scale is used, by default \ggscale{scale\_color\_ordinal()}.
 
-<<ggplot-basics-13, eval=eval_plots_all>>=
-ggplot() +
-  geom_point(data = mtcars,
-             mapping = aes(x = disp, y = mpg))
+<<ggplot-basics-12d>>=
+ggplot(data = mtcars,
+       mapping = aes(x = disp, y = mpg, color = ordered(cyl))) +
+  geom_point()
 @
 
-The last two examples above show two different approaches. When plots have a single layer, they are equally convenient. If a plot has multiple layer based on the same data, the first of this approaches makes this clear. If each layer uses different data, the second approach is better than using a combination of the two approaches. As discussed earlier, using a consistent and clear style when coding is important.
+The scales for other aesthetics function in a similar way as those for color. Scales are described in detail in section \ref{sec:plot:scales} on page \pageref{sec:plot:scales:continuous}.
+
+In the examples above for simple plots, based on data contained in a single data frame, mappings were established  by passing the value returned by the call to \Rfunction{aes()} as the argument to parameter \code{mapping} of \Rfunction{ggplot()}.
+
+Arguments passed to \code{data} and/or \code{mapping} parameters of \Rfunction{ggplot()} function as defaults for all layers in a plot. In layer functions, statistics and geometries, arguments passed to parameters with these same names, override the whole-plot defaults if present. Consequently, the code below creates a plot, \code{p3}, identical to \code{p2} above.
+
+<<ggplot-basics-13>>=
+p3 <-
+  ggplot() +
+  geom_point(data = mtcars,
+             mapping = aes(x = disp, y = mpg, color = cyl))
+p3
+@
+
+These examples demonstrate two different approaches that are equally convenient for simple plots with a single layer. However, if a plot has multiple layers based on the same data, the approach used for \code{p2}  makes this clear and is concise. If each layer uses different data and/or different mappings, the second approach is necessary.
 
 \begin{explainbox}
-In some cases, when flexibility is needed while constructing complex plots with multiple layers other idioms can be preferable, e.g., when assembling a plot from ``pieces´´ stored in variables or built programmatically. Some examples are given below.
+In some cases, when flexibility is needed while constructing complex plots with multiple layers other \emph{idioms} can be preferable, e.g., when assembling a plot from ``pieces´´ stored in variables or built programmatically.
 
 The default mapping can also be added directly with the \code{+} operator, instead of being passed as an argument to \Rfunction{ggplot()}.
 
@@ -459,38 +497,41 @@ ggplot() +
   geom_point(data = mtcars)
 @
 
-We can save the mapping to a variable and add the variable instead of the call to \code{aes()} in each of the examples above, of which we show only the first one.
+We can save the mapping to a variable and pass the variable as an argument to parameter \code{mapping}.
 
-<<ggplot-basics-12a, eval=eval_plots_all>>=
+<<ggplot-basics-15a, eval=eval_plots_all>>=
 my.mapping <- aes(x = disp, y = mpg)
 ggplot(data = mtcars,
        mapping = my.mapping) +
   geom_point()
 @
 
-In all these examples, the plot remains unchanged (not shown). However, the flexibility of the grammar allows the assembly of plots from separately constructed pieces and reusing these pieces by storing them in variables.
+In all these examples, the plot remains unchanged (not shown). However, the flexibility of the grammar allows the assembly of plots from separately constructed pieces and reusing these pieces by storing them in variables. These approaches can be very useful in scrips that construct consistently formatted sets of plots, or when the same mapping needs to be used consistently in multiple plots.
 \end{explainbox}
 
-The mapping of aesthetics does not necessarily have to be to variable in \code{data}, it can be a code statement that returns a value computed from one of more variables in \code{data} and constant values. In this simple example, \code{mpg} in miles per gallon is first converted into km per litre.
+The mapping to aesthetics in the call to \Rfunction{aes()} does not have to be to a variable from \code{data} as in examples above. A a code statement that returns a value computed from one or more variables from \code{data} is also accepted. Computations during mapping helps avoid the proliferation of variables in the data frames containing observations. In this simple example, \code{mpg} in miles per gallon is converted into km per litre during mapping.
 
-<<ggplot-basics-12b>>=
+<<ggplot-basics-15b>>=
 my.mapping <- aes(x = disp, y = mpg * 0.43)
 ggplot(data = mtcars,
        mapping = my.mapping) +
   geom_point()
 @
 
-Subsetting of data is in principle not possible within a call to \Rfunction{aes()}, but see below. When a plot has default data, the argument passed to parameter \code{data} of a layer function, can be a function returning a data frame. In this case, the function is applied to the default data and the data frame it returns used in the layer. In the example below an anonymous function defined in-line, extracts a subset of rows in data and highlights it by overplotting with a different color. The argument passed to data is a function definition, not a call, thus, if passed by name, no parentheses are used.
+\begin{explainbox}
+In many cases we can use \code{stats} to operate on the \code{data} before they are plotted. Sometimes it is more convenient to directly modify the whole-plot default \code{data} directly before it reaches a layer function. The argument passed to parameter \code{data} of the layer function, can be the definition of a function accepting a data frame as argument and returning a data frame, in addition to a data frame. If the argument is a function, it is applied to the default data and the data frame it returns used as \code{data} in the layer. In the example, an anonymous function defined in-line, extracts a subset of the rows. The observations in the extracted rows are highlighted in the plot by overplotting them in yellow.
 
 <<ggplot-basics-16>>=
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg)) +
   geom_point(size = 4) +
-  geom_point(data = function(x){subset(x = x, cyl == 4)}, 
+  geom_point(data = function(x){subset(x = x, cyl == 4)},
              color = "yellow", size = 1.5)
 @
 
-The plot's default data can also be operated upon using the \pkgname{magrittr} pipe operator, but not the pipe operator native to \Rlang (\Roperator{\textbar >}) or the dot-pipe operator from \pkgname{wrapr} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}). In my opining, using a function as above is simpler and clearer.
+The argument passed above to data is a function definition, not a function call. Thus, if a function is passed by name, no parentheses are used. No arguments can be passed to a function, except for the default \code{data} passed by position to its first parameter. Consequently, it is not possible to pass function \code{subset} directly. The anonymous function above is needed to be able to pass \code{cyl == 4} as argument.
+
+The plot's default data can also be operated upon using the \pkgname{magrittr} pipe operator, but not the pipe operator native to \Rlang (\Roperator{\textbar >}) or the dot-pipe operator from \pkgname{wrapr} (see section \ref{sec:data:pipes} on page \pageref{sec:data:pipes}). In this approach we pass a code statement built on a call to function \Rfunction{subset()} with \code{cyl == 4} passed as argument. The plot, not shown, is as in the example above.
 
 <<ggplot-basics-17, eval=eval_plots_all>>=
 ggplot(data = mtcars,
@@ -500,9 +541,9 @@ ggplot(data = mtcars,
              size = 1.5)
 @
 
-For this example, an alternative approach is to put the test condition within the call to \Rfunction{aes()}. Setting \code{size = 0} draws a very small point, but visible. Using \code{NA} instead, skips the rows, and \code{na.rm = TRUE} silences the warning. This is a roundabout approach to subsetting.
+A third possible approach is to test the condition within the call to \Rfunction{aes()}. In this approach it is not possible to extract a subset of rows. We can instead attempt to make some observations invisible, however, setting \code{size = 0} draws a very small point, still visible. Out various possible approaches, setting size to \code{NA}, skips the rows, and \code{na.rm = TRUE} silences the warning. This is a roundabout approach to subsetting. Notice that \ggscale{scale\_size\_identity()} is also needed. The plot, not shown, when is rendered with not different to the two examples above.
 
-<<ggplot-basics-18>>=
+<<ggplot-basics-18, eval=eval_plots_all>>=
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg)) +
   geom_point(size = 4) +
@@ -511,6 +552,9 @@ ggplot(data = mtcars,
              na.rm = TRUE) +
   scale_size_identity()
 @
+
+As it is usual in \Rlang, multiple approaches can be used to the same end.
+\end{explainbox}
 
 \begin{explainbox}
 \emph{Late mapping}\index{grammar of graphics!mapping of data!late} of variables to aesthetics has been possible in \pkgname{ggplot2} for a long time using as notation enclosure of the name of a variable returned by a statistic between \code{..}, but this notation has been deprecated some time ago and replaced by \ggscale{stat()}. In both cases, this imposed a limitation: it was impossible to map a computed variable to the same aesthetic as input to the statistic and to the geometry in the same layer. There were also some other quirks that prevented passing some arguments to the geometry through the dots \code{...} parameter of a statistic.
@@ -522,7 +566,7 @@ Since version 3.3.0 of \pkgname{ggplot2} the syntax used for mapping variables t
 %
 %User-coded transformations of the data are best handled at the third stage using scale transformations. However, when the intention is to jointly display or combine different computed variables returned by a statistic we need to set the desired mapping of original and computed variables to aesthetics at more than one stage.
 %
-The documentation of \pkgname{ggplot2} gives several good examples of cases when the new syntax is useful. I give here a different example. A polynomial fitted to data using \Rfunction{rlm()}. RLM is a procedure that automatically assigns before computing the residual sums of squares, weights to the individual residuals in an attempt to protect the estimated fit from the influence of extreme observations or outliers. When using this and similar methods it is of interest to plot the residuals together with the weights. A frequent approach is to map weights to a gradient between two colours. The code below constructs a data frame containing artificial data that includes an extreme value or outlier.
+The documentation of \pkgname{ggplot2} gives several good examples of cases when the new mapping syntax is useful. I give here a different example, a polynomial fitted to data using \Rfunction{rlm()}. RLM is a procedure that automatically assigns before computing the residual sums of squares, weights to the individual residuals in an attempt to protect the estimated fit from the influence of extreme observations or outliers. When using this and similar methods it is of interest to plot the residuals together with the weights. One approach is to map weights to a gradient between two colours. The code below constructs a data frame containing artificial data that includes an extreme value or outlier.
 
 <<mapping-stage-01>>=
 set.seed(4321)
@@ -569,54 +613,69 @@ When fitting models to observations with \Rfunction{lm()}, the un-weighted resid
 \section{Geometries}\label{sec:plot:geometries}
 \index{grammar of graphics!geometries|(}
 
-Different geometries support different \emph{aesthetics}. While \gggeom{geom\_point()} supports \code{shape}, and \gggeom{geom\_line()} supports \code{linetype}, both support \code{x}, \code{y}, \code{color} and \code{size}. In this section I describe frequently used \code{geometries} from package \ggplot and from a few packages that extend \ggplot. The graphic output from some code examples will not be shown, with the expectation that readers will run them to see the plots.
+Different geometries support different \emph{aesthetics} (Table \ref{tab:plot:geoms}). While \gggeom{geom\_point()} supports \code{shape}, and \gggeom{geom\_line()} supports \code{linetype}, both support \code{x}, \code{y}, \code{color} and \code{size}. In this section I describe frequently used \code{geometries} from package \ggplot and from a few packages that extend \ggplot. The graphic output from some code examples will not be shown, with the expectation that readers will run the code to see the plots.
 
-Mainly for historical reasons, \emph{geometries} accept a \emph{statistic} as an argument, in the same way as \emph{statistics} accept a \emph{geometry} as an argument. In this section I only describe \emph{geometries} which have as a default \emph{statistic} \code{stat\_identity}. \emph{Geometries} that have other \emph{statistics} as default are described in section \ref{sec:plot:stat:summaries} together with the corresponding \emph{statistics}.
+Mainly for historical reasons, \emph{geometries} accept a \emph{statistic} as an argument, in the same way as \emph{statistics} accept a \emph{geometry} as an argument. In this section I only describe \emph{geometries} which have as a default \emph{statistic} \code{stat\_identity}. In section \ref{sec:plot:stat:summaries} (page \pageref{sec:plot:stat:summaries}) I describe other \emph{geometries} together with the \emph{statistics} they use by default.
+
+\begin{table}
+  \caption[\ggplot geometries]{\ggplot geometries described in section \ref{sec:plot:geometries}, packages where they are defined, and the aesthetics supported. The default statistic is in all cases \ggstat{stat\_identity()}.}\vspace{1ex}\label{tab:plot:geoms}
+  \centering
+   \begin{tabular}{llp{8.25cm}}
+     \toprule
+     Geometry & Package & Aesthetics \\
+     \midrule
+     \code{geom\_point} & \pkgnameNI{ggplot2} & x, y, shape, size, fill, color, alpha \\
+     \code{geom\_pointrange} & \pkgnameNI{ggplot2} & x, y, ymin, ymax, shape, size, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_errorbar} & \pkgnameNI{ggplot2} & x, ymin, ymax, linetype, linewidth, color, alpha \\
+     \code{geom\_linerange} & \pkgnameNI{ggplot2} & x, ymin, ymax, linetype, linewidth, color, alpha  \\
+     \code{geom\_line} & \pkgnameNI{ggplot2} & x, y, linetype, linewidth, color, alpha  \\
+     \code{geom\_segment} & \pkgnameNI{ggplot2} & x, y, xend, yend, linetype, linewidth, color, alpha \\
+     \code{geom\_step} & \pkgnameNI{ggplot2} & x, y, linetype, linewidth, color, alpha  \\
+     \code{geom\_path} & \pkgnameNI{ggplot2} & x, y, linetype, linewidth, color, alpha  \\
+     \code{geom\_curve} & \pkgnameNI{ggplot2} & x, y, xend or yend, linetype, linewidth, color, alpha  \\
+     \code{geom\_area} & \pkgnameNI{ggplot2} & x, y, (ymin = 0), linetype, linewidth, fill, color, alpha \\
+     \code{geom\_ribbon} & \pkgnameNI{ggplot2} & x, ymin and ymax, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_align} & \pkgnameNI{ggplot2} & x or y, xmin or xmax, ymin or ymax, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_rect} & \pkgnameNI{ggplot2} & xmin, xmax, ymin, ymax, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_tile} & \pkgnameNI{ggplot2} & x, y, width, height, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_col} & \pkgnameNI{ggplot2} & x, y, width, linetype, linewidth, fill, color, alpha \\
+     \code{geom\_rug} & \pkgnameNI{ggplot2} & x or y, linewidth, color, alpha \\
+     \code{geom\_hline} & \pkgnameNI{ggplot2} & yintercept, linetype, linewidth, color, alpha  \\
+     \code{geom\_vline} & \pkgnameNI{ggplot2} & xintercept, linetype, linewidth, color, alpha  \\
+     \code{geom\_text} & \pkgnameNI{ggplot2} & x, y, label, face, family, angle, size, color, alpha \\
+     \code{geom\_label} & \pkgnameNI{ggplot2} & x, y, label, face, family, (angle), size, fill, color, alpha  \\
+     \code{geom\_text\_npc} & \pkgnameNI{ggpp} & x, y, label, face, family, angle, size, color, alpha \\
+     \code{geom\_label\_npc} & \pkgnameNI{ggpp} & x, y, label, face, family, (angle), size, fill, color, alpha  \\
+     \code{geom\_text\_repel} & \pkgnameNI{ggrepel} & x, y, label, face, family, angle, size, color, alpha \\
+     \code{geom\_label\_repel} & \pkgnameNI{ggrepel} & x, y, label, face, family, size, fill, color, alpha  \\
+     \code{geom\_sf} & \pkgnameNI{ggplot2} & fill, color \\
+     \code{geom\_table} & \pkgnameNI{ggpp} & x, y, label, size, color, angle \\
+     \code{geom\_plot} & \pkgnameNI{ggpp} & x, y, label, angle \\
+     \code{geom\_grob} & \pkgnameNI{ggpp} & x, y, label \\
+     \code{geom\_blank} & \pkgnameNI{ggplot2} & --- \\
+     \bottomrule
+   \end{tabular}
+\end{table}
+
 
 \subsection{Point}\label{sec:plot:geom:point}
 \index{grammar of graphics!point geometry|(}
 
-As shown earlier in this chapter, \gggeom{geom\_point()}, can be used to add a layer with observations represented by ``points'' or symbols. Variable \code{cyl} describes the numbers of cylinders in the engines of the cars. It is a numeric variable, and when mapped to color, a continuous color scale is used to represent this variable.
+As seen in examples above, \gggeom{geom\_point()}, can be used to add a layer with observations represented by ``points'' or symbols. Variable \code{cyl} describes the numbers of cylinders in the engines of the cars. It is a numeric variable, and when mapped to color, a continuous color scale is used to represent this variable.
 
-\index{plots!scatter plot|(}The first examples build scatter plots, because numeric variables are mapped to both \code{x} and \code{y}.
-Some scales, like those for \code{color}, exist in two ``flavors,'' one suitable for numeric variables (continuous) and another for factors (discrete).
+\index{plots!scatter plot|(}The first example produces a scatter plots, because numeric variables are mapped to both \code{x} and \code{y}.
 
 <<scatter-01>>=
 ggplot(data = mtcars,
-       aes(x = disp, y = mpg, color = cyl)) +
-  geom_point()
-@
-
-If we convert \code{cyl} into a factor, a discrete color scale is used instead of a continuous one.
-
-<<scatter-02, eval=eval_plots_all>>=
-ggplot(data = mtcars,
-       aes(x = disp, y = mpg, color = factor(cyl))) +
-  geom_point()
-@
-
-If we convert \code{cyl} into an ordered factor, a different discrete color scale is used by default.
-
-<<scatter-02a, eval=eval_plots_all>>=
-ggplot(data = mtcars,
-       aes(x = disp, y = mpg, color = ordered(cyl))) +
+       aes(x = disp, y = mpg, shape = factor(cyl))) +
   geom_point()
 @
 
 \begin{playground}
-Try a different mapping: \code{disp} $\rightarrow$ \code{color}, \code{cyl} $\rightarrow$ \code{x}. Continue by using \code{help(mtcars)} and/or \code{names(mtcars)} to see what variables are available, and then try the combinations that trigger your curiosity---i.e., explore the data.
+Try a different mapping: \code{disp} $\rightarrow$ \code{color}, \code{cyl} $\rightarrow$ \code{x}, keeping the mapping \code{mpg}  $\rightarrow$ \code{y} unchanged. Continue by using \code{help(mtcars)} and/or \code{names(mtcars)} to see what other variables are available, and then try the combinations that trigger your curiosity---i.e., explore the data.
 \end{playground}
 
-The mapping between data values and aesthetic values is controlled by scales. Different color scales, and even palettes within a given scale, provide different mappings between data values and rendered colours.
 
-<<scatter-03, eval=eval_plots_all>>=
-ggplot(data = mtcars,
-       aes(x = disp, y = mpg, color = factor(cyl))) +
-  geom_point() +
-  scale_color_brewer(type = "qual", palette = 2)
-@
-
-The data, aesthetics mappings, and geometries are the same as in earlier code; to alter how the plot looks, we have changed only the scale and palette used for the color aesthetic. Conceptually it is still exactly the same plot we created earlier, except for the colours used. This is a very important point to understand, because it allows us to separate two different concerns: the semantic structure and the graphic design.
 
 \begin{playground}
 Try the different palettes available through the brewer scale. You can play directly with the palettes using function \code{brewer\_pal()} from package \pkgname{scales} together with \code{show\_col()}).
@@ -1216,6 +1275,40 @@ ggplot(data = mtcars, aes(x = disp, y = mpg, color = factor(cyl))) +
 \index{grammar of graphics!statistics|(}
 
 Before learning about \ggplot \emph{statistics}, it is important to have clear how the mapping of factors to \emph{aesthetics} works. When a factor, for example, is mapped to \code{color}, it creates a new grouping, with the observations matching a given level of the factor, corresponding to a group. Most \emph{statistics} operate on the data for each of these groups separately, returning a summary for each group, for example, the mean of the observations in a group.
+
+\begin{table}
+  \caption[\ggplot statistics]{\ggplot statistics described in section \ref{sec:plot:statistics}, packages where they are defined, their default geometry and the aesthetics they use as input for computations.}\vspace{1ex}\label{tab:plot:stats}
+  \centering
+   \begin{tabular}{llll}
+     \toprule
+     Statistic & Package & Geometry & Aesthetics \\
+     \midrule
+     \code{stat\_function} & \pkgnameNI{ggplot2} & \code{geom\_function} & x \\
+     \code{stat\_summary} & \pkgnameNI{ggplot2} & \code{geom\_pointrange} & x, y \\
+     \code{stat\_smooth} & \pkgnameNI{ggplot2} & \code{geom\_smooth} & x, y, weight \\
+     \code{stat\_poly\_line} & \pkgnameNI{ggpp} &\code{geom\_smooth} & x, y, weight \\
+     \code{stat\_poly\_eq} & \pkgnameNI{ggpp} & \code{geom\_text} & x, y, weight  \\
+     \code{stat\_fit\_tb} & \pkgnameNI{ggpp} & \code{geom\_table} & x, y, weight  \\
+     \code{stat\_bin} & \pkgnameNI{ggplot2} & \code{geom\_bar} & x, y \\
+     \code{geom\_histogram} & \pkgnameNI{ggplot2} & --- & x, y \\
+     \code{stat\_bin2d} & \pkgnameNI{ggplot2} & \code{geom\_tile} & x, y \\
+     \code{stat\_bin\_hex} & \pkgnameNI{ggplot2} & \code{geom\_hex} & x, y \\
+     \code{stat\_density} & \pkgnameNI{ggplot2} & \code{geom\_area} & x, y \\
+     \code{geom\_density} & \pkgnameNI{ggplot2} & --- & x, y \\
+     \code{stat\_density\_2d} & \pkgnameNI{ggplot2} & \code{geom\_density\_2d} & x, y \\
+     \code{stat\_boxplot} & \pkgnameNI{ggplot2} & \code{geom\_boxplot} & x, y  \\
+     \code{stat\_ydensity} & \pkgnameNI{ggplot2} & \code{geom\_violin} & x, y  \\
+     \code{geom\_violin} & \pkgnameNI{ggplot2} & --- & x, y, weight  \\
+     \code{geom\_quasirandom} & \pkgnameNI{ggbeeswarm} & --- & x, y \\
+     \code{stat\_ma\_line} & \pkgnameNI{ggpmisc} & \code{geom\_smooth} & x, y \\
+     \code{stat\_ma\_eq} & \pkgnameNI{ggpmisc} & \code{geom\_text} & x, y, weight  \\
+     \code{stat\_centroid} & \pkgnameNI{ggpmisc} & \code{geom\_point} & x, y \\
+     \code{stat\_quant\_line} & \pkgnameNI{ggpmisc} & \code{geom\_smooth} & x, y, weight  \\
+     \code{stat\_quant\_eq} & \pkgnameNI{ggpmisc} & \code{geom\_text} & x, y, weight \\
+     \code{stat\_identity} & \pkgnameNI{ggplot2} & \code{geom\_point} & --- \\
+     \bottomrule
+   \end{tabular}
+\end{table}
 
 \subsection{Functions}\label{sec:plot:function}
 \index{grammar of graphics!function statistic|(}
@@ -3075,7 +3168,7 @@ Some graphics devices are part of base-\Rlang, and others are implemented in con
 Package \pkgname{gginnards} provides an enhanced \code{str()} methods, \code{num\_layers()}, \code{top\_layer()}, \code{bottom\_layer()}, and \code{mapped\_vars()}.
 
 Package \pkgname{ggtrace} xxxx
- 
+
 \section{Further reading}
 An\index{further reading!grammar of graphics}\index{further reading!plotting} in-depth discussion of the many extensions to package \pkgname{ggplot2} is outside the scope of this book. Several books describe in detail the use of \pkgname{ggplot2}, being \citebooktitle{Wickham2016} \autocite{Wickham2016} the one written by the main author of the package. For inspiration or worked out examples, the book \citebooktitle{Chang2018} \autocite{Chang2018} is an excellent reference. In depth explanations of the technical aspects of \Rlang graphics are available in the book \citebooktitle{Murrell2019} \autocite{Murrell2019}.
 
