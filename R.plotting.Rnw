@@ -55,7 +55,6 @@ To run the examples included in this chapter, you need first to load some packag
 
 <<message=FALSE>>=
 library(learnrbook)
-library(wrapr)
 library(scales)
 library(ggplot2)
 library(ggrepel)
@@ -63,10 +62,9 @@ library(gginnards)
 library(broom)
 library(ggpmisc)
 library(ggbeeswarm)
-library(ggforce)
-library(tikzDevice)
 library(lubridate)
-library(tidyverse)
+library(tibble)
+library(dplyr)
 library(patchwork)
 @
 
@@ -1231,11 +1229,11 @@ The bitmaps are read from PNG files (contained as examples in package \pkgname{g
 <<plot-grob-01a>>=
 file1.name <-
   system.file("extdata", "Isoquercitin.png",
-              package = "ggpmisc", mustWork = TRUE)
+              package = "ggpp", mustWork = TRUE)
 Isoquercitin <- magick::image_read(file1.name)
 file2.name <-
   system.file("extdata", "Robinin.png",
-              package = "ggpmisc", mustWork = TRUE)
+              package = "ggpp", mustWork = TRUE)
 Robinin <- magick::image_read(file2.name)
 @
 
@@ -2244,7 +2242,7 @@ Make an empty plot (\code{ggplot()}) and add to it as title an \Rlang expression
 \subsection{Continuous scales}\label{sec:plot:scales:continuous}
 \index{grammar of graphics!continuous scales|(}
 I start by listing the most frequently used arguments to the continuous scale functions: \code{name}, \code{breaks}, \code{minor\_breaks}, \code{labels}, \code{limits}, \code{expand}, \code{na.value}, \code{trans}, \code{guide}, and \code{position}. The value of \code{name} is used for axis labels or the key title (see previous section). The arguments to \code{breaks} and \code{minor\_breaks} override the default locations of major and minor ticks and grid lines. Setting them to \code{NULL} suppresses the ticks. By default the tick labels are generated from the value of \code{breaks} but an argument to \code{labels} of the same length as \code{breaks} will replace these defaults. The values of \code{limits} determine both the range of values in the data included and the plotting area as described above---by default the out-of-bounds (\code{oob}) observations are replaced by \code{NA} but it is possible to instead ``squish'' these observations towards the edge of the plotting area. The argument to \code{expand} determines the size of the margins or padding added to the area delimited by \code{lims} when setting the ``visual'' plotting area. The value passed to \code{na.value} is used as a replacement for \code{NA} valued observations---most useful for \code{color} and \code{fill} aesthetics. The transformation object passed as an argument to \code{trans} determines the transformation used---the transformation affects the rendering, but breaks and tick labels remain expressed in the original data units. The argument to \code{guide} determines the type of key or removes the default key. Depending on the scale in question not all these parameters are available. A family of continuous scales, \emph{binned scales}, was added in \ggplot 3.3.0. These scales map a continuous variable from \code{data} onto a discrete gradient of aesthetic values, but are otherwise very similar.
-  
+
 The code below constructs data frame \code{fake2.data}, containing artificial data.
 
 <<scales-01>>=
@@ -2393,7 +2391,7 @@ p5 <-
 @
 
 \sloppy
-For currency, functions \code{dollar()} and \code{comma()} can be used to format the numbers in the labels as used for currency. Function \code{scientific\_format()} formats numbers using exponents of 10---useful for logarithmic-transformed scales. Additional functions, \code{label\_number(scale\_cut = cut\_short\_scale())}, \code{label\_log()}, or \code{label\_number(scale\_cut = cut\_si("g")} provide other options. As shown below, some of these functions can be useful with untransformed continuous scales. 
+For currency, functions \code{dollar()} and \code{comma()} can be used to format the numbers in the labels as used for currency. Function \code{scientific\_format()} formats numbers using exponents of 10---useful for logarithmic-transformed scales. Additional functions, \code{label\_number(scale\_cut = cut\_short\_scale())}, \code{label\_log()}, or \code{label\_number(scale\_cut = cut\_si("g")} provide other options. As shown below, some of these functions can be useful with untransformed continuous scales.
 <<scale-ticks-04>>=
 p6 <-
   ggplot(data = fake2.data, mapping = aes(x = z, y = y * 1000)) +
@@ -2762,7 +2760,7 @@ This approach has the limitation, shared with the use of \Rfunction{annotate()} 
 In the next example, expressions are used as annotations as well as for tick labels. Do notice that we use recycling for setting the breaks, as \code{c(0, 0.5, 1, 1.5, 2) * pi} is equivalent to \code{c(0, 0.5 * pi, pi, 1.5 * pi, 2 * pi}. Annotations are plotted at their own position, unrelated to any observation in the data, but using the same coordinates and units as for plotting the data.
 
 <<annotate-03>>=
-ggplot(data = data.frame(x = c(0, 2 * pi)), 
+ggplot(data = data.frame(x = c(0, 2 * pi)),
        mapping = aes(x = x)) +
   stat_function(fun = sin) +
   scale_x_continuous(
@@ -2806,8 +2804,8 @@ Wind rose plots are frequently histograms or density plots drawn on a polar syst
 A circular histogram of wind directions with 30-degree-wide bins is create using \ggstat{stat\_bin()}. The counts represent the number of minutes during 24~h when the wind direction was within each bin.
 
 <<wind-05>>=
-p.base <- 
-  ggplot(data = viikki_d29.dat, 
+p.base <-
+  ggplot(data = viikki_d29.dat,
          mapping = aes(x = WindDir_D1_WVT))  +
   coord_polar() +
   scale_x_continuous(breaks = c(0, 90, 180, 270),
@@ -2815,19 +2813,19 @@ p.base <-
                      limits = c(0, 360),
                      expand = c(0, 0),
                      name = "Wind direction")
-                     
-p.base + 
+
+p.base +
   stat_bin(color = "black", fill = "gray50", geom = "bar",
-           binwidth = 30, na.rm = TRUE) + 
+           binwidth = 30, na.rm = TRUE) +
            labs(y = "Frequency (min/d)")
 @
 
 For an equivalent plot, using an empirical density, \ggstat{stat\_density()} is used instead of \ggstat{stat\_bin()}, and \gggeom{geom\_polygon()} instead of \gggeom{geom\_bar()}. The \code{name} of the \code{y} scale is also updated.
 
 <<wind-06>>=
-p.base + 
+p.base +
   stat_density(color = "black", fill = "gray50",
-               geom = "polygon", linewidth = 1) + 
+               geom = "polygon", linewidth = 1) +
                labs(y = "Density (/1)")
 @
 
@@ -2838,10 +2836,10 @@ opts_chunk$set(opts_fig_very_wide)
 @
 
 <<wind-08>>=
-ggplot(data = viikki_d29.dat, 
+ggplot(data = viikki_d29.dat,
        mapping = aes(x = WindDir_D1_WVT, y = WindSpd_S_WVT)) +
   coord_polar() +
-  stat_density_2d(mapping = aes(fill = after_stat(level)), 
+  stat_density_2d(mapping = aes(fill = after_stat(level)),
                   geom = "polygon") +
   scale_x_continuous(breaks = c(0, 90, 180, 270),
                      labels = c("N", "E", "S", "W"),
@@ -2866,7 +2864,7 @@ Pie charts are more difficult to read than bar charts because our brain is bette
 A pie chart of counts is like a bar plot in which instead of heights angles describe the number of counts. \gggeom{geom\_bar()}, which defaults to use \code{stat\_count()}, together with \ggcoordinate{coord\_polar()} creates a pie chart. The brewer gradient scale supplies the palette for the fills, while the color of the border line is set with \code{color = "black")}.
 
 <<>>=
-ggplot(data = mpg, 
+ggplot(data = mpg,
        mapping = aes(x = factor(1), fill = factor(class))) +
   geom_bar(width = 1, color = "black") +
   coord_polar(theta = "y") +
@@ -2898,7 +2896,7 @@ The theme used by default is \ggtheme{theme\_gray()} with default arguments. In 
 Even the default \ggtheme{theme\_gray()} can be added to a plot, to replace the default one with a newly constructed one created with arguments different to the defaults ones. Below, a serif font at a larger size than the default is used.
 
 <<themes-01>>=
-ggplot(data = fake2.data, 
+ggplot(data = fake2.data,
        mapping = aes(x = z, y = y)) +
   geom_point() +
   theme_gray(base_size = 18,
@@ -2916,8 +2914,8 @@ Predefined ``themes'' like \ggtheme{theme\_gray()} are, in reality, not themes b
 A frequent idiom is to create a plot without specifying a theme, and then adding the theme when printing or saving it. This can save work, for example, when producing different versions of the same plot for a publication and a talk.
 
 <<themes-03>>=
-p.base <- 
-  ggplot(data = fake2.data, 
+p.base <-
+  ggplot(data = fake2.data,
          mapping = aes(x = z, y = y)) +
   geom_point()
 print(p.base + theme_bw())
@@ -2945,7 +2943,7 @@ The use of a grey background as default for plots is unusual. This graphic desig
 To create a significantly different theme, and/or reuse it in multiple plots, it is best to create a new constructor, or a modified complete theme as described in section \ref{sec:plot:theme:new} on page \pageref{sec:plot:theme:new}. In other cases it is enough to tweak individual theme settings for a single plot. Below, overlapping $x$-axis tick labels are avoided by rotation the axis tick labels. When rotating the labels it is also necessary to change their justification, as justification is relative to the orientation of the text.
 
 <<themes-11>>=
-ggplot(data = fake2.data, 
+ggplot(data = fake2.data,
        mapping = aes(x = z + 1000, y = y)) +
   geom_point() +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
@@ -3015,17 +3013,17 @@ my_theme_gray <-
             base_line_size = base_size/22,
             base_rect_size = base_size/22,
             base_color = "darkblue") {
-            
+
     theme_gray(base_size = base_size,
                base_family = base_family,
                base_line_size = base_line_size,
                base_rect_size = base_rect_size) +
-               
+
     theme(line = element_line(color = base_color),
           rect = element_rect(color = base_color),
           text = element_text(color = base_color),
           title = element_text(color = base_color),
-          axis.text = element_text(color = base_color), 
+          axis.text = element_text(color = base_color),
           complete = TRUE)
   }
 @
@@ -3048,7 +3046,7 @@ p.base + my_theme_gray(15, base_color = "darkred")
 
 \section{Composing plots}
 \index{plots!composing|(}
-While facets make it possible to create plots with panels that share the same mappings and data (see section \ref{sec:plot:facets} on page \pageref{sec:plot:facets}), plot composition makes it possible to combine separately created \code{"gg"} plot objects into a single plot. Composition before rendering makes it possible to automate the correct alignments, ensure consistency of text size and even merge duplicate guide or keys. Composite plots can save space on the screen or page, but more importantly can bring together data visualizations that need to be compared or read as a whole. 
+While facets make it possible to create plots with panels that share the same mappings and data (see section \ref{sec:plot:facets} on page \pageref{sec:plot:facets}), plot composition makes it possible to combine separately created \code{"gg"} plot objects into a single plot. Composition before rendering makes it possible to automate the correct alignments, ensure consistency of text size and even merge duplicate guide or keys. Composite plots can save space on the screen or page, but more importantly can bring together data visualizations that need to be compared or read as a whole.
 
 Package \pkgname{patchwork} defines a simple grammar for composing plots created with \ggplot, that I have used earlier in the chapter to display pairs of plots side by side. Composition with \pkgname{patchwork} can also include grid graphical objects. The plot composition grammar uses operators \Roperator{+}, \Roperator{|} and \Roperator{/}, although \pkgname{patchwork} provides additional tools for defining complex layouts of panels. While \Roperator{+} allows different layouts, \Roperator{|} composes panels side by side, and \Roperator{/} composes panels on top of each other. The plots to be used as panels can be grouped using parentheses. The operands must be whole plots, below, this ensured by saving each plot to a variable. When composing anonymous plots they must be enclosed in parentheses, to ensure that the correct operators are dispatched.
 
@@ -3073,7 +3071,7 @@ opts_chunk$set(opts_fig_very_wide_square)
 
 \begin{playground}
 A combined plot can be simply assembled using the operators (plot not shown).
-  
+
 <<patchwork-02, eval=eval_plots_all>>=
 p1 | p2 / p3
 (p1 | p2) / p3
@@ -3082,7 +3080,7 @@ p1 | p2 / p3
 The operators used for composition are the arithmetic ones, and even if used for a different purpose still obey the precedence rules of mathematics. The order of precedence can be altered, as done above, using parentheses. Run the examples above after creating three plots. Modify the code trying different ways of organizing the three panels.
 \end{playground}
 
-A title for the whole plot and a letter as tag for each panel are added as a whole-plot annotation. 
+A title for the whole plot and a letter as tag for each panel are added as a whole-plot annotation.
 
 <<patchwork-03>>=
 ((p1 | p2) / p3) +
@@ -3431,15 +3429,14 @@ An\index{further reading!grammar of graphics}\index{further reading!plotting} in
 <<echo=FALSE>>=
 try(detach(package:tidyverse))
 try(detach(package:lubridate))
-try(detach(package:tikzDevice))
-try(detach(package:ggforce))
 try(detach(package:ggbeeswarm))
 try(detach(package:ggpmisc))
 try(detach(package:gginnards))
 try(detach(package:ggrepel))
 try(detach(package:ggplot2))
 try(detach(package:scales))
-try(detach(package:wrapr))
+try(detach(package:dplyr))
+try(detach(package:tibble))
 try(detach(package:learnrbook))
 @
 
