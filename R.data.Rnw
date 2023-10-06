@@ -347,7 +347,7 @@ Debugging nested function calls is difficult. So, in general, it is preferable t
 \begin{explainbox}
 The design of \Rlang's native pipes has benefited from the experience gathered by earlier implementations and being now part the language, we can expect it to become the reference one once its implementation is stable. The designers of the three implementations have to some extent disagreed in their design decisions. Consequently, some differences are more than aesthetic. \Rlang pipes are simpler, easier to use and expected to be fastest. Those from \pkgname{magrittr} are the most feature rich, but not as safe to use, and purportedly given a more complex implementation, the slowest. Package \pkgname{wrapr} is an attempt to enhance pipes compared to \pkgname{magrittr} focusing in syntactic simplicity and performance. \Rlang's \Roperator{\textbar >} operator has been enhanced since its addition in \Rlang only two years ago. These enhancements have all been backwards compatible.
 
-The syntax of operators \Roperator{\textbar >} and \Roperator{\%>\%} is not identical. With \Rlang's \Roperator{\textbar >} (as of R 4.3.0) the placeholder \code{\_} can be only passed to parameters by name, while with \pkgname{magrittr}'s \Roperator{\%>\%} the placeholder \code{.} can be used to pass arguments both by name and by position. With operator \Roperator{\%.>\%} the use of the placeholder \code{.} is mandatory, and it can be passed by name or by position to the function call on the \textit{rhs}. Other differences are deeper like those related to the use in the \emph{rhs} of the extraction operator or support or not for expressions that are not explicit function calls.
+The syntax of operators \Roperator{\textbar >} and \Roperator{\%>\%} is not identical. With \Rlang's \Roperator{\textbar >} (as of \Rpgrm 4.3.0) the placeholder \code{\_} can be only passed to parameters by name, while with \pkgname{magrittr}'s \Roperator{\%>\%} the placeholder \code{.} can be used to pass arguments both by name and by position. With operator \Roperator{\%.>\%} the use of the placeholder \code{.} is mandatory, and it can be passed by name or by position to the function call on the \textit{rhs}. Other differences are deeper like those related to the use in the \emph{rhs} of the extraction operator or support or not for expressions that are not explicit function calls.
 \end{explainbox}
 
 In the case of \Rlang, the \Roperator{\textbar >} pipe is conceptually a substitution with no alteration of the syntax or evaluation order. This avoids \emph{surprising} the user and simplifies implementation. In other words, \Rlang pipes are an alternative way of writing nested function calls. Quoting \Rlang documentation:
@@ -717,22 +717,26 @@ options(tibble.print_max = 3, tibble.print_min = 3)
 @
 
 \section{Times and dates with \pkgname{lubridate}}\label{sec:data:datetime}
-
+\index{time and dates|(}
 In \Rlang and many other computing languages, time values are stored as integer values subject to special interpretation. In \Rlang, times are most frequently stored as objects of class \code{POSIXct} or \code{POSIXlt}. Package \pkgname{lubridate} makes working with dates and times in \Rlang much easier.
 
-When dealing with time values, first of all it is necessary to distinguish universal time coordinates (UTC) and local time coordinates. An instant in time is an absolute value and can be unambiguously described using UTC. Local times are different representations of a given instant in time, using local time coordinates such as CET (central European Time). The relationship between UTC and local times depends on country legislation, national borders and in some cases, time zones within countries. In addition many countries make use a seasonal shift in the local time coordinates, the so called ``summer time''. The dates on which these seasonal shifts are implemented depends on the country or region, and these dates have varied over time. Shifts in local time create gaps and overlaps: some local time values correspond to two different time instants, and the skipped ones do not exist and when encoutered should be handled as errors.
+When\index{time and dates!universal time coordinates}\index{time and dates!local time}\index{time and dates!time zones} dealing with time values, first of all it is necessary to distinguish universal time coordinates (UTC) and local time coordinates. An instant in time is an absolute value and can be unambiguously described using UTC. Local times are different representations of a given instant in time, using local time coordinates such as CET (central European Time). The relationship between UTC and local times depends on country legislation, national borders and in some cases, time zones within countries. In addition many countries make use a seasonal shift in the local time coordinates, the so called ``summer time''. The dates on which these seasonal shifts are implemented depends on the country or region, and these dates have varied over time. Shifts in local time create gaps and overlaps: some local time values correspond to two different time instants, and the skipped ones do not exist and when encountered should be handled as errors.
+
+\begin{explainbox}
+Different systems are in use to describe time zones and the corresponding time coordinates. One commonly used is based on three or four letter codes, e.g., EET for Eastern European Time. Another commonly used one is based on the names of continents and cities, e.g., Europe/Helsinki. A third one in common use is simply expressed as an offset in hours, e.g., UTC+3. Most time zones have time shifts of whole hours and few to half hours. To some extent what names are recognized depends on the operating system under which \Rpgrm is running. See \url{https://en.wikipedia.org/wiki/List_of_tz_database_time_zones} for a list.
+\end{explainbox}
 
 Periodical adjustments introduced by leap years, and even leap seconds need to be taken into account when computing time durations between instants in time, even when using UTC. When carrying out arithmetic operations on dates and times, all these ``irregularities'' have to be accounted for. The functions and operators from package \pkgname{lubridate} implement the necessary corrections for current and historical times.
 
 Times and dates written as text are formatted rather inconsistently depending on the customs of different cultures and languages. Package \pkgname{lubridate} also provides functions implementing conversions between character strings and times or dates and back. These string to time conversions are based on patterns, and are in general reliable if the correct pattern is used. Package \pkgname{anytime} defines functions that can decode a broad range of formats, but relying on them can be risky, and not all possible formats are correctly decoded.
 
-Objects of class \code{POSIXlt}, the class used in \Rlang to store dates and times in a partly formatted form, do not necessarily contain time zone information. In many cases when used in computations \code{POSIXlt} values are interpreted based on the locale settings under which \Rlang is running, e.g., the time zone settings of the computer. Objects of class \Rclass{Date} do not keep track of the time zone, so do not represent instants in time traceable to UTC.
+Objects of class \Rclass{POSIXlt}, the class used in \Rlang to store dates and times in a partly formatted form, do not necessarily contain time zone information. In many cases when used in computations \Rclass{POSIXlt} values are interpreted based on the locale settings under which \Rlang is running, e.g., the time zone settings of the computer. Objects of class \Rclass{Date} do not keep track of the time zone, so do not represent instants in time traceable to UTC.
 
 \begin{warningbox}
-  Whenever possible it is best to store time data and also dates encoded using UTC as \code{POSIXct} objects. This eliminates uncertainties that can cause otherwise major difficulties in computations.
+  Whenever possible it is best to store time data and also dates encoded using UTC as \Rclass{POSIXct} objects. This eliminates uncertainties that can cause otherwise major difficulties in computations.
 \end{warningbox}
 
-\code{POSIXct} objects are of mode numeric, and thus vectors, and because of this, can be stored as columns in data frames and tibbles. Some statistical functions and even some model fitting functions accept them as input.
+\Rclass{POSIXct} objects are of mode numeric, and thus vectors, and because of this, can be stored as columns in data frames and tibbles. Some statistical functions and even some model fitting functions accept them as input.
 
 Current date can be easily queried, and the returned value is fetched from the computer's clock.
 
@@ -750,7 +754,7 @@ class(this.instant)
 this.instant
 @
 
-Conversion from character strings to \code{POSIXct} is straightforward as long as all character strings to be converted have the same or very similarly formatted. A family of functions from \pkgname{lubridate} with names like \Rfunction{dmy\_hms()} can convert character strings into \code{POSIXct} objects. These functions are vectorized and can convert a whole character vector in a single operation into a \code{POSIXct} vector of the same length.
+Conversion from character strings to \Rclass{POSIXct} is straightforward as long as all character strings to be converted have the same or very similarly formatted. A family of functions from \pkgname{lubridate} with names like \Rfunction{dmy\_hms()} can convert character strings into \Rclass{POSIXct} objects. These functions are vectorized and can convert a whole character vector in a single operation into a \Rclass{POSIXct} vector of the same length.
 
 <<lubridate-03>>=
 dmy_h("04/10/23 15", tz = "EET")
@@ -759,7 +763,7 @@ dmy_h("04/10/23 15 EET") # Wrong decoding!
 @
 
 \begin{warningbox}
-Conversion functions with no time components return \code{Date} objects if no argument is passed to \code{tz}, while \code{tz = ""}, as used below, signifies the local time zone.
+Conversion functions with no time components return \Rclass{Date} objects if no argument is passed to \code{tz}, while \code{tz = ""}, as used below, signifies the local time zone.
 
 <<lubridate-04>>=
 class(ymd("2023-10-04"))
@@ -816,6 +820,7 @@ round(my.time, "hours")
 \begin{playground}
 Working with time data, frequently involves checking that the results of computations are according to our expectations. Sometimes the documentation is not enough and we need to explore with code examples how functions work. For example, take one date in February 2020 and one date in March 2020, and compute the duration between them. Then repeat the computation for year 2022 using the same dates. Which of these years was a leap year?
 \end{playground}
+\index{time and dates|)}
 
 \section{Further reading}
 An\index{further reading!new grammars of data} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2023} \autocite{Wickham2023} and \citebooktitle{Peng2022} \autocite{Peng2022} are the most useful. The documentation of the packages briefly presented in this chapter is an up-to-date source of very useful information and worthwhile reading.
