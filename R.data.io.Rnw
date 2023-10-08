@@ -206,7 +206,7 @@ close(f1)
 When \Rpgrm is used in batch mode, the ``files'' \code{stdin}, \code{stdout} and \code{stderror} can be opened, and data read from, or written to. These \emph{standard} sources and sinks, so familiar to \Clang programmers, allow the use of \Rlang scripts as tools in data pipes coded as shell scripts under Unix and other OSs.
 
 \section{Plain-text files}\label{sec:files:txt}
-\index{importing data!text files|(}
+\index{importing data!text files|(}\index{file formats!plain text}
 In general, text files are the most portable approach to data storage but usually also the least efficient with respect to the size of the file. Text files are composed of encoded characters. This makes them easy to edit with text editors and easy to read from programs written in most programming languages. On the other hand, how the data encoded as characters is arranged can be based on two different approaches: positional or using a specific character as a separator.
 
 The positional approach is more concise but almost unreadable to humans as the values run into each other. Reading of data stored using a positional approach requires access to a format definition and was common in FORTRAN and COBOL at the time when punch cards were used to store data. In the case of separators, different separators are in common use. Comma-separated values (CSV) encodings use either a comma or semicolon to separate the fields or columns. Tabulator, or tab-separated values (TSV) use the tab character as a column separator. Sometimes white space is used as a separator, most commonly when all values are to be converted to \code{numeric}.
@@ -237,7 +237,7 @@ data.frame(al = 1, a1 = 2, aO = 3, a0 = 4)
 
 Reading\index{importing data!text encodings} data from a text file can result in very odd-looking values stored in \Rlang variables because of a mismatch in encoding, e.g., when a CSV file saved with \pgrmname{MS-Excel} is silently encoded using 16-bit unicode format, but read as an 8-bit unicode encoded file.
 
-The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. Function \Rfunction{tools:::showNonASCIIfile()} from the \Rlang \pkgname{tools} package, which is not exported, but available in recent and current (\Sexpr{paste(R.version$major, R.version$minor, sep = ".")}) versions of \Rpgrm, can be used to test files for the presence on non-ASCII characters. This function takes as an argument the path to a file, and its companion function \Rfunction{tools:::showNonASCII()} a \code{character} string.
+The hardest part of all these problems is to diagnose their origin, as function arguments and working environment options can in most cases be used to force the correct decoding of text files with diverse characteristics, origins and vintages once one knows what is required. Function \code{tools:::showNonASCIIfile()}\qRfunction{showNonASCIIfile()} from the \Rlang \pkgname{tools} package, which is not exported, but available in recent and current (\Sexpr{paste(R.version$major, R.version$minor, sep = ".")}) versions of \Rpgrm, can be used to test files for the presence on non-ASCII characters. This function takes as an argument the path to a file, and its companion function \code{tools:::showNonASCII()}\qRfunction{showNonASCII()} a \code{character} string.
 \end{explainbox}
 
 \subsection[Base R and `utils']{Base \Rlang and \pkgname{utils}}
@@ -440,7 +440,7 @@ citation(package = "readr")
 
 Package \pkgname{readr} is part of the \pkgname{tidyverse} suite. It defines functions that have different default behavior and that are designed to be faster under different situations than those native to  \Rlang. The functions from package \pkgname{readr} can sometimes wrongly decode their input and rarely even do this silently. The \pkgname{readr} functions guess more properties of the text file format; in most cases they succeed, which is very handy, but occasionally they fail. Automatic guessing can be overridden by passing arguments and this is recommended for scripts that will be reused to read different files in the future. Another important advantage is that these functions read character strings formatted as dates or times directly into columns of class \code{POSIXct}. All \code{write} functions defined in \pkgname{readr} have an \code{append} parameter, which can be used to change the default behavior of overwriting an existing file with the same name, to appending the output at its end.
 
-Although in this section we exemplify the use of these functions by passing a file name as an argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}). Furthermore, if the file name ends in a tag recognizable as indicating a compressed file format, the file will be uncompressed on the fly.
+Although in this section we exemplify the use of these functions by passing a file name as an argument, as is the case with \Rlang native functions, URLs, and open file descriptors are also accepted (see section \ref{sec:io:connections} on page \pageref{sec:io:connections}). Furthermore,\index{file formats!compressed} if the file name ends in a tag recognizable as indicating a compressed file format, e.g., \code{.gz} or \code{.zip}, the file will be uncompressed on the fly.
 
 \begin{warningbox}
 Functions ``equivalent'' to native \Rlang functions described in the previous section have names formed by replacing the dot with an underscore, e.g.,  \Rfunction{read\_csv()} $\approx$ \Rfunction{read.csv()}. The similarity refers to the format of the files read, but not the order, names, or roles of their formal parameters. For example, function \code{read\_table()} has a slightly different behavior than \Rfunction{read.table()}, although they both read fields separated by white space. Row names are not set in the returned \Rclass{tibble}, which inherits from \Rclass{data.frame}, but is not fully compatible (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble}).
@@ -473,7 +473,7 @@ read_table(file = "extdata/not-aligned-ASCII.txt")
 Function \Rfunction{read\_delim()} with space as the delimiter succeeds only with the not-aligned file as in this file the separator is in all cases a single space.
 
 <<readr-05a>>=
-read_delim(file = "extdata/not-aligned-ASCII.txt", 
+read_delim(file = "extdata/not-aligned-ASCII.txt",
            delim = " ", show_col_types = FALSE)
 @
 
@@ -497,7 +497,7 @@ read_table(file = "extdata/miss-aligned-ASCII.txt", show_col_types = FALSE)
 @
 
 <<readr-07>>=
-read_table(file = "extdata/miss-aligned-ASCII.txt", show_col_types = FALSE, 
+read_table(file = "extdata/miss-aligned-ASCII.txt", show_col_types = FALSE,
            guess_max = 3L)
 @
 \end{explainbox}
@@ -540,7 +540,7 @@ Use \Rfunction{write\_file()} to write a file that can be read with \Rfunction{r
 
 \section{XML and HTML files}
 \index{importing data!XML and HTML files|(}
-
+\index{file formats!HTML}\index{file formats!XML}
 XML files contain text with special markup. Several modern data exchange formats are based on the \langname{XML} standard (see \url{https://www.w3.org/TR/xml/}) which uses schemas for flexibility. Schemas define specific formats, allowing reading of formats not specifically targeted during development of the read functions. Even the modern \langname{XHTML} standard used for web pages is based on such schemas, while \langname{HTML} only differs slightly in its syntax.
 
 \subsection[`xml2']{\pkgname{xml2}}
@@ -573,7 +573,7 @@ The functions defined in this package can be used to ``harvest'' data from web p
 \index{importing data!XML and HTML files|)}
 
 \section{GPX files}
-\index{importing data!GPX files|(}
+\index{importing data!GPX files|(}\index{file formats!GPX}
 GPX\index{importing data!geographic positioning system} (GPS Exchange Format) files use an XML scheme designed for saving and exchanging data from geographic positioning systems (GPS). There is some variation on the variables saved depending on the settings of the GPS receiver. The example data used here is from a Transmeta BT747 GPS logger. The example below reads the data into a \code{tibble} as character strings. For plotting, the character values representing numbers and dates would need to be converted to numeric and datetime (\code{POSIXct}) values, respectively. In the case of plotting tracks on a map, it is preferable to use package \pkgname{sf} to import the tracks directly from the \code{.gpx} file into a layer (use of \Rlang pipe operator is described in section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}).
 
 <<gps-01>>=
@@ -614,7 +614,7 @@ When importing data from a worksheet or workbook, my recommendation is first to 
 If we have access to the original software used for creating a worksheet or workbook, then exporting worksheets to text files in CSV format and importing them into \Rlang using the functions described in sections \ref{sec:files:txt} and \ref{sec:files:readr} starting on pages \pageref{sec:files:txt} and \pageref{sec:files:readr} provides a broadly compatible route for importing data---with the caveat that one must ensure that delimiters and decimal marks match the expectations of the functions used. This approach is not ideal from the perspective of having to create intermediate \code{CSV} formatted text files. A better approach is, when feasible, to import the data directly from the workbook or worksheets into \Rlang.
 
 \subsection[`readxl']{\pkgname{readxl}}\label{sec:files:excel}
-\index{importing data!.xlsx files|(}
+\index{importing data!.xlsx files|(}\index{file formats!xlsx}
 
 <<readxl-00, eval=FALSE, include=FALSE>>=
 citation(package = "readxl")
@@ -704,7 +704,7 @@ If you have some worksheet files available, import them into \Rlang to get a fee
 \index{importing data!.xlsx files|)}
 
 \subsection[`readODS']{\pkgname{readODS}}
-\index{importing data!.ods files|(}
+\index{importing data!.ods files|(}\index{file formats!ODS}
 
 Package \pkgname{readODS} provides functions for reading data saved in files that follow the \emph{Open Documents Standard}. Function \Rfunction{read\_ods()} has a similar user interface to that of \code{read\_excel()} and reads one worksheet at a time, with support only for skipping top rows and selecting ranges of columns and rows. The value returned is a tibble or, optionally, a data frame. Function \Rfunction{read\_fods()} reads flat ODS files.
 
@@ -797,7 +797,7 @@ If you use or have in the past used other statistical software or a general-purp
 \index{importing data!other statistical software|)}
 
 \section{NetCDF files}\label{sec:dataio:netcdf}
-\index{importing data!NeCDF files|(}
+\index{importing data!NeCDF files|(}\index{file formats!NetCDF}
 
 In some fields, including geophysics and meteorology, \pgrmname{NetCDF} is a very common format for the exchange of data. It is also used in other contexts in which data are referenced to a grid of locations, like with data read from Affymetrix microarrays used to study gene expression. \pgrmname{NetCDF} files are binary but use a format that allows the storage of metadata describing each variable together with the data itself in a well-organized and standardized format, which is ideal for exchange of moderately large data sets measured on a spatial or spatio-temporal grid.
 
@@ -840,7 +840,7 @@ head(latitude)
 
 The \code{time} vector contains only monthly values as the file contains a long-term series of monthly averages, expressed as days from 1800-01-01 corresponding to the first day of each month of year "1". We use package \pkgname{lubridate} for the conversion. To find the indexes for the grid point of interest, it is necessary to study the vectors \code{longitude} and \code{latitude} saved above.
 
-Next the potential evapotranspiration is read for one grid point, and used to construct a data frame, with some values recycled. 
+Next the potential evapotranspiration is read for one grid point, and used to construct a data frame, with some values recycled.
 
 <<ncdf4-03>>=
 pet.tb <-
@@ -984,7 +984,7 @@ citation(package = "DBI")
 citation(package = "RSQLite")
 @
 
-One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently, available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM) (see chapter \ref{chap:R:data}). This is an important subject, but extensive enough to be outside the scope of this book. We provide a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2017} \autocite{Wickham2017}.
+One of the advantages of using databases is that subsets of cases and variables can be retrieved, even remotely, making it possible to work in \Rlang both locally and remotely with huge data sets. One should remember that \Rlang natively keeps whole objects in RAM, and consequently, available machine memory limits the size of data sets with which it is possible to work. Package \pkgname{dbplyr} provides the tools to work with data in databases using the same verbs as when using \pkgname{dplyr} with data stored in memory (RAM) (see chapter \ref{chap:R:data}). This is an important subject, but extensive enough to be outside the scope of this book. We provide a few simple examples to show the very basics but interested readers should consult \citebooktitle{Wickham2023a} \autocite{Wickham2023a}.
 
 The additional steps compared to using \pkgname{dplyr} start with the need to establish a connection to a local or remote database. We will use \Rlang package \pkgname{RSQLite} to create a local temporary \pgrmname{SQLite} database. \pkgname{dbplyr} backends supporting other database systems are also available. We will use meteorological data from \pkgname{learnrbook} for this example.
 
@@ -1026,7 +1026,7 @@ unlink("./extdata", recursive = TRUE)
 \end{explainbox}
 
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
-\index{importing data!physical devices|(}
+\index{importing data!physical devices|(}\index{file formats!JSON}
 
 Numerous\index{internet-of-things} modern data acquisition devices based on microcontrollers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or the JSON format are commonly used.
 
@@ -1082,7 +1082,7 @@ Most YoctoPuce input modules have a built-in datalogger, and the stored data can
 
 \section{Further reading}
 
-\Rpgrm includes the manual "R Data Import/Export", a very useful reference. 
+\Rpgrm includes the manual "R Data Import/Export", a very useful reference.
 
 Since\index{further reading!elegant R code}\index{further reading!idiosyncracies or R} this is the end of the book, I recommend as further reading the writings of \citeauthor{Burns1998} as they are full of insight. Having arrived at the end of \emph{Learn R: As a Language} you should read \citebooktitle{Burns1998} \autocite{Burns1998} and \citebooktitle{Burns2012} \autocite{Burns2012}. If you want to never get caught unaware by \Rlang's idiosyncrasies, read also \citebooktitle{Burns2011} \autocite{Burns2011}.
 

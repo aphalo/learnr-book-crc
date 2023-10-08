@@ -17,14 +17,14 @@ Computer Science is a science of abstraction---creating the right model for a pr
 
 \section{Aims of this chapter}
 
-In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. We will start by discussing how to define and use new functions, operators and classes. Later we will focus on using existing packages and touch briefly on how they work. We will not consider the important, but more advanced question of packaging functions and classes into new \Rlang packages.
+In earlier chapters we have only used base \Rlang features. In this chapter you will learn how to expand the range of features available. I start by discussing how to define and use new functions, operators and classes. What are their semantics and how they contribute to conciseness and reliability of computer scripts and programs. Later I focus on using existing packages to share extensions to \Rlang and touch briefly on how they work. I do not consider the important, but more advanced question of packaging functions and classes into new \Rlang packages. Instead I discuss how packages are installed and used.
 
 \section{Defining functions and operators}\label{sec:script:functions}
 \index{functions!defining new}\index{operators!defining new}
 
 \emph{Abstraction} can be defined as separating the fundamental properties from the accidental ones. Say obtaining the mean from a given vector of numbers is an actual operation. There can be many such operations on different numeric vectors, each one a specific case. When we describe an algorithm for computing the mean from any numeric vector we have created the abstraction of \emph{mean}. In the same way, each time we separate operations from specific data we create a new abstraction. In this sense, functions are abstractions of operations or actions; they are like ``verbs'' describing actions separately from actors.
 
-The main role of functions is that of providing an abstraction allowing us to avoid repeating blocks of code (groups of statements) applying the same operations on different data. The reasons to avoid repetition of similar blocks of code statements are that 1) if the algorithm or implementation needs to be revised---e.g., to fix a bug or error---it is best to make edits in a single place; 2) sooner or later pieces of repeated code can become different leading to inconsistencies and hard-to-track bugs; 3) abstraction and division of a problem into smaller chunks, greatly helps with keeping the code understandable to humans; 4) textual repetition makes the script file longer, and this makes debugging, commenting, etc., more tedious, and error prone.
+The main role of functions is that of providing an abstraction allowing us to avoid repeating blocks of code (groups of statements) applying the same operations on different data. The reasons to avoid repetition of similar blocks of code statements are that 1) if the algorithm or implementation needs to be revised---e.g., to fix a bug or error---it is best to make edits in a single place; 2) sooner or later pieces of repeated code can become different leading to inconsistencies and hard-to-track bugs; 3) abstraction and division of a problem into smaller chunks, greatly helps with keeping the code understandable to humans; 4) textual repetition makes the script file longer, and this makes debugging, commenting, etc., more tedious, and error prone; 5) with well-defined input and output, functions facilitate testing.
 
 How do we, in practice, avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and later we \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book; what we will next tackle is how to define new functions of our own.
 
@@ -154,6 +154,10 @@ A new terse notation for defining functions was introduced in \Rlang 4.1.0, with
 \index{names and scoping}\index{scoping rules}\index{namespaces}
 Scoping in \Rlang is implemented using \emph{environments} and \emph{name spaces}. We can think of environments as having a boundary with asymmetric visibility. The code within a function runs in its own environment, in isolation from the calling environment in relation to assignments, but the values stored in objects in the calling environment can be retrieved. This protects from unintentional side effects by making difficult to overwrite object definitions in the calling environment. It is possible to override this protection with operator \Roperator{<<-} or with function \Rfunction{assign()}. When used, assignment as side effects, can make the code much more difficult to read and debug, so its best to avoid them.
 
+\begin{warningbox}
+  Parameters and local variables are not read-only, they behave like normal variables within the body of the function. However, assignments made using the operator \Roperator{<-}, only affect a local copy that is destroyed when the function returns.
+\end{warningbox}
+
 The visibility of names is determined by the \emph{scoping rules} of a language. The clearest, but not the only situation when scoping rules matter, is when objects with the same name coexist. In such a situation one will be accessible by its unqualified name and the other hidden but possibly accessible by qualifying the name with the namespace where it is defined.
 
 As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of language. For example \code{pi} is a constant defined in \Rlang with the value of the mathematical constant $\pi$. If we use the same name for one of our variables, the original definition becomes hidden.
@@ -263,7 +267,7 @@ list
 \subsection{Operators}\label{sec:operator:functions}
 \index{operators!defining new}
 
-Operators are functions that use a different syntax for being called. If their name is enclosed in back ticks they can be called as ordinary functions. Binary operators like \code{+} have two formal parameters, and unary operators like unary \code{-} have only one formal parameter. The parameters of many binary \Rlang operators are named \code{e1} and \code{e2}.
+Operators are functions that use a different syntax for being called. If their name is enclosed in back ticks they can be called as ordinary functions. Binary operators like \code{+} have two formal parameters, and unary operators like unary \code{-} have only one formal parameter. The parameters of many binary \Rlang operators are named \code{e1} and \code{e2}. This is just a convention, not enforced by the \Rlang language.
 
 <<oper-01>>=
 1 / 2
@@ -363,6 +367,20 @@ Once a specialized method exists for a class, it will be used for objects of thi
 <<explain-object-classes-03>>=
 print(a)
 print(as.numeric(a))
+@
+
+Adding name \code{"derivclass"} to the head of the class character vector, makes object \code{b} a member of both classes, \code{"myclass"} and \code{"derivclass"}, where \code{"derivclass"} is derived from \code{"myclass"}. As \code{"derivclass"} is at position \code{1}, it is for this object its most derived class.
+
+<<explain-object-classes-04>>=
+b <- 456
+class(b) <- c("derivclass", class(a))
+@
+
+A specialized \code{print()} method is not available for \code{"derivclass"}, the method for \code{"myclass"}, the next class name along the vector, is called.
+
+<<explain-object-classes-05>>=
+print(b)
+print(as.numeric(b))
 @
 \end{explainbox}
 
@@ -466,7 +484,7 @@ pak::pkg_install("learnrbook")
 Already installed packages are updated with function \Rfunction{update.packages()}.
 \end{faqbox}
 
-\begin{faqbox}{How to install an \Rlang package from GitHub?}
+\begin{faqbox}{How to install or update \Rlang package from GitHub?}
 Package \pkgname{remotes} makes it possible to install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. The code in the next chunk (not run here) can be used to install the latest, possibly under development version of package \pkgname{learnrbook}.
 
 <<remotes-01, eval=FALSE>>=
@@ -485,7 +503,7 @@ pak::pkg_install("aphalo/learnrbook")
 
 Under \pgrmname{MS-Windows} it is easier to install packages from binary \texttt{.zip} files than from \texttt{.tar.gz} source files. For \pgrmname{OS X} (Apple Mac) the situation is similar, with binaries available both for Intel and ARM (M1, M2 series) processors. Most, but not all, Linux distributions include in the default setup the tools needed for installation of \Rlang packages. Under Linux it is rather common to install packages from sources, although package binaries have recently become more easily available.
 
-If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available. In \CRAN, the binary for a new version of a package becomes available with a delay of one or two days compared to the source. For packages that need compilation, the installation from sources takes more time than installation from binaries.
+If the tools are available, packages can be easily installed from sources from within \RStudio. However, binaries are for most packages also readily available. In \CRAN, the binary for a new version of a package becomes available with a delay of one or two days compared to the source. For packages that need compilation, the installation from sources takes more time than installation from binaries.
 
 \begin{advplayground}
 Use \code{help} to look up the help page for \Rfunction{install.packages()}, and explore how to control whether the package is installed from a source or a binary file. Also explore, how to install a package from a file in a local disk instead of from a repository like \CRAN.
@@ -496,7 +514,7 @@ Frequently the README file of a package includes instructions on how to install 
 \begin{faqbox}{How to change the repository used to install packages?}
 Function \Rfunction{setRepositories()} can be used to enable other repositories in addition or instead of \CRAN during an \Rpgrm session. In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
 
-Alternatively, one can use \Rfunction{pak::pkg\_install()} as this function attempts to automatically set the correct repository based on the name of the package.
+Alternatively, one can use function \Rfunction{pkg\_install()} from package \pkgname{pak} as this function attempts to automatically set the correct repository based on the name of the package.
 \end{faqbox}
 
 \begin{faqbox}{How to use an installed package?}
@@ -506,6 +524,14 @@ To use the functions and other objects defined in a package, the package must fi
 library("learnrbook")
 @
 
+\end{faqbox}
+
+\begin{faqbox}{How to find the currently installed version of a package?}
+Function \Rfunction{packageVersion} returns the version as an object of class \code{"package\_version"} that can not only be printed, but also meaningfully compared, e.g., to test for a minimum version requirement.
+
+<<pkg-version-01>>=
+packageVersion(pkg="learnrbook")
+@
 \end{faqbox}
 
 As packages are contributed by independent authors, they should be cited in addition to citing \Rpgrm itself when they are used to obtain results or plots included in publications. \Rlang function \Rfunction{citation()} when called with the name of a package as its argument provides the reference that should be cited for the package, and without an explicit argument, the reference to cite for the version of \Rlang in use as shown below.
@@ -547,7 +573,7 @@ When we reuse a name defined in a package, its definition in the package does no
 If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached. To avoid confusion in such cases, in scripts it is best to use the qualified names for calling objects defined with the same name in two packages. Using the qualified name for an object from an already attached package, is inconsequential for its interpretation by \Rpgrm, but can enhance the readability of the code.
 
 \begin{warningbox}
-If one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library}, the package is only loaded. In other words, the names of the exported objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
+If one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library()}, the package is only loaded. In other words, the names of the exported objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
 \end{warningbox}
 
 Some functions that are part of \Rlang are collected into packages grouped by category: \pkgname{base}, \pkgname{stats}, \pkgname{datasets}, etc., and can be called when needed using qualified names.  We can find out the search order by calling \Rfunction{search()}, with the search starting at the \code{".GlobalEnv"} for statements evaluated at the \Rlang command line.

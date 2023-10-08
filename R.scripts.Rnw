@@ -184,7 +184,7 @@ C -> variable
 
 The points discussed above already help a lot. However, one can go further in achieving the goal of human readability by interspersing explanations and code ``chunks'' and using all the facilities of typesetting, even of formatted maths formulas and equations, within the listing of the script. Furthermore, by including the results of the calculations and the code itself in a typeset report built automatically one ensures that they match each other. This greatly contributes to data analysis reproducibility, which is becoming a widespread requirement both in academia and in industry.
 
-This approach is called literate programming\index{literate programming} and was first proposed by \citeauthor{Knuth1984a} (\citeyear{Knuth1984a}) through his \pgrmname{WEB} system. In the case of \Rpgrm programming, the first support of literate programming was in \pkgname{Sweave}, which has been superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of \Markdown or \Latex\ \autocite{Lamport1994} as the markup language for the textual contents and also formats and applies syntax highlighting to code. \langname{Rmarkdown} is an extension to \Markdown that makes it easier to include \Rlang code in documents (see \url{http://rmarkdown.rstudio.com/}). It is the basis of \Rlang packages that support typesetting large and complex documents (\pkgname{bookdown}), web sites (\pkgname{blogdown}), package vignettes (\pkgname{pkgdown}) and slides for presentations \autocite{Xie2016,Xie2018}. \Quarto, which provides an enhanced version of \Rmarkdown, is implemented in \Rlang package \pkgname{quarto} together with the \pgrmname{quarto} program as a separate executable. The use of \pkgname{knitr} and \pkgname{quarto} is very well integrated into the \RStudio IDE.
+This approach is called literate programming\index{literate programming} and was first proposed by \citeauthor{Knuth1984a} (\citeyear{Knuth1984a}) through his \pgrmname{WEB} system. In the case of \Rpgrm programming, the first support of literate programming was in \pkgname{Sweave}, which has been superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of \Markdown or \Latex\ \autocite{Lamport1994} as the markup language for the textual contents and also formats and applies syntax highlighting to code. \langname{Rmarkdown} is an extension to \Markdown that makes it easier to include \Rlang code in documents (see \url{http://rmarkdown.rstudio.com/}). It is the basis of \Rlang packages that support typesetting large and complex documents (\pkgname{bookdown}), web sites (\pkgname{blogdown}), package vignettes (\pkgname{pkgdown}) and slides for presentations \autocite{Xie2016,Xie2018}. \Quarto, which provides an enhanced version of \Rmarkdown, is implemented in \Rlang package \pkgname{quarto} together with the \Quarto program as a separate executable. The use of \pkgname{knitr} and \pkgname{quarto} is very well integrated into the \RStudio IDE.
 The generation of typeset reports is outside the scope of the book, but it is an important skill to learn. It is well described in the books and web sites cited.
 
 \subsection{Debugging scripts}\label{sec:script:debug}
@@ -302,7 +302,7 @@ stdin | grep("abc") | more
 
 How can \emph{pipes} exist within a single \Rlang script? When chaining functions into a pipe, data is passed between them through temporary \Rlang objects stored in memory, which are created and destroyed automatically. Conceptually there is little difference between \osname{Unix} shell pipes and pipes in \Rlang scripts, but the implementations are different.
 
-What do pipes achieve in \Rlang scripts? They relieve us from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Pipes usually improve readability of scripts by allowing more concise code.
+What do pipes achieve in \Rlang scripts? They relieve us from the responsibility of creating and deleting the temporary objects. By chaining the statements they enforce their sequential execution. Pipes usually improve readability of scripts by allowing more concise code.
 
 Since year 2021, starting from version 4.1.0, \Rlang includes a native pipe operator (\Roperator{\textbar >}) as part of the language. Subsequently, the placeholder (\code{\_}) was implemented in version 4.2.0 and its functionality expanded in version 4.3.0. Another two implementations of pipes, that have been available as \Rlang extensions for some years in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}, are described in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
 
@@ -356,7 +356,7 @@ The placeholder can be also used with extraction operators.
 @
 
 \begin{explainbox}
-Base \Rlang functions like \Rfunction{subset()} have a signature that is natural for use in pipes by implicitly passing the piped value as argument to its first formal parameter, while others like \Rfunction{assign()} do not. For example, when calling function \code{assign()} to save a value using a name available as a character string we would like to pass the piped value as argument to parameter \code{value} which is not the first. In such cases we can use \code{\_} as a placeholder and pass it by name.
+Base \Rlang functions like \Rfunction{subset()} have formal parameters in an order that is suitable for implicitly passing the piped value as argument to their first parameter, while others like \Rfunction{assign()} do not. For example, when calling function \code{assign()} to save a value using a name available as a character string we would like to pass the piped value as argument to parameter \code{value} which is not the first. In such cases we can use \code{\_} as a placeholder and pass it by name.
 
 <<pipes-box-pipes-02>>=
 obj.name <- "data.out"
@@ -377,8 +377,7 @@ obj.name <- "data.out"
 
 In general whenever we use temporary variables to store values that are passed as arguments only once, we can nest or chain the statements making the saving of intermediate results into a temporary variable implicit instead of explicit. Examples of some useful idioms follow.
 
-Addition of computed variables to a data frame using \Rfunction{within()} (see section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}) and selecting rows with \Rfunction{subset()} (see section \ref{sec:calc:df:subset} on page \pageref{sec:calc:df:subset
-}) are combined in our first simple example. For clarity, we use the \code{\_} placeholder to indicate the value returned by the preceding function in the pipe.
+Addition of computed variables to a data frame using \Rfunction{within()} (see section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}) and selecting rows with \Rfunction{subset()} (see section \ref{sec:calc:df:subset} on page \pageref{sec:calc:df:subset}) are combined in our first simple example. For clarity, we use the \code{\_} placeholder to indicate the value returned by the preceding function in the pipe.
 
 <<pipes-r-06>>=
 data.frame(x = 1:10, y = rnorm(10)) |>
@@ -660,9 +659,9 @@ Hint: if you need to refresh your understanding of the type conversion rules, se
   \caption{Flowchart for a \code{switch} construct.}\label{fig:switch:diagram}
 \end{figure}
 
-In addition to \Rcontrol{if} and \Rcontrol{if \ldots\ else}, there is in \Rlang a \Rcontrol{switch} statement (Figure \ref{fig:switch:diagram}). It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one.
+In addition to \Rcontrol{if} and \Rcontrol{if \ldots\ else}, there is in \Rlang a \Rcontrol{switch()} statement (Figure \ref{fig:switch:diagram}). It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one.
 
-A \Rcontrol{switch} statement returns a value, just like \code{if}, the value returned by the \Rcontrol{switch} statement is the value returned by one of the statements. Each of the alternative statements is called a \textit{case}. The value passed as argument to \Rcontrol{switch} functions as an index selecting one of them.
+A \Rcontrol{switch()} statement returns a value, just like \code{if}, the value returned by the \Rcontrol{switch()} statement is the value returned by one of the statements. Each of the alternative statements is called a \textit{case}. The value passed as argument to \Rcontrol{switch()} functions as an index selecting one of them.
 
 In the first example we use a \code{character} variable as the condition, named cases, and a final unlabelled case as default in case of no match. In real use, a computed value or user input would be used in place of \code{my.object}. As with the \code{logical} argument to \code{if}, the \code{character} string value passed as argument must be a vector of length one.
 
@@ -727,7 +726,7 @@ b
 \end{explainbox}
 
 \begin{explainbox}
-  The \Rcontrol{switch} statement can substitute for chained \code{if \ldots\ else} statements when all the conditions can be described by constant values or distinct values returned by the same test. The advantage is more concise and readable code. The equivalent of the first \Rcontrol{switch} example above when written using \code{if \ldots\ else} becomes longer. Given how terse code using \Rcontrol{switch} is, those not yet familiar with its use may find the more verbose style used below easier to understand. On the other hand, with numerous cases a \Rcontrol{switch} statement is easier to read and understand.
+  The \Rcontrol{switch()} statement can substitute for chained \code{if \ldots\ else} statements when all the conditions can be described by constant values or distinct values returned by the same test. The advantage is more concise and readable code. The equivalent of the first \Rcontrol{switch()} example above when written using \code{if \ldots\ else} becomes longer. Given how terse code using \Rcontrol{switch()} is, those not yet familiar with its use may find the more verbose style used below easier to understand. On the other hand, with numerous cases a \Rcontrol{switch()} statement is easier to read and understand.
 
 <<explain-switch-11>>=
 my.object <- "two"
@@ -746,7 +745,7 @@ b
 \end{explainbox}
 
 \begin{advplayground}
-  Consider another alternative approach, the use of a named vector to map values. In most of the examples above the code for the cases is a constant value or an operation among constant values. Implement one of this examples using a named vector instead of a \Rcontrol{switch} statement.
+  Consider another alternative approach, the use of a named vector to map values. In most of the examples above the code for the cases is a constant value or an operation among constant values. Implement one of this examples using a named vector instead of a \Rcontrol{switch()} statement.
 \end{advplayground}
 
 \subsection[Vectorized \texttt{ifelse()}]{Vectorized \code{ifelse()}}
@@ -956,10 +955,10 @@ The same approach of adding calls to \code{print()} can be used for debugging an
 Above I used \code{seq(along.with = a)} to build a numeric vector containing a sequence of the same length as vector \code{a}. Using this \emph{idiom} ensures that a vector, in this example \code{a}, with length zero will be handled correctly, with \code{numeric(0)} assigned to \code{b}.
 
 \begin{advplayground}
-Run the examples below and explain why the two approaches are equivalent only when the length of \code{a} is one or more. Find the answer by assigning to \code{A}, vectors of different lengths, including zero (using \code{A <- numeric(0)}).
+Run the examples below and explain why the two approaches are equivalent only when the length of \code{A} is one or more. Find the answer by assigning to \code{A}, vectors of different lengths, including zero (using \code{A <- numeric(0)}).
 
 <<for-04, eval=eval_playground>>=
-# assign a numeric vector to variable A
+A <- -5:5 # assign different numeric vector to A
 B <- numeric(length(A))
 for(i in seq(along.with = A)) {
   B[i] <- A[i]^2
@@ -976,7 +975,7 @@ C
 \end{advplayground}
 
 \begin{explainbox}
-Using \code{seq(along.with = A)}, its equivalent \code{seq\_along(A)}, as above creates a sequence of integers in \code{i}, that indexes all members of \code{a} in the ``walk-trough''. There is no requirement in the \Rlang for this, and including only some of the valid indexes, or including them in arbitrary order is possible if needed, however this is rarely the case. On exit from the loop, the iterator \code{i} remains accessible and contains its value at the last iteration.
+Using \code{seq(along.with = a)}, its equivalent \code{seq\_along(a)},\qRfunction{seq()}\qRfunction{seq\_along()} as above creates a sequence of integers in \code{i}, that indexes all members of \code{a} in the ``walk-trough''. There is no requirement in the \Rlang for this, and including only some of the valid indexes, or including them in arbitrary order is possible if needed, however this is rarely the case. On exit from the loop, the iterator \code{i} remains accessible and contains its value at the last iteration.
 \end{explainbox}
 
 Vectorization usually results in the simplest and fastest code, as shown below (see section \ref{sec:loops:slow} on \pageref{sec:loops:slow}). However, not all \Rloop{for} loops can be replaced by vectorized statements.
@@ -1453,7 +1452,7 @@ do.call(anova, results)
 \index{vectorization}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
 When working with large data sets, or many smaller data sets, one frequently needs to take performance into account. In \Rlang, explicit \Rloop{for}, \Rloop{while} and \Rloop{repeat} are considered to be slow to run. Vectorized operations perform in general comparatively faster. As vectorization (see page \pageref{par:calc:vectorized:opers}) usually also makes code simpler, it is good style to use vectorization whenever possible. Depending on the case, loops can be replaced using vectorized arithmetic operators, \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) and functions implementing frequently used operations (see section \ref{sec:vectorized:functions} on page \pageref{sec:vectorized:functions}). Improved performance needs to be balanced against the effort invested in writing faster code, as in most cases our own time is more valuable than computer running time. However, using vectorized operators and optimized functions becomes nearly effortless once one is familiar with them.\qRloop{for}
 
-To demonstrate the magnitude of the differences in performance that can be expected, I used as a first case the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference in computation time was huge between loops and vectorization for vectors of up to 1\,000 numbers (near $\times 500$), but the total times were very short ($5 \times 10^{-3}$\,s vs.\ $10 \times 10^{-6}$\,s). For these vectors, pre-allocation of a vector to collect the results made almost no difference and vectorization with the extraction operator \Roperator{[]} together with the minus arithmetic operator \Roperator{-} was fastest. There seems to be a significant overhead for explicit loops, as the running time was nearly independent of the length of these short vectors.
+To demonstrate the magnitude of the differences in performance that can be expected, I used as a first case the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference in computation time was huge between loops and vectorization for vectors of up to 1\,000 numbers (near $\times 500$), but the total times were very short ($5 \times 10^{-3}$\,s vs.\ $10 \times 10^{-6}$\,s). For these vectors, pre-allocation of a vector to collect the results made almost no difference and vectorization with the extraction operator \Roperator{[ ]} together with the minus arithmetic operator \Roperator{-} was fastest. There seems to be a significant overhead for explicit loops, as the running time was nearly independent of the length of these short vectors.
 
 For vectors of 10\,000 or more numbers there was only a very small advantage in using function \Rfunction{diff()} over using vectorized arithmetic and extraction operators. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results made an important difference ($\times 2$ to $\times 3$), larger in the case of \Rloop{for}. However, vectorized operators and function \Rfunction{diff()} remained nearly $\times 10$ faster than the fastest explicit loop. For the longer vectors the time increased almost linearly with their length, with similar slopes for the different approaches. Because of the computation used for this example, \emph{apply()} functions could not be used.
 

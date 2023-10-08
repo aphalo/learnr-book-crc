@@ -16,7 +16,7 @@ Essentially everything in S[R], for instance, a call to a function, is an S[R] o
 
 \section{Aims of this chapter}
 
-Base \Rlang and the recommended extension packages (installed by default) include many functions for manipulating data. The \Rlang distribution supplies a complete set of functions and operators that allow all the usual data manipulation operations. These functions have stable and well-described behavior, so in my view they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter I describe the new syntax introduced by the most popular contributed \Rlang extension packages aiming at changing (usually improving one aspect at the expense of another) in various ways how we can manipulate data in \Rlang. These independently developed packages extend the \Rlang language not only by adding new ``words'' to it but by supporting new ways of meaningfully connecting ``words''---i.e., providing new ``grammars'' for data manipulation. While at the current stage of development of base \Rlang not breaking existing code has been the priority, several of the still ``young'' packages in the \pkgname{tidyverse} have prioritized experimentation with enhanced features over backwards compatibility. The development of \pkgname{tidyverse} packages seems to have emphasized users' convenience more than encouraging safe/error-free user code. The design of package \pkgname{data.table} has prioritized performance at the expense of easy of use. I do not describe in depth these new approaches but instead only briefly compare them to base \Rlang highlighting the most important differences.
+Base \Rlang and the recommended extension packages (installed by default) include many functions for manipulating data. The \Rlang distribution supplies a complete set of functions and operators that allow all the usual data manipulation operations. These functions have stable and well-described behavior, so in my view they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter I describe the new syntax introduced by the most popular contributed \Rlang extension packages aiming at changing (usually improving one aspect at the expense of another) in various ways how we can manipulate data in \Rlang. These independently developed packages extend the \Rlang language not only by adding new ``words'' to it but by supporting new ways of meaningfully connecting ``words''---i.e., providing new ``grammars'' for data manipulation. While at the current stage of development of base \Rlang not breaking existing code has been the priority, several of the still ``young'' packages in the \pkgname{tidyverse} have prioritized experimentation with enhanced features over backwards compatibility. The development of \pkgname{tidyverse} packages seems to have initially emphasized users' convenience more than encouraging safe/error-free user code. The design of package \pkgname{data.table} has prioritized performance at the expense of easy of use. I do not describe in depth these new approaches but instead only briefly compare them to base \Rlang highlighting the most important differences.
 
 \section{Introduction}
 
@@ -31,7 +31,13 @@ When a computation included a chain of sequential operations, until \Rlang 4.1.0
 
 In much of my work I emphasize reproducibility and reliability, preferring base \Rlang over extension packages, except for plotting, whenever practical. For run once and delete or quick-and-dirty data analyses I tend to use the \emph{tidyverse}. However, with modern computers and some understanding of what are the performance bottlenecks in \Rlang code, I have rarely found it worthwhile the effort needed for improved performance by using extension packages. The benefit to effort balance will be different for those readers who analyze huge data sets.
 
-The definition of the \emph{tidyverse} is rather vague, as package \pkgname{tidyverse} loads and attaches a set of packages of which most but not all follow a consistent design and support this new grammar. In this chapter you will become familiar with packages \pkgname{tibble}, \pkgname{dplyr}, \pkgname{tidyr}, and \pkgname{lubridate}. Package \pkgnameNI{ggplot2} will be described in chapter \ref{chap:R:plotting} as it implements the grammar of graphics and has little in common with other members of the \pkgname{tidyverse}. As many of the functions in the \emph{tidyverse} can be substituted by existing base \Rlang functions, recognizing similarities and differences between them has become important since both approaches are now in common use, and frequently even coexist within \Rlang scripts.
+The definition of the \emph{tidyverse} is rather vague, as package \pkgname{tidyverse} loads and attaches a set of packages of which most but not all follow a consistent design and support this new grammar. The packages that are attached by package \pkgname{tidyverse} has changed over time. Package \pkgname{tidyverse}, however, defines a function that lists them.
+
+<<tidyverse-00>>=
+tidyverse::tidyverse_packages()
+@
+
+In this chapter you will become familiar with packages \pkgname{tibble}, \pkgname{dplyr}, \pkgname{tidyr}, and \pkgname{lubridate}. Package \pkgnameNI{ggplot2} will be described in chapter \ref{chap:R:plotting} as it implements the grammar of graphics and has little in common with other members of the \pkgname{tidyverse}. As many of the functions in the \emph{tidyverse} can be substituted by existing base \Rlang functions, recognizing similarities and differences between them has become important since both approaches are now in common use, and frequently even coexist within \Rlang scripts.
 
 \begin{explainbox}
 In any design, there is a tension between opposing goals. In software for data analysis a key pair of opposed goals are usability, including concise but expressive code, and avoidance of ambiguity. Base \Rlang function \Rfunction{subset()} has an unusual syntax, as it evaluates the expression passed as the second argument within the namespace of the data frame passed as its first argument (see section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}). This saves typing, enhancing usability, at the expense of increasing the risk of bugs, as by reading the call to subset, it is not obvious which names are resolved in the environment of the call to \code{subset()} and which ones within its first argument---i.e., as column names in the data frame. In addition, changes elsewhere in a script can change how a call to subset is interpreted. In reality, subset is a wrapper function built on top of the extraction operator \code{[ ]} (see section \ref{sec:calc:indexing} on page \pageref{sec:calc:indexing}). It is a convenience function, mostly intended to be used at the console, rather than in scripts or package code. To extract columns or rows from a data frame it is always safer to use the \Roperator{[ , ]} or \Roperator{[[ ]]} operators at the expense of some verbosity.
@@ -54,6 +60,7 @@ library(learnrbook)
 library(tibble)
 library(magrittr)
 library(wrapr)
+library(stringr)
 library(dplyr)
 library(tidyr)
 library(lubridate)
@@ -203,15 +210,20 @@ The two viewpoints on conversion functions are as follows. 1) The conversion fun
 
 As tibbles have been defined as a class derived from \code{data.frame}, if methods have not been explicitly defined for tibbles, the methods defined for data frames are called, and these are likely to return a data frame rather than a tibble. Even a frequent operation like column binding is affected, at least at the time of writing.
 
-<<tibble-box-03>>=
+<<tibble-box-03a>>=
 class(my.df)
 class(my.tb)
+@
+
+<<tibble-box-03b>>=
 class(cbind(my.df, my.tb))
 class(cbind(my.tb, my.df))
+@
+
+<<tibble-box-03c>>=
 class(cbind(my.df, added = -3:-1))
 class(cbind(my.tb, added = -3:-1))
 identical(cbind(my.tb, added = -3:-1), cbind(my.df, added = -3:-1))
-
 @
 \end{explainbox}
 
@@ -244,7 +256,7 @@ tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
 
 \section{Data pipes}\label{sec:data:pipes}
 \index{chaining statements with \emph{pipes}|(}
-The first obvious difference between scripts using \pkgname{tidyverse} packages is the frequent use of \emph{pipes}. This is, however, mostly a question of preferences, as pipes can be as well used with base \Rlang functions. In addition, since version 4.0.0, \Rlang has a native pipe operator \Roperator{\textbar >}, described in section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}. Here we describe other earlier implementations of pipes, and the differences among these and \Rlang's pipe operator.
+The first obvious difference between scripts using \pkgname{tidyverse} packages is the frequent use of \emph{pipes}. This is, however, mostly a question of preferences, as pipes can be as well used with base \Rlang functions. In addition, since version 4.0.0, \Rlang has a native pipe operator \Roperator{\textbar >}, described in section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}. Here I describe other earlier implementations of pipes, and the differences among these and \Rlang's pipe operator.
 
 \subsection{\pkgname{magrittr}}
 \index{pipes!tidyverse|(}
@@ -400,10 +412,41 @@ Although there are usually alternatives to get the computations done correctly, 
 \section{Reshaping with \pkgname{tidyr}}\label{sec:data:reshape}
 \index{reshaping tibbles|(}
 \index{long-form- and wide-form tabular data}
-Data stored in table-like formats can be arranged in different ways. In base \Rlang most model fitting functions and the \Rfunction{plot()} method using (model) formulas, expect data to be arranged in ``long form'' so that each row in a data frame corresponds to a single observation (or measurement) event on a subject. Each column corresponds to a different measured feature, or ancillary information like the time of measurement, or a factor describing a classification of subjects according to treatments or features of the experimental design (e.g., blocks). Covariates measured on the same subject at an earlier point in time may also be stored in a column. Data arranged in \emph{long form} has been nicknamed as ``tidy'' and this is reflected in the name given to the \pkgname{tidyverse} suite of packages. However, this longitudinal arrangement of data has been the preferred format since the inception of \Slang and \Rlang. Data in which columns correspond to measurement events is described as being in a \emph{wide form}.
-%
-%The packages in the \pkgname{tidyverse} provide convenience functions to simplify coding of data manipulation, which in some cases, have, in addition, improved performance compared to base \Rlang---i.e., it is possible to code the same operations using only base \Rlang, but this may require more and/or more verbose statements.
-%
+Data stored in table-like formats can be arranged in different ways, wide and long (Figure \ref{fig:wide:long:data}). In base \Rlang most model fitting functions and the \Rfunction{plot()} method using (model) formulas, expect data to be arranged in ``long form'' so that each row in a data frame corresponds to a single observation (or measurement) event on a subject. Each column corresponds to a different measured feature, or ancillary information like the time of measurement, or a factor describing a classification of subjects according to treatments or features of the experimental design (e.g., blocks). Covariates measured on the same subject at an earlier point in time may also be stored in a column. Data arranged in \emph{long form} has been nicknamed as ``tidy'' and this is reflected in the name given to the \pkgname{tidyverse} suite of packages. However, this longitudinal arrangement of data has been the preferred format since the inception of \Slang and \Rlang. Data in which columns correspond to measurement events is described as being in a \emph{wide form}.
+
+\begin{figure}
+\begin{footnotesize}
+\parbox{.55\linewidth}{
+ \begin{tabular}{lp{1.25cm}p{1.25cm}p{1.25cm}}
+  \toprule
+  Subject & Height January & Height February & Height March \\
+  \midrule
+  A & 5 & 7 & 9 \\
+  B & 4 & 7 & 9 \\
+  C & 6 & 7 & 8 \\
+  \bottomrule
+\end{tabular}}
+\hfill
+\parbox{.4\linewidth}{
+\begin{tabular}{lll}
+  \toprule
+  Subject & Date & Height \\
+  \midrule
+  A & January & 5 \\
+  B & January & 4 \\
+  C & January & 6 \\
+  A & February & 7 \\
+  B & February & 7 \\
+  C & February & 7 \\
+  A & March & 9 \\
+  B & March & 9 \\
+  C & March & 8 \\
+  \bottomrule
+\end{tabular}}
+\end{footnotesize}
+\caption{Wide (left) and long (right) data formats.}\label{fig:wide:long:data}
+\end{figure}
+
 It is rather frequently used when observations in each subject are repeated in time. In this case, there is one row per subject and one column for each combination of response variable and time of measurement. Real-world data at the time of acquisition is rather frequently stored in the wide format, or even in ad-hoc non-rectangular formats, so in many cases the first task in data analysis is to reshape the data. Package \pkgname{tidyr} provides functions for reshaping data from wide to long form and \emph{vice versa}.
 
 \begin{warningbox}
@@ -501,12 +544,12 @@ tibble(a = 1:5, b = 2 * a)
 @
 \end{explainbox}
 
-Continuing with the example from the previous section, we most likely would like to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr}. We use regular expressions (see section \ref{sec:calc:regex} on page \pageref{sec:calc:regex}) as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or, in other words, using rows displaced relative to the current one.
+Continuing with the example from the previous section, a likely next step would be to split the values in variable \code{part} into \code{plant\_part} and \code{part\_dim}. We use \code{mutate()} from \pkgname{dplyr} and \Rfunction{str\_extract()} from \pkgname{stringr} (a package included in the \pkgname{tidyverse}, aimed at the manipulation of character strings). We use regular expressions (see section \ref{sec:calc:regex} on page \pageref{sec:calc:regex}) as arguments passed to \code{pattern}.  We do not show it here, but \Rfunction{mutate()} can be used with variables of any \code{mode}, and calculations can involve values from several columns. It is even possible to operate on values applying a lag or, in other words, using rows displaced relative to the current one.
 
 <<tidy-tibble-02>>=
 long_iris.tb |>
   mutate(plant_part = str_extract(part, "^[:alpha:]*"),
-         part_dim = str_extract(part, "[:alpha:]*$")) -> long_iris.tb
+         part_dimension = str_extract(part, "[:alpha:]*$")) -> long_iris.tb
 long_iris.tb
 @
 
@@ -515,7 +558,7 @@ In the next few chunks, we print the returned values rather than saving them in 
 Function \Rfunction{arrange()} is used for sorting the rows---makes sorting a data frame or tibble simpler than by using \Rfunction{sort()} and \Rfunction{order()}. Here we sort the tibble \code{long\_iris.tb} based on the values in three of its columns.
 
 <<tidy-tibble-03>>=
-arrange(long_iris.tb, Species, plant_part, part_dim)
+arrange(long_iris.tb, Species, plant_part, part_dimension)
 @
 
 Function \Rfunction{filter()} can be used to extract a subset of rows---similar to \Rfunction{subset()} but with a syntax consistent with that of other functions in the \pkgname{tidyverse}. In this case, 300 out of the original 600 rows are retained.
@@ -549,12 +592,14 @@ select(iris.tb, Species, matches("pal"))
 Function \Rfunction{rename()} can be used to rename columns, whereas base \Rlang requires the use of both \Rfunction{names()} and \Rfunction{names()<-} and \emph{ad hoc} code to match new and old names. As shown below, the syntax for each column name to be changed is \code{<new name> = <old name>}. The two names can be given either as bare names as below or as character strings.
 
 <<tidy-tibble-07>>=
-rename(long_iris.tb, dim = dimension)
+long_iris.tb |>
+select(-part) |>
+rename(part = plant_part, size = dimension, dimension = part_dimension)
 @
 \index{row-wise operations on data|)}
 
 \begin{explainbox}
-  Several of the functions described in this section were needed because operator \Roperator{\%>\%}) from package \pkgname{magrittr} did not support the use of the extraction operators in the rhs using operator syntax. Operator \Roperator{\textbar >} starting from \Rlang version 4.3.0 does not have this limitation (see section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}), however, the functions from \pkgname{dplyr} remain useful as they allow more concise coding of complex conditions.
+  Several of the functions described in this section were needed because operator \Roperator{\%>\%}) from package \pkgname{magrittr} did not support the use of the extraction operators in the rhs using operator syntax. Operator \Roperator{\textbar >} starting from \Rlang version 4.3.0 does not have this limitation (see section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}), however, the functions from \pkgname{dplyr} remain useful as they allow more concise and clear coding of complex conditions.
 \end{explainbox}
 
 \subsection{Group-wise manipulations}\label{sec:dplyr:group:wise}
@@ -569,10 +614,10 @@ Another important operation is to summarize quantities by groups of rows. Contra
 When using persistent grouping, the first step is to use \Rfunction{group\_by()} to ``tag'' a tibble with the grouping. We create a \emph{tibble} and then convert it into a \emph{grouped tibble}. Once we have a grouped tibble, function \Rfunction{summarise()} will recognize the grouping and use it when the summary values are calculated.
 
 <<tibble-grouped-01>>=
-tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) |>
-  group_by(letters) |>
-  summarise(mean_numbers = mean(numbers),
-            median_numbers = median(numbers),
+tibble(numbers = 1:9, Letters = rep(letters[1:3], 3)) |>
+  group_by(Letters) |>
+  summarise(mean_num = mean(numbers),
+            median_num = median(numbers),
             n = n()) |>
   ungroup() # not always needed but safer
 @
@@ -580,33 +625,41 @@ tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) |>
 In the non-persistent grouping approach, we specify the grouping in the call to \Rfunction{summarise()} (this new feature is labelled as experimental in \pkgname{dplyr} version 1.1.3, and may change in future versions).
 
 <<tibble-grouped-02>>=
-tibble(numbers = 1:9, letters = rep(letters[1:3], 3)) |>
-  summarise(.by = letters,
-            mean_numbers = mean(numbers),
-            median_numbers = median(numbers),
+tibble(numbers = 1:9, Letters = rep(letters[1:3], 3)) |>
+  summarise(.by = Letters,
+            mean_num = mean(numbers),
+            median_num = median(numbers),
             n = n())
 @
 
 \begin{warningbox}
-How is grouping implemented for data frames and tibbles?\index{grouping!implementation in tidyverse} In our case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class. It also adds several attributes with the grouping information in a format suitable for fast selection of group members. To demonstrate this, we need to make an exception to our recommendation above and save a grouped tibble to a variable.
+How is grouping implemented for data frames and tibbles?\index{grouping!implementation in tidyverse} Best way to find out is to explore how a grouped tibble differs from one that is not grouped.
+
+Tibble \code{my.tb} is not grouped.
 
 <<tibble-grouped-box-01>>=
-my.tb <- tibble(numbers = 1:9, letters = rep(letters[1:3], 3))
+my.tb <- tibble(numbers = 1:9, Letters = rep(letters[1:3], 3))
 is.grouped_df(my.tb)
 class(my.tb)
 names(attributes(my.tb))
 @
 
+Tibble \code{my\_gr.tb} is grouped by variable, or column, \code{Letters}. In this case as our tibble belongs to class \code{tibble\_df}, grouping adds \code{grouped\_df} as the most derived class.
+
 <<tibble-grouped-box-02>>=
-my_gr.tb <- group_by(.data = my.tb, letters)
+my_gr.tb <- group_by(.data = my.tb, Letters)
 is.grouped_df(my_gr.tb)
 class(my_gr.tb)
 @
-% allow page break
+
+Grouping also adds several attributes with the grouping information in a format suitable for fast selection of group members.
+
 <<tibble-grouped-box-02a>>=
 names(attributes(my_gr.tb))
 setdiff(attributes(my_gr.tb), attributes(my.tb))
 @
+
+A call to \Rfunction{ungroup()} removes the grouping, restoring the original tibble..
 
 <<tibble-grouped-box-03>>=
 my_ugr.tb <- ungroup(my_gr.tb)
@@ -623,7 +676,7 @@ identical(my.tb, my_ugr.tb)
 
 The tests above show that members are in all cases the same as operator \Roperator{==} tests for equality at each position in the tibble but not the attributes, while attributes, including \code{class} differ between normal tibbles and grouped ones and so they are not \emph{identical} objects.
 
-If we replace \code{tibble} by \code{data.frame} in the first statement, and rerun the chunk, the result of the last statement in the chunk is \code{FALSE} instead of \code{TRUE}. At the time of writing starting with a \code{data.frame} object, applying grouping with \Rfunction{group\_by()} followed by ungrouping with \Rfunction{ungroup()} has the side effect of converting the data frame into a tibble. This is something to be very much aware of, as there are differences in how the extraction operator \Roperator{[ , ]} behaves in the two cases. The safe way to write code making use of functions from \pkgname{dplyr} and \pkgname{tidyr} is to always make sure that subsequent code works correctly with both tibbles and data frames.
+If we replace \code{tibble} by \code{data.frame} in the first statement, and rerun the chunk, the result of the last statement in the chunk is \code{FALSE} instead of \code{TRUE}. At the time of writing starting with a \code{data.frame} object, applying grouping with \Rfunction{group\_by()} followed by ungrouping with \Rfunction{ungroup()} has the side effect of converting the data frame into a tibble. This is something to be very much aware of, as there are differences in how the extraction operator \Roperator{[ , ]} behaves in the two cases. The safe way to write code making use of functions from \pkgname{dplyr} and \pkgname{tidyr} is to always make sure that subsequent code works correctly with tibbles in addition to with data frames.
 \end{warningbox}
 \index{group-wise operations on data|)}
 
@@ -826,13 +879,13 @@ Working with time data, frequently involves checking that the results of computa
 \index{time and dates|)}
 
 \section{Further reading}
-An\index{further reading!new grammars of data} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2023} \autocite{Wickham2023} and \citebooktitle{Peng2022} \autocite{Peng2022} are the most useful. The documentation of the packages briefly presented in this chapter is an up-to-date source of very useful information and worthwhile reading.
+An\index{further reading!new grammars of data} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2023a} \autocite{Wickham2023a} and \citebooktitle{Peng2022} \autocite{Peng2022} are the most useful. The documentation of the packages briefly presented in this chapter is an up-to-date source of very useful information and worthwhile reading.
 
 <<echo=FALSE>>=
 try(detach(package:lubridate))
 try(detach(package:tidyr))
 try(detach(package:dplyr))
-# try(detach(package:stringr))
+try(detach(package:stringr))
 try(detach(package:wrapr))
 try(detach(package:magrittr))
 try(detach(package:tibble))
