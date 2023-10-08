@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 % !Rnw root = appendix.main.Rnw
 
 \begin{knitrout}
@@ -376,3 +377,383 @@ Here is an example of bad style in a script. Read \href{https://google.github.io
 
 
 
+=======
+% !Rnw root = appendix.main.Rnw
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning in file(con, "{}r"{}): cannot open file 'r4p.main.Rnw': No such file or directory}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in file(con, "{}r"{}): cannot open the connection}}\end{kframe}
+\end{knitrout}
+
+\chapter{Base R: ``Paragraphs'' and ``Essays''}\label{chap:R:scripts}
+\index{scripts}
+
+\begin{VF}
+An \Rlang script is simply a text file containing (almost) the same commands that you would enter on the command line of \Rlang.
+
+\VA{Jim Lemon}{\emph{Kickstarting R}}\nocite{LemonND}
+\end{VF}
+
+%\dictum[\href{https://cran.r-project.org/doc/contrib/Lemon-kickstart/}{Kickstarting R}]{An R script is simply a text file containing (almost) the same commands that you would enter on the command line of R.}\vskip2ex
+
+\section{Aims of this chapter}
+
+For those who have mainly used graphical user interfaces, understanding why and when scripts can help in communicating a certain data analysis protocol can be revelatory. As soon as a data analysis stops being trivial, describing the steps followed through a system of menus and dialogue boxes becomes extremely tedious.
+
+Moreover, graphical user interfaces tend to be difficult to extend or improve in a way that keeps step-by-step instructions valid across program versions and operating systems.
+
+Many times, exactly the same sequence of commands needs to be applied to different data sets, and scripts make both implementation and validation of such a requirement easy.
+
+In this chapter, I will walk you through the use of \Rpgrm scripts, starting from an extremely simple script.
+
+\section{Writing scripts}
+
+In \Rlang language, the closest match to a natural language essay is a script. A script is built from multiple interconnected code statements needed to complete a given task. Simple statements, equivalent to sentences, can be combined into compound statements, equivalent to natural language paragraphs. Frequently, we combine simple sequences of statements into a sequence of actions necessary to complete a task. The sequence is not necessarily linear, as branching and repetition are also available.
+
+Scripts can vary from simple scripts containing only a few code statements, to complex scripts containing hundreds of code statements. In the rest of the present section I discuss how to write readable and reliable scripts and how to use them.
+
+\subsection{What is a script?}\label{sec:script:what:is}
+\index{scripts!definition}
+A \textit{script} is a text file that contains (almost) the same commands that you would type at the \Rlang console prompt. A true script is not, for example, an MS-Word file where you have pasted or typed some \Rlang commands.
+
+When typing commands/statements at the \Rlang console, we ``feed'' one line of text at a time. When we end the line by typing the enter key, the line of text is interpreted and evaluated. We then type the next line of text, which gets in turn interpreted and evaluated, and so on. In a script we write nearly the same text in an editor and save multiple lines containing commands into a text file. Interpretation takes place only later, when we \emph{source} the file as a whole into \Rlang.
+
+A script file has the following characteristics.
+\begin{itemize}
+  \item The script is a plain text file, i.e., a file containing bytes that represent alphanumeric characters in a standardized character set like UTF8 or ASCII.
+  \item The text in the file contains valid \Rlang statements (including comments) and nothing else.
+  \item Comments start at a \code{\#} and end at the end of the line.
+  \item The \Rlang statements are in the file in the order that they must be executed, and respecting the line continuation rules of \Rlang.
+  \item \Rlang scripts customarily have file names ending in \texttt{.r} or \texttt{.R}.
+\end{itemize}
+
+The statements in the text file, are read, interpreted and evaluated sequentially, from the start to the end of the file, as represented in the diagram. We use \textcolor{blue}{$\cdots$} to represent additional statements in the script.
+
+\begin{center}
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop, color = blue, fill = blue!15] {\textsl{Top = start}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (continue) [startstop, color = blue, fill = blue!15, below of=stat3] {$\cdots$};
+\node (stop) [startstop, color = blue, fill = blue!15, below of=continue] {\textsl{Bottom = end}};
+\draw [arrow, color = blue] (start) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (stat3);
+\draw [arrow, color = blue] (stat3) -- (continue);
+\draw [arrow, color = blue] (continue) -- (stop);
+\end{tikzpicture}
+\end{small}
+\end{center}
+
+As we will see later in the chapter, code statements can be combined into larger statements and evaluated conditionally and/or repeatedly, which allows us to control the realised sequence of evaluated statements. Scripts need to respect the \Rlang syntax. In addition to being valid it is important that scripts are also understandable to humans, consequently a clear writing style and consistent adherence to it are important.
+
+It is good practice to write scripts so that they are self-contained. To make a script self-contained, one must include code to load the packages used, load or import data from files, perform the data analysis and display and/or save the results of the analysis. Such scripts can be used to apply the same analysis algorithm to other data by reading data from a different file and/or to reproduce the same analysis at a later time using the same data. Such scripts document all steps used for the analysis.
+
+
+
+\subsection{How do we use a script?}\label{sec:script:using}
+\index{scripts!sourcing}
+
+A script can be ``sourced'' using function \Rfunction{source()}. If we have a text file called \texttt{my.first.script.r} containing the following text:
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+# this is my first R script
+print(3 + 4)
+\end{verbatim}
+\end{shaded}
+
+and then source this file:
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{source}\hlstd{(}\hlstr{"my.first.script.r"}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+## [1] 7
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The results of executing the statements contained in the file will appear in the console. The commands themselves are not shown (by default the sourced file is not \emph{echoed} to the console) and the results of computations are be printed unless one includes explicit \Rfunction{print()} commands in the script. Adding a redundant \Rfunction{print()} is harmless.
+
+Scripts can be run both by sourcing them into an open \Rlang session, or at the operating system command prompt (see section \ref{sec:intro:using:R} on page \pageref{sec:intro:using:R}). In \RStudio, the script in the currently active editor tab can be sourced at the \Rlang console with the the ``source'' button.  The drop-down menu of this button has three entries: ``Source'' , quietly in the \Rlang console, ``Source with echo'' showing the code as it is run at the \Rlang console, and ``Source as local job'', using a new instance of \Rlang in the background. In the last case, the \Rlang console remains free for other uses while the script is running.
+
+When a script is \emph{sourced}, the output can be saved to a text file instead of being shown in the console. It is also easy to call \Rpgrm with the \Rlang script file as an argument directly at the operating system shell or command-interpreter prompt---and obviously also from shell scripts. The next two chunks show commands entered at the OS shell command prompt rather than at the \Rlang command prompt.
+
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+RScript my.first.script.r
+\end{verbatim}
+\end{shaded}
+
+You can open an operating system's \emph{shell} from the Tools menu in \RStudio, to run this command. The output will be printed to the shell console. If you would like to save the output to a file, use redirection using the operating system's syntax.
+
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+RScript my.first.script.r > my.output.txt
+\end{verbatim}
+\end{shaded}
+
+While developing or debugging a script, one usually wants to run (or \emph{execute}) one or a few statements at a time. This can be done in \RStudio using the ``run'' button after either positioning the cursor in the line to be executed, or selecting the text to be run (the selected text can be part of a line, a whole line, or a group of lines, as long as it is syntactically valid). The key-shortcut Ctrl-Enter is equivalent to pressing the ``run'' button.
+
+\subsection{How to write a script}\label{sec:script:writing}
+\index{scripts!writing}
+
+As with any type of writing, different approaches may be preferred by different \Rlang users. In general, the approach used, or mix of approaches, will also depend on how confident one is that the statements will work as expected---one already knows the best approach vs.\ one is exploring different alternatives.
+
+Three approaches are listed below. They all can result in equally good code. However, depending on the situation one or another will allow us to write the script faster. Of these three approaches, the last one has the advantage that the script file contains at all times valid \Rlang code, even if incomplete.  It also has the advantage that code remains in the History and can be retrieved also with some delay. In the first approach, the script file is likely to contain bugs until fully tested. In the middle approach, only the most recently added statements are likely to contain bugs.
+
+\begin{description}
+\item[If one is very familiar with similar problems] One would just create a new text file and write the whole thing in the editor, and then test it. This is rather unusual.
+\item[If one is moderately familiar with the problem] One would write the script as above, but testing it, step by step, as one is writing it, i.e., running parts of the script as one adds them. This is the approach I use most frequently.
+\item[If one is mostly playing around] Then if one is using \RStudio, one can type statements at the console prompt. As you should know by now, everything you run at the console is saved to the ``History.'' In \RStudio, the History is displayed in its own pane, and in this pane one can select any previous statement(s) and by clicking on a single icon, copy and paste them to either the \Rlang console prompt, or the cursor position in the editor pane. In this way one can build a script by copying and pasting from the history to the script file, the bits that have worked as you wanted.
+\end{description}
+
+\begin{playground}
+By now you should be familiar enough with \Rlang to be able to write your own script.
+\begin{enumerate}
+  \item Create a new \Rpgrm script (in \RStudio, from the File menu, leftmost ``+'' icon, or by typing ``Ctrl + Shift + N'').
+  \item Save the file as \texttt{my.second.script.r}.
+  \item Use the editor pane in \RStudio to type some \Rpgrm commands and comments.
+  \item \emph{Run} individual commands.
+  \item \emph{Source} the whole file.
+\end{enumerate}
+\end{playground}
+
+\subsection{The need to be understandable to people}\label{sec:script:readability}
+\index{scripts!readability}
+
+When you write a script, it is either because you want to document what you have done or you want re-use the script at a later time. In either case, the script itself although still meaningful for the computer, could become very obscure to you, and even more to someone seeing it for the first time. This must be avoided by spending time and effort on the writing style.
+
+How does one achieve an understandable script or program?
+\begin{itemize}
+  \item Avoid the unusual. People using a certain programming language tend to use some implicit or explicit rules of style---style includes \textit{indentation} of statements, \textit{capitalization} of variable and function names. As a minimum try to be consistent with yourself.
+  \item Use meaningful names for variables, and any other object. What is meaningful depends on the context. Depending on common use, a single letter may be more meaningful than a long word. However self-explanatory names are usually better: e.g.,  using \code{n.rows} and \code{n.cols} is much clearer than using \code{n1} and \code{n2} when dealing with a matrix of data. Probably \code{number.of.rows} and \code{number.of.columns} would make the script verbose, and take longer to type without gaining anything in return.
+  \item How to make the words visible in names: traditionally in \Rlang one would use dots to separate the words and use only lower case. Some years ago, it became possible to use underscores. The use of underscores is quite common nowadays because in some contexts it is ``safer'', as in some situations a dot may have a special meaning. Names like \code{NumCols}, using ``camel case'', are only infrequently used in \Rlang programming but is common in other languages like \pascallang.
+\end{itemize}
+
+\begin{infobox}
+\textbf{Style guidelines} The use of meaningful names as well as consistent indentation and formatting are crucial in making the code we write understandable both to others and to ourselves at a later time. In practice it is not enough for program code to be understood by a computer and that it returns the correct answer. Both large programs and small scripts have to be readable to humans, and the intention of the code understandable. In most cases \Rlang code will be maintained, reused and modified over time. In many cases it serves to document a given computation and to make it possible to reproduce it.
+
+The Tidyverse style guide for writing \Rlang code (\url{https://style.tidyverse.org/}) is frequently used. However, more important than strictly following any guideline is to be consistent in the style one, a team of programmers or data analysts, or even members of an organization use. In the current book, I have not followed this guide in all respects, as I have followed in part the style implicitly used in \Rlang documentation. However, I have attempted to be consistent.
+
+When writing code, using a consistent style for formatting and indentation, carefully choosing variable names using predictable and consistent naming conventions, and adding textual explanations in comments when needed, helps achieve readability for humans. I have tried to be as consistent as possible throughout the whole book in this respect, with only small deviations from the recommended style.
+\end{infobox}
+
+\begin{playground}
+Here is an example of bad style in a script. Read \href{https://google.github.io/styleguide/Rguide.xml}{Google's R Style Guide}%\footnote{This is just an example, similar, but not exactly the same style as the style I use myself.}
+, and edit the code in the chunk below so that it becomes easier to read.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> Stashed changes

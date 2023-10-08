@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 % !Rnw root = appendix.main.Rnw
 
 <<echo=FALSE, cache=FALSE>>=
@@ -1728,3 +1729,1735 @@ detach(package:scales)
 
 \section{Further reading}
 For\index{further reading!the R language} further readings on the aspects of \Rlang discussed in the current chapter, I suggest the books \citetitle{Matloff2011} \autocite{Matloff2011} and \citetitle{Wickham2019} \autocite{Wickham2019}.
+=======
+% !Rnw root = appendix.main.Rnw
+
+<<echo=FALSE, cache=FALSE>>=
+set_parent('r4p.main.Rnw')
+opts_knit$set(concordance=TRUE)
+opts_knit$set(unnamed.chunk.label = 'scripts-chunk')
+@
+
+\chapter{Base R: ``Paragraphs'' and ``Essays''}\label{chap:R:scripts}
+\index{scripts}
+
+\begin{VF}
+An \Rlang script is simply a text file containing (almost) the same commands that you would enter on the command line of \Rlang.
+
+\VA{Jim Lemon}{\emph{Kickstarting R}}\nocite{LemonND}
+\end{VF}
+
+%\dictum[\href{https://cran.r-project.org/doc/contrib/Lemon-kickstart/}{Kickstarting R}]{An R script is simply a text file containing (almost) the same commands that you would enter on the command line of R.}\vskip2ex
+
+\section{Aims of this chapter}
+
+For those who have mainly used graphical user interfaces, understanding why and when scripts can help in communicating a certain data analysis protocol can be revelatory. As soon as a data analysis stops being trivial, describing the steps followed through a system of menus and dialogue boxes becomes extremely tedious.
+
+Moreover, graphical user interfaces tend to be difficult to extend or improve in a way that keeps step-by-step instructions valid across program versions and operating systems.
+
+Many times, exactly the same sequence of commands needs to be applied to different data sets, and scripts make both implementation and validation of such a requirement easy.
+
+In this chapter, I will walk you through the use of \Rpgrm scripts, starting from an extremely simple script.
+
+\section{Writing scripts}
+
+In \Rlang language, the closest match to a natural language essay is a script. A script is built from multiple interconnected code statements needed to complete a given task. Simple statements, equivalent to sentences, can be combined into compound statements, equivalent to natural language paragraphs. Frequently, we combine simple sequences of statements into a sequence of actions necessary to complete a task. The sequence is not necessarily linear, as branching and repetition are also available.
+
+Scripts can vary from simple scripts containing only a few code statements, to complex scripts containing hundreds of code statements. In the rest of the present section I discuss how to write readable and reliable scripts and how to use them.
+
+\subsection{What is a script?}\label{sec:script:what:is}
+\index{scripts!definition}
+A \textit{script} is a text file that contains (almost) the same commands that you would type at the \Rlang console prompt. A true script is not, for example, an MS-Word file where you have pasted or typed some \Rlang commands.
+
+When typing commands/statements at the \Rlang console, we ``feed'' one line of text at a time. When we end the line by typing the enter key, the line of text is interpreted and evaluated. We then type the next line of text, which gets in turn interpreted and evaluated, and so on. In a script we write nearly the same text in an editor and save multiple lines containing commands into a text file. Interpretation takes place only later, when we \emph{source} the file as a whole into \Rlang.
+
+A script file has the following characteristics.
+\begin{itemize}
+  \item The script is a plain text file, i.e., a file containing bytes that represent alphanumeric characters in a standardized character set like UTF8 or ASCII.
+  \item The text in the file contains valid \Rlang statements (including comments) and nothing else.
+  \item Comments start at a \code{\#} and end at the end of the line.
+  \item The \Rlang statements are in the file in the order that they must be executed, and respecting the line continuation rules of \Rlang.
+  \item \Rlang scripts customarily have file names ending in \texttt{.r} or \texttt{.R}.
+\end{itemize}
+
+\begin{figure}
+\centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop, color = blue, fill = blue!15] {\textsl{Top = start}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (continue) [startstop, color = blue, fill = blue!15, below of=stat3] {$\cdots$};
+\node (stop) [startstop, color = blue, fill = blue!15, below of=continue] {\textsl{Bottom = end}};
+\draw [arrow, color = blue] (start) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (stat3);
+\draw [arrow, color = blue] (stat3) -- (continue);
+\draw [arrow, color = blue] (continue) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption[Code statements in a script.]{Diagram of script showing sequentially evaluated code statements; \textcolor{blue}{$\cdots$} represent additional statements in the script.}\label{fig:script}
+\end{figure}
+
+The statements in the text file, are read, interpreted and evaluated sequentially, from the start to the end of the file, as represented in the diagram (Figure \ref{fig:script}).
+
+As we will see later in the chapter, code statements can be combined into larger statements and evaluated conditionally and/or repeatedly, which allows us to control the realised sequence of evaluated statements.
+
+In addition to being valid it is important that scripts are also understandable to humans, consequently a clear writing style and consistent adherence to it are important.
+
+It is good practice to write scripts so that they are self-contained. To make a script self-contained, one must include code to load the packages used, load or import data from files, perform the data analysis and display and/or save the results of the analysis. Such scripts can be used to apply the same analysis algorithm to other data by reading data from a different file and/or to reproduce the same analysis at a later time using the same data. Such scripts document all steps used for the analysis.
+
+<<setup-scripts, include=FALSE, cache=FALSE>>=
+show.results <- FALSE
+@
+
+\subsection{How do we use a script?}\label{sec:script:using}
+\index{scripts!sourcing}
+
+A script can be ``sourced'' using function \Rfunction{source()}. If a text file called \texttt{my.first.script.r} contains the text
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+# this is my first R script
+print(3 + 4)
+\end{verbatim}
+\end{shaded}
+
+it can be sourced by typing at \Rpgrm console
+
+<<evaluate=FALSE>>=
+source("my.first.script.r")
+@
+
+Execution of the statements in the file makes \Rlang display \code{[1] 7} at the console as, below the command we typed in. The commands themselves are not shown (by default the sourced file is not \emph{echoed} to the console) and the results of computations are not printed unless one includes explicit \Rfunction{print()} commands in the script.
+
+Scripts can be run both by sourcing them into an open \Rlang session, or at the operating system command prompt (see section \ref{sec:intro:using:R} on page \pageref{sec:intro:using:R}). In \RStudio, the script in the currently active editor tab can be sourced using the ``source'' button.  The drop-down menu of this button has three entries: ``Source'' , quietly to the \Rlang console, ``Source with echo'' showing the code as it is run, and ``Source as local job'', using a new instance of \Rlang in the background. In the last case, the \Rlang console remains free for other uses while the script is running.
+
+When a script is \emph{sourced}, the output can be saved to a text file instead of being shown in the console. It is also easy to call \Rpgrm with the \Rlang script file as an argument directly at the operating system shell or command-interpreter prompt---and obviously also from shell scripts. The next two chunks show commands entered at the OS shell command prompt rather than at the \Rlang command prompt.
+
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+RScript my.first.script.r
+\end{verbatim}
+\end{shaded}
+
+You can open an operating system's \emph{shell} from the Tools menu in \RStudio, to run this command. The output will be printed to the shell console. If you would like to save the output to a file, use output redirection using the operating system's syntax.
+
+\begin{shaded}
+\footnotesize
+\begin{verbatim}
+RScript my.first.script.r > my.output.txt
+\end{verbatim}
+\end{shaded}
+
+While developing or debugging a script, one usually wants to run (or \emph{execute}) one or a few statements at a time. This can be done in \RStudio using the ``run'' button after either positioning the cursor in the line to be executed, or selecting the text to be run (the selected text can be part of a line, a whole line, or a group of lines, as long as it is syntactically valid). The key-shortcut Ctrl-Enter is equivalent to pressing the ``run'' button.
+
+\subsection{How to write a script}\label{sec:script:writing}
+\index{scripts!writing}
+
+As with any type of writing, different approaches may be preferred by different \Rlang users. In general, the approach used, or mix of approaches, will also depend on how confident one is that the statements will work as expected---one already knows the best approach vs.\ one is exploring different alternatives.
+
+Three approaches are listed below. They all can result in equally good code, but as work in progress they differ. In the first approach, the script as whole is likely to contain bugs before fully tested. In the middle approach, only the most recently added statements are likely to contain bugs. In the last one the script contains at all times only valid \Rlang code, even if incomplete. The third approach also has the advantage that code remains in the \Rpgrm console \emph{History} and can be retrieved with a delay, e.g., after comparison against an alternative statement.
+\begin{description}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+\item[If one is very familiar with similar problems] One would just create a new text file and write the whole thing in the editor, and then test it. This is rather unusual.
+\item[If one is moderately familiar with the problem] One would write the script as above, but testing it, step by step, as one is writing it, i.e., running parts of the script as one adds them. This is the approach I use most frequently.
+\item[If one is mostly playing around] Then if one is using \RStudio, one can type statements at the console prompt. As you should know by now, everything you run at the console is saved to the ``History.'' In \RStudio, the History is displayed in its own pane, and in this pane one can select any previous statement(s) and by clicking on a single icon, copy and paste them to either the \Rlang console prompt, or the cursor position in the editor pane. In this way one can build a script by copying and pasting from the history to the script file, the bits that have worked as you wanted.
+\end{description}
+
+\begin{playground}
+By now you should be familiar enough with \Rlang to be able to write your own script.%
+\begin{enumerate}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item Create a new \Rpgrm script (in \RStudio, from the File menu, leftmost ``+'' icon, or by typing ``Ctrl + Shift + N'').
+  \item Save the file as \texttt{my.second.script.r}.
+  \item Use the editor pane in \RStudio to type some \Rpgrm commands and comments.
+  \item \emph{Run} individual commands.
+  \item \emph{Source} the whole file.
+\end{enumerate}
+\end{playground}
+
+\subsection{The need to be understandable to people}\label{sec:script:readability}
+\index{scripts!readability}
+
+It is not enough for program code to be understood by a computer and that it returns the correct answer. Both large programs and small scripts have to be readable to humans, and the intention of the code understandable. In most cases \Rlang code will be maintained, reused and modified over time. In many cases it serves to document a given computation and to make it possible to reproduce it.
+
+When one writes a script, it is either because one wants to document what has been done or because one plans to use it again in the future. In the first case other persons will read it and in the second case one rarely remembers all the details. Thus, spending time and effort on the writing style paying special attention to following recommendations is important.
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \item Avoid the unusual. People using a certain programming language tend to use some implicit or explicit rules of style---style includes \textit{indentation} of statements, \textit{capitalization} of variable and function names. As a minimum try to be consistent with yourself.
+  \item Use meaningful names for variables, and any other object. What is meaningful depends on the context. Depending on common use, a single letter may be more meaningful than a long word. However self-explanatory names are usually better: e.g.,  using \code{n.rows} and \code{n.cols} is much clearer than using \code{n1} and \code{n2} when dealing with a matrix of data. Probably \code{number.of.rows} and \code{number.of.columns} would make the script verbose, and take longer to type without gaining anything in return. Sometimes, short textual explanations in comments (ignored by \Rlang) are needed to achieve readability for humans.
+  \item How to make the words visible in names: traditionally in \Rlang one would use dots to separate the words and use only lower case. Some years ago, it became possible to use underscores. The use of underscores is quite common nowadays because it is ``safer'', as in some situations a dot may have a special meaning. Names like \code{NumCols}, using ``camel case'', are only infrequently used in \Rlang programming but is common in other languages like \pascallang.
+\end{itemize}
+
+The \emph{Tidyverse style guide} for writing \Rlang code (\url{https://style.tidyverse.org/}) provides more detailed ``rules''. However, more important than strictly following a published guideline is to be consistent in the style one, a team of programmers or data analysts, or even members of an organization use. In the current book, I have not followed this guide in all respects, instead following in some cases the style used in \Rlang documentation. However, I have attempted to be consistent.
+
+\begin{playground}
+Here is an example of bad style in a script. Edit the code in the chunk below so that it becomes easier to read.
+
+<<eval=eval_playground>>=
+a <- 2 # height
+b <- 4 # length
+C <-
+    a *
+b
+C -> variable
+      print(
+"area: ", variable
+)
+@
+\end{playground}
+
+The points discussed above already help a lot. However, one can go further in achieving the goal of human readability by interspersing explanations and code ``chunks'' and using all the facilities of typesetting, even of formatted maths formulas and equations, within the listing of the script. Furthermore, by including the results of the calculations and the code itself in a typeset report built automatically one ensures that they match each other. This greatly contributes to data analysis reproducibility, which is becoming a widespread requirement both in academia and in industry.
+
+This approach is called literate programming\index{literate programming} and was first proposed by \citeauthor{Knuth1984a} (\citeyear{Knuth1984a}) through his \pgrmname{WEB} system. In the case of \Rpgrm programming, the first support of literate programming was in \pkgname{Sweave}, which has been superseded by \pkgname{knitr} \autocite{Xie2013}. This package supports the use of \Markdown or \Latex\ \autocite{Lamport1994} as the markup language for the textual contents and also formats and applies syntax highlighting to code. \langname{Rmarkdown} is an extension to \Markdown that makes it easier to include \Rlang code in documents (see \url{http://rmarkdown.rstudio.com/}). It is the basis of \Rlang packages that support typesetting large and complex documents (\pkgname{bookdown}), web sites (\pkgname{blogdown}), package vignettes (\pkgname{pkgdown}) and slides for presentations \autocite{Xie2016,Xie2018}. \Quarto, which provides an enhanced version of \Rmarkdown, is implemented in \Rlang package \pkgname{quarto} together with the \pgrmname{quarto} program as a separate executable. The use of \pkgname{knitr} and \pkgname{quarto} is very well integrated into the \RStudio IDE.
+The generation of typeset reports is outside the scope of the book, but it is an important skill to learn. It is well described in the books and web sites cited.
+
+\subsection{Debugging scripts}\label{sec:script:debug}
+\index{scripts!debugging}
+
+The use of the word \emph{bug} to describe a problem in computer hardware and software started in 1946 when a real bug, more precisely a moth, got between the contacts of a relay in an electromechanical computer causing it to malfunction and Grace Hooper described the first computer \emph{bug}. The use of the term bug in engineering predates the use in computer science, and consequently, the first use of bug in computing caught on easily.
+
+A suitable quotation from a letter written by Thomas Alva Edison 1878 \autocite[as given by][]{Hughes2004}:
+\begin{quotation}
+  It has been just so in all of my inventions. The first step is an intuition, and comes with a burst, then difficulties arise--this thing gives out and [it is] then that ``Bugs''--as such little faults and difficulties are called--show themselves and months of intense watching, study and labor are requisite before commercial success or failure is certainly reached.
+\end{quotation}
+
+The quoted paragraph above makes clear that only very exceptionally does any new design fully succeed. The same applies to \Rlang scripts as well as any other non-trivial piece of computer code. From this it logically follows that testing and de-bugging are fundamental steps in the development of \Rlang scripts and packages. Debugging, as an activity, is outside the scope of this book. However, clear programming style and good documentation are indispensable for efficient testing and reuse.
+
+Even for scripts used for analyzing a single data set, we need to be confident that the algorithms and their implementation are valid, and able to return correct results. This is true both for scientific reports, expert reports and any data analysis related to assessment of compliance with legislation or regulations. Of course, even in cases when we are not required to demonstrate validity, say for decision making purely internal to a private organization, we will still want to avoid costly mistakes.
+
+The first step in producing reliable computer code is to accept that any code that we write needs to be tested and, if possible, validated. Another important step is to make sure that input is validated within the script and a suitable error produced for bad input (including valid input values falling outside the range that can be reliably handled by the script).
+
+If during testing, or during normal use, a wrong value is returned by a calculation, or no value (e.g.,  the script crashes or triggers a fatal error), debugging consists in finding the cause of the problem. The cause can be either a mistake in the implementation of an algorithm, as well as in the algorithm itself. However, many apparent \emph{bugs} are caused by bad or missing handling of special cases like invalid input values, rounding errors, division by zero, etc., in which a program crashes instead of elegantly issuing a helpful error message.
+
+Diagnosing the source of bugs is, in most cases, like detective work. One uses hunches based on common sense and experience to try to locate the lines of code causing the problem. One follows different \emph{leads} until the case is solved. In most cases, at the very bottom we rely on some sort of divide-and-conquer strategy. For example, we may check the value returned by intermediate calculations until we locate the earliest code statement producing a wrong value. Another common case is when some input values trigger a bug. In such cases it is frequently best to start by testing if different ``cases'' of input lead to errors/crashes or not. Boundary input values are usually the telltale ones: e.g.,  for numbers, zero, negative and positive values, very large values, very small values, missing values (\code{NA}), vectors of length zero (\code{numeric()}), etc.
+
+\begin{warningbox}
+  \textbf{Error messages} When debugging, keep in mind that in some cases a single bug can lead to a whole cascade of error messages. Do also keep in mind that typing mistakes, originating when code is entered through the keyboard, can wreak havock in a script: usually there is little correspondence between the number of error messages and the seriousness of the bug triggering them. When several errors are triggered, start by reading the error message printed first, as later errors can be an indirect consequence of earlier ones.
+\end{warningbox}
+
+There are special tools, called debuggers, available, and they help enormously. Debuggers allow one to step through the code, executing one statement at a time, allowing inspection of the objects present in the \Rlang environment. It is even possible to execute additional statements at the \Rpgrm console, e.g., to modify the value of a variable, while execution is paused. An \Rlang debugger is available within \RStudio and also through the \Rlang console.
+
+When writing your first scripts, you will manage perfectly well, and learn more by running the script one line at a time, and when needed temporarily inserting \code{print()} statements to ``look'' at how the value of variables changes at each step. A debugger allows a lot more control, as one can ``step in'' and ``step out'' of function definitions, and set and unset break points where execution will stop. However, using a debugger is not as simple as using \code{print()}.
+
+If you get stuck trying to find the cause of a bug, do extend your search both to the most trivial of possible causes, and later on to the least likely ones (such as a bug in a package installed from \CRAN or \Rlang itself). Of course, when suspecting a bug in code you have not written, it is wise to very carefully read the documentation, as the ``bug'' may be just a misunderstanding of what a certain piece of code is expected to do.  Also keep in mind that as discussed on page \pageref{sec:intro:net:help}, you will be able to find online already-answered questions to many of your likely problems and doubts. For example, searching with Google for the text of an error message is usually well rewarded. Most important to remember is that bugs do pop up frequently in newly written code, and occasionally in old code. Nobody is immune to them: not the code you write, packages you use or \Rlang itself.
+
+\section{Compound statements}\label{sec:script:compound:statement}
+\index{compound code statements}\index{simple code statements}
+
+Individual statements can be grouped into \emph{compound statements} by enclosing them in curly braces (Figure \ref{fig:compound:statement}). Conceptually is like putting these statements into a box that allows us to operate with them as an anonymous whole.
+
+\begin{figure}
+\centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.7cm]
+\node (start) [startstop] {\ldots};
+\node (enc) [enclosure, color = blue, fill = blue!5, below of=start, yshift=-0.75cm] {\ };
+\node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2, yshift=+0.2cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow, color = blue] (start) -- (stat2);
+\draw [arrow, color = blue] (stat2) -- (stat3);
+\draw [arrow, color = blue] (stat3) -- (stop);
+\draw [arrow, color = black] (start) -- (enc);
+\draw [arrow, color = black] (enc) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption[Compound code statement]{Diagram of a compound code statement is a grouping of statements that in some contexts behaves as a single statement. In the diagram, statements A and B have been grouped into a compound statement.}\label{fig:compound:statement}
+\end{figure}
+
+
+<<compound-1>>=
+print("...")
+{
+  print("A")
+  print("B")
+}
+print("...")
+@
+
+The grouping of the two middle statements above is of no consequence, as it does not alter sequential evaluation. In the example above only side effects are of interest. In the example below, the value returned by a compound statement is that returned by the last statement evaluated within it. Individual statements can be separated by an end-of-line as above, or by a semicolon (;) as shown below, for two statements, each of them implementing an arithmetic operation.
+
+<<compound-2>>=
+{1 + 2; 3 + 4}
+@
+
+The example above demonstrates that only the value returned by the compound statement as a whole is displayed automatically at the \Rlang console, i.e., the implicit call to \code{print()} is applied to the compound statement. Thus, even though both statements were evaluated, we only see the result returned by the second one.
+
+\begin{playground}
+Nesting is also possible. Before running the compound statement below try to predict the value it will return, and then run the code and compare your prediction to the value returned.
+
+<<compound-3, eval=eval_playground>>=
+{1 + 2; {a <- 3 + 4; a + 1}}
+@
+\end{playground}
+
+Grouping is of little use by itself. It becomes useful together with control-of-execution constructs, when defining functions, and similar cases where we need to treat a group of code statements as if they were a single statement. We will see several examples of the use of compound statements in the current chapter and in chapter \ref{chap:R:functions} on page \pageref{chap:R:functions}.
+
+\section{Function calls}
+\index{functions!call}
+We will describe functions in detail and how to create new ones in chapter \ref{chap:R:functions}. We have already been using functions since chapter \ref{chap:R:as:calc}. Functions are structurally \Rlang statements, in most cases, compound statements, using formal parameters as placeholders. When one calls a function one passes arguments for the different parameters (or placeholder names) and the (compound) statement conforming the \emph{body} of the function is evaluated after ``replacing'' the placeholders by the values passed as arguments.
+
+In the first example we have two statements. The first one computes $log(100)$ by calling function \code{log10()} with \code{100} as argument and stores the returned value in variable \code{a}. In the second statement we pass variable \code{a} as argument to \code{print()} and as a side effect the value 2 is displayed.
+
+<<fun-calls-01>>=
+a <- log10(100)
+print(a)
+@
+
+Function calls can be nested. The example above can be rewritten as.
+
+<<fun-calls-02>>=
+print(log10(100))
+@
+
+The difference is that we avoid the explicit creation of a variable. Whether this is an advantage or not depends on whether we use variable \code{a} in later statements or not.
+
+Statements with more levels of nesting than shown above become very difficult to read, so alternative notations can help.
+
+\section{Data pipes}\label{sec:script:pipes}
+\index{pipes!base R|(}
+\index{pipe operator}
+\index{chaining statements with \emph{pipes}}
+Pipes have been at the core of shell scripting in \osname{Unix} since early stages of its design \autocite{Kernigham1981} as well as in \osname{Linux} distributions. Within an OS, pipes are chains of small programs or ``tools'' that carry out a single well-defined task (e.g., \code{ed}, \code{gsub}, \code{grep}, \code{more}, etc.). Data such as text is described as flowing from a source into a sink through a series of steps at which a specific transformations take place. In \osname{Unix} and  \osname{Linux} shells like \pgrmname{sh} or \pgrmname{bash}, sinks and sources are files, but in \osname{Unix} and \osname{Linux} files are an abstraction that includes all devices and connections for input or output, including physical ones such as terminals and printers.
+
+<<pipes-r-01,engine="bash",eval=FALSE>>=
+stdin | grep("abc") | more
+@
+
+How can \emph{pipes} exist within a single \Rlang script? When chaining functions into a pipe, data is passed between them through temporary \Rlang objects stored in memory, which are created and destroyed automatically. Conceptually there is little difference between \osname{Unix} shell pipes and pipes in \Rlang scripts, but the implementations are different.
+
+What do pipes achieve in \Rlang scripts? They relieve us from the responsibility of creating and deleting the temporary objects and of enforcing the sequential execution of the different steps. Pipes usually improve readability of scripts by allowing more concise code.
+
+Since year 2021, starting from version 4.1.0, \Rlang includes a native pipe operator (\Roperator{\textbar >}) as part of the language. Subsequently, the placeholder (\code{\_}) was implemented in version 4.2.0 and its functionality expanded in version 4.3.0. Another two implementations of pipes, that have been available as \Rlang extensions for some years in packages \pkgnameNI{magrittr} and \pkgnameNI{wrapr}, are described in chapter \ref{chap:R:data} on page \pageref{chap:R:data}.
+
+I describe R's pipe syntax based on \Rpgrm 4.3.0. I start by showing the same operations coded using nested function calls, using explicit saving of intermediate values in temporary objects, and using the pipe operator.
+
+Nested function calls are concise, but difficult to read when the depth of nesting increases.
+
+<<pipes-r-02>>=
+sum(sqrt(1:10))
+@
+
+Saving intermediate results explicitly results in clear but verbose code.
+
+<<pipes-r-03>>=
+data.in <- 1:10
+data.tmp <- sqrt(data.in)
+sum(data.tmp)
+rm(data.tmp) # clean up!
+@
+
+A pipe using operator \Roperator{\textbar >} makes the data flow clear and keeps the code concise.
+
+<<pipes-r-04>>=
+1:10 |> sqrt() |> sum()
+@
+
+We can assign the result of the computation to a variable, most elegantly using the \Roperator{->} operator on the \emph{rhs} of the pipe.
+
+<<pipes-r-04a>>=
+1:10 |> sqrt() |> sum() -> my_rhs.var
+my_rhs.var
+@
+
+We can also use the \Roperator{<-} operator on the \emph{lhs} of the pipe, i.e., for assignments a pipe behaves as a compound statement.
+
+<<pipes-r-04b>>=
+my_lhs.var <- 1:10 |> sqrt() |> sum()
+my_lhs.var
+@
+
+Formally, the \Roperator{\textbar >} operator from base \Rlang takes two operands, just like operator \code{+} does. The value returned by the \emph{lhs} (left-hand side) operand, which can be any \Rlang expression, is passed as argument to the function-call operand on \emph{rhs} (right-hand side). The called function must accept at least one argument. This default syntax that implicitly passes the argument by position to the first parameter of the function would limit which functions could be used in a pipe construct. However, it is also possible to pass the piped argument explicitly by name to any parameter of the function on the \emph{rhs} using an underscore (\code{\_}) as placeholder.
+
+<<pipes-r-05>>=
+1:10 |> sqrt(x = _) |> sum(x = _)
+@
+
+The placeholder can be also used with extraction operators.
+
+<<pipes-r-05a>>=
+1:10 |> sqrt(x = _) |> _[2:8] |> sum(x = _)
+@
+
+\begin{explainbox}
+Base \Rlang functions like \Rfunction{subset()} have a signature that is natural for use in pipes by implicitly passing the piped value as argument to its first formal parameter, while others like \Rfunction{assign()} do not. For example, when calling function \code{assign()} to save a value using a name available as a character string we would like to pass the piped value as argument to parameter \code{value} which is not the first. In such cases we can use \code{\_} as a placeholder and pass it by name.
+
+<<pipes-box-pipes-02>>=
+obj.name <- "data.out"
+1:10 |> sqrt() |> sum() |> assign(x = obj.name, value = _)
+@
+
+Alternatively, we can define a wrapper function, with the desired order for the formal parameters. This approach can be worthwhile when the same function is called repeatedly within a script.
+
+<<pipes-box-pipes-03>>=
+value_assign <- function(value, x, ...) {
+  assign(x = x, value = value, ...)
+}
+obj.name <- "data.out"
+1:10 |> sqrt() |> sum() |> value_assign(obj.name)
+@
+
+\end{explainbox}
+
+In general whenever we use temporary variables to store values that are passed as arguments only once, we can nest or chain the statements making the saving of intermediate results into a temporary variable implicit instead of explicit. Examples of some useful idioms follow.
+
+Addition of computed variables to a data frame using \Rfunction{within()} (see section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}) and selecting rows with \Rfunction{subset()} (see section \ref{sec:calc:df:subset} on page \pageref{sec:calc:df:subset
+}) are combined in our first simple example. For clarity, we use the \code{\_} placeholder to indicate the value returned by the preceding function in the pipe.
+
+<<pipes-r-06>>=
+data.frame(x = 1:10, y = rnorm(10)) |>
+  within(data = _,
+         {
+           x4 <- x^4
+           is.large <- x^4 > 1000
+         }) |>
+  subset(x = _, is.large)
+@
+
+\begin{playground}
+Without using the \code{\_} placeholder and a more compact layout, the code above becomes. Compare the code below to that above to work out how I simplified the code.
+
+<<pipes-r-06aa, eval=eval_playground>>=
+data.frame(x = 1:10, y = rnorm(10)) |>
+  within({x4 <- x^4; is.large <- x^4 > 1000}) |>
+  subset(is.large)
+@
+\end{playground}
+
+Subset can be also used to select variables or columns from data frames and matrices.
+
+<<pipes-r-06a>>=
+data.frame(x = 1:10, y = rnorm(10)) |>
+  within(data = _,
+         {
+           x4 <- x^4
+           is.large <- x^4 > 1000
+         }) |>
+  subset(x = _, is.large, select = -x)
+@
+
+<<pipes-r-06b>>=
+data.frame(x = 1:10, y = rnorm(10)) |>
+  within(data = _,
+         {
+           x4 <- x^4
+           is.large <- x^4 > 1000
+         }) |>
+  subset(x = _, select = c(y, x4))
+@
+
+<<pipes-r-07>>=
+data.frame(group = factor(rep(c("T1", "T2", "Ctl"), each = 4)),
+           y = rnorm(12)) |>
+  subset(x = _, group %in% c("T1", "T2")) |>
+  aggregate(data = _, y ~ group, mean)
+@
+
+The extraction operators are accepted on the \emph{rhs} of a pipe only starting from \Rpgrm 4.3.0. With these versions \code{\_[["y"]]}, as shown below, as well as its equivalent \code{\_\$y} can be used. Function \Rfunction{getElement()} used as \code{getElement("y")}, being a normal function, can be used in situations where operators are not accepted, like on the \emph{rhs} of \Roperator{|>} in older versions of \Rlang.
+
+<<pipes-r-09>>=
+data.frame(group = factor(rep(c("T1", "T2", "Ctl"), each = 4)),
+           y = rnorm(12)) |>
+  subset(x = _, group %in% c("T1", "T2")) |>
+  aggregate(data = _, y ~ group, mean) |>
+  _[["y"]]
+@
+
+Additional functions designed to be used in pipes are available through packages as described in chapter \ref{chap:R:data}.
+
+\begin{playground}
+  In the last three examples, in which function calls is the explicit use of the placeholder needed, and in which ones is it optional? Hint: edit the code, removing the parameter name, \code{=}, and \code{\_},  and test whether the edited code works and returns the same value as before.
+\end{playground}
+\index{pipes!base R|)}
+
+\section{Conditional evaluation}\label{sec:script:flow:control}
+\index{control of execution flow}
+By default \Rlang statements in a script are evaluated (or executed) in the sequence they appear in the script \textit{listing} or text. We give the name \emph{control of execution constructs} to those special statements that allow us to alter this default sequence, by either skipping or repeatedly evaluating individual statements. The statements whose evaluation is controlled can be either simple or compound. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others allow statements to be executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
+
+These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. However, \emph{control of execution constructs} are a crucial part of most useful scripts. As we will see next, a compound statement can include multiple simple or nested compound statements. \Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectorized and vectorized.
+
+\subsection[Non-vectorized \texttt{if}, \texttt{else} and \texttt{switch}]{Non-vectorized \code{if}, \code{else} and \code{switch}}\label{sec:script:if}
+\qRcontrol{if ()}\qRcontrol{if () \ldots\ else}%
+
+\begin{figure}
+  \centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.3cm] {\code{if (<cond.>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.2cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\code{FALSE}} (stat3);
+\draw [arrow] (stat2) |- (stat3);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption[Flowchart for \code{if} construct.]{Flowchart for \code{if} construct.}\label{fig:if:diagram}
+\end{figure}
+
+The \code{if} construct ``decides,'' depending on a \code{logical} value, whether the next code statement is executed (if \code{TRUE}) or skipped (if \code{FALSE}) (Figure \ref{fig:if:diagram}). The flow chart shows how \code{if} works: \code{<statement A>} is either evaluated or skipped depending on the value of \code{<condition>}, while \code{<statement B>} is always evaluated.\label{flowchart:if}
+
+The usefulness of \emph{if} statements stems from the possibility of computing the \code{logical} value used as \code{<condition>} with comparison operators (see section \ref{sec:calc:comparison} on page \pageref{sec:calc:comparison}) and logical operators (see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}).
+
+We start with toy examples demonstrating how \emph{if} statements work. Later we will see examples closer to real use cases. Here \Rcontrol{if} controls the evaluation or not of the simple statement \code{print("Hello!")}.
+
+\begin{explainbox}
+We use the name \emph{flag} for a \code{logical} variable set manually, preferably near the top of the script. Real flags were used in railways to indicate to trains whether to stop or continue at stations and which route to follow at junctions. Use of \code{logical} flags in scripts is most useful when switching between two behaviors that depend on multiple separate statements.
+\end{explainbox}
+
+<<if-1z>>=
+flag <- TRUE
+if (flag) print("Hello!")
+@
+
+\begin{playground}
+Play with the code above by changing the value assigned to variable \code{flag}, \code{FALSE}, \code{NA}, and \code{logical(0)}.
+
+In the example above we use variable \code{flag} as the \emph{condition}.
+
+Nothing in the \Rlang language prevents this condition from being a \code{logical} constant. Explain why \code{if (FALSE)} in the syntactically-correct statement below is of no practical use.
+
+<<if-1>>=
+if (FALSE) print("Hello!")
+@
+\end{playground}
+
+Conditional execution is much more useful than what could be expected from the previous examples, because the statement whose execution is being controlled can be a compound statement of almost any length or complexity. A very simple example follows, with a compound statement containing two statements, each one, a call to function \code{print()} with a different argument.
+
+<<if-2>>=
+printing <- TRUE
+if (printing) {
+  print("A")
+  print("B")
+}
+@
+
+\begin{warningbox}
+The condition passed as an argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector of length one. As this condition is \emph{not} vectorized, a longer vector will trigger an \Rlang warning or error depending on \Rlang's version.
+\end{warningbox}
+
+\begin{figure}
+  \centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.5cm] {\code{if (<cond.>) else}};
+\node (stat2) [process, color = blue, fill = blue!15, left of=dec1, xshift=-3.2cm] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.2cm] {\code{<statement B>}};
+\node (stat4) [process, below of=dec1, yshift=-0.5cm] {\code{<statement C>}};
+\node (stop) [startstop, below of=stat4] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{FALSE}} (stat3);
+\draw [arrow] (stat2) |- (stat4);
+\draw [arrow] (stat3) |- (stat4);
+\draw [arrow] (stat4) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption[Flowchart for \code{if \ldots\ else} construct.]{Flowchart for \code{if \ldots else} construct.}\label{fig:if:else:diagram}
+\end{figure}
+
+The \code{if \ldots\ else \ldots} construct ``decides,'' depending on a \code{logical} value, which of two code statements is executed (Figure \ref{fig:if:else:diagram}). The flow chart shows how it works: either \code{<statement A>} or \code{<statement B>} is evaluated and the other skipped depending on the value of \code{<condition>}, while \code{<statement C>} is always evaluated.\label{flowchart:if:else}
+
+<<if-3>>=
+a <- 10
+if (a < 0) print("'a' is negative") else print("'a' is not negative")
+print("This is always printed")
+@
+
+As can be seen above, the statement immediately following \code{if} is executed if the condition returns \code{TRUE} and that following \code{else} is executed if the condition returns \code{FALSE}. Statements after the conditionally executed \code{if} and \code{else} statements are always executed, independently of the value returned by the condition.
+
+\begin{playground}
+Play with the code in the chunk above by assigning different numeric vectors to \code{a}.
+\end{playground}
+
+<<auxiliary, echo=FALSE, include = FALSE, eval=TRUE>>=
+show.results <- TRUE
+if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
+# eval.if.4
+show.results <- FALSE
+if (show.results) eval.if.4 <- c(1:4) else eval.if.4 <- FALSE
+#eval.if.4
+@
+
+\begin{explainbox}
+Do you still remember the rules about continuation lines?
+
+<<if-4>>=
+# 1
+a <- 1
+if (a < 0) print("'a' is negative") else print("'a' is not negative")
+@
+
+Why does the statement below (not evaluated here) trigger an error while the one above does not?
+
+<<if-4a, eval=FALSE>>=
+# 2 (not evaluated here)
+if (a < 0) print("'a' is negative")
+else print("'a' is not negative")
+@
+
+How do the continuation line rules apply when we add curly braces as shown below.
+
+<<if-4b>>=
+# 1
+a <- 1
+if (a < 0) {
+    print("'a' is negative")
+  } else {
+    print("'a' is not negative")
+  }
+@
+
+In the example above, we enclosed a single statement between each pair of curly braces, but as these braces create compound statements, multiple statements could have been enclosed between each pair.
+\end{explainbox}
+
+\begin{playground}
+Play with the use of conditional execution, with both simple and compound statements, and also think how to combine \code{if} and \code{else} to select among more than two options.
+\end{playground}
+
+In \Rlang, the value returned by any compound statement is the value returned by the last simple statement executed within the compound one. This means that we can assign the value returned by an \code{if} and \code{else} statement to a variable. This style is less frequently used, but occasionally can result in easier-to-understand scripts.\label{chunk:if:assignment}
+
+<<if-4c>>=
+a <- 1
+my.message <-
+  if (a < 0) "'a' is negative" else "'a' is not negative"
+print(my.message)
+@
+
+\begin{explainbox}
+If the condition statement returns a value of a class other than \code{logical}, \Rlang will attempt to convert it into a logical. This is sometimes used instead of a comparison to zero, as the conversion from \code{integer} yields \code{TRUE} for all integers except zero. The code below illustrates a rather frequently used idiom for checking if there is something available to display.
+<<if-explain_conv>>=
+message <- "abc"
+if (length(message)) print(message)
+@
+\end{explainbox}
+
+\begin{advplayground}
+Study the conversion rules between \Rclass{numeric} and \Rclass{logical} values, run each of the statements below, and explain the output based on how type conversions are interpreted, remembering the difference between \emph{floating-point numbers} as implemented in computers and \emph{real numbers} ($\mathbb{R}$) as defined in mathematics (see page \pageref{box:integer:float}).
+
+% chunk contains intentional error-triggering examples
+<<if-PG-01, eval=FALSE>>=
+if (0) print("hello")
+if (-1) print("hello")
+if (0.01) print("hello")
+if (1e-300) print("hello")
+if (1e-323) print("hello")
+if (1e-324) print("hello")
+if (1e-500) print("hello")
+if (as.logical("true")) print("hello")
+if (as.logical(as.numeric("1"))) print("hello")
+if (as.logical("1")) print("hello")
+if ("1") print("hello")
+@
+
+Hint: if you need to refresh your understanding of the type conversion rules, see section \ref{sec:calc:type:conversion} on page \pageref{sec:calc:type:conversion}.
+\end{advplayground}
+
+\begin{figure}
+  \centering
+\begin{small}\label{flowchart:switch}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=start, yshift=-0.4cm] {\code{switch(<value>)}};
+\node (stat2) [process, color = blue, fill = blue!15, below of=dec1, xshift=3.4cm] {\code{<statement A>}};
+\node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
+\node (stat4) [process, color = blue, fill = blue!15, below of=stat3] {\code{<statement C>}};
+\node (stat5) [process, color = blue, fill = blue!15, below of=stat4] {\code{<statement D>}};
+\node (stat6) [process, below of=stat5, xshift=3.3cm] {\code{<statement E>}};
+\node (stop) [startstop, below of=stat6] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 1>}} (stat2);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 2>}} (stat3);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<value 3>}} (stat4);
+\draw [arrow, color=blue] (dec1) |- node[anchor=north west] {\code{<default>}} (stat5);
+\draw [arrow] (stat2) -| (stat6);
+\draw [arrow] (stat3) -| (stat6);
+\draw [arrow] (stat4) -| (stat6);
+\draw [arrow] (stat5) -| (stat6);
+\draw [arrow] (stat6) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption{Flowchart for a \code{switch} construct.}\label{fig:switch:diagram}
+\end{figure}
+
+In addition to \Rcontrol{if} and \Rcontrol{if \ldots\ else}, there is in \Rlang a \Rcontrol{switch} statement (Figure \ref{fig:switch:diagram}). It can be used to select among \emph{cases}, or several alternative statements, based on an expression evaluating to a \code{numeric} or a \code{character} value of length equal to one.
+
+A \Rcontrol{switch} statement returns a value, just like \code{if}, the value returned by the \Rcontrol{switch} statement is the value returned by one of the statements. Each of the alternative statements is called a \textit{case}. The value passed as argument to \Rcontrol{switch} functions as an index selecting one of them.
+
+In the first example we use a \code{character} variable as the condition, named cases, and a final unlabelled case as default in case of no match. In real use, a computed value or user input would be used in place of \code{my.object}. As with the \code{logical} argument to \code{if}, the \code{character} string value passed as argument must be a vector of length one.
+
+<<>>=
+my.object <- "two"
+b <- switch(my.object,
+            one = 1,
+            two = 1 / 2,
+            four = 1 / 4,
+            0
+)
+b
+@
+
+Multiple condition values can share the same statement.
+
+<<>>=
+my.object <- "two"
+b <- switch(my.object,
+            one =, uno = 1,
+            two =, dos = 1 / 2,
+            four =, cuatro = 1 / 4,
+            0
+)
+b
+@
+
+\begin{playground}
+    Do play with the use of the switch statement. Look at the documentation for \code{switch()} using \code{help(switch)} and study the examples at the end of the help page. Explore what happens if you set \code{my.object <- "ten"}, \code{my.object <- "three"}, \code{my.object <- NA\_character\_} or  \code{my.object <- character()}. Then remove the \code{, 0} as default value, and repeat.
+\end{playground}
+
+When the expression used as a condition returns a value that is not a \code{character}, it will be interpreted as an \code{integer} index. In this case no names are used for the cases, and the last one is always interpreted as the default.
+
+<<>>=
+my.number <- 2
+b <- switch(my.number,
+            1,
+            1 / 2,
+            1 / 4,
+            0
+)
+b
+@
+
+\begin{playground}
+    Continue playing with the use of the switch statement. Explore what happens if you set \code{my.number <- 10}, \code{my.number <- 3}, \code{my.number <- NA} or  \code{my.object <- numeric()}. Then remove the \code{, 0} as default value, and repeat.
+\end{playground}
+
+\begin{explainbox}
+The statements for the cases in a \Rcontrol{switch()} statement can be compound statements as in the case of \code{if}, and they can even be used for a side effect. For example the example above can edited to print a message when the default value is returned.
+
+<<explain-switch-01>>=
+my.object <- "ten"
+b <- switch(my.object,
+            one = 1,
+            two = 1 / 2,
+            three = 1 / 4,
+            {print("No match! Using default"); 0}
+)
+b
+@
+\end{explainbox}
+
+\begin{explainbox}
+  The \Rcontrol{switch} statement can substitute for chained \code{if \ldots\ else} statements when all the conditions can be described by constant values or distinct values returned by the same test. The advantage is more concise and readable code. The equivalent of the first \Rcontrol{switch} example above when written using \code{if \ldots\ else} becomes longer. Given how terse code using \Rcontrol{switch} is, those not yet familiar with its use may find the more verbose style used below easier to understand. On the other hand, with numerous cases a \Rcontrol{switch} statement is easier to read and understand.
+
+<<explain-switch-11>>=
+my.object <- "two"
+if (my.object == "one") {
+  b <- 1
+} else if (my.object == "two") {
+  b <- 1 / 2
+} else if (my.object == "four") {
+  b <- 1 / 4
+} else {
+  b <- 0
+}
+b
+@
+
+\end{explainbox}
+
+\begin{advplayground}
+  Consider another alternative approach, the use of a named vector to map values. In most of the examples above the code for the cases is a constant value or an operation among constant values. Implement one of this examples using a named vector instead of a \Rcontrol{switch} statement.
+\end{advplayground}
+
+\subsection[Vectorized \texttt{ifelse()}]{Vectorized \code{ifelse()}}
+\index{vectorized ifelse}
+Vectorized \emph{ifelse} is a peculiarity of the \Rlang language, but very useful for writing concise code that may execute faster than logically equivalent but not vectorized code.
+Vectorized conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector usually the result of a test (parameter \code{test}), an expression to use for \code{TRUE} cases (parameter \code{yes}), and an expression to use for \code{FALSE} cases (parameter \code{no}). At each index position along the vectors, the value included in the returned vector is taken from \code{yes} if the corresponding member of the \code{test} logical vector is \code{TRUE} and from \code{no} if the corresponding member of \code{test} is \code{FALSE}. All three arguments can be any \Rlang statement returning the required vectors.
+
+The flow chart for \Rcontrol{ifelse()} is similar to that for \code{if \ldots\ else} shown on page \pageref{flowchart:if} but applied in parallel to the individual members of vectors; e.g.\ the condition expression is evaluated at index position \code{1} controls which value will be present in the returned vector at index position \code{1}, and so on.
+
+It is customary to pass arguments to \code{ifelse} by position. We give a first example with named arguments to clarify the use of the function.
+
+<<ifelse-0>>=
+my.test <- c(TRUE, FALSE, TRUE, TRUE)
+ifelse(test = my.test, yes = 1, no = -1)
+@
+
+In practice, the most common idiom is to have as an argument passed to \code{test}, the result of a comparison calculated on the fly. In the first example we compute the absolute values for a vector, equivalent to that returned by \Rlang function \code{abs()}.
+
+<<ifelse-0a>>=
+nums <- -3:+3
+ifelse(nums < 0, -nums, nums)
+@
+
+\begin{warningbox}
+In the case of \Rcontrol{ifelse()}, the length of the returned value is determined by the length of the logical vector passed as an argument to its first formal parameter (named \code{test})! A frequent mistake is to use a condition that returns a \code{logical} vector of length one, expecting that it will be recycled because arguments passed to the other formal parameters (named \code{yes} and \code{no}) are longer. However, no recycling will take place, resulting in a returned value of length one, with the remaining elements of the vectors passed to \code{yes} and \code{no} being discarded. Do try this by yourself, using logical vectors of different lengths. You can start with the examples below, making sure you understand why the returned values are what they are.
+
+<<>>=
+ifelse(TRUE, 1:5, -5:-1)
+ifelse(FALSE, 1:5, -5:-1)
+ifelse(c(TRUE, FALSE), 1:5, -5:-1)
+ifelse(c(FALSE, TRUE), 1:5, -5:-1)
+ifelse(c(FALSE, TRUE), 1:5, 0)
+@
+\end{warningbox}
+
+\begin{playground}
+Some additional examples to play with, with a few surprises. Study the examples below until you understand why returned values are what they are. In addition, create your own examples to test other possible cases. In other words, play with the code until you fully understand how \code{ifelse()} statements work.
+
+<<ifelse-1, eval=eval_playground>>=
+a <- 1:10
+ifelse(a > 5, 1, -1)
+ifelse(a > 5, a + 1, a - 1)
+ifelse(any(a > 5), a + 1, a - 1) # tricky
+ifelse(logical(0), a + 1, a - 1) # even more tricky
+ifelse(NA, a + 1, a - 1) # as expected
+@
+Hint: if you need to refresh your understanding of \code{logical} values and Boolean algebra see section \ref{sec:calc:boolean} on page \pageref{sec:calc:boolean}.
+\end{playground}
+
+\begin{advplayground}
+Write, using \Rcontrol{ifelse()}, a single statement to combine numbers from the two vectors \code{a} and \code{b} into a result vector \code{d}, based on whether the corresponding value in vector \code{c} is the character \code{"a"} or \code{"b"}. Then print vector \code{d} to make the result visible.
+
+<<ifelse-2, eval=eval_playground>>=
+a <- -10:-1
+b <- +1:10
+c <- c(rep("a", 5), rep("b", 5))
+# your code
+@
+
+If you do not understand how the three vectors are built, or you cannot guess the values they contain by reading the code, print them, and play with the arguments, until you understand what each parameter does. Also use \code{help(rep)} and/or \code{help(ifelse)} to access the documentation.
+\end{advplayground}
+
+\begin{advplayground}
+Continuing from the playground above, test the behaviour of \Rcontrol{ifelse()} with \code{NA}, \code{NULL} and \code{logical()} passed as arguments to \code{test}. Also test the behaviour when only some members of a logical vector are not available (\code{NA}).
+\end{advplayground}
+
+\section{Iteration}
+\index{loops|seealso{iteration}}
+We give the name \emph{iteration} to the process of repetitive execution of a program statement---e.g., \emph{computed by iteration}. We use the same word, \emph{iteration}, to name each one of these repetitions of the execution of a statement---e.g., \emph{the second iteration}.
+
+Iteration constructs make it possible to ``decide'' at run time the number of iterations, i.e., when execution breaks out of the loop and continues at the next statement in the script. Iteration can be used to apply the same computations to the different members of a vector or list (this section), but also to apply different functions to members of a vector, matrix, list or data frame (section \ref{sec:R:faces:of:loops} on page \pageref{sec:R:faces:of:loops}).
+
+In \Rlang three types of iteration loops are available: \Rloop{for}, \Rloop{while} and \Rloop{repeat} constructs. They differ in the origin of the values they iterate over, and in the type of test used to terminate iteration. When the same algorithm can be implemented with more than one of these constructs, using the least flexible of them usually results in easier to understand code.
+
+In \Rlang, explicit loops as described in this section can in some cases be replaced by calls to \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) or with vectorized functions and operators (see page \pageref{par:calc:vectorized:opers}). The choice among these approaches affects readability and performance (see section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}).
+
+\subsection[\texttt{for} loops]{\code{for} loops}
+
+\begin{figure}
+  \centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.3cm] {\code{for (<list>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.55cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\textsl{continue}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\textsl{break}} (stat3);
+\draw [arrow, color = blue] (stat2) |- (entry);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption{Flowchart for a \code{for} iteration loop.}\label{fig:for:loop:diagram}
+\end{figure}
+
+The\index{for loop}\index{iteration!for loop}\qRloop{for} most frequently used type of loop is a \code{for} loop. These loops work in \Rlang by ``walking through'' a list or vector of values to act upon (Figure \ref{fig:for:loop:diagram}). Within a \qRloop{for} loop these values are available, sequentially, one at a time through a variable that functions as a placeholder. The implicit test for the end of the vector or list takes place at the top of the construct before the loop statement is evaluated. The flow chart has the shape of a \emph{loop} as the execution can be directed to an earlier position in the sequence of statements, allowing the same section of code to be evaluated multiple times, each time with a new value assigned to the placeholder variable.
+
+In the diagram above the argument to \code{for()} is shown as \code{<list>} but it can also be a \code{vector} of any mode. Objects of most classes derived from \code{list} or from an atomic vector can also fulfil the same role. The extraction operation with a numeric index must be supported by objects of the class passed as argument.
+
+Similarly to \code{if} constructs, only one statement is controlled by \Rloop{for}, however this statement can be a compound statement enclosed in braces \verb|{ }| (see pages \pageref{sec:script:compound:statement} and \pageref{sec:script:if}).
+
+<<for-00>>=
+b <- 0 # variable needs to set to a valid numeric value!
+for (a in 1:5) b <- b + a
+b
+@
+
+Here the statement \code{b <- b + a} is executed five times, with placeholder variable \code{a} sequentially taking each of the values, 1, 2, 3, 4, and 5, in anonymous vector \code{1:5}. The name used as placeholder has to fulfil the same requirements as an ordinary \Rlang variable name. The list or vector following \code{in} can contain any valid \Rlang objects, as long as the code statements in the loop body can handle them.
+
+\begin{warningbox}
+In a \code{for()} loop construct, even when it is a variable, the vector or list passed as argument cannot be modified by the code statement within the \code{for} loop.
+\end{warningbox}
+
+A\index{for loop!unrolled} loop can be ``unrolled'' into a linear sequence of statements. Let's work through the \code{for} loop above.
+
+<<for-unrolled>>=
+b <- 0
+# start of loop
+# first iteration
+a <- 1
+b <- b + a
+# second iteration
+a <- 2
+b <- b + a
+# third iteration
+a <- 3
+b <- b + a
+# fourth iteration
+a <- 4
+b <- b + a
+# fifth iteration
+a <- 5
+b <- b + a
+# end of loop
+b
+@
+
+The operation implemented in this example is a very frequent one, the sum of a vector, so base \Rlang provides a function optimized for efficiently computing it.
+
+<<for-replaced-by-sum>>=
+sum(1:5)
+@
+
+\begin{warningbox}
+It is important to note that a list or vector of length zero is a valid argument to \code{for()}, that triggers no error, but skips the statements in the loop body.
+
+<<for-00a>>=
+b <- 0
+for (a in numeric()) b <- b + a
+print(b)
+@
+\end{warningbox}
+
+By printing at each iteration variable \code{b}, the partial results at each iteration can be observed. Brackets are needed to form a compound statement from the two simple statements so that \code{print(b)} is also executed at each iteration.
+
+<<for-01>>=
+a <- c(1, 4, 3, 6, 8)
+for(x in a) {
+  b <- x*2
+  print(b)
+  }
+@
+
+\begin{warningbox}
+The iteration constructs \Rloop{for}, \Rloop{while}, and \code{repeat} always silently return \code{NULL}, which is a different behaviour than that of \code{if}.
+
+<<for-02>>=
+b <- for(x in a) x*2
+x
+b
+@
+
+Thus as shown in earlier examples of \Rloop{for} loops, computed values need to be assigned to one or more variables within the loop so that they are not lost.
+\end{warningbox}
+
+While in the examples above the code directly walked through the values in the vector, and alternative approach is to walk through a sequence of indices using the extraction operator \Roperator{[ ]} to access the values in vectors or lists. This approach makes it possible to walk through more than one list or vector. In the example below, elements of vectors \code{a} and \code{b} are accessed concurrently, \code{a} providing the input and \code{b} used to store the corresponding computed value.\label{chunk:for:example}
+
+<<for-03a>>=
+b <- numeric() # an empty vector
+for(i in seq(along.with = a)) {
+  b[i] <- a[i]^2
+}
+b
+@
+
+\begin{playground}\label{box:play:forloop}
+Adding calls to \code{print()} makes visible the values taken by variables \code{i}, \code{a}, and \code{b} at each iteration. Try to understand where these values come from at each iteration, by playing with the code and modifying it.
+
+<<for-03d, eval=eval_playground>>=
+b <- numeric() # an empty vector
+for(i in seq(along.with = a)) {
+  b[i] <- a[i]^2
+  print(i)
+  print(a)
+  print(b)
+}
+b
+@
+
+The same approach of adding calls to \code{print()} can be used for debugging any code that does not return the expected results.
+\end{playground}
+
+Above I used \code{seq(along.with = a)} to build a numeric vector containing a sequence of the same length as vector \code{a}. Using this \emph{idiom} ensures that a vector, in this example \code{a}, with length zero will be handled correctly, with \code{numeric(0)} assigned to \code{b}.
+
+\begin{advplayground}
+Run the examples below and explain why the two approaches are equivalent only when the length of \code{a} is one or more. Find the answer by assigning to \code{A}, vectors of different lengths, including zero (using \code{A <- numeric(0)}).
+
+<<for-04, eval=eval_playground>>=
+# assign a numeric vector to variable A
+B <- numeric(length(A))
+for(i in seq(along.with = A)) {
+  B[i] <- A[i]^2
+}
+B
+
+C <- numeric(length(A))
+for(i in 1:length(A)) {
+  C[i] <- A[i]^2
+}
+C
+@
+
+\end{advplayground}
+
+\begin{explainbox}
+Using \code{seq(along.with = A)}, its equivalent \code{seq\_along(A)}, as above creates a sequence of integers in \code{i}, that indexes all members of \code{a} in the ``walk-trough''. There is no requirement in the \Rlang for this, and including only some of the valid indexes, or including them in arbitrary order is possible if needed, however this is rarely the case. On exit from the loop, the iterator \code{i} remains accessible and contains its value at the last iteration.
+\end{explainbox}
+
+Vectorization usually results in the simplest and fastest code, as shown below (see section \ref{sec:loops:slow} on \pageref{sec:loops:slow}). However, not all \Rloop{for} loops can be replaced by vectorized statements.
+
+<<for-03c>>=
+b <- a^2
+b
+@
+
+\begin{explainbox}
+\Rloop{for} loops as described above, in the absence of errors, have statically predictable behavior. The compound statement in the loop will be executed once for each member of the vector or list. Special cases may require the alteration of the normal flow of execution in the loop. Two cases are easy to deal with, one is stopping iteration early with a call to \Rloop{break()}, and another is jumping ahead to the next iteration with a call to \Rloop{next()}. The example below shows the use of these two functions: we ignore negative values contained in \code{a}, and exit or break out of the loop when the accumulated sum \code{b} exceeds 100.
+
+<<for-05>>=
+b <- 0
+a <- -10:100
+idxs <- seq_along(a)
+for(i in idxs) {
+  if (a[i] < 0) next()
+  b <- b + a[i]
+  if (b > 100) break()
+}
+b
+i
+a[i]
+@
+
+Hint: if you find the code in the example above difficult to understand, insert \code{print()} statements and run it again inspecting how the values of \code{a}, \code{b}, \code{idxs} and \code{i} behave within the loop.
+
+In \Rloop{for} loops the use of \Rcontrol{break()} and \Rcontrol{next()} should be reserved for exceptional conditions. When the \Rloop{for} construct is not flexible enough for the computations being implemented, using a \Rloop{while} or a \Rloop{repeat} loop is preferable.
+
+\end{explainbox}
+
+\subsection[\texttt{while} loops]{\code{while} loops}
+
+\begin{figure}
+  \centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [decision, color = blue, fill = blue!15, below of=entry, yshift=0.3cm] {\code{while (<cond.>)}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.3cm] {\code{<statement A>}};
+\node (stat3) [process, below of=dec1, yshift=-0.5cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {\code{TRUE}} (stat2);
+\draw [arrow, color=blue] (dec1) -- node[anchor=west] {\code{FALSE}} (stat3);
+\draw [arrow, color = blue] (stat2) |- (entry);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption{Flowchart for a \code{while} iteration loop.}\label{fig:while:loop:diagram}
+\end{figure}
+
+\Rloop{while} loops\index{iteration!while loop} are more flexible than \code{for} loops (Figure \ref{fig:while:loop:diagram}). Instead of walking through a list or vector, iteration is controlled by a logical condition of length one, just like in \code{if}. Differently to \code{if}, the controlled statement is executed repeatedly as long as the condition remains \code{TRUE}.
+
+<<while-02>>=
+a <- 2
+while (a < 50) {
+  print(a)
+  a <- a^2
+}
+print(a)
+@
+
+\begin{warningbox}
+To ensure that a \code{while} loop is exited instead of circling for ever, the condition, \code{a < 50} in the example above, must depend on a value that is modified by the controlled statement, like \code{a} in this case.
+\end{warningbox}
+
+\begin{playground}
+Make sure that you understand why the final value of \code{a} is larger than 50.
+\end{playground}
+
+\begin{explainbox}
+The statements above can be simplified, by nesting the assignment inside a call to print.
+
+<<while-03, eval=eval_playground>>=
+a <- 2
+print(a)
+while (a < 50) print(a <- a^2)
+@
+
+In \Rlang, statements like \code{c <- 1:5} return \emph{invisibly} (with no implicit call to \code{print()}) the value assigned. This makes possible \emph{chained} assignments to several variables within a single statement like in the example below, as well as using an assignment statement as an argument to a function or operator.
+
+<<while-04, eval=eval_playground>>=
+a <- b <- c <- 1:5
+a
+@
+\end{explainbox}
+
+\begin{advplayground}
+Explain why a second \code{print(a)} has been added before \code{while()}. Hint: experiment if necessary.
+\end{advplayground}
+
+As with \code{for} loops we can use an index variable in a \Rfunction{while} loop to walk through vectors and lists. The difference is that we have to update the index values explicitly in our own code. As example below is the code example for \code{for} from page \pageref{chunk:for:example} rewritten using \Rfunction{while}.
+
+<<while-05>>=
+a <- c(1, 4, 3, 6, 8)
+b <- numeric() # an empty vector
+i <- 1
+while(i <= length(a)) {
+  b[i] <- a[i]^2
+  print(b)
+  i <- i + 1
+}
+b
+@
+
+\begin{explainbox}
+\Rloop{while} loops as described above will terminate when the condition tested is \code{FALSE}. In cases that require stopping iteration based on an additional test condition within the compound statement, we can call \Rloop{break()} in the body of an \code{if} or \code{else} statement within the \code{while} statement. As in the case of \code{for} loops, it is good to use \Rloop{break()} only for exceptional conditions.
+\end{explainbox}
+
+\subsection[\texttt{repeat} loops]{\code{repeat} loops}
+
+\begin{figure}
+\centering
+\begin{small}
+\begin{tikzpicture}[node distance=1.5cm]
+\node (start) [startstop] {\ldots};
+\node (entry) [below of=start, color = blue, yshift=0.5cm]{$\bullet$};
+\node (dec1) [process, color = blue, fill = blue!15, below of=start, yshift=-0.3cm] {\code{repeat}};
+\node (stat2) [process, color = blue, fill = blue!15, right of=dec1, xshift=3.3cm] {\code{<statement A>}};
+\node (stat3) [process, below of=stat2, yshift=-0.1cm] {\code{<statement B>}};
+\node (stop) [startstop, below of=stat3] {\ldots};
+\draw [arrow] (start) -- (dec1);
+\draw [arrow, color=blue] (dec1) -- node[anchor=north] {} (stat2);
+\draw [arrow, color=blue] (stat2) |- node[anchor=south east] {\textsl{continue}} (entry);
+\draw [arrow, color=blue] (stat2) -- node[anchor=west] {\code{break()}} (stat3);
+\draw [arrow, color = blue] (entry) -- (dec1);
+\draw [arrow] (stat3) -- (stop);
+\end{tikzpicture}
+\end{small}
+  \caption{Flowchart for a \code{repeat} iteration loop.}\label{fig:repeat:loop:diagram}
+\end{figure}
+
+The \Rloop{repeat}\index{iteration!repeat loop} construct is the most flexible as iteration only stops with a call to \Rcontrol{break()}. One or more calls to \Rcontrol{break()} can be located anywhere within the compound statement that forms the body of the loop (Figure \ref{fig:repeat:loop:diagram}).
+
+<<repeat-1>>=
+a <- 2
+repeat{
+  print(a)
+  if (a > 50) break()
+  a <- a^2
+}
+@
+
+\begin{playground}
+Try to explain why the example above returns the values it does. Use the approach of adding \code{print()} statements, as described on page \pageref{box:play:forloop}.
+\end{playground}
+
+When \code{repeat} loop constructs contain more than one call to \Rcontrol{break()}, each within a different \code{if} or \code{else} statement, indentation and/or comments can be used to highlight in the listing this infrequent use case .
+
+\begin{advplayground}
+  Explain why a \Rloop{repeat} construct is equivalent to a \Rloop{while} construct with the test condition set equal to \code{logical} constant \code{TRUE}.
+\end{advplayground}
+
+\subsection{Nesting of loops}\label{sec:nested:loops}
+\index{iteration!nesting of loops}\index{nested iteration loops}\index{loops!nested}
+
+All the execution-flow control statements seen above can be nested, as syntactically they are themselves statements. I show an example with two \code{for} loops used to walk through rows and columns of a \code{matrix} constructed as follows.
+
+<<nested-1>>=
+A <- matrix(1:50, nrow = 10)
+A
+@
+
+The nested loops below compute the sum for each row of the matrix. In the example below, the value of \code{i} changes for each iteration of the outer loop. The value of \code{j} changes for each iteration of the inner loop, and the inner loop is run in full for each iteration of the outer loop. The inner loop index \code{j} changes fastest.
+
+<<nested-22>>=
+row.sum <- numeric()
+for (i in 1:nrow(A)) {
+  row.sum[i] <- 0
+  for (j in 1:ncol(A))
+    row.sum[i] <- row.sum[i] + A[i, j]
+}
+print(row.sum)
+@
+
+\begin{warningbox}
+The nested loops above work correctly with any two-dimensional matrix with at least one column and one row, but \emph{crash} with an empty matrix (\code{matrix()} or \code{matrix(numeric())}). Thus it is good practice to enclose the \Rloop{for} loop in an \Rcontrol{if} statement as protection. For the example above a suitable \code{logical} condition is \code{!is.null(dim(A)) \&\& !any(dim(A) == 0}.
+\end{warningbox}
+
+\begin{advplayground}
+1) Modify the code in last chunk above so that it sums the values only in the first three columns of \code{A}, and 2) modify the same code so that it sums the values only in the last three rows of \code{A}.
+
+Does the code you wrote work as expected when the number of rows in \code{A} is different from \Sexpr{nrow(A)}? and, also if the number of columns in \code{A} is different from \Sexpr{ncol(A)}? What would happen if \code{A} had fewer than three columns? Try to think first what to expect based on the code you wrote. Then create matrices of different sizes and test your code. After that, if necessary, try to improve the code, so that wrong results are never returned.
+\end{advplayground}
+
+\section[Apply functions]{\emph{Apply} functions}\label{sec:data:apply}
+
+\emph{Apply}\index{apply functions}\index{loops!faster alternatives} functions' role is similar to that of the iteration loops discussed above. One could say that apply functions ``walk along'' a vector, list or a dimension of a matrix or an array, calling a function with each member of the collection as argument. Notation is more concise than in \code{for} constructs. However, apply functions can be used only when the operations to be applied are \emph{independent---i.e., the results from one iteration are not used in another iteration---}.
+
+\begin{warningbox}
+Conceptually, \code{for}, \code{while} and \code{repeat} loops are interpreted as controlling a sequential evaluation of program statements. In contrast, \Rlang's \emph{apply} functions are, conceptually, thought as evaluating a function in parallel for each of the different members of their input. So, while in loops the results of earlier iterations through a loop can be stored in variables and used in subsequent iterations, this is not possible in the case of \emph{apply} functions.
+\end{warningbox}
+
+The different \emph{apply} functions in base \Rlang differ in the class of the values they accept for their \code{X} parameter, the class of the object they return and/or the class of the value returned by the applied function. \Rloop{lapply()}, \Rloop{vapply()} and \Rloop{sapply()} expect a \code{vector} or \code{list} as an argument passed through \code{X}. \Rloop{lapply()} returns a \code{list} or an \code{array}; and \Rloop{vapply()} always \emph{simplifies} its returned value into a vector, while \Rloop{sapply()} does the simplification according to the argument passed to its \code{simplify} parameter. All these \emph{apply} functions can be used to apply an \Rlang function that returns a value of the same or a different class as its argument. In the case of \Rloop{apply()} and \Rloop{lapply()} not even the length of the values returned for each member of the collection passed as an argument, needs to be consistent. Function \Rloop{apply()} is used to apply a function to the elements along one dimension of an object that has two or more \emph{dimensions} returning an array or a list or a vector depending on the size, and consistency in length and class among the values returned by the applied function.
+
+\subsection{Applying functions to vectors, lists and data frames}
+
+I exemplify the use of \Rloop{lapply()}, \Rloop{sapply()} and \Rloop{vapply()}. Below, they are used to apply function \Rfunction{log()} to each member of a \code{numeric} vector. This is a function defined in \Rlang itself, but user-defined functions and functions imported from packages can be applied identically. How to define packages and define new functions are the subject of chapter \ref{chap:R:functions} (on page \pageref{chap:R:functions}).
+
+\begin{warningbox}
+The individual member objects in the list or vector passed as argument to parameter \code{x} of \textit{apply} functions are passed as a positional argument to the first formal parameter of the applied function, i.e., only some \Rlang functions can be passed as argument to \code{FUN}.
+\end{warningbox}
+
+<<apply-00>>=
+set.seed(123456) # so that vct1 does not change
+vct1 <- runif(6) # A short vector as input to keep output short
+str(vct1)
+@
+
+<<apply-01a>>=
+z <- lapply(X = vct1, FUN = log)
+str(z)
+@
+
+The code above calls \code{log()} once with each of the six members of \code{vct1} as argument and collects the returned values into a list, hence the \code{l} in \Rloop{lapply()}.
+
+<<apply-02>>=
+z <- sapply(X = vct1, FUN = log)
+str(z)
+@
+
+The code above calls \code{log()} as in the previous example but collects the returned values into a vector, i.e., by default it \emph{simplifies} the list into a vector or matrix when possible, hence the \code{s} in \Rloop{sapply()}. Simplification can be skipped, in this case returning a list as \Rloop{lapply()} above (not shown).
+
+<<apply-03, eval=eval_playground>>=
+z <- sapply(X = vct1, FUN = log, simplify = FALSE)
+str(z)
+@
+
+\Rloop{vapply()} always returns a vector (no example shown), hence the \code{v} in its name. The computed results are the same using \Rloop{lapply()}, \Rloop{sapply()} or \Rloop{vapply()}, but the class and structure of the objects returned can differ, as well as how numbers are printed.
+
+Function \Rfunction{log()} has a second parameter named \code{base} that can be passed and argument to override the default base ($e$) used to compute natural logarithms. Additional arguments like this can be passed by name, using the name of the parameter in the function passed as argument to \code{FUN}, in this case \code{base}.
+
+<<apply-01b>>=
+z <- sapply(X = vct1, FUN = log, base = 10)
+str(z)
+@
+
+\begin{explainbox}
+Anonymous functions can be defined (see section \ref{sec:script:functions} on page \pageref{sec:script:functions}) and directly passed as argument to \code{FUN} without the need of separately assigning them to a name.
+
+<<apply-04>>=
+z <- sapply(X = vct1, FUN = function(x) {log10(x + 1)})
+str(z)
+@
+\end{explainbox}
+
+As explained in section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}, class \code{data.frame} is derived from class \code{list}. The columns in a data frame are equivalent to members of a list, and functions can thus be applied to columns. The data frame \code{cars} from package \pkgname{datasets} contains data for speed and for stopping distance for cars stored in two columns or member variables, named \code{speed} and \code{dist}. The members of the returned \code{numeric} vector, containing the computed means, are named accordingly.
+
+<<apply-05a>>=
+sapply(X = cars, FUN = mean)
+@
+
+\begin{explainbox}
+Here is a possible way of obtaining means and standard deviations of member vectors. The argument passed to \code{FUN.VALUE} provides a template for the type of the returned value and its organization into rows and columns. Notice that the rows in the output are now named according to the names in \code{FUN.VALUE}.
+
+A function that returns a numeric vector of length 2 containing mean and standard deviation can be defined by calling existing functions (see section \ref{sec:script:functions} on page \pageref{sec:script:functions}).
+
+<<apply-07>>=
+mean_and_sd <-
+  function(x, na.rm = FALSE) {
+    c(mean = mean(x, na.rm = na.rm),  sd = sd(x, na.rm = na.rm))
+  }
+@
+
+and \Rloop{vapply()} used to apply it to each member vector of the list. The argument passed to \code{FUN.VALUE} serves as a template indicating the values returned by function \code{mean\_and\_sd()}.
+
+<<apply-07b>>=
+values <- vapply(X = cars,
+                 FUN = mean_and_sd,
+                 FUN.VALUE = c(mean = 0, sd = 0),
+                 na.rm = TRUE)
+class(values)
+values
+@
+\end{explainbox}
+
+\begin{playground}
+  Apply function \code{mean\_and\_sd()} defined above to the data frame \code{cars} from \pkgname{datasets}. The aim is to obtain the mean and standard deviation for each numeric column.
+\end{playground}
+
+\begin{advplayground}
+Obtain the summary of dataset \code{airquality} with function \Rfunction{summary()}, but in addition, write code with an \emph{apply} function to count the number of non-missing values in each column. Hint: using \code{sum()} on a \code{logical} vector returns the count of \code{TRUE} values as \code{TRUE}, and \code{FALSE} are transparently converted into \code{numeric} 1 and 0, respectively, when \code{logical} values are used in arithmetic expressions.
+\end{advplayground}
+
+In the examples above the \emph{apply} functions were used to ``reduce´´ the data by applying summary functions. In the next code chunk \code{lapply()} is used to construct the \code{list} of five vectors \code{ls1} using a vector of five numbers as argument passed to parameter \code{X}. As above, additional \emph{named} arguments are relayed to each call of \code{rnorm()}.
+
+<<apply-06>>=
+set.seed(123456)
+ls1 <- lapply(X = c(v1 = 2, v2 = 5, v3 = 3, v4 = 1, v5 = 4),
+              FUN = rnorm, mean = 10, sd = 1)
+#names(ls1) <- paste("vect", 1:length(ls1))
+str(ls1)
+@
+
+In addition to functions returning pseudo-random draws from different probability distributions, constructors for objects of various classes can be used similarly.
+
+\subsection{Applying functions to matrices and arrays}
+
+Matrices and arrays have two or more dimensions, and contrary to data frames, they are not a special kind of one-dimensional lists. In \Rlang the dimensions of a matrix, rows and columns, over which a function is applied are called \emph{margins} (see section \ref{sec:matrix:array}, and Figure \ref{fig:matrix:margins} on page \pageref{fig:matrix:margins}). The argument passed to parameter \code{MARGIN} determines \emph{over} which margin the function will be applied. Arrays can have many dimensions (see Figure \ref{fig:array:margins} on page \pageref{fig:array:margins}), and consequently more margins. In the case of arrays with more than two dimensions, it is possible and can be useful to apply functions over multiple margins at once.
+
+\begin{warningbox}
+The individual \emph{slices} of the matrix or array passed as argument to parameter \code{X} of \textit{apply} functions are passed as a positional argument to the first formal parameter of the applied function, i.e., only some \Rlang functions can be passed as argument to \code{FUN}.
+\end{warningbox}
+
+Matrix \code{mat1} constructed here will be used in examples. Adding names helps with understanding both here and when using matrices in real data analysis situations.
+
+<<apply-10>>=
+mat1 <- matrix(rnorm(6, mean = 10, sd = 1), ncol = 2)
+mat1 <- round(mat1, digits = 1)
+dimnames(mat1) <- # add row and column names
+  list(paste("row", 1:nrow(mat1)), paste("col", 1:ncol(mat1)))
+mat1
+@
+
+Column (or row) means of matrices can be easily computed with \Rfunction{apply()}. However, in contrast to when using other \emph{apply} functions, an argument must be passed to parameter \code{MARGIN}.
+
+<<apply-08>>=
+apply(mat1, MARGIN = 2, FUN = mean)
+@
+
+\begin{playground}
+Edit the example above so that it computes row means instead of column means.
+\end{playground}
+
+\begin{advplayground}
+As described above, we can pass arguments by name to the applied function. Can you guess why parameter names of \emph{apply} functions are fully in uppercase, something very unusual for \Rlang coding style?
+\end{advplayground}
+
+If the function applied returns a value of the same length as its input, then the dimensions of the value returned by \Rloop{apply()} are the same as those of its input. Using the identity function \Rfunction{I()} that returns its argument unchanged, facilitates the comparison of output against input.
+
+<<apply-11>>=
+z <- apply(X = mat1, MARGIN = 2, FUN = I)
+dim(z)
+z
+@
+
+Passing \code{MARGIN = 1} as below instead of \code{MARGIN = 2} as above, rows and columns are transposed in the returned value!.
+
+<<apply-12>>=
+z <- apply(X = mat1, MARGIN = 1, FUN = I)
+dim(z)
+z
+@
+
+The next, more realistic example, applies function \Rfunction{summary()} that returns a value usually shorter than its input, but longer than one. Both for column summaries (\code{MARGIN = 2}) and row summaries (\code{MARGIN = 1}), a matrix is returned. Each columns, a numeric vector in this example, contains the vector returned by a call to \Rfunction{summary()}. Column and row names from \code{mat1} are preserved, as well as the names in the value returned by \Rfunction{summary()}.
+
+<<apply-13>>=
+z <- apply(X = mat1, MARGIN = 2, FUN = summary)
+z
+@
+
+<<apply-14>>=
+z <- apply(X = mat1, MARGIN = 1, FUN = summary)
+z
+@
+
+In all examples above, we have used ordinary functions. Binary operators in \Rlang are functions with two formal parameters which can be called using infix notation in expressions---i.e., \code{a + b}. By back-quoting their names they can be called using the same syntax as for ordinary functions, and consequently also passed to the \code{FUN} parameter of apply functions. A toy example, equivalent to the vectorized operation \code{vct1 + 5} follows. By enclosing operator \Roperator{+} in back ticks (\code{`}) and passing by name a constant to its second formal parameter (\code{e2 = 5}) operator \Roperator{+} behaves like an ordinary function. See section \ref{sec:operator:functions} on page \pageref{sec:operator:functions}).
+
+<<apply-15>>=
+set.seed(123456) # so that vct1 does not change
+vct1 <- runif(10)
+z <- sapply(X = vct1, FUN = `+`, e2 = 5)
+str(z)
+@
+
+\section{Functions that replace loops}\label{sec:vectorized:functions}
+
+\begin{table}
+  \caption[Functions that replace loops]{\Rlang functions that can substitute for iteration loops. They accept vectors as argument, except for \Rfunction{rowSums()}, \Rfunction{colSums()}, \Rfunction{rowMeans()}, and \Rfunction{colMeans()} which accept \code{matrix} objects as argument. Only functions that return a value with the same dimensions as the argument passed as input are vectorized in the sense used in this book.\vspace{1ex}}\label{tab:vectorized:functions}
+  \centering
+\noindent
+\begin{tabular}{lll}
+  \toprule
+  Function & Computation & Returned class, length \\
+  \midrule
+  \Rfunction{sum()}\strut & $\sum_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{rowSums()}\strut & $\sum_{j=1}^l x_i$ & \code{numeric}, $n$ \\
+  \Rfunction{colSums()}\strut & $\sum_{i=1}^n x_j$ & \code{numeric}, $l$ \\
+  \Rfunction{mean()}\strut & $\sum_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{rowMeans()}\strut & $\sum_{j=1}^l x_i / l$ & \code{numeric}, $n$ \\
+  \Rfunction{colMeans()}\strut & $\sum_{i=1}^n x_j / n$ & \code{numeric}, $l$ \\
+  \Rfunction{prod()}\strut & $\prod_{i=1}^n x_i$ & \code{numeric}, $1$ \\
+  \Rfunction{cumsum()}\strut & $\sum_{i=1}^1 x_i, \cdots \sum_{i=1}^j x_i, \cdots \sum_{i=1}^n x_i$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cumprod()}\strut & $\prod_{i=1}^1 x_i, \cdots \prod_{i=1}^j x_i, \cdots \prod_{i=1}^n x_i$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummax()}\strut & cumulative maximum & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{cummin()}\strut & cumulative minimum & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{runmed()}\strut & running median & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{diff()}\strut & $x_2 - x_1, \cdots x_i - x_{i-1}, \cdots x_n - x_{n-1}$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}-1$ \\
+  \Rfunction{diffinv()}\strut & inverse of diff & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}+1$ \\
+  \Rfunction{factorial()}\strut & $x!$ & \code{numeric}, $n_\mathrm{out} = n_\mathrm{in}$ \\
+  \Rfunction{rle()}\strut & run-length encoding & \code{rle}, $n_\mathrm{out} < n_\mathrm{in}$ \\
+  \Rfunction{inverse.rle()}\strut & run-length decoding & \code{vector}, $n_\mathrm{out} > n_\mathrm{in}$ \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\Rlang provides several functions that can be used to avoid writing iterative loops. The most frequently used are taken for granted: \Rfunction{mean()}, \Rfunction{var()} (variance), \Rfunction{sd()} (standard deviation), \Rfunction{max()}, and \Rfunction{min()}. Replacing code implementing an iterative algorithm by a single function call simplifies the script's code and can make it easier to understand. These functions are written in \Clang and compiled, so even when iterative algorithms are used, they are fast (see section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}). Table \ref{tab:vectorized:functions} lists several functions from base \Rlang that implement iterative algorithms. All these functions take a vector of arbitrary length as their first argument, except for \Rfunction{inverse.rle()}.\vspace{2ex}
+
+\begin{playground}
+  Build a \code{numeric} vector such as \code{x <- c(1, 9, 6, 4, 3)} and pass it as argument to the functions in Table \ref{tab:vectorized:functions}. Do the corresponding computations manually for the functions your find most relevant, trying to understand what values they calculate.
+\end{playground}
+\index{loops!faster alternatives|)}
+
+\section{The multiple faces of loops}\label{sec:R:faces:of:loops}
+
+\ilAdvanced\ In this advanced section I describe some uses of \Rlang loops that help with writing  concise scrips. As these make heavy use of functions, if you are reading the book sequentially, you should skip this section and return to it after reading chapters \ref{chap:R:functions} and \ref{chap:R:statistics}.
+
+In the same way as we can assign names to \code{numeric}, \code{character} and other types of objects, we can assign names to functions and expressions. We can also create lists of functions and/or expressions. The \Rlang language has a very consistent grammar, with all lists and vectors behaving in the same way. The implication of this is that we can assign different functions or expressions to a given name, and consequently it is possible to write loops over lists of functions or expressions.
+
+In this first example we use a \emph{character vector of function names}, and use function \Rfunction{do.call()} call them as it accepts both character strings and function names as argument to its first parameter. We obtain a numeric vector with named members with names matching the function names.
+
+<<loops-function-names>>=
+vct1 <- rnorm(10)
+results <- numeric()
+fun.names <- c("mean", "max", "min")
+for (f.name in fun.names) {
+  results[[f.name]] <- do.call(f.name, list(vct1))
+}
+results
+@
+
+When traversing a \emph{list of functions} in a loop, we face the problem that we cannot access the original names of the functions as what is stored in the list are the code definitions of the functions. In this case, we can hold the function definitions in the loop variable (\code{f} in the chunk below) and call the functions by use of the function call notation (\code{f()}). We obtain a numeric vector with anonymous members.
+
+<<loops-functions-1>>=
+results <- numeric()
+funs <- list(mean, max, min)
+for (f in funs) {
+  results <- c(results, f(x))
+}
+results
+@
+
+We can use a named list of functions to gain full control of the naming of the results. We obtain a numeric vector with named members with names matching the names given to the list members.
+
+<<loops-functions-2>>=
+results <- numeric()
+funs <- list(average = mean, maximum = max, minimum = min)
+for (f in names(funs)) {
+  results[[f]] <- funs[[f]](x)
+}
+results
+@
+
+Next is an example using model formulas. We use a loop to fit three models, obtaining a list of fitted models. We cannot pass to \Rfunction{anova()} this list of fitted models, as it expects each fitted model as a separate nameless argument to its \code{\ldots} parameter. We can get around this problem using function \Rfunction{do.call()} to call \Rfunction{anova()}. Function \Rfunction{do.call()} passes the members of the list passed as its second argument as individual arguments to the function being called, using their names if present. \Rfunction{anova()} expects nameless arguments so we need to remove the names present in \code{results}.
+
+<<loops-formulas-1>>=
+my.data <- data.frame(x = 1:10, y = 1:10 + rnorm(10, 1, 0.1))
+results <- list()
+models <- list(linear = y ~ x, linear.orig = y ~ x - 1, quadratic = y ~ x + I(x^2))
+for (m in names(models)) {
+  results[[m]] <- lm(models[[m]], data = my.data)
+}
+str(results, max.level = 1)
+do.call(anova, unname(results))
+@
+
+If we had no further use for \code{results} we could simply build a list with nameless members by using positional indexing.
+
+<<loops-formulas-2>>=
+results <- list()
+models <- list(y ~ x, y ~ x - 1, y ~ x + I(x^2))
+for (i in seq(along.with = models)) {
+  results[[i]] <- lm(models[[i]], data = my.data)
+}
+str(results, max.level = 1)
+do.call(anova, results)
+@
+
+\section{Iteration when performance is important}\label{sec:loops:slow}
+\index{vectorization}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
+When working with large data sets, or many smaller data sets, one frequently needs to take performance into account. In \Rlang, explicit \Rloop{for}, \Rloop{while} and \Rloop{repeat} are considered to be slow to run. Vectorized operations perform in general comparatively faster. As vectorization (see page \pageref{par:calc:vectorized:opers}) usually also makes code simpler, it is good style to use vectorization whenever possible. Depending on the case, loops can be replaced using vectorized arithmetic operators, \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) and functions implementing frequently used operations (see section \ref{sec:vectorized:functions} on page \pageref{sec:vectorized:functions}). Improved performance needs to be balanced against the effort invested in writing faster code, as in most cases our own time is more valuable than computer running time. However, using vectorized operators and optimized functions becomes nearly effortless once one is familiar with them.\qRloop{for}
+
+To demonstrate the magnitude of the differences in performance that can be expected, I used as a first case the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference in computation time was huge between loops and vectorization for vectors of up to 1\,000 numbers (near $\times 500$), but the total times were very short ($5 \times 10^{-3}$\,s vs.\ $10 \times 10^{-6}$\,s). For these vectors, pre-allocation of a vector to collect the results made almost no difference and vectorization with the extraction operator \Roperator{[]} together with the minus arithmetic operator \Roperator{-} was fastest. There seems to be a significant overhead for explicit loops, as the running time was nearly independent of the length of these short vectors.
+
+For vectors of 10\,000 or more numbers there was only a very small advantage in using function \Rfunction{diff()} over using vectorized arithmetic and extraction operators. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results made an important difference ($\times 2$ to $\times 3$), larger in the case of \Rloop{for}. However, vectorized operators and function \Rfunction{diff()} remained nearly $\times 10$ faster than the fastest explicit loop. For the longer vectors the time increased almost linearly with their length, with similar slopes for the different approaches. Because of the computation used for this example, \emph{apply()} functions could not be used.
+
+\begin{figure}
+\centering
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<bench-diff-01, echo=FALSE>>=
+library(scales)
+library(ggplot2)
+library(patchwork)
+
+load("benchmarks.pantera.Rda")
+
+fig.seconds <-
+  ggplot(summaries,
+         aes(x = size, y = median*1e-3,
+         color = loop, shape = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Vector length (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (s)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  scale_shape(name = "Iteration\napproach", solid = TRUE) +
+  expand_limits(y = 1e-6) +
+  theme_bw(14)
+
+fig.rel <-
+  ggplot(rel.summaries,
+         aes(x = size, y = median, color = loop, shape = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Vector length (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (relative to shortest)",
+                breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  scale_shape(name = "Iteration\napproach", solid = TRUE) +
+  theme_bw(14)
+
+print(fig.seconds / fig.rel + plot_layout(guides = "collect"))
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+\caption[Benchmark results for running differences.]{Benchmark results for different approaches to computing running differences in numeric (double) vector of different lengths. The data in this figure were obtained in a computer with a 12-years old Xenon E3-1235 CPU with four cores, 32\,GB of RAM, Windows 10 and \Rpgrm 4.3.1.}\label{fig:diff:benchmarks}
+\end{figure}
+
+\begin{explainbox}
+The chunks below show the code for the six approaches compared in Figure \ref{fig:diff:benchmarks}, where \code{a} is a numeric vector varying length constructed with function \code{rnorm()}.
+
+<<loops-while-0, eval=FALSE>>=
+b <- numeric() # do not pre-allocate memory
+i <- 1
+while (i < length(a)) {
+  b[i] <- a[i+1] - a[i]
+  i <- i + 1
+}
+@
+
+<<loops-while-1, eval=FALSE>>=
+b <- numeric(length(a)-1) # pre-allocate memory
+i <- 1
+while (i < length(a)) {
+  b[i] <- a[i+1] - a[i]
+  i <- i + 1
+}
+@
+
+<<loops-for-2, eval=FALSE>>=
+b <- numeric() # do not pre-allocate memory
+for(i in seq(along.with = b)) {
+  b[i] <- a[i+1] - a[i]
+}
+@
+
+<<loops-for-2a, eval=FALSE>>=
+b <- numeric(length(a)-1) # pre-allocate memory
+for(i in seq(along.with = b)) {
+  b[i] <- a[i+1] - a[i]
+}
+@
+
+<<loops-vectorized-, eval=FALSE>>=
+# vectorized using extraction operators
+b <- a[2:length(a)] - a[1:length(a)-1]
+@
+
+<<loops-r-function-2, eval=FALSE>>=
+# vectorized function diff()
+b <- diff(a)
+@
+\end{explainbox}
+
+In nested iteration loops it is most important to vectorize or otherwise enhance the performance of the innermost loop as it is the one executed most frequently. The code for nested loops (used as example in section \ref{sec:nested:loops} on page \pageref{sec:nested:loops}) can be edited to remove the explicit use of \Rloop{for} loops. I assessed the performance of different approaches by collecting timings for square \code{matrix} objects with dimensions (rows $\times$ columns) ranging from $10 \times 10$, size = $10^2$, to $10\,000 \times 10\,000$, size = $10^8$ (Figure \ref{fig:rowsums:benchmarks}).
+
+In this second case, pre-allocation of memory to \code{b} did not enhance performance in good agreement with the benchmarks for the first example as when largest its length was 10\,000. The two nested loops always took the longest to run irrespective of the size of matrix \code{A}. A single loop over rows using a call to \Rfunction{sum()} for each row, improved performance compared to nested loops, most clearly for large matrices. This approach was out-performed by \Rfunction{apply()} only for small matrices, from which we can infer that \Rfunction{apply()} has a much smaller overhead than an explicit \Rloop{for} loop. \Rfunction{rowSums()} was between $\times 5$ and $\times 20$ faster than the second fastest approach depending on the size of the matrix.
+
+\begin{figure}
+\centering
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_wide_square)
+@
+
+<<bench-rowsums-01, echo=FALSE>>=
+#library(scales)
+#library(ggplot2)
+#library(patchwork)
+
+load("benchmarks-rowSums-pantera.Rda")
+
+fig.seconds <-
+  ggplot(summaries,
+         aes(x = size, y = median*1e-3, color = loop, shape = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Matrix size (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (s)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  scale_shape(name = "Iteration\napproach", solid = TRUE) +
+  expand_limits(y = 1e-6) +
+  theme_bw(14)
+
+fig.rel <-
+  ggplot(rel.summaries,
+         aes(x = size, y = median, color = loop, shape = loop)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10(name = "Matrix size (n)",
+                breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_y_log10(name = "Time (relative to shortest)",
+                breaks = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)) +
+  scale_color_discrete(name = "Iteration\napproach") +
+  scale_shape(name = "Iteration\napproach", solid = TRUE) +
+  theme_bw(14)
+
+print(fig.seconds / fig.rel + plot_layout(guides = "collect"))
+@
+
+<<include=FALSE, cache=FALSE>>=
+opts_chunk$set(opts_fig_narrow)
+@
+
+\caption[Benchmark results for row sums.]{Benchmark results for different approaches to computing row sums of square numeric (double) matrices of different sizes. The data in this figure were obtained in a computer with a 12-years old Xenon E3-1235 CPU with four cores, 32\,GB of RAM, Windows 10 and \Rpgrm 4.3.1.}\label{fig:rowsums:benchmarks}
+\end{figure}
+
+\begin{explainbox}
+The chunks below show the code for the six approaches compared in Figure \ref{fig:rowsums:benchmarks}, where \code{A} was a numeric matrix constructed with function \code{rnorm()}.
+
+The inner \Rloop{for} loop can be replaced by function \code{sum()} which returns the sum of a vector. Within the loop \code{A[i, ]} extracts whole rows, one at a time.
+
+<<nested-22, eval=FALSE>>=
+@
+
+<<nested-3, eval=FALSE>>=
+row.sum <- numeric(nrow(A)) # faster
+for (i in 1:nrow(A)) {
+  row.sum[i] <- sum(A[i, ])
+}
+@
+
+The\index{apply functions} outer loop can be replaced by a call to \Rfunction{apply()} (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
+
+<<nested-4, eval=FALSE>>=
+row.sum <- apply(A, MARGIN = 1, sum) # MARGIN=1 indicates rows
+@
+
+Calculating row sums is a frequent operation, thus, \Rlang provides a built-in function for this.
+
+<<nested-5, eval=FALSE>>=
+rowSums(A)
+@
+
+The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. Package \pkgname{microbenchmark}, used for the benchmarks shown in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks}, provides finer time resolution.
+\end{explainbox}
+
+As in these examples the computations in the body of the loop are very simple, the overhead of the iterative loops strongly affects the total computation time in these benchmarks. When the computations at each iteration are time consuming, the overhead of using explicit iteration loops gets diluted. Thus, removing the explicit use of iteration is most helpful, when it is easier to implement vectorized arithmetic or find optimized functions.
+
+\begin{warningbox}
+  The timings in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks} are only valid for the specific computer configuration, operating system and \Rpgrm version that I used. They provide only an approximate guide to what can be expected in different conditions. The scripts used are included in package \pkgname{learnrbook} in case readers wish to run them on their computers. As replication is used, the total run time for the script is relatively long.
+\end{warningbox}
+
+\begin{explainbox}
+  You may be wandering: how do the faster approaches manage to avoid the overhead of iteration? Of course they do not really avoid iteration, but the loops in functions written in \Clang, \Cpplang, or \langname{FORTRAN} are compiled into machine code as part of \Rpgrm itself or when packages binaries are created. In simpler words, the time required to convert and optimize the code written in these languages into machine code is spent during compilation, usually before we download and install \Rlang or packages. Instead, a loop coded in \Rlang is interpreted into machine code each time we source our script, and in some cases for each iteration in a loop. The \Rlang interpreter does some compilation into virtual machine code, as a preliminary stage which helps improve performance.
+\end{explainbox}
+
+The examples in this section use numbers and arithmetic operations, but vectorization and \emph{apply} functions can be also used with vectors of other modes, such as vectors of \code{character} strings or \code{logical} values.
+
+With modern computer processors, or CPUs, splitting the tasks across multiple cores for concurrent execution can enhance performance. To some extent this happens invisibly due to optimizations in the translation into machine code. Explicit approaches are available in package \pkgname{parallel} included in the \Rlang distribution and contributed packages such as \pkgname{future}. Parallelization is also possible across interconnected computers. However, how to enhance performance based on parallel or distributed execution is beyond the scope of this book.
+
+\section{Object names as character strings}
+
+In\index{object names}\index{object names!as character strings} all assignment examples before this section, we have used object names included as literal character strings in the code expressions. In other words, the names are ``decided'' as part of the code, rather than at run time. In scripts or packages, the object name to be assigned may need to be decided at run time and, consequently, be available only as a character string stored in a variable. In this case, function \Rfunction{assign()} must be used instead of the operators \code{<-} or \code{->}. The statements below demonstrate its use.
+
+First using a \code{character} constant.
+
+<<assignx-01>>=
+assign("a", 9.99)
+a
+@
+Next using a \code{character} value stored in a variable.
+
+<<assignx-01a>>=
+name.of.var <- "b"
+assign(name.of.var, 9.99)
+b
+@
+
+The two toy examples above do not demonstrate why one may want to use \Rfunction{assign()}. Common situations where we may want to use character strings to store (future or existing) object names are 1) when we allow users to provide names for objects either interactively or as \code{character} data, 2) when in a loop we transverse a vector or list of object names, or 3) we construct at runtime object names from multiple character strings based on data or settings. A common case is when we import data from a text file and we want to name the object according to the name of the file on disk, or a character string read from the header at the top of the file.
+
+Another case is when \code{character} values are the result of a computation.
+
+<<assignx-02>>=
+for (i in 1:5) {
+   assign(paste("square_of_", i, sep = ""), i^2)
+}
+ls(pattern = "square_of_*")
+@
+
+The complementary operation of \emph{assigning} a name to an object is to \emph{get} an object when we have available its name as a character string. The corresponding function is \Rfunction{get()}.
+
+<<assignx-03>>=
+get("a")
+get("b")
+@
+
+If we have available a character vector containing object names and we want to create a list containing these objects we can use function \Rfunction{mget()}. In the example below we use function \code{ls()} to obtain a character vector of object names matching a specific pattern and then collect all these objects into a list.
+
+<<assignx-04>>=
+obj_names <- ls(pattern = "square_of_*")
+obj_lst <- mget(obj_names)
+str(obj_lst)
+@
+
+\begin{advplayground}
+Think of possible uses of functions \Rfunction{assign()}, \Rfunction{get()} and \Rfunction{mget()} in scripts you use or could use to analyze your own data (or from other sources). Write a script to implement this, and iteratively test and revise this script until the result produced by the script matches your expectations.
+\end{advplayground}
+
+\section{Clean-up}
+
+Sometimes we need to make sure that clean-up code is executed even if the execution of a script or function is aborted by the user or as a result of an error condition. A typical example is a script that temporarily sets a disk folder as the working directory or uses a file as temporary storage. Function \Rfunction{on.exit()} can be used to record that a user supplied expression needs to be executed when the current function, or a script, exits. Function \Rfunction{on.exit()} can also make code easier to read as it keeps creation and clean-up next to each other in the body of a function or in the listing of a script.
+
+<<on-exit-01>>=
+file.create("temp.file")
+on.exit(file.remove("temp.file"))
+# code that makes use of the file goes here
+@
+
+Function \Rfunction{library()} attaches the namespace of the loaded packages and in some special cases one may want to detach them at the end of a script. We can use \Rfunction{detach()} similarly as with attached \code{data.frame} objects (see page \pageref{par:calc:attach}). As an example we detach the packages used in section \ref{sec:loops:slow}. It is important to remember that the order in which they can be detached is determined by their interdependencies.
+
+<<cleanup-02>>=
+detach(package:patchwork)
+detach(package:ggplot2)
+detach(package:scales)
+@
+
+\section{Further reading}
+For\index{further reading!the R language} further readings on the aspects of \Rlang discussed in the current chapter, I suggest the books \citetitle{Matloff2011} \autocite{Matloff2011} and \citetitle{Wickham2019} \autocite{Wickham2019}.
+>>>>>>> Stashed changes

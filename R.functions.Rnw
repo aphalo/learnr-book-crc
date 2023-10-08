@@ -207,13 +207,13 @@ For example in \code{SEM(a)} we are calling function \Rfunction{SEM()} with \cod
 
 The function we defined above will always give the correct answer because \code{NA} values in the input will always result in an \code{NA} being returned. The problem is that unlike \Rlang's functions like \code{var()}, there is no option to omit \code{NA} values in the function we defined.
 
-This could be implemented by adding a second parameter \code{na.omit} to the definition of our function and passing its argument to the call to \Rfunction{var()} within the body of \code{SEM()}. However, to avoid returning wrong values we need to make sure \code{NA} values are also removed before counting the number of observations with \code{length()}.
+This could be implemented by adding a second parameter \code{na.rm} to the definition of our function and passing its argument to the call to \Rfunction{var()} within the body of \code{SEM()}. However, to avoid returning wrong values we need to make sure \code{NA} values are also removed before counting the number of observations with \code{length()}.
 
 A readable way of implementing this in code is to define the function as follows.
 
 <<fun-05>>=
-sem <- function(x, na.omit = FALSE) {
- if (na.omit) {
+sem <- function(x, na.rm = FALSE) {
+ if (na.rm) {
    x <- na.omit(x)
  }
  sqrt(var(x)/length(x))
@@ -223,7 +223,7 @@ sem <- function(x, na.omit = FALSE) {
 <<fun-06>>=
 sem(x = a)
 sem(x = a.na)
-sem(x = a.na, na.omit = TRUE)
+sem(x = a.na, na.rm = TRUE)
 @
 
 \Rlang does not provide a function for standard error, so the function above is generally useful. Its user interface is consistent with that of functionally similar existing functions. We have added a new word to the \Rlang vocabulary available to us.
@@ -424,11 +424,17 @@ print(as.numeric(a))
 
 \subsection{Sharing of \Rlang-language extensions}
 \index{extensions to R}
-The most elegant way of adding new features or capabilities to \Rlang is through packages. This is without doubt the best mechanism when these extensions to \Rlang need to be shared. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
+The most elegant way of adding new features or capabilities to \Rlang is through packages. A package can contain any or all of \Rlang function and operator definitions, data objects, classes and their methods, plus the corresponding documentation. Some packages available through \CRAN contain only one of two \Rlang objects while others contain hundreds of them. After loading a package those objects that a package exports can be used as if they were part \Rlang itself.
+
+Packages are, without doubt, the best mechanism for sharing extensions to \Rlang. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
+
+\begin{explainbox}
+In a source file the package code is in text files, simply archived and compressed together into a single file. A binary file has been processed into a form suitable for faster installation under a given operating system and possibly CPU family. Binary files are also specific to each major version of \Rlang. In addition to being slower, installation from source files in many cases requires additional software like compilers to be available at the time of installation. A compiler is a program that translates the text representation of computer program written in \Clang, \Cpplang or \langname{FORTRAN}, into machine code, i.e., instructions for the computer hardware. \Rlang code is translated into instructions for a virtual machine, part of \Rpgrm, that does the final translation into machine code at runtime.
+\end{explainbox}
 
 Packages can be shared as source or binary package files, sent for example through e-mail. However, the largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the packages and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing (\Sexpr{lubridate::today()}) was \Sexpr{signif(nrow(available.packages(repos = "https://cran.rstudio.com/")), 3)}.
 
-A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for \Rlang packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the ROpenScience website (\url{https://ropensci.org/}).
+A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for \Rlang packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the rOpenScience website (\url{https://ropensci.org/}).
 Occasionally one may have or want to install packages directly from Git repositories such as versions still under development and not yet submitted to \CRAN.
 
 One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox.'' How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
@@ -439,11 +445,11 @@ One good way of learning how the extensions provided by a package work, is by ex
 In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages.
 
 \begin{warningbox}
-The instructions below assume that user has access to repositories in the internet and enough user rights to install packages. This is rarely the cases in organizations using strict security protocols. In such cases, the organization may keep a mirror of CRAN in the intranet. The local/user's private \Rpgrm library can be kept in a folder where the user has writing and reading rights.
+The instructions below assume that user has access to repositories in the internet and enough user rights to install packages. This is rarely the cases in organizations using strict security protocols. In such cases, the organization may keep a mirror of \CRAN in the intranet. The local/user's private \Rpgrm library can be kept in a folder where the user has writing and reading rights.
 \end{warningbox}
 
 \begin{faqbox}{How to install or update a package from CRAN?}
-CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
+\CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
 
 Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can called with the name of the package as argument. For example, to install package ’learnrbook’ we use
 
@@ -475,20 +481,20 @@ pak::pkg_install("aphalo/learnrbook")
 
 \end{faqbox}
 
-\Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. This is because some \Rlang packages contain source code in other languages such as \Clang, \Cpplang or \langname{FORTRAN} that needs to be compiled into machine code during installation. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in an installer under the name \pgrmname{RTools} (available from CRAN). \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}) is usually needed to build the PDF of the package's manual.
+\Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. This is because some \Rlang packages contain source code in other languages such as \Clang, \Cpplang or \langname{FORTRAN} that needs to be compiled into machine code during installation. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in an installer under the name \pgrmname{RTools} (available from \CRAN). \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}) is usually needed to build the PDF of the package's manual.
 
 Under \pgrmname{MS-Windows} it is easier to install packages from binary \texttt{.zip} files than from \texttt{.tar.gz} source files. For \pgrmname{OS X} (Apple Mac) the situation is similar, with binaries available both for Intel and ARM (M1, M2 series) processors. Most, but not all, Linux distributions include in the default setup the tools needed for installation of \Rlang packages. Under Linux it is rather common to install packages from sources, although package binaries have recently become more easily available.
 
-If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available. In CRAN, the binary for a new version of a package becomes available with a delay of one or two days compared to the source. For packages that need compilation, the installation from sources takes more time than installation from binaries.
+If the tools are available, packages can be very easily installed from sources from within \RStudio. However, binaries are for most packages also readily available. In \CRAN, the binary for a new version of a package becomes available with a delay of one or two days compared to the source. For packages that need compilation, the installation from sources takes more time than installation from binaries.
 
 \begin{advplayground}
-Use \code{help} to look up the help page for \Rfunction{install.packages()}, and explore how to control whether the package is installed from a source or a binary file. Also explore, how to install a package from a file in a local disk instead of from a repository like CRAN.
+Use \code{help} to look up the help page for \Rfunction{install.packages()}, and explore how to control whether the package is installed from a source or a binary file. Also explore, how to install a package from a file in a local disk instead of from a repository like \CRAN.
 \end{advplayground}
 
-Frequently the README file of a package includes instructions on how to install it from CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file. In CRAN, each package has a home web page that can be easily found if one knows the name of the package, e.g., \url{https://CRAN.R-project.org/package=learnrbook}. Nowadays, it is common for the help for a package being also available as a web site, e.g., \url{https://docs.r4photobiology.info/learnrbook/}.
+Frequently the README file of a package includes instructions on how to install it from \CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file. In \CRAN, each package has a home web page that can be easily found if one knows the name of the package, e.g., \url{https://CRAN.R-project.org/package=learnrbook}. Nowadays, it is common for the help for a package being also available as a web site, e.g., \url{https://docs.r4photobiology.info/learnrbook/}.
 
 \begin{faqbox}{How to change the repository used to install packages?}
-Function \Rfunction{setRepositories()} can be used to enable other repositories in addition or instead of CRAN during an \Rpgrm session. In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
+Function \Rfunction{setRepositories()} can be used to enable other repositories in addition or instead of \CRAN during an \Rpgrm session. In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
 
 Alternatively, one can use \Rfunction{pak::pkg\_install()} as this function attempts to automatically set the correct repository based on the name of the package.
 \end{faqbox}
@@ -565,24 +571,30 @@ getAnywhere("cars")$where # the first visible definition is in the global enviro
 \begin{warningbox}
 In the playground above I used a data frame object, but the same mechanisms apply to all \Rlang objects including functions. The situation when one of the definitions is a function and the other is not, is slightly different in that a call using parenthesis notation will distinguish between a function and an object of the same name that is not a function. Relying on this distinction is anyway a bad idea.
 
-<<pkg-02>>=
+<<pkg-02a>>=
 mean
+@
+
+<<pkg-02b>>=
 mean <- mean(1:5)
 mean
 mean(8:9)
+@
+
+<<pkg-02c>>=
 getAnywhere("mean")$where
 rm(mean)
 getAnywhere("mean")$where
 @
 
-In this last example I removed with \code{rm(mean)} the variable we had assigned a value to. Package namespaces also prevent deletion or overwriting of objects defined in the package. This is different to defining a new object with the same name, which is allowed. The two statements below trigger errors and are not evaluated when typesetting the book.
+In this last example \code{rm(mean)} removed the variable we had assigned a value to. Package namespaces also prevent deletion or overwriting of objects defined in the package. This is different to defining a new object with the same name, which is allowed. The two statements below trigger errors and are not evaluated when typesetting the book.
 
 <<pkg-03, eval=FALSE>>=
 datasets::cars <- "my car is green"
 rm(datasets::cars)
 @
 
-We looked at only one member of the value returned by \Rfunction{getAnywhere()}, do have a look at its help page for more details as it contains additional information.
+The value returned by \Rfunction{getAnywhere()} has additional information than that in its member \code{where}. Do have a look at its help page for more details.
 
 \end{warningbox}
 
