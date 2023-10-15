@@ -17,7 +17,7 @@ Most programmers have seen them, and most good programmers realize they've writt
 <<echo=FALSE>>=
 # set to TRUE to execute code chunks that require internet access and instruments, repectively
 eval_online_data <- TRUE
-eval_yoctopuce <- FALSE
+eval_yoctopuce <- TRUE
 @
 
 \section{Aims of this chapter}
@@ -1028,7 +1028,7 @@ unlink("./extdata", recursive = TRUE)
 \section{Data acquisition from physical devices}\label{sec:data:acquisition}
 \index{importing data!physical devices|(}\index{file formats!JSON}
 
-Numerous\index{internet-of-things} modern data acquisition devices based on microcontrollers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or the JSON format are commonly used.
+Numerous\index{internet-of-things} modern data acquisition devices based on microcontrollers, including internet-of-things (IoT) devices, have servers (or daemons) that can be queried over a network connection to retrieve either real-time or logged data. Formats based on XML schemas or the JSON format are commonly used for data.
 
 \subsection[jsonlite]{\pkgname{jsonlite}}
 
@@ -1037,10 +1037,10 @@ citation(package = "jsonlite")
 @
 
 \index{importing data!jsonlite}\index{YoctoPuce modules}
-The next example retrieves data from USB module from \href{http://www.yoctopuce.com/}{YoctoPuce} using a software hub running locally. The module used is a YoctoMeteo.
+The next example retrieves data from USB module from \href{http://www.yoctopuce.com/}{YoctoPuce} using a software hub running locally. The module used in this example is a YoctoMeteo.
 
 \begin{warningbox}
-This example needs setting the configuration of the YoctoPuce module beforehand and having a module to connect to.
+This example needs enabling data recording in the YoctoPuce module, collecting data and replacing in the call to function \Rfunction{fromJSON()} \code{"C1-Meteo"} by the ID assigned to the module used. The example uses a Yocto VirtualHub running locally and listening at port 4444, the default. The same code can be used over the network by editing the string saved in \code{hub.url}.
 \end{warningbox}
 
 Function \Rfunction{fromJSON()} from package \pkgname{jsonlite} retrieves logged data from one sensor.
@@ -1048,14 +1048,14 @@ Function \Rfunction{fromJSON()} from package \pkgname{jsonlite} retrieves logged
 <<iot-01, eval=eval_yoctopuce>>=
 hub.url <- "http://localhost:4444/"
 Meteo01.df <-
-    fromJSON(paste(hub.url, "byName/METEO01/dataLogger.json",
+    fromJSON(paste(hub.url, "byName/C1-Meteo/dataLogger.json",
                    sep = ""), flatten = TRUE)
 str(Meteo01.df, max.level = 2)
 @
 
 The minimum, mean, and maximum values for each logging interval need to be split from a single vector. We do this by indexing with a logical vector (recycled). The data returned is in long form, with quantity names and units also returned by the module, as well as the time.
 
-<<iot-02, eval=eval_yoctopuce>>=
+<<iot-02, eval=eval_yoctopuce, cache=TRUE>>=
 Meteo01.df[["streams"]][[which(Meteo01.df$id == "temperature")]] |>
   as_tibble(x = _) |>
   dplyr::transmute(.data = _,
@@ -1076,7 +1076,7 @@ full_join(temperature.df, humidity.df)
 @
 
 \begin{explainbox}
-Most YoctoPuce input modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub. As shown above, it is possible to control them through the HTML server in the physical or virtual hubs. Alternatively the \Rlang package \pkgname{reticulate} can be used to control YoctoPuce modules by means of the \langname{Python} library giving access to their API.
+Most YoctoPuce input modules have a built-in datalogger, and the stored data can also be downloaded as a \code{CSV} file through a physical or virtual hub. As shown above, it is possible to control them through the HTML server in the physical or virtual hubs. Alternatively the \Rlang package \pkgname{reticulate} can be used to control YoctoPuce modules by means of the \langname{Python} library giving access to their full API.
 \end{explainbox}
 \index{importing data!physical devices|)}
 
