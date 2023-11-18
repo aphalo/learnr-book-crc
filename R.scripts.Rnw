@@ -52,11 +52,11 @@ A script file has the following characteristics.
 \centering
 \begin{small}
 \begin{tikzpicture}[node distance=1.5cm]
-\node (start) [startstop, color = blue, fill = blue!15] {\textsl{Top = start}};
+\node (start) [startstop, color = blue, fill = blue!15] {\textsl{Top (start)}};
 \node (stat2) [process, color = blue, fill = blue!15, below of=start] {\code{<statement A>}};
 \node (stat3) [process, color = blue, fill = blue!15, below of=stat2] {\code{<statement B>}};
 \node (continue) [startstop, color = blue, fill = blue!15, below of=stat3] {$\cdots$};
-\node (stop) [startstop, color = blue, fill = blue!15, below of=continue] {\textsl{Bottom = end}};
+\node (stop) [startstop, color = blue, fill = blue!15, below of=continue] {\textsl{Bottom (end)}};
 \draw [arrow, color = blue] (start) -- (stat2);
 \draw [arrow, color = blue] (stat2) -- (stat3);
 \draw [arrow, color = blue] (stat3) -- (continue);
@@ -449,9 +449,9 @@ Additional functions designed to be used in pipes are available through packages
 \index{control of execution flow}
 By default \Rlang statements in a script are evaluated (or executed) in the sequence they appear in the script \textit{listing} or text. We give the name \emph{control of execution constructs} to those special statements that allow us to alter this default sequence, by either skipping or repeatedly evaluating individual statements. The statements whose evaluation is controlled can be either simple or compound. Some of the control of execution flow statements, function like \emph{ON-OFF switches} for program statements. Others allow statements to be executed repeatedly while or until a condition is met, or until all members of a list or a vector are processed.
 
-These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. However, \emph{control of execution constructs} are a crucial part of most useful scripts. As we will see next, a compound statement can include multiple simple or nested compound statements. \Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectored and vectored.
+These \emph{control of execution constructs} can be also used at the \Rlang console, but it is usually awkward to do so as they can extend over several lines of text. In simple scripts, the \emph{flow of execution} can be fixed and linear from the first to the last statement in the script. However, \emph{control of execution constructs} are a crucial part of most useful scripts. As we will see next, a compound statement can include multiple simple or nested compound statements. \Rpgrm has two types of \emph{if}\index{conditional statements} statements, non-vectorised and vectorised.
 
-\subsection[Non-vectored \texttt{if}, \texttt{else} and \texttt{switch}]{Non-vectored \code{if}, \code{else} and \code{switch}}\label{sec:script:if}
+\subsection[Non-vectorised \texttt{if}, \texttt{else} and \texttt{switch}]{Non-vectorised \code{if}, \code{else} and \code{switch}}\label{sec:script:if}
 \qRcontrol{if}\qRcontrol{if\ldots{}else}%
 
 \begin{figure}
@@ -511,7 +511,7 @@ if (printing) {
 @
 
 \begin{warningbox}
-The condition passed as an argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector of length one. As this condition is \emph{not} vectored, a longer vector will trigger an \Rlang warning or error depending on \Rlang's version.
+The condition passed as an argument to \code{if}, enclosed in parentheses, can be anything yielding a \Rclass{logical} vector of length one. As this condition is \emph{not} vectorised, a longer vector will trigger an \Rlang warning or error depending on \Rlang's version.
 \end{warningbox}
 
 \begin{figure}
@@ -749,10 +749,10 @@ b
   Consider another alternative approach, the use of a named vector to map values. In most of the examples above the code for the cases is a constant value or an operation among constant values. Implement one of this examples using a named vector instead of a \Rcontrol{switch()} statement.
 \end{advplayground}
 
-\subsection[Vectored \texttt{ifelse()}]{Vectored \code{ifelse()}}
-\index{vectored ifelse}
-Vectored \emph{ifelse} is a peculiarity of the \Rlang language, but very useful for writing concise code that may execute faster than logically equivalent but not vectored code.
-Vectored conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector usually the result of a test (parameter \code{test}), an expression to use for \code{TRUE} cases (parameter \code{yes}), and an expression to use for \code{FALSE} cases (parameter \code{no}). At each index position along the vectors, the value included in the returned vector is taken from \code{yes} if the corresponding member of the \code{test} logical vector is \code{TRUE} and from \code{no} if the corresponding member of \code{test} is \code{FALSE}. All three arguments can be any \Rlang statement returning the required vectors.
+\subsection[Vectorised \texttt{ifelse()}]{Vectorised \code{ifelse()}}
+\index{vectorised ifelse}
+Vectorised \emph{ifelse} is a peculiarity of the \Rlang language, but very useful for writing concise code that may execute faster than logically equivalent but not vectorised code.
+Vectorised conditional execution is coded by means of \emph{function} \Rcontrol{ifelse()} (written as a single word). This function takes three arguments: a \code{logical} vector usually the result of a test (parameter \code{test}), an expression to use for \code{TRUE} cases (parameter \code{yes}), and an expression to use for \code{FALSE} cases (parameter \code{no}). At each index position along the vectors, the value included in the returned vector is taken from \code{yes} if the corresponding member of the \code{test} logical vector is \code{TRUE} and from \code{no} if the corresponding member of \code{test} is \code{FALSE}. All three arguments can be any \Rlang statement returning the required vectors.
 
 The flow chart for \Rcontrol{ifelse()} is similar to that for \code{if \ldots\ else} shown on page \pageref{flowchart:if} but applied in parallel to the individual members of vectors; e.g.\ the condition expression is evaluated at index position \code{1} controls which value will be present in the returned vector at index position \code{1}, and so on.
 
@@ -821,7 +821,7 @@ Iteration constructs make it possible to ``decide'' at run time the number of it
 
 In \Rlang three types of iteration loops are available: \Rloop{for}, \Rloop{while} and \Rloop{repeat} constructs. They differ in the origin of the values they iterate over, and in the type of test used to terminate iteration. When the same algorithm can be implemented with more than one of these constructs, using the least flexible of them usually results in easier to understand code.
 
-In \Rlang, explicit loops as described in this section can in some cases be replaced by calls to \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) or with vectored functions and operators (see page \pageref{par:calc:vectorized:opers}). The choice among these approaches affects readability and performance (see section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}).
+In \Rlang, explicit loops as described in this section can in some cases be replaced by calls to \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) or with vectorised functions and operators (see page \pageref{par:calc:vectorized:opers}). The choice among these approaches affects readability and performance (see section \ref{sec:loops:slow} on page \pageref{sec:loops:slow}).
 
 \subsection[\texttt{for} loops]{\code{for} loops}
 
@@ -979,7 +979,7 @@ C
 Using \code{seq(along.with = a)}, its equivalent \code{seq\_along(a)},\qRfunction{seq()}\qRfunction{seq\_along()} as above creates a sequence of integers in \code{i}, that indexes all members of \code{a} in the ``walk-trough''. There is no requirement in the \Rlang for this, and including only some of the valid indexes, or including them in arbitrary order is possible if needed, however this is rarely the case. On exit from the loop, the iterator \code{i} remains accessible and contains its value at the last iteration.
 \end{explainbox}
 
-Vectorisation usually results in the simplest and fastest code, as shown below (see section \ref{sec:loops:slow} on \pageref{sec:loops:slow}). However, not all \Rloop{for} loops can be replaced by vectored statements.
+Vectorisation usually results in the simplest and fastest code, as shown below (see section \ref{sec:loops:slow} on \pageref{sec:loops:slow}). However, not all \Rloop{for} loops can be replaced by vectorised statements.
 
 <<for-03c>>=
 b <- a^2
@@ -1337,7 +1337,7 @@ z <- apply(X = mat1, MARGIN = 1, FUN = summary)
 z
 @
 
-In all examples above, we have used ordinary functions. Binary operators in \Rlang are functions with two formal parameters which can be called using infix notation in expressions---i.e., \code{a + b}. By back-quoting their names they can be called using the same syntax as for ordinary functions, and consequently also passed to the \code{FUN} parameter of apply functions. A toy example, equivalent to the vectored operation \code{vct1 + 5} follows. By enclosing operator \Roperator{+} in back ticks (\code{`}) and passing by name a constant to its second formal parameter (\code{e2 = 5}) operator \Roperator{+} behaves like an ordinary function. See section \ref{sec:operator:functions} on page \pageref{sec:operator:functions}).
+In all examples above, we have used ordinary functions. Binary operators in \Rlang are functions with two formal parameters which can be called using infix notation in expressions---i.e., \code{a + b}. By back-quoting their names they can be called using the same syntax as for ordinary functions, and consequently also passed to the \code{FUN} parameter of apply functions. A toy example, equivalent to the vectorised operation \code{vct1 + 5} follows. By enclosing operator \Roperator{+} in back ticks (\code{`}) and passing by name a constant to its second formal parameter (\code{e2 = 5}) operator \Roperator{+} behaves like an ordinary function. See section \ref{sec:operator:functions} on page \pageref{sec:operator:functions}).
 
 <<apply-15>>=
 set.seed(123456) # so that vct1 does not change
@@ -1349,7 +1349,7 @@ str(z)
 \section{Functions that replace loops}\label{sec:vectorized:functions}
 
 \begin{table}
-  \caption[Functions that replace loops]{\Rlang functions that can substitute for iteration loops. They accept vectors as argument, except for \Rfunction{rowSums()}, \Rfunction{colSums()}, \Rfunction{rowMeans()}, and \Rfunction{colMeans()} which accept \code{matrix} objects as argument. Only functions that return a value with the same dimensions as the argument passed as input are vectored in the sense used in this book.\vspace{1ex}}\label{tab:vectorized:functions}
+  \caption[Functions that replace loops]{\Rlang functions that can substitute for iteration loops. They accept vectors as argument, except for \Rfunction{rowSums()}, \Rfunction{colSums()}, \Rfunction{rowMeans()}, and \Rfunction{colMeans()} which accept \code{matrix} objects as argument. Only functions that return a value with the same dimensions as the argument passed as input are vectorised in the sense used in this book.\vspace{1ex}}\label{tab:vectorized:functions}
   \centering
 \noindent
 \begin{tabular}{lll}
@@ -1451,11 +1451,11 @@ do.call(anova, results)
 
 \section{Iteration when performance is important}\label{sec:loops:slow}
 \index{vectorisation}\index{recycling of arguments}\index{iteration}\index{loops!faster alternatives|(}
-When working with large data sets, or many smaller data sets, one frequently needs to take performance into account. In \Rlang, explicit \Rloop{for}, \Rloop{while} and \Rloop{repeat} are considered to be slow to run. Vectored operations perform in general comparatively faster. As vectorisation (see page \pageref{par:calc:vectorized:opers}) usually also makes code simpler, it is good style to use vectorisation whenever possible. Depending on the case, loops can be replaced using vectored arithmetic operators, \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) and functions implementing frequently used operations (see section \ref{sec:vectorized:functions} on page \pageref{sec:vectorized:functions}). Improved performance needs to be balanced against the effort invested in writing faster code, as in most cases our own time is more valuable than computer running time. However, using vectored operators and optimised functions becomes nearly effortless once one is familiar with them.\qRloop{for}
+When working with large data sets, or many smaller data sets, one frequently needs to take performance into account. In \Rlang, explicit \Rloop{for}, \Rloop{while} and \Rloop{repeat} are considered to be slow to run. Vectorised operations perform in general comparatively faster. As vectorisation (see page \pageref{par:calc:vectorized:opers}) usually also makes code simpler, it is good style to use vectorisation whenever possible. Depending on the case, loops can be replaced using vectorised arithmetic operators, \emph{apply} functions (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}) and functions implementing frequently used operations (see section \ref{sec:vectorized:functions} on page \pageref{sec:vectorized:functions}). Improved performance needs to be balanced against the effort invested in writing faster code, as in most cases our own time is more valuable than computer running time. However, using vectorised operators and optimised functions becomes nearly effortless once one is familiar with them.\qRloop{for}
 
 To demonstrate the magnitude of the differences in performance that can be expected, I used as a first case the computation of the differences between successive numbers in a vector, applied to vectors of lengths ranging from 10 to 100 million numbers (Figure \ref{fig:diff:benchmarks}). In relative terms the difference in computation time was huge between loops and vectorisation for vectors of up to 1\,000 numbers (near $\times 500$), but the total times were very short ($5 \times 10^{-3}$\,s vs.\ $10 \times 10^{-6}$\,s). For these vectors, pre-allocation of a vector to collect the results made almost no difference and vectorisation with the extraction operator \Roperator{[ ]} together with the minus arithmetic operator \Roperator{-} was fastest. There seems to be a significant overhead for explicit loops, as the running time was nearly independent of the length of these short vectors.
 
-For vectors of 10\,000 or more numbers there was only a very small advantage in using function \Rfunction{diff()} over using vectored arithmetic and extraction operators. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results made an important difference ($\times 2$ to $\times 3$), larger in the case of \Rloop{for}. However, vectored operators and function \Rfunction{diff()} remained nearly $\times 10$ faster than the fastest explicit loop. For the longer vectors the time increased almost linearly with their length, with similar slopes for the different approaches. Because of the computation used for this example, \emph{apply()} functions could not be used.
+For vectors of 10\,000 or more numbers there was only a very small advantage in using function \Rfunction{diff()} over using vectorised arithmetic and extraction operators. For \Rloop{while} and \Rloop{for} loops pre-allocation of the vector to collect results made an important difference ($\times 2$ to $\times 3$), larger in the case of \Rloop{for}. However, vectorised operators and function \Rfunction{diff()} remained nearly $\times 10$ faster than the fastest explicit loop. For the longer vectors the time increased almost linearly with their length, with similar slopes for the different approaches. Because of the computation used for this example, \emph{apply()} functions could not be used.
 
 \begin{figure}
 \centering
@@ -1646,7 +1646,7 @@ rowSums(A)
 The simplest way of measuring the execution time of an \Rlang expression is to use function \Rfunction{system.time()}. Package \pkgname{microbenchmark}, used for the benchmarks shown in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks}, provides finer time resolution.
 \end{explainbox}
 
-As in these examples the computations in the body of the loop are very simple, the overhead of the iterative loops strongly affects the total computation time in these benchmarks. When the computations at each iteration are time consuming, the overhead of using explicit iteration loops gets diluted. Thus, removing the explicit use of iteration is most helpful, when it is easier to implement vectored arithmetic or find optimised functions.
+As in these examples the computations in the body of the loop are very simple, the overhead of the iterative loops strongly affects the total computation time in these benchmarks. When the computations at each iteration are time consuming, the overhead of using explicit iteration loops gets diluted. Thus, removing the explicit use of iteration is most helpful, when it is easier to implement vectorised arithmetic or find optimised functions.
 
 \begin{warningbox}
   The timings in Figures \ref{fig:diff:benchmarks} and \ref{fig:rowsums:benchmarks} are only valid for the specific computer configuration, operating system and \Rpgrm version that I used. They provide only an approximate guide to what can be expected in different conditions. The scripts used are included in package \pkgname{learnrbook} in case readers wish to run them on their computers. As replication is used, the total run time for the script is relatively long.
