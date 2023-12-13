@@ -6,7 +6,7 @@ opts_knit$set(concordance=TRUE)
 opts_knit$set(unnamed.chunk.label = 'data-chunk')
 @
 
-\chapter{R Extensions: Data Wrangling}\label{chap:R:data}
+\chapter{\Rlang Extensions: Data Wrangling}\label{chap:R:data}
 
 \begin{VF}
 Essentially everything in S[R], for instance, a call to a function, is an S[R] object. One viewpoint is that S[R] has self-knowledge. This self-awareness makes a lot of things possible in S[R] that are not in other languages.
@@ -14,9 +14,9 @@ Essentially everything in S[R], for instance, a call to a function, is an S[R] o
 \VA{Patrick J. Burns}{\emph{S Poetry}, 1998}\nocite{Burns1998}
 \end{VF}
 
-\section{Aims of this chapter}
+\section{Aims of This Chapter}
 
-Base \Rlang and the recommended extension packages (installed by default) include many functions for manipulating data. The \Rlang distribution supplies a complete set of functions and operators that allow all the usual data manipulation operations. These functions have stable and well-described behavior, so in my view they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter I describe the new syntax introduced by the most popular contributed \Rlang extension packages aiming at changing (usually improving one aspect at the expense of another) in various ways how we can manipulate data in \Rlang. These independently developed packages extend the \Rlang language not only by adding new ``words'' to it but by supporting new ways of meaningfully connecting ``words''---i.e., providing new ``grammars'' for data manipulation. While at the current stage of development of base \Rlang not breaking existing code has been the priority, several of the still ``young'' packages in the \pkgname{tidyverse} have prioritised experimentation with enhanced features over backwards compatibility. The development of \pkgname{tidyverse} packages seems to have initially emphasised users' convenience more than encouraging safe/error-free user code. The design of package \pkgname{data.table} has prioritised performance at the expense of easy of use. I do not describe in depth these new approaches but instead only briefly compare them to base \Rlang highlighting the most important differences.
+Base \Rlang and the recommended extension packages (installed by default) include many functions for manipulating data. The \Rlang distribution supplies a complete set of functions and operators that allow all the usual data manipulation operations. These functions have stable and well-described behaviour, so in my view they should be preferred unless some of their limitations justify the use of alternatives defined in contributed packages. In the present chapter I describe the new syntax introduced by the most popular contributed \Rlang extension packages aiming at changing (usually improving one aspect at the expense of another) in various ways how we can manipulate data in \Rlang. These independently developed packages extend the \Rlang language not only by adding new ``words'' to it but by supporting new ways of meaningfully connecting ``words''---i.e., providing new ``grammars'' for data manipulation. While at the current stage of development of base \Rlang not breaking existing code has been the priority, several of the still ``young'' packages in the \pkgname{tidyverse} have prioritised experimentation with enhanced features over backwards compatibility. The development of \pkgname{tidyverse} packages seems to have initially emphasised users' convenience more than encouraging safe/error-free user code. The design of package \pkgname{data.table} has prioritised performance at the expense of easy of use. I do not describe in depth these new approaches but instead only briefly compare them to base \Rlang highlighting the most important differences.
 
 \section{Introduction}
 
@@ -47,7 +47,7 @@ Package \pkgname{dplyr}, and much of the \pkgname{tidyverse}, relies on a simila
 
 Package \pkgname{poorman} re-implements many of the functions in \pkgname{dplyr} and a few from \pkgname{tidyr} using pure \Rlang code instead of compiled \Cpplang code and with no dependencies on other extension packages. This light-weight approach can be useful when \Rlang's data frames rather than tibbles are preferred or when the possible enhanced performance with large data sets is not needed.
 
-\section{Packages used in this chapter}
+\section{Packages Used in This Chapter}
 
 <<eval=FALSE>>=
 install.packages(learnrbook::pkgs_ch_data)
@@ -84,7 +84,7 @@ Package \pkgname{tibble} aimed at enhanced performance, like \pkgname{data.table
 
 The authors of package \pkgname{tibble} describe their \Rclass{tbl} class as nearly backwards compatible with \Rclass{data.frame} and make it a derived class. This backwards compatibility is only partial so in some situations data frames and tibbles are not equivalent.
 
-The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed by the design of base \Rlang data frames at the cost of creating some incompatibilities due to changed (improved) syntax for member extraction. Tibbles simplify the creation of ``columns'' of class \Rclass{list} and remove support for columns of class \Rclass{matrix}. Handling of attributes is also different, with no row names added by default. There are also differences in default behavior of both constructors and methods.
+The class and methods that package \pkgname{tibble} defines lift some of the restrictions imposed by the design of base \Rlang data frames at the cost of creating some incompatibilities due to changed (improved) syntax for member extraction. Tibbles simplify the creation of ``columns'' of class \Rclass{list} and remove support for columns of class \Rclass{matrix}. Handling of attributes is also different, with no row names added by default. There are also differences in default behaviour of both constructors and methods.
 
 \emph{Although, objects of class \Rclass{tbl} can be passed as arguments to functions that expect data frames as input, these functions are not guaranteed to work correctly with tibbles as a result of the differences in syntax of some methods.}
 
@@ -123,7 +123,7 @@ show_classes <- function(x) {
 }
 @
 
-The \Rfunction{tibble()} constructor by default does not convert character data into factors, while the \Rfunction{data.frame()} constructor did before \Rlang version 4.0.0. The default can be overridden through an argument passed to these constructors, and in the case of \Rfunction{data.frame()} also by setting an \Rlang option. This new behavior extends to function \Rfunction{read.table()} and its wrappers (see section \ref{sec:files:txt} on page \pageref{sec:files:txt}).
+The \Rfunction{tibble()} constructor by default does not convert character data into factors, while the \Rfunction{data.frame()} constructor did before \Rlang version 4.0.0. The default can be overridden through an argument passed to these constructors, and in the case of \Rfunction{data.frame()} also by setting an \Rlang option. This new behaviour extends to function \Rfunction{read.table()} and its wrappers (see section \ref{sec:files:txt} on page \pageref{sec:files:txt}).
 
 <<tibble-02>>=
 my.df <- data.frame(codes = c("A", "B", "C"), numbers = -1:1, integers = 1L:3L)
@@ -141,7 +141,7 @@ is_tibble(my.tb)
 show_classes(my.tb)
 @
 
-The \Rmethod{print()} method for tibbles differs from that for data frames in that it outputs a header with the text ``A tibble:'' followed by the dimensions (number of rows $\times$ number of columns), adds under each column name an abbreviation of its class and instead of printing all rows and columns, a limited number of them are displayed. In addition, individual values are formatted more compactly and using color to highlight, for example, negative numbers in red.
+The \Rmethod{print()} method for tibbles differs from that for data frames in that it outputs a header with the text ``A tibble:'' followed by the dimensions (number of rows $\times$ number of columns), adds under each column name an abbreviation of its class and instead of printing all rows and columns, a limited number of them are displayed. In addition, individual values are formatted more compactly and using colour to highlight, for example, negative numbers in red.
 
 <<tibble-04>>=
 print(my.df)
@@ -157,7 +157,7 @@ options(tibble.print_max = 3, tibble.print_min = 3)
 \end{explainbox}
 
 \begin{playground}
-Print methods for tibbles and data frames differ in their behavior when not all columns fit in a printed line. 1) Construct a data frame and an equivalent tibble with at least 50 rows and then test how the output looks when they are printed. 2) Construct a data frame and an equivalent tibble with more columns than will fit in the width of the \Rlang console and then test how the output looks when they are printed.
+Print methods for tibbles and data frames differ in their behaviour when not all columns fit in a printed line. 1) Construct a data frame and an equivalent tibble with at least 50 rows and then test how the output looks when they are printed. 2) Construct a data frame and an equivalent tibble with more columns than will fit in the width of the \Rlang console and then test how the output looks when they are printed.
 \end{playground}
 
 Data frames can be converted into tibbles with \code{as\_tibble()}.
@@ -183,7 +183,7 @@ show_classes(my_conv.df)
 \end{warningbox}
 
 \begin{explainbox}
-Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between authors on what the \emph{correct} behavior is based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
+Not all conversion functions work consistently when converting from a derived class into its parent. The reason for this is disagreement between authors on what the \emph{correct} behaviour is based on logic and theory. You are not likely to be hit by this problem frequently, but it can be difficult to diagnose.
 
 We have already seen that calling \Rfunction{as.data.frame()} on a tibble strips the derived class attributes, returning a data frame. We will look at the whole character vector stored in the \code{"class"} attribute to demonstrate the difference. We also test the two objects for equality, in two different ways. Using the operator \code{==} tests for equivalent objects. Objects that contain the same data. Using \Rfunction{identical()} tests that objects are exactly the same, including attributes such as \code{"class"}, which we retrieve using \Rfunction{class()}.
 
@@ -206,7 +206,7 @@ my.xtb == my_conv_x.tb
 identical(my.xtb, my_conv_x.tb)
 @
 
-The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Some packages in the \pkgname{tidyverse} sometimes follow, or have followed in the past, approach 2). If in doubt about the behavior of some function, then you will need to do a test similar to the one used above.
+The two viewpoints on conversion functions are as follows. 1) The conversion function should return an object of its corresponding class, even if the argument is an object of a derived class, stripping the derived class. 2) If the object is of the class to be converted to, including objects of derived classes, then it should remain untouched. Base \Rlang follows, as far as I have been able to work out, approach 1). Some packages in the \pkgname{tidyverse} sometimes follow, or have followed in the past, approach 2). If in doubt about the behaviour of some function, then you will need to do a test similar to the one used above.
 
 As tibbles have been defined as a class derived from \code{data.frame}, if methods have not been explicitly defined for tibbles, the methods defined for data frames are called, and these are likely to return a data frame rather than a tibble. Even a frequent operation like column binding is affected, at least at the time of writing.
 
@@ -234,7 +234,7 @@ tibble(a = 1:5, b = 5:1, c = a + b, d = letters[a + 1])
 @
 
 \begin{playground}
-What is the behavior if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
+What is the behaviour if you replace \Rfunction{tibble()} by \Rfunction{data.frame()} in the statement above?
 \end{playground}
 
 \begin{warningbox}
@@ -254,7 +254,7 @@ tibble(a = 1:5, b = 5:1, c = list("a", 1:2, 0:3, letters[1:3], letters[3:1]))
 \index{tibble!differences with data frames|)}
 \index{data frame!replacements|)}
 
-\section{Data pipes}\label{sec:data:pipes}
+\section{Data Pipes}\label{sec:data:pipes}
 \index{chaining statements with \emph{pipes}|(}
 The first obvious difference between scripts using \pkgname{tidyverse} packages is the frequent use of \emph{pipes}. This is, however, mostly a question of preferences, as pipes can be as well used with base \Rlang functions. In addition, since version 4.0.0, \Rlang has a native pipe operator \Roperator{\textbar >}, described in section \ref{sec:script:pipes} on page \pageref{sec:script:pipes}. Here I describe other earlier implementations of pipes, and the differences among these and \Rlang's pipe operator.
 
@@ -280,7 +280,7 @@ data.in %>% sqrt(x = .) %>% sum(.) -> data1.out
 all.equal(data0.out, data1.out)
 @
 
-R's native pipe operator requires, consistently with \Rlang in all other situations, that functions that are to be evaluated use the parenthesis syntax, while \pkgname{magrittr} allows the parentheses to be missing when the piped argument is the only one passed to the function call on \textit{rhs}.
+\Rlang's native pipe operator requires, consistently with \Rlang in all other situations, that functions that are to be evaluated use the parenthesis syntax, while \pkgname{magrittr} allows the parentheses to be missing when the piped argument is the only one passed to the function call on \textit{rhs}.
 
 <<pipes-x04b>>=
 data.in %>% sqrt %>% sum -> data5.out
@@ -403,7 +403,7 @@ if (exists("data8.out")) {
 }
 @
 
-Although there are usually alternatives to get the computations done correctly, unexpected silent behavior can be confusing.
+Although there are usually alternatives to get the computations done correctly, unexpected silent behaviour can be confusing.
 \end{warningbox}
 
 \index{pipes!wrapr|)}
@@ -507,7 +507,7 @@ What has changed? Would it matter if our code used indexing with a numeric vecto
 %Base \Rlang function \Rfunction{reshape()} can do both operations, selected by passing it an argument. The names of the parameters are different and the manipulation of names is not built in as in the \pkgname{tidyr} functions.  Package \pkgname{poorman} provides a light-weight and dependency-free implementation of the core functions of package \pkgname{dplyr} and well as its own versions of functions \Rfunction{pivot\_longer()} and \Rfunction{pivot\_wider()}.
 %
 \begin{advplayground}
-  Functions \Rfunction{pivot\_longer()} and \Rfunction{pivot\_wider()} from package \pkgname{poorman} attempt to replicate the behavior of the same name functions from package \pkgname{tidyr}. In some edge cases, the behavior differs. Test if the two code chunks above return identical or equal values when \code{poorman::}  is prepended to the names of these two functions. First, ensure than package \pkgname{poorman} is installed, then run the code below.
+  Functions \Rfunction{pivot\_longer()} and \Rfunction{pivot\_wider()} from package \pkgname{poorman} attempt to replicate the behaviour of the same name functions from package \pkgname{tidyr}. In some edge cases, the behaviour differs. Test if the two code chunks above return identical or equal values when \code{poorman::}  is prepended to the names of these two functions. First, ensure than package \pkgname{poorman} is installed, then run the code below.
 
 <<tidy-tibble-01c, eval=eval_playground>>=
 poor_long_iris.tb <-
@@ -526,7 +526,7 @@ What is the difference between the values returned by the two functions? Could s
 \end{advplayground}
 \index{reshaping tibbles|)}
 
-\section{Data manipulation with \pkgname{dplyr}}\label{sec:dplyr:manip}
+\section{Data Manipulation with \pkgname{dplyr}}\label{sec:dplyr:manip}
 \index{data manipulation in the tidyverse|(}
 
 The first advantage a user of the \pkgname{dplyr} functions and methods sees is the completeness of the set of operations supported and the symmetry and consistency among the different functions. A second advantage is that almost all the functions are defined not only for objects of class \Rclass{tibble}, but also for objects of class \code{data.table} (package \pkgname{dtplyr}) and for SQL databases (package \pkgname{dbplyr}), with consistent syntax (see also section \ref{sec:data:db} on page \pageref{sec:data:db}). As discussed above, using a code base that is not yet fully stable has a cost that needs to be balanced against the gain obtained from its use.
@@ -696,7 +696,7 @@ first.tb <- tibble(idx = c(1:4, 5), values1 = "a")
 second.tb <- tibble(idx = c(1:4, 6), values2 = "b")
 @
 
-Below we apply the \emph{}\index{joins between data sources!mutating} functions exported by \pkgname{dplyr}: \Rfunction{full\_join()}, \Rfunction{left\_join()}, \Rfunction{right\_join()} and \Rfunction{inner\_join()}. These functions always retain all columns, and in case of multiple matches, keep a row for each matching combination of rows. We repeat each example with the arguments passed to \code{x} and \code{y} swapped to more clearly show their different behavior.
+Below we apply the \emph{}\index{joins between data sources!mutating} functions exported by \pkgname{dplyr}: \Rfunction{full\_join()}, \Rfunction{left\_join()}, \Rfunction{right\_join()} and \Rfunction{inner\_join()}. These functions always retain all columns, and in case of multiple matches, keep a row for each matching combination of rows. We repeat each example with the arguments passed to \code{x} and \code{y} swapped to more clearly show their different behaviour.
 
 A full join retains all unmatched rows filling missing values with \code{NA}. By default the match is done on columns with the same name in \code{x} and \code{y}, but this can be changed by passing an argument to parameter \code{by}. Using \code{by} one can base the match on columns that have different names in \code{x} and \code{y}, or prevent matching of columns with the same name in \code{x} and \code{y} (example at end of the section).
 
@@ -772,7 +772,7 @@ full_join(x = first2.tb, y = second.tb, by = c("idx2" = "idx"))
 options(tibble.print_max = 3, tibble.print_min = 3)
 @
 
-\section{Times and dates with \pkgname{lubridate}}\label{sec:data:datetime}
+\section{Times and Dates with \pkgname{lubridate}}\label{sec:data:datetime}
 \index{time and dates|(}
 In \Rlang and many other computing languages, time values are stored as integer values subject to special interpretation. In \Rlang, times are most frequently stored as objects of class \code{POSIXct} or \code{POSIXlt}. Package \pkgname{lubridate} makes working with dates and times in \Rlang much easier.
 
@@ -878,7 +878,7 @@ Working with time data, frequently involves checking that the results of computa
 \end{playground}
 \index{time and dates|)}
 
-\section{Further reading}
+\section{Further Reading}
 An\index{further reading!new grammars of data} in-depth discussion of the \pkgname{tidyverse} is outside the scope of this book. Several books describe in detail the use of these packages. As several of them are under active development, recent editions of books such as \citebooktitle{Wickham2023a} \autocite{Wickham2023a} and \citebooktitle{Peng2022} \autocite{Peng2022} are the most useful. The documentation of the packages briefly presented in this chapter is an up-to-date source of very useful information and worthwhile reading.
 
 <<echo=FALSE>>=
