@@ -26,9 +26,9 @@ In earlier chapters we have only used base \Rlang features. In this chapter you 
 
 The main role of functions is that of providing an abstraction allowing us to avoid repeating blocks of code (groups of statements) applying the same operations on different data. The reasons to avoid repetition of similar blocks of code statements are that 1) if the algorithm or implementation needs to be revised---e.g., to fix a bug or error---it is best to make edits in a single place; 2) sooner or later pieces of repeated code can become different leading to inconsistencies and hard-to-track bugs; 3) abstraction and division of a problem into smaller chunks, greatly helps with keeping the code understandable to humans; 4) textual repetition makes the script file longer, and this makes debugging, commenting, etc., more tedious, and error prone; 5) with well-defined input and output, functions facilitate testing.
 
-How do we, in practice, avoid repeating bits of code? We write a function containing the statements that we would need to repeat, and later we \emph{call} (``use'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book; what we will next tackle is how to define new functions of our own.
+How does one, in practice, avoid repeating bits of code? One writes a function containing the statements that would need to be repeated, and later one \emph{calls} (``uses'') the function in their place. We have been calling \Rlang functions or operators in almost every example in this book; what we will next tackle is how to define new functions of our own.
 
-We saw in section \ref{sec:script:compound:statement} on page \pageref{sec:script:compound:statement} a diagram of a compound statement. A function is a code statement, simple or compound, that is partly isolated from the enclosing environment. The \emph{function} abstraction relies on formal parameters working as placeholders for arguments within the function body. When the function is called (or ``used'') values are passed as arguments to the parameters, and used when executing the code within the function.
+The diagram in section \ref{sec:script:compound:statement} on page \pageref{sec:script:compound:statement} describes a compound statement. A function is a code statement, simple or compound, that is partly isolated from the enclosing environment. The \emph{function} abstraction relies on formal parameters working as placeholders for arguments within the function body. When the function is called (or ``used'') values are passed as arguments to the parameters, and used when executing the code within the function.
 
 New functions and operators are defined using function \Rfunction{function()}, and saved like any other object in \Rlang by assignment to a variable name. In the example below, \code{x} and \code{y} are both formal parameters, or names used within the function for objects that will be supplied as \emph{arguments} when the function is called.
 
@@ -38,22 +38,23 @@ Function \code{fun1()} has two formal parameters, \code{x} and \code{y}.
 fun1 <- function(x, y){x * y}
 @
 
-When we call \code{fun1()} with \code{4} and \code{3} as arguments, the computation that takes place is \code{4 * 3} and the value returned is \code{12}. In this example it is printed, but we could have assigned it to a variable or used it in further computations within the calling statement.
+When we call \code{fun1()} with \code{4} and \code{3} as arguments, the computation that takes place is \code{4 * 3} and the value returned is \code{12}. In this example the returned value or result is printed, but it could have been assigned to a variable or used in further computations within the calling statement.
 
 <<fun-00b>>=
 fun1(x = 4, y = 3)
 @
 
 \begin{playground}
-What is the computation that takes places in this function call?
+What is the computation that takes places in these function calls?
 
 <<fun-00c, eval=eval_playground>>=
 fun1(x = 10, y = 50)
+fun1(x = 10, y = 50) * 3
 @
 \end{playground}
 
 \begin{warningbox}
-Even though the statements within the function body do have access to the environment in which the function is called, it is safest to pass all input through the function parameters, and return all values to the caller. This ensures that the users of the function can treat it a black box with no side effects.
+Even though the statements within the function body do have access to the environment in which the function is called, it is safest to pass all input through the function parameters, and return all values to the caller. This ensures that the users of the function can treat it as a black box with no side effects.
 \end{warningbox}
 
 \begin{figure}
@@ -96,10 +97,10 @@ In \Rlang, statements within the function usually do not affect directly any var
 
 When a function has a side effect, the caller is no longer in full control (Figure \ref{fig:function:side:effect:diagram}). Side effects can be actions that do not alter any object in the calling code, like when a call to \Rfunction{print()} displays text or numbers. Side effects can also be an assignment that modifies an object in the caller's environment, such as assigning a new value to a variable in the caller's environment, i.e., ``outside the function''.
 
-A function can return only one object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case on \Rfunction{lm()} the returned object's class is \Rclass{lm}, and its mode is \Rclass{list}.
+A function can return only one object, so when multiple results are produced they need to be collected into a single object. In many cases, lists are used to collect all the values to be returned into one \Rlang object. For example, model fit functions like \code{lm()}, discussed in section \ref{sec:stat:LM} on page \pageref{sec:stat:LM}, return lists with multiple heterogeneous members, plus ancillary information stored in several attributes. In the case of \Rfunction{lm()} the returned object's class is \Rclass{lm}, and its mode is \Rclass{list}.
 
 \begin{playground}
-When function \Rcontrol{return()} is called within a function, flow of execution within the function stops and the argument passed to \Rcontrol{return()} is the value returned by the function call. In contrast, if function \Rcontrol{return()} is not explicitly called, the value returned by the function call is that returned by the last statement \emph{executed} within the body of the function. Run these examples, and your own variations.
+When function \Rcontrol{return()} is called within a function, the flow of execution within the function stops and the argument passed to \Rcontrol{return()} is the value returned by the function call. In contrast, if function \Rcontrol{return()} is not explicitly called, the value returned by the function call is that returned by the last statement \emph{executed} within the body of the function. Run these examples, and your own variations.
 
 \label{chunck:print:funs}
 <<fun-02, eval=eval_playground>>=
@@ -136,7 +137,7 @@ In some other computer languages, arguments can be passed by reference, meaning 
 Functions have their own \emph{scope}. Any new variables created by normal assignment within the body of a function are visible only within the body of the function and are destroyed when the function returns from the call. In normal use, functions in \Rlang do not affect their environment through side effects.
 
 \begin{warningbox}
-Functions can be called without giving them a name. This is common when the function is simple and called only once. Anonymous functions are frequently used together with \emph{apply functions}, as a definition passed directly as argument to parameter \code{FUN} (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
+Functions can be called without giving them a name. This is common when the function is simple and called only once. Anonymous functions are frequently used together with \emph{apply functions}, as a definition passed directly as an argument to parameter \code{FUN} (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
 
 <<fun-10>>=
 (function(x, y){x * y})(x = 4, y = 3)
@@ -160,7 +161,7 @@ Scoping in \Rlang is implemented using \emph{environments} and \emph{name spaces
 
 The visibility of names is determined by the \emph{scoping rules} of a language. The clearest, but not the only situation when scoping rules matter, is when objects with the same name coexist. In such a situation one will be accessible by its unqualified name and the other hidden but possibly accessible by qualifying the name with the namespace where it is defined.
 
-As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of language. For example \code{pi} is a constant defined in \Rlang with the value of the mathematical constant $\pi$. If we use the same name for one of our variables, the original definition becomes hidden.
+As the \Rlang language has few reserved words for which no redefinition is allowed, we should take care not to accidentally reuse names that are part of the language. For example, \code{pi} is a constant defined in \Rlang with the value of the mathematical constant $\pi$. If we use the same name for one of our variables, the original definition is hidden and can no longer be normally accessed.
 
 <<scope-01>>=
 pi
@@ -207,9 +208,9 @@ SEM(a)
 SEM(a.na)
 @
 
-For example in \code{SEM(a)} we are calling function \Rfunction{SEM()} with \code{a} as an argument.
+For example, with \code{SEM(a)} we are calling function \Rfunction{SEM()} with \code{a} as an argument.
 
-The function we defined above will always give the correct answer because \code{NA} values in the input will always result in an \code{NA} being returned. The problem is that unlike \Rlang's functions like \code{var()}, there is no option to omit \code{NA} values in the function we defined.
+Our function \code{SEM(a)} never returns a wrong answer because \code{NA} values in its input always result in \code{NA} being returned. The problem is that unlike \Rlang's functions such as \code{var()}, \Rfunction{SEM()} does not support omitting \code{NA} values.
 
 This could be implemented by adding a second parameter \code{na.rm} to the definition of our function and passing its argument to the call to \Rfunction{var()} within the body of \code{SEM()}. However, to avoid returning wrong values we need to make sure \code{NA} values are also removed before counting the number of observations with \code{length()}.
 
@@ -250,13 +251,13 @@ We first print (implicitly) the definition of our function from earlier in this 
 sem
 @
 
-Next we print the definition of \Rlang's standard deviation function \code{sd()}.
+Next, we print the definition of \Rlang's standard deviation function \code{sd()}.
 
 <<fun-08>>=
 sd
 @
 
-As can be seen at the end of the printouts, these functions written in the \Rlang language have been byte-compiled so that they executes faster. We can also see that the definition of \code{sd()} resides in \code{namespace:stats} because it has been attached from package \pkgname{stats}.
+As can be seen at the end of the printouts, these functions written in the \Rlang language have been byte-compiled so that they execute faster. We can also see that the definition of \code{sd()} resides in \code{namespace:stats} because it has been attached from package \pkgname{stats}.
 
 Functions that are part of the \Rlang language, but that are not coded using the \Rlang language, are called primitives and their full definition cannot be accessed through their name (c.f., \code{sem()} defined above and \code{sd}, with \code{list()} below).
 
@@ -284,7 +285,7 @@ The name by itself and enclosed in back ticks allows us to access the definition
 @
 
 \begin{explainbox}
-\textbf{Defining a new operator.} We will define a binary operator (taking two arguments) that subtracts from the numbers in a vector the mean of another vector. First we need a suitable name, but we have less freedom as names of user-defined operators must be enclosed in percent signs. We will use \code{\%-mean\%} and as with any \emph{special name}, we need to enclose it in quotation marks for the assignment.
+\textbf{Defining a new operator.} We will define a binary operator (taking two arguments) that subtracts from the numbers in a vector the mean of another vector. First, we need a suitable name, but we have less freedom as names of user-defined operators must be enclosed in percent signs. We will use \code{\%-mean\%} and as with any \emph{special name}, we need to enclose it in quotation marks for the assignment.
 
 <<oper-EB01>>=
 "%-mean%" <- function(e1, e2) {
@@ -311,7 +312,7 @@ To print the definition, we enclose the name of our new operator in back ticks--
 \index{S3 class system}\index{classes!S3 class system}\index{methods!S3 class system}
 New classes are normally defined within packages rather than in user scripts. To be really useful implementing a new class involves not only defining a class but also a set of specialised functions or \emph{methods} that implement operations on objects belonging to the new class. Nevertheless, an understanding of how classes work is important even if only very occasionally a user will define a new method for an existing class within a script.
 
-Classes are abstractions, but abstractions describing the shared properties of ``types'' or groups of similar objects. In this sense, classes are abstractions of ``actors,'' they are like ``nouns'' in natural language. What we obtain with classes is the possibility of defining multiple versions of functions (or \emph{methods}) sharing the same name but tailored to operate on objects belonging to different classes. We have already been using methods with multiple \emph{specialisations} throughout the book, for example \code{plot()} and \code{summary()}.
+Classes are abstractions, but abstractions describing the shared properties of ``types'' or groups of similar objects. In this sense, classes are abstractions of ``actors'', they are like ``nouns'' in natural language. What we obtain with classes is the possibility of defining multiple versions of functions (or \emph{methods}) sharing the same name but tailored to operate on objects belonging to different classes. We have already been using methods with multiple \emph{specialisations} throughout the book, for example, \code{plot()} and \code{summary()}.
 
 We start with a quotation from \citebooktitle{Burns1998} \autocite[][, page 13]{Burns1998}.
 \begin{quotation}
@@ -324,7 +325,7 @@ what class of object they are.
 
 We say that specific methods are \emph{dispatched} based on the class of the argument passed. This, together with the loose type checks of \Rlang, allows writing code that functions as expected on different types of objects, e.g., character and numeric vectors.
 
-\Rlang has good support for the object-oriented programming paradigm, but as a system that has evolved over the years, currently \Rlang supports multiple approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a name like ``plot'' can be used as a generic name, and that the specific version of \Rfunction{plot()} called depends on the arguments of the call. Using computing terms we could say that the \emph{generic} of \Rfunction{plot()} dispatches the original call to different specific versions of \Rfunction{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions, the specialisations of a generic are recognized/identified only by their name. And the class of an object by a character string stored as an attribute to the object (see section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes} about attributes).
+\Rlang has good support for the object-oriented programming paradigm, but as a system that has evolved over the years, currently \Rlang supports multiple approaches. The still most popular approach is called S3, and a more recent and powerful approach, with slower performance, is called S4. The general idea is that a name like ``plot'' can be used as a generic name and that the specific version of \Rfunction{plot()} called depends on the arguments of the call. Using computing terms we could say that the \emph{generic} of \Rfunction{plot()} dispatches the original call to different specific versions of \Rfunction{plot()} based on the class of the arguments passed. S3 generic functions dispatch, by default, based only on the argument passed to a single parameter, the first one. S4 generic functions can dispatch the call based on the arguments passed to more than one parameter and the structure of the objects of a given class is known to the interpreter. In S3 functions, the specialisations of a generic are recognised/identified only by their name. And the class of an object by a character string stored as an attribute to the object (see section \ref{sec:calc:attributes} on page \pageref{sec:calc:attributes} about attributes).
 
 We first explore one of the methods already available in \Rlang. The definition of \code{mean} shows that it is the generic for a method.
 
@@ -332,7 +333,7 @@ We first explore one of the methods already available in \Rlang. The definition 
 mean
 @
 
-We can find out which specialisations of method are available in the current search path using \Rfunction{methods()}.
+We can find out which specialisations of a method are available in the current search path using \Rfunction{methods()}.
 
 <<object-classes-00a>>=
 methods(mean)
@@ -345,7 +346,7 @@ methods(class = "list")
 @
 
 \begin{explainbox}
-S3 class information is stored as a character vector in an attribute named \code{"class"}. The most basic approach to creation of an object of a new S3 class, is to add the new class name to the class attribute of the object. As the implied class hierarchy is given by the order of the members of the character vector, the name of the new class must be added at the head of the vector. Even though this step can be done as shown here, in practice this step would normally take place within a \emph{constructor} function and the new class, if defined within a package, would need to be registered. We show here this bare-bones example to demonstrate how S3 classes are implemented in \Rlang.
+S3 class information is stored as a character vector in an attribute named \code{"class"}. The most basic approach to the construction (= creation) of an object of a new S3 class, is to add the new class name to the \code{class} attribute of the object. As the implied class hierarchy is given by the order of the members of the character vector, the name of the new class must be added at the head of the vector. Even though this step can be done as shown here, in practice this step would normally take place within a \emph{constructor} function and the new class, if defined within a package, would need to be registered. We show here this bare-bones example only to demonstrate how S3 classes are implemented in \Rlang.
 
 <<explain-object-classes-01>>=
 a <- 123
@@ -369,7 +370,7 @@ print(a)
 print(as.numeric(a))
 @
 
-Adding name \code{"derivclass"} to the head of the class character vector, makes object \code{b} a member of both classes, \code{"myclass"} and \code{"derivclass"}, where \code{"derivclass"} is derived from \code{"myclass"}. As \code{"derivclass"} is at position \code{1}, it is for this object its most derived class.
+Adding the name \code{"derivclass"} to the head of the \code{class} character vector, makes object \code{b} a member of both classes, \code{"myclass"} and \code{"derivclass"}, where \code{"derivclass"} is derived from \code{"myclass"}. As \code{"derivclass"} is at position \code{1}, it is for this object its \emph{most derived class}.
 
 <<explain-object-classes-04>>=
 b <- 456
@@ -442,20 +443,20 @@ print(as.numeric(b))
 
 \subsection{Sharing of \Rlang-language extensions}
 \index{extensions to R}
-The most elegant way of adding new features or capabilities to \Rlang is through packages. A package can contain any or all of \Rlang function and operator definitions, data objects, classes and their methods, plus the corresponding documentation. Some packages available through \CRAN contain only one of two \Rlang objects while others contain hundreds of them. After loading a package those objects that a package exports can be used as if they were part \Rlang itself.
+The most elegant way of adding new features or capabilities to \Rlang is through packages. A package can contain any, seevral or all of \Rlang function and operator definitions, data objects, classes and their methods, plus the corresponding documentation. Some packages available through \CRAN contain only one of two \Rlang objects while others contain hundreds of them. After loading and attaching a package the objects that the package exports can be used as if they were part \Rlang itself.
 
-Packages are, without doubt, the best mechanism for sharing extensions to \Rlang. However, in most situations it is also the best mechanism for managing code that will be reused even by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
+Packages are, without doubt, the best mechanism for sharing extensions to \Rlang. However, in most situations, packages are also very useful for managing code that will be reused by a single person over time. \Rlang packages have strict rules about their contents, file structure, and documentation, which makes it possible among other things for the package documentation to be merged into \Rpgrm's help system when a package is loaded. With a few exceptions, packages can be written so that they will work on any computer where \Rpgrm runs.
 
 \begin{explainbox}
-In a source file the package code is in text files, simply archived and compressed together into a single file. A binary file has been processed into a form suitable for faster installation under a given operating system and possibly CPU family. Binary files are also specific to each major version of \Rlang. In addition to being slower, installation from source files in many cases requires additional software like compilers to be available at the time of installation. A compiler is a program that translates the text representation of computer program written in \Clang, \Cpplang or \langname{FORTRAN}, into machine code, i.e., instructions for the computer hardware. \Rlang code is translated into instructions for a virtual machine, part of \Rpgrm, that does the final translation into machine code at runtime.
+In a source file the package code is in text files, simply archived and compressed together into a single file. A binary file has been processed into a form suitable for faster installation under a given operating system and possibly CPU family. Binary files are also specific to each major version of \Rlang. In addition to being slower, installation from source files in many cases requires additional software like compilers to be available at the time of installation. A compiler is a program that translates the text representation of a computer program written in \Clang, \Cpplang, \langname{FORTRAN}, etc., into machine code, i.e., instructions for the computer hardware. \Rlang code is translated into instructions for a virtual machine, part of \Rpgrm, that does the final translation into machine code at runtime.
 \end{explainbox}
 
-Packages can be shared as source or binary package files, sent for example through e-mail. However, the largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the packages and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing (\Sexpr{lubridate::today()}) was \Sexpr{signif(nrow(available.packages(repos = "https://cran.rstudio.com/")), 3)}.
+For distribution a single compressed archive file is used for aech package. Packages can be shared as source- or binary-code files, sent for example through e-mail. However, the largest public repository of \Rpgrm packages is called \CRAN (\url{https://cran.r-project.org/}), an acronym for Comprehensive R Archive Network. Packages available through \CRAN are guaranteed to work, in the sense of not failing any tests built into the packages and not crashing or aborting prematurely. They are tested daily, as they may depend on other packages whose code will change when updated. The number of packages available through \CRAN at the time of printing (\Sexpr{lubridate::today()}) was \Sexpr{signif(nrow(available.packages(repos = "https://cran.rstudio.com/")), 3)}.
 
-A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. ROpenScience\index{ROpenScience} has established guidelines and a system for code peer review for \Rlang packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the rOpenScience website (\url{https://ropensci.org/}).
+A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. rOpenScience\index{rOpenScience} has established guidelines and a system for code peer review for \Rlang packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the rOpenScience website (\url{https://ropensci.org/}).
 Occasionally one may have or want to install packages directly from Git repositories such as versions still under development and not yet submitted to \CRAN.
 
-One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox.'' How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
+One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox''. How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
 
 \subsection{Download, installation and use}\label{sec:packages:install}
 
@@ -463,13 +464,13 @@ One good way of learning how the extensions provided by a package work, is by ex
 In \Rlang speak, ``library'' is the location where packages are installed. Packages are sets of functions, and data, specific for some particular purpose, that can be loaded into an \Rlang session to make them available so that they can be used in the same way as built-in \Rlang functions and data. Function \Rfunction{library()} is used to load and attach packages that are already installed in the local \Rlang library. In contrast, function \Rfunction{install.packages()} is used to install packages.
 
 \begin{warningbox}
-The instructions below assume that user has access to repositories in the internet and enough user rights to install packages. This is rarely the cases in organisations using strict security protocols. In such cases, the organisation may keep a mirror of \CRAN in the intranet. The local/user's private \Rpgrm library can be kept in a folder where the user has writing and reading rights.
+The instructions below assume that the user has access to repositories on the internet and enough user rights to install packages. This is rarely the case in organisations using strict security protocols. In such cases, the organisation may keep a mirror of \CRAN in the intranet. The local/user's private \Rpgrm library can be kept in a folder where the user has writing and reading rights.
 \end{warningbox}
 
 \begin{faqbox}{How to install or update a package from CRAN?}
-\CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
+\CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as a front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
 
-Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can called with the name of the package as argument. For example, to install package ’learnrbook’ we use
+Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can called with the name of the package as argument. For example, to install package \pkgname{learnrbook} we use
 
 <<pkg-00, eval=FALSE>>=
 install.packages("learnrbook")
@@ -485,16 +486,16 @@ Already installed packages are updated with function \Rfunction{update.packages(
 \end{faqbox}
 
 \begin{faqbox}{How to install or update \Rlang package from GitHub?}
-Package \pkgname{remotes} makes it possible to install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. The code in the next chunk (not run here) can be used to install the latest, possibly under development version of package \pkgname{learnrbook}.
+Package \pkgname{remotes} makes it possible to install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. The code in the next chunk (not run here) can be used to install the latest, possibly, still under development, version of package \pkgname{learnrbook}.
 
 <<remotes-01, eval=FALSE>>=
-remotes::install_github("aphalo/learnrbook")
+remotes::install_github("aphalo/learnrbook-pkg")
 @
 
 Alternatively, the newer package \pkgname{pak} can be used.
 
 <<pak-02, eval=FALSE>>=
-pak::pkg_install("aphalo/learnrbook")
+pak::pkg_install("aphalo/learnrbook-pkg")
 @
 
 \end{faqbox}
@@ -509,16 +510,16 @@ If the tools are available, packages can be easily installed from sources from w
 Use \code{help} to look up the help page for \Rfunction{install.packages()}, and explore how to control whether the package is installed from a source or a binary file. Also explore, how to install a package from a file in a local disk instead of from a repository like \CRAN.
 \end{advplayground}
 
-Frequently the README file of a package includes instructions on how to install it from \CRAN or another on-line repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file. In \CRAN, each package has a home web page that can be easily found if one knows the name of the package, e.g., \url{https://CRAN.R-project.org/package=learnrbook}. Nowadays, it is common for the help for a package being also available as a web site, e.g., \url{https://docs.r4photobiology.info/learnrbook/}.
+Frequently the README file of a package includes instructions on how to install it from \CRAN or another online repository. Exceptionally, packages may require additionally the installation of software outside \Rpgrm before their installation and/or use. When present, these rather exceptional requirements are always listed in the DESCRIPTION under \code{SystemRequirements:} and explained in more detail in the README file. In \CRAN, each package has a home web page that can be easily found if one knows the name of the package, e.g., \url{https://CRAN.R-project.org/package=learnrbook}. Nowadays, it is common for the help for a package being also available as a web site, e.g., \url{https://docs.r4photobiology.info/learnrbook/}.
 
 \begin{faqbox}{How to change the repository used to install packages?}
-Function \Rfunction{setRepositories()} can be used to enable other repositories in addition or instead of \CRAN during an \Rpgrm session. In recent versions of \Rpgrm the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
+Function \Rfunction{setRepositories()} can be used to enable other repositories in addition or instead of \CRAN during an \Rpgrm session. In recent versions of \Rpgrm, the default list of repositories is taken from \Rlang option \code{"repos"} if defined. Consult \code{help("setRepositories")} for the details.
 
 Alternatively, one can use function \Rfunction{pkg\_install()} from package \pkgname{pak} as this function attempts to automatically set the correct repository based on the name of the package.
 \end{faqbox}
 
 \begin{faqbox}{How to use an installed package?}
-To use the functions and other objects defined in a package, the package must first be loaded, and for the names of these objects to be visible in the user's workspace, the package needs to be attached. Function \Rfunction{library()} loads and attaches one package at a time. For example, to load and attach package 'learnrbook' we use.
+To use the functions and other objects defined in a package, the package must first be loaded, and for the names of these objects to be visible in the user's workspace, the package needs to be attached. Function \Rfunction{library()} loads and attaches one package at a time. For example, to load and attach package \pkgname{learnrbook} we use.
 
 <<pkg-00a, eval=FALSE>>=
 library("learnrbook")
@@ -550,13 +551,13 @@ Conflicts among packages can easily arise, for example, when they use the same n
 
 \subsection{Finding suitable packages}
 
-Due to the large number of contributed \Rlang packages it can sometimes be difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built into base \Rlang. Base \Rlang plus the recommended packages (installed when \Rlang is installed) cover a lot of ground. To analyse data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate or extend the functionality in base \Rlang with advantage. When one considers the use of novel or specialised types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to choose from within the available contributed packages. Sometimes groups or suites of packages are designed to work well together.
+Due to the large number of contributed \Rlang packages it can sometimes be difficult to find a suitable package for a task at hand. It is good to first check if the necessary capability is already built into base \Rlang. Base \Rlang plus the recommended packages (installed when \Rlang is installed) cover a lot of ground. To analyse data using almost any of the more common statistical methods does not require the use of special packages. Sometimes, contributed packages duplicate or extend the functionality in base \Rlang. When one considers the use of novel or specialised types of data analysis, the use of contributed packages can be unavoidable. Even in such cases, it is not unusual to have alternatives to choose from within the available contributed packages. Sometimes groups or suites of packages are designed to work well together.
 
-The \CRAN repository has very broad scope and includes a section called ``views.'' \Rlang views are web pages providing annotated lists of packages frequently used within a given field of research, engineering or specific applications. These views are edited and updated by different editors. They can be found at \url{https://cran.r-project.org/web/views/}.
+The \CRAN repository has a very broad scope and includes a section called ``views''. \Rlang views are web pages providing annotated lists of packages frequently used within a given field of research, engineering or specific applications. These views are maintained by different expert editors. The \Rlang views can be found at \url{https://cran.r-project.org/web/views/}.
 
 The Bioconductor repository specialises in bioinformatics with \Rlang. It also has a section with ``views'' and within it, descriptions of different data analysis workflows. The workflows are especially good as they reveal which sets of packages work well together. These views can be found at \url{https://www.bioconductor.org/packages/release/BiocViews.html}.
 
-\textsf{rOpenSci} \autocite{Ram2019} fosters a culture that values open and reproducible research using shared data and reusable software. One aspect of this is making possible peer-review of \Rlang packages. \textsf{rOpenSci} does not keep a separate package repository for the peer-reviewed packages, they keep an index at \url{https://ropensci.org/packages/}. The packages included have becoming more diverse, but initially the focus was in facilitating access to open data sources.
+\textsf{rOpenSci} \autocite{Ram2019} fosters a culture that values open and reproducible research using shared data and reusable software. One aspect of this is making possible peer-review of \Rlang packages. \textsf{rOpenSci} does not keep a separate package repository for the peer-reviewed packages, they keep an index at \url{https://ropensci.org/packages/}. The packages included have become more diverse, but initially the main focus was on facilitating access to open data sources.
 
 The \CRAN repository keeps an archive of earlier versions of packages, on an individual package basis. This is also important for long-term reproducibility.
 
@@ -565,12 +566,12 @@ The \CRAN repository keeps an archive of earlier versions of packages, on an ind
 \Rlang packages define all objects within a \emph{namespace} with the same name as the package itself. Loading and attaching a package with \Rfunction{library()} makes visible only the exported objects. Attaching a package adds these objects to the search path so that they can be accessed without prepending the name of the namespace. Most packages do not export all the functions and objects defined in their code; some are kept internal, in most cases because they may change or be removed in future versions.
 
 \begin{explainbox}
-Package namespaces can be detached and also unloaded with function \Rscoping{detach()} using a slightly different notation for the argument from that which we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}. This is very seldom needed, but one case I have come across are packages that define a generic functions of the same name and interfere with each other.
+Package namespaces can be detached and also unloaded with function \Rscoping{detach()} using a slightly different notation for the argument from that which we described for data frames in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}. This is very seldom needed, but one case I have come across is a package that redefines a generic function of a method of a package it imports, thus preventing the normal use of a third package that depends on the original definition of the generic.
 \end{explainbox}
 
 When we reuse a name defined in a package, its definition in the package does not get overwritten, but instead, only hidden. These hidden objects remain accessible using the name \emph{qualified} by prepending the name of the package followed by two colons, e.g., \code{base:mean()}.
 
-If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached. To avoid confusion in such cases, in scripts it is best to use the qualified names for calling objects defined with the same name in two packages. Using the qualified name for an object from an already attached package, is inconsequential for its interpretation by \Rpgrm, but can enhance the readability of the code.
+If two packages define objects with the same name, then which one is visible depends on the order in which the packages were attached with \Rfunction{library()}. To avoid confusion in such cases, in scripts it is best to use the qualified names for calling objects defined with the same name in two packages. Using the qualified name for an object from an already attached package, is inconsequential for its interpretation by \Rpgrm, but can enhance the readability of the code.
 
 \begin{warningbox}
 If one uses a qualified name for an object but does not attach the package with a call to \Rfunction{library()}, the package is only loaded. In other words, the names of the exported objects are not added to the search pass, but the code defining them is retrieved and available using qualified names.
@@ -595,7 +596,7 @@ getAnywhere("cars")$where # the first visible definition is in the global enviro
 \end{playground}
 
 \begin{warningbox}
-In the playground above I used a data frame object, but the same mechanisms apply to all \Rlang objects including functions. The situation when one of the definitions is a function and the other is not, is slightly different in that a call using parenthesis notation will distinguish between a function and an object of the same name that is not a function. Relying on this distinction is anyway a bad idea.
+In the playground above, I used a data frame object, but the same mechanisms apply to all \Rlang objects including functions. The situation when one of the definitions is a function and the other is not, is slightly different in that a call using parenthesis notation will distinguish between a function and an object of the same name that is not a function. Relying on this distinction is anyway very confusing and, thus, a bad idea.
 
 <<pkg-02a>>=
 mean
@@ -613,14 +614,14 @@ rm(mean)
 getAnywhere("mean")$where
 @
 
-In this last example \code{rm(mean)} removed the variable we had assigned a value to. Package namespaces also prevent deletion or overwriting of objects defined in the package. This is different to defining a new object with the same name, which is allowed. The two statements below trigger errors and are not evaluated when typesetting the book.
+In this last example, \code{rm(mean)} removed the variable we had assigned a value to. Package namespaces protect the objects defined in the package from deletion or overwriting. This is different to defining a new object with the same name, which is allowed. The two statements below trigger errors and are not evaluated when typesetting the book.
 
 <<pkg-03, eval=FALSE>>=
 datasets::cars <- "my car is green"
 rm(datasets::cars)
 @
 
-The value returned by \Rfunction{getAnywhere()} has additional information than that in its member \code{where}. Do have a look at its help page for more details.
+The value returned by \Rfunction{getAnywhere()} has additional information than that in its member \code{where}. Do have a look at its help page with \code{help(getAnywhere)} for the details.
 
 \end{warningbox}
 
@@ -628,7 +629,7 @@ The value returned by \Rfunction{getAnywhere()} has additional information than 
 
 Several\index{further reading!object oriented programming in R} books describe in detail the different class systems available and how to use them in \Rlang. For an in-depth treatment of the subject please consult the books \citebooktitle{Wickham2019} \autocite{Wickham2019} and \citebooktitle{Chambers2016} \autocite{Chambers2016}.
 
-\index{further reading!package development}The development of \Rlang packages is accessibly explained in the book \citebooktitle{Wickham2023} \autocite{Wickham2023}, using a practical approach and tools developed by the author and his collaborators. The book \citebooktitle{Chambers2016} \autocite{Chambers2016} has its focus on \Rlang itself, how it works, and how to develop extensions both with simple and with challenging goals.
+\index{further reading!package development}The development of \Rlang packages is accessibly explained in the book \citebooktitle{Wickham2023} \autocite{Wickham2023}, using a practical approach and tools developed by the author and his collaborators. The book \citebooktitle{Chambers2016} \autocite{Chambers2016} has its focus on \Rlang itself, how it works, and how to develop extensions both with simple and challenging goals.
 
 <<eval=eval_diag, include=eval_diag, echo=eval_diag, cache=FALSE>>=
 knitter_diag()
