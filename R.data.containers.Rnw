@@ -147,27 +147,23 @@ lst1[["x"]]
 lst1[[1]]
 @
 
-\begin{warningbox}
-   The default behaviour also differs in that only \Roperator{\$} does partial matching of the member name (recognises incomplete names), which makes dangerous its use in scripts or package code.
-\end{warningbox}
-
 \begin{explainbox}\label{box:extraction:opers}
 We mentioned above that indexing by name can be done either with double square brackets, \Roperator{[[ ]]}, or with \Roperator{\$}. Operators \Roperator{[ ]} and \Roperator{[[ ]]} work like normal \Rlang functions, accepting as arguments passed to them both constant values and variables for indexing. In contrast, \Roperator{\$} mainly intended for use when typing at the console, accepts only bare member names on its \emph{rhs}. With \Roperator{[[ ]]} the name of the variable or column is given as a character string, enclosed in quotation marks, or as a variable with mode \code{character}. A number as a positional index is also accepted.
 
 <<index-partial-1>>=
-lst1 <- list(abcd = 123, xyzw = 789)
-lst1[[1]]
-lst1[["abcd"]]
+lst1a <- list(abcd = 123, xyzw = 789)
+lst1a[[1]]
+lst1a[["abcd"]]
 vct1 <- "abcd"
-lst1[[vct1]]
+lst1a[[vct1]]
 @
 
 When using \Roperator{\$}, the name is entered as a constant, without quotation marks, and cannot be a variable or a number.
 
 <<index-partial-1a>>=
-lst1$abcd
-lst1$ab
-lst1$a
+lst1a$abcd
+lst1a$ab
+lst1a$a
 @
 
 Both in the case of lists and data frames (see section \ref{sec:R:data:frames} on page \pageref{sec:R:data:frames}), when using double square brackets, by default an exact match is required between the name in the object and the name used for indexing. In contrast, with \Roperator{\$}, an unambiguous partial match is silently accepted. For interactive use, partial matching decreases the extent of the text typed at the console. However, in scripts, and especially \Rlang code in packages, it is best to avoid the use of \Roperator{\$} as partial matching to a wrong variable present at a later time, e.g., when someone else revises the script, misdirected partial matching can lead to difficult-to-diagnose errors.
@@ -535,10 +531,9 @@ is.data.frame(df1[ , "treatment", drop = FALSE])
 In contrast to matrices and data frames, the extraction operator \Roperator{[ ]} of tibbles---defined in package \pkgname{tibble}---never simplifies returned one-column tibbles into vectors (see section \ref{sec:data:tibble} on page \pageref{sec:data:tibble} for details on the differences between data frames and tibbles).
 \end{warningbox}
 
-\begin{advplayground}
-Usually data frames are created from lists or by passing individual vectors and factors to the constructors. It is also possible to construct data frames starting from matrices, other data frames and named vectors and combinations of them. In these cases additional nuances become important. We give only some examples here, as the details are well described in \code{help(data.frame)}.
+Usually data frames are created from lists or by passing individual vectors and factors to the constructors. It is also possible to construct data frames starting from matrices, other data frames and named vectors, in which case, the identity function \Rfunction{I()} can be used to protect them from interpretation by the \Rfunction{data.frame()} constructor. In these cases, additional nuances become important. The details are well described in \code{help(data.frame)}.
 
-We use a named numeric vector, and a factor. The names are moved from the vector to the rows of the data frame! Consult \code{help(data.frame)} for an explanation.
+With a named numeric vector, and a factor as arguments, the names are moved from the vector to the rows of the data frame!
 
 <<data-frames-bx-constr-01>>=
 vct1 <- c(one = 1, two = 2, three = 3, four = 4)
@@ -548,7 +543,7 @@ df1
 df1$vct1
 @
 
-If we protect the vector with \Rlang's identity function \Rfunction{I()} the names are not removed from the vector as can be seen by extracting the column from the data frame.
+If the vector is protected with \Rlang's identity function \Rfunction{I()} the names are not moved as can be seen by extracting the column \code{vct1} from data frame \code{df2}.
 
 <<data-frames-bx-constr-02>>=
 df2 <- data.frame(fct1, I(vct1))
@@ -556,15 +551,19 @@ df2
 df2$vct1
 @
 
-If we start with a matrix instead of a vector, the matrix is by default split into separate columns in the data frame. If the matrix has no column names, new ones are created.
+\begin{explainbox}
+With a matrix instead of a vector, the matrix is split into separate columns in the data frame. If the matrix has no column names, new ones are created.
 
 <<data-frames-bx-constr-04>>=
 mat1 <- matrix(1:12, ncol = 3)
 df4 <- data.frame(fct1, mat1)
+@
+
+<<data-frames-bx-constr-04a>>=
 df4
 @
 
-If we protect the matrix with function \Rfunction{I()}, it is not split, and the whole matrix becomes a column in the data frame.
+If the matrix is protected with function \Rfunction{I()}, it is not split, and the whole matrix becomes a column in the data frame.
 
 <<data-frames-bx-constr-05>>=
 df5 <- data.frame(fct1, I(mat1))
@@ -572,7 +571,10 @@ df5
 df5$mat1
 @
 
-If we start with a list, each member with a suitable number of elements, each member becomes a column in the data frame. In the case of a too short one, recycling is applied.
+\end{explainbox}
+
+\begin{explainbox}
+With a list, whose member are vectors, each member of the list becomes a column in the data frame. In the case of too short members, recycling is applied.
 
 <<data-frames-bx-constr-06>>=
 lst1 <- list(a = 4:1, b = letters[4:1], c = "n", d = "z")
@@ -580,15 +582,21 @@ df6<- data.frame(fct1, lst1)
 df6
 @
 
-The behaviour is different if we protect the list with \Rfunction{I()}: then the list is added in whole as a variable or column in the data frame. In this case the length or number of members in the list itself must match the number of rows in the data frame, while the length and class of the individual members of the list can vary. This is similar to the default behaviour of tibbles, but \Rlang data frames require explicit use of \Rfunction{I()} (see chapter \ref{chap:R:data} on page \pageref{chap:R:data} for details about package \pkgname{tibble}).
+If the list is protected with \Rfunction{I()}, the list is added in whole as a variable or column in the data frame. In this case the length of the list must match the number of rows in the data frame, while the length and class of the individual members of the list can vary. The names of the list members are used to set the \code{rownames} of the data frame.
+This is similar to the default behaviour of tibbles, while \Rlang data frames require explicit use of \Rfunction{I()} for lists not to be split (see chapter \ref{chap:R:data} on page \pageref{chap:R:data} for details about package \pkgname{tibble}).
 
 <<data-frames-bx-constr-07>>=
 df7<- data.frame(fct1, I(lst1))
 df7
+@
+<<data-frames-bx-constr-07b>>=
 df7$lst1
 @
 
-What is this exercise about? Do check the documentation carefully and think of uses where the flexibility gained by use of function \Rfunction{I()} to protect arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write \Rlang statements to extract individual members of embedded matrices or lists using indexing. Finally, test if the behaviour of \Rfunction{I()} is the same when assigning new member variables (or ``columns'') to an existing data frame.
+\end{explainbox}
+
+\begin{advplayground}
+What do we gain using \Rfunction{I()}? Check the documentation carefully and think of uses where the flexibility gained by the option to protect or not the arguments passed to the \Rfunction{data.frame()} constructor can be useful. In addition, write \Rlang statements to extract individual members of embedded matrices or lists using indexing. Finally, test if the behaviour of \Rfunction{I()} is the same when assigning new member variables (or ``columns'') to an existing data frame.
 \end{advplayground}
 
 \subsection{Sub-setting data frames}\label{sec:calc:df:subset}
@@ -666,7 +674,8 @@ Alternatively, negative indexing can be used to remove columns from a copy of a 
 
 <<data-frames-6a>>=
 df8[ , -which(colnames(df8) == "y")]
-@
+@%
+\pagebreak
 
 Instead of using the equality test, we can use the operator \code{\%in\%} or function \code{grepl()} to create a \code{logical} vector useful for deleting or selecting multiple columns in a single statement.
 
@@ -724,7 +733,8 @@ Related to splitting a data frame is the calculation of summaries based on a sub
 To summarise a single variable by group we can use \Rfunction{aggregate()}.
 
 <<faq-aggregate-01>>=
-aggregate(x = iris$Petal.Length, by = list(iris$Species), FUN = mean)
+aggregate(x = iris$Petal.Length, 
+          by = list(iris$Species), FUN = mean)
 @
 
 \end{faqbox}
@@ -733,7 +743,8 @@ aggregate(x = iris$Petal.Length, by = list(iris$Species), FUN = mean)
 To summarise variables we can use \Rfunction{aggregate()} (see section \ref{sec:dplyr:group:wise} on page \pageref{sec:dplyr:group:wise} for an alternative approach using package \pkgnameNI{dplyr}).
 
 <<faq-aggregate-02>>=
-aggregate(x = iris[ , sapply(iris, is.numeric)], by = list(iris$Species), FUN = mean)
+aggregate(x = iris[ , sapply(iris, is.numeric)], 
+          by = list(iris$Species), FUN = mean)
 @
 
 For these data, as the only non-numeric variable is \code{Species}, we could have also used formula notation as shown below.
@@ -795,14 +806,14 @@ We use column names or numeric indexes with the extraction operator \Roperator{[
 
 <<faq-data-frames-01>>=
 sorted_cols_iris <- iris[ , sort(colnames(iris), decreasing = TRUE)]
-head(sorted_cols_iris, 6)
+head(sorted_cols_iris, 5)
 @
 
 Similarly, we can use values in a column as argument to \Rfunction{order()} to obtain the \code{numeric} indices to sort rows.
 
 <<faq-data-frames-02>>=
 sorted_rows_iris <- iris[order(iris$Petal.Length), ]
-head(sorted_rows_iris, 6)
+head(sorted_rows_iris, 5)
 @
 
 \end{faqbox}
@@ -1077,7 +1088,13 @@ is.vector(mat1 )
 mat1
 @
 
-In this case we could have used \Rfunction{dim()} instead of \Rfunction{attr()}.
+In this case we can also use \Rfunction{dim()}.
+
+<<attibutes-ebx-01d>>=
+dim(mat1) <- NULL
+is.vector(mat1 )
+@
+
 \end{explainbox}
 
 \begin{warningbox}
@@ -1209,28 +1226,28 @@ rm(list = setdiff(ls(pattern="*"), to.keep))
 
 \section{Plotting}
 \index{plots!base R graphics}
-In most cases the most effective way of obtaining and overview of a data set is by plotting it using multiple approaches. The base-\Rlang generic method \Rfunction{plot()} can be used to plot different data. It is a generic method that has specialisations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section, I very briefly demonstrate the use of the most common base-\Rlang graphics functions. They are well described in the book \citebooktitle{Murrell2019} \autocite{Murrell2019}. I will not describe the Lattice (based on \Slang's Trellis) approach to plotting \autocite{Sarkar2008}. Instead, I describe in detail the use of the \emph{layered grammar of graphics} and plotting with package \ggplot in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}.
+In most cases the most effective way of obtaining an overview of a data set is by plotting it using multiple approaches. The base-\Rlang generic method \Rfunction{plot()} can be used to plot different data. It is a generic method that has specialisations suitable for different kinds of objects (see section \ref{sec:script:objects:classes:methods} on page \pageref{sec:script:objects:classes:methods} for a brief introduction to objects, classes and methods). In this section, I very briefly demonstrate the use of the most common base-\Rlang graphics functions. They are well described in the book \citebooktitle{Murrell2019} \autocite{Murrell2019}. I describe in detail the use of the \emph{layered grammar of graphics} and plotting with package \ggplot in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}.
 
 \subsection{Plotting data}
-It is possible to pass two vectors (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of function \Rfunction{plot()}.
+It is possible to pass two vectors (here columns from a data frame) directly as arguments to the \code{x} and \code{y} parameters of function \Rfunction{plot()}. (The plot is shown farther down, as the three approaches create identical plots.)
 
 <<plot-0, include=FALSE, cache=FALSE>>=
 opts_chunk$set(opts_fig_narrow_square)
 @
 
-<<plot-1a>>=
+<<plot-1a, eval=FALSE>>=
 plot(x = cars$speed, y = cars$dist)
 @
 
-We can also use \Rfunction{with()} or \Rfunction{attach()} as described in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}. (Same plot as above, not shown.)
+It is also possible to use \Rfunction{with()} or \Rfunction{attach()} as described in section \ref{sec:calc:df:with} on page \pageref{sec:calc:df:with}.
 
 <<plot-1b, eval=FALSE>>=
 with(cars, plot(x = speed, y = dist))
 @
 
-However, it is better to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing as an argument to parameter \code{data} a data frame containing these variables as columns. The formula \code{dist \textasciitilde\ speed}, is read as \code{dist} explained by \code{speed}---i.e., \code{dist} is mapped to the $y$-axis as the dependent variable and \code{speed} to the $x$-axis as the independent variable. The names used in the formula, are looked up as columns in the \code{data.frame} passed as an argument to \code{data}. As described in section \ref{sec:stat:mf} on page \pageref{sec:stat:mf} the same syntax is used to describe models to be fitted to observations. (Same plot as above, not shown.)
+However, it is better to use a \emph{formula} to specify the variables to be plotted on the $x$ and $y$ axes, passing as an argument to parameter \code{data} a data frame containing these variables as columns. The formula \code{dist \textasciitilde\ speed}, is read as \code{dist} explained by \code{speed}---i.e., \code{dist} is mapped to the $y$-axis as the dependent variable and \code{speed} to the $x$-axis as the independent variable. The names used in the formula, are those of columns in the \code{data.frame}. As described in section \ref{sec:stat:mf} on page \pageref{sec:stat:mf} the same syntax is used to describe models to be fitted to observations.
 
-<<plot-1c, eval=FALSE>>=
+<<plot-1c>>=
 plot(dist ~ speed, data = cars)
 @
 
@@ -1274,7 +1291,8 @@ png(file = "output/my-file.png", width = 600, height = 500)
 plot(dist ~ speed, data = cars)
 text(x = 10, y = 110, labels = "some texts to be added")
 dev.off()
-@
+@%
+\pagebreak
 
 This is not the only approach available in \Rpgrm for building complex plots. As we will see in chapter \ref{chap:R:plotting} on page \pageref{chap:R:plotting}, an alternative approach is to build a \emph{plot object} as a list of member components, that can be saved as any other \Rlang object. This object functions as a ``recipe'' that is later rendered as a whole on a graphical device by calling \code{print()} to display it.
 
@@ -1282,7 +1300,7 @@ This is not the only approach available in \Rpgrm for building complex plots. As
 \index{data sets!their storage|)}
 
 \section{Further Reading}
-For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter, I suggest  the book \citetitle{Matloff2011} \autocite{Matloff2011}, with emphasis on the \Rlang language and programming. An in-depth description of plotting and graphic devices in \Rlang is available in the book \citetitle{Murrell2019} \autocite{Murrell2019}.
+For\index{further reading!using the R language} further reading on the aspects of \Rlang discussed in the current chapter, I suggest  the book \citetitle{Matloff2011} \autocite{Matloff2011}, with emphasis on the \Rlang language and programming. The new, open-source, book \citetitle{Gagolewski2023} \autocite{Gagolewski2023}, provides a free alternative. This book also covers base \Rlang plotting giving more advanced examples than \textit{Learn R: As a Language}. An in-depth description of plotting and graphic devices in \Rlang is available in the book \citetitle{Murrell2019} \autocite{Murrell2019}.
 
 <<container-chapter-cleanup, include=FALSE>>=
 rm(list = setdiff(ls(pattern="*"), to.keep))
