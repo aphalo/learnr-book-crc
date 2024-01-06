@@ -602,29 +602,39 @@ Additional query methods give easy access to different aspects of fitted models:
 Familiarise yourself with these extraction and summary methods by reading their documentation and use them to explore \code{fm1} fitted above or model fits to other data of your interest.
 \end{playground}
 
-\begin{explainbox}\label{box:LM:fit:object}
-The\index{linear models!structure of model fit object} objects returned by model fitting functions contain the full information, including the data to which the model was fit to. Their structure resembles a nested list. In most cases the class of the objects returned by model fit functions agrees in name with the name of the model-fit function (\code{"lm"} in this example) but is not derived from \Rlang class \code{"list"}. The different functions described above, either extract parts of the object or do additional calculations and formatting based on them. There are different specialisations of these methods which are called depending on the class of the model-fit object. (See section \ref{sec:methods} on page \pageref{sec:methods}.)
+It is usual\index{linear models!structure of summary object} to only look at the values returned by \Rfunction{anova()} and \Rfunction{summary()} as implicitly displayed by \code{print()}. However, both \Rfunction{anova()} and \Rfunction{summary()} return complex objects, derived from \code{list}, containing some members not displayed by \code{print()}. Access to members of these objects can be necessary to use them in further calculations or to print them in a format different to the default.
 
-<<models-EB0>>=
-class(fm1)
-names(fm1)
+\begin{explainbox}\label{box:LM:fit:summary:object}
+The class and structure of the objects returned by \Rmethod{summary()} depends on the class of the model fit object, i.e., \Rmethod{summary()} is a generic method with multiple specialisations.
+
+<<models-EB2ca>>=
+class(summary(fm1))
 @
 
-The structure of model-fit objects is of interest only when the query or accessor functions do not provide the needed information and when we are interested to learn how model fitting works in \Rlang. As with any other \Rlang object \Rfunction{str()} shows the structure. Calling \Rfunction{str()} with \code{no.list = TRUE, give.attr = FALSE, vec.len = 2} as arguments restricts the output to an overview of the structure of \code{fm1}.
+One case where we need to extract individual members is when adding annotations to plots. Another case is when writing reports to include programmatically the computed values within the text. \Rfunction{str()} can be used to display the structure. Calling \Rfunction{str()} with \code{no.list = TRUE}, \code{give.attr = FALSE} and \code{vec.len = 2} as arguments restricts the output to an overview of the structure of \code{fm1}.
 
-<<models-EB1>>=
-str(fm1, no.list = TRUE, give.attr = FALSE, vec.len = 2)
+<<models-EB3>>=
+str(summary(fm1), no.list = TRUE, give.attr = FALSE, vec.len = 2)
 @
 
-Member \code{call} contains the function call and arguments used to create object \code{fm1}.
+Extraction of members follows the usual \Rlang rules using \Roperator{\$}, \Roperator{[ ]}, or \Roperator{[[ ]]}.
 
-<<models-EB1b>>=
-str(fm1$call)
+<<models-EB4>>=
+summary(fm1)$adj.r.squared
 @
 
-It is usual\index{linear models!structure of summary object} to only look at the value returned by \Rfunction{anova()} and \Rfunction{summary()} as implicitly displayed by \code{print()}. However, both \Rfunction{anova()} and \Rfunction{summary()} return complex objects, derived from \code{list}, containing some members not displayed by \code{print()}. Access to members of these objects can be necessary to use them in further calculations or to print them in a format different to the default.
+Estimates of \code{coefficients} are accompanied by estimates of their standard errors, \emph{t}-values and \emph{P}-values, while in the model object \code{fm1} these are not included.
 
-The class of the object returned by \code{anova()} does not depend on the class of the model fit object, while its structure does depend.
+<<models-EB3b>>=
+coef(fm1)
+str(fm1$coefficients)
+print(summary(fm1)$coefficients)
+str(summary(fm1)$coefficients)
+@
+\end{explainbox}
+
+\begin{explainbox}\label{box:LM:anova:object}
+The class of the object returned by method \code{anova()} does not depend on the class of the model fit object, while its structure does depend.
 
 <<models-EB2>>=
 anova(fm1)
@@ -637,34 +647,6 @@ class(anova(fm1))
 <<models-EB2b>>=
 str(anova(fm1))
 @
-
-The class of the summary objects depends on the class of the model fit object; \Rfunction{summary()} is a generic method with multiple specialisations.
-
-<<models-EB2c>>=
-class(summary(fm1))
-@
-
-One case where we need to extract individual members is when adding annotations to plots. Another case is when writing reports to include programmatically the computed values within the text. \Rfunction{str()} can be used to display the structure in a simplified way, and later of one member as above.
-
-<<models-EB3>>=
-str(summary(fm1), no.list = TRUE, give.attr = FALSE, vec.len = 2)
-@
-
-Extraction of members follows the usual \Rlang rules using \Roperator{\$}, \Roperator{[ ]}, or \Roperator{[[ ]]}.
-
-<<models-EB4>>=
-summary(fm1)$adj.r.squared
-@
-
-The \code{coefficients} estimates in the summary are accompanied by estimates for the corresponding standard errors, \emph{t}-value and \emph{P}-value, while in the model object \code{fm1} these are not included.
-
-<<models-EB3b>>=
-coef(fm1)
-str(fm1$coefficients)
-print(summary(fm1)$coefficients)
-str(summary(fm1)$coefficients)
-@
-
 \end{explainbox}
 
 \begin{explainbox}\label{box:stats:slope:ttest}
@@ -707,6 +689,27 @@ Method \Rfunction{predict()} uses the fitted model together with new data for th
 Predict using both \code{fm1} and \code{fm2} the distance required to stop cars moving at 0, 5, 10, 20, 30, and 40~mph. Study the help page for the \Rfunction{predict()} method for linear models (using \code{help(predict.lm)}). Explore the difference between \code{"prediction"} and \code{"confidence"} bands: why are they so different?
 \end{playground}
 \index{linear models!linear regression|)}%
+
+\begin{explainbox}\label{box:LM:fit:object}
+The\index{linear models!structure of model fit object} objects returned by model fitting functions contain the full information, including the data to which the model was fit to. Their structure resembles a nested list. In most cases the class of the objects returned by model fit functions agrees in name with the name of the function (\code{"lm"} in this example) but is not derived from \code{"list"}. The query functions, either extract parts of the object or do additional calculations and formatting based on them. Different specialisations of these methods are called depending on the class of the model fit object. (See section \ref{sec:methods} on page \pageref{sec:methods}.)
+
+<<models-EB0>>=
+class(fm1)
+names(fm1)
+@
+
+The structure of model fit objects is of interest only when the query or accessor functions do not provide the needed information and components have to be extracted using operator \Roperator{[[ ]]}. Exploring these objects is also a way of learning how model fitting works in \Rlang. As with any other objects, \Rfunction{str()} shows the structure.
+
+<<models-EB1>>=
+str(fm1, no.list = TRUE, give.attr = FALSE, vec.len = 2)
+@
+
+Member \code{call} contains the function call and arguments used to create object \code{fm1}.
+
+<<models-EB1b>>=
+str(fm1$call)
+@
+\end{explainbox}
 
 \subsection{Analysis of variance, ANOVA}\label{sec:anova}
 %\index{analysis of variance}
@@ -1628,8 +1631,7 @@ We can see that the returned object \code{loc} is a \code{matrix}, with names fo
 <<mds-02>>=
 class(loc)
 dim(loc)
-dimnames(loc)
-head(loc)
+head(loc, 8)
 @
 
 To make the code easier to read, two vectors are first extracted from the matrix and named \code{x} and \code{y}. We force aspect to equality so that distances on both axes are comparable.
@@ -1644,7 +1646,8 @@ y <- -loc[, 2] # change sign so North is at the top
 plot(x, y, type = "n", asp = 1,
      main = "cmdscale(eurodist)")
 text(x, y, rownames(loc), cex = 0.6)
-@
+@%
+\pagebreak
 
 \begin{advplayground}
   Find data on the mean annual temperature, mean annual rainfall and mean number of sunny days at each of the locations in the \code{eurodist} data set. Next, compute suitable distance metrics, for example, using function \Rfunction{dist}. Finally, use MDS to visualise how similar the locations are with respect to each of the three variables. Devise a measure of distance that takes into account the three climate variables and use MDS to find how distant the different locations are.

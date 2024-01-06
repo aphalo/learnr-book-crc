@@ -198,23 +198,18 @@ After the toy examples above, we will define a small but useful function: a func
 SEM <- function(x){sqrt(var(x) / length(x))}
 @
 
-We can test our function.
+As a test, we call \Rfunction{SEM()} with both \code{a} and \code{a.na} as argument.
 
 <<fun-04>>=
 a <- c(1, 2, 3, -5)
 a.na <- c(a, NA)
 SEM(x = a)
-SEM(a)
-SEM(a.na)
+SEM(x = a.na)
 @
 
-For example, with \code{SEM(a)} we are calling function \Rfunction{SEM()} with \code{a} as an argument.
+Our function \code{SEM(a)} never returns a wrong answer because \code{NA} values in its input always result in \code{NA} being returned. The downside is that unlike \Rlang's functions such as \code{var()}, \Rfunction{SEM()} does not support omitting \code{NA} values.
 
-Our function \code{SEM(a)} never returns a wrong answer because \code{NA} values in its input always result in \code{NA} being returned. The problem is that unlike \Rlang's functions such as \code{var()}, \Rfunction{SEM()} does not support omitting \code{NA} values.
-
-This could be implemented by adding a second parameter \code{na.rm} to the definition of our function and passing its argument to the call to \Rfunction{var()} within the body of \code{SEM()}. However, to avoid returning wrong values we need to make sure \code{NA} values are also removed before counting the number of observations with \code{length()}.
-
-A readable way of implementing this in code is to define the function as follows.
+Adding \code{na.rm} as a second parameter and passing the argument it receives to the call to \Rfunction{var()} within the body of \code{SEM()} is not enough. To avoid returning wrong values, \code{NA} values should be also removed before counting the number of observations with \code{length()}. A good alternative is to define the function as follows.
 
 <<fun-05>>=
 sem <- function(x, na.rm = FALSE) {
@@ -276,7 +271,7 @@ Operators are functions that use a different syntax for being called. If their n
 `/`(e1 = 1 , e2 = 2)
 @
 
-An important consequence of the possibility of calling operators using ordinary syntax is that operators can be used as arguments to \emph{apply} functions in the same way as ordinary functions. When passing operator names as arguments to \emph{apply} functions we only need to enclose them in back ticks (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}).
+\Kern{1}{An important consequence of the possibility of calling operators using ordinary syntax is that operators can be used as arguments to \emph{apply} functions in the same way as ordinary functions. When passing operator names as arguments to \emph{apply} functions we only need to enclose them in back ticks (see section \ref{sec:data:apply} on page \pageref{sec:data:apply}).}
 
 The name by itself and enclosed in back ticks allows us to access the definition of an operator.
 
@@ -381,6 +376,9 @@ A specialised \code{print()} method is not available for \code{"derivclass"}, th
 
 <<explain-object-classes-05>>=
 print(b)
+@
+
+<<explain-object-classes-05a>>=
 print(as.numeric(b))
 @
 \end{explainbox}
@@ -456,7 +454,7 @@ For distribution a single compressed archive file is used for aech package. Pack
 A key repository for bioinformatics with \Rlang is Bioconductor\index{Bioconductor} (\url{https://www.bioconductor.org/}), containing packages that pass strict quality tests, adding an additional 3\,400 packages. rOpenScience\index{rOpenScience} has established guidelines and a system for code peer review for \Rlang packages. These peer-reviewed packages are available through \CRAN or other repositories and listed at the rOpenScience website (\url{https://ropensci.org/}).
 Occasionally one may have or want to install packages directly from Git repositories such as versions still under development and not yet submitted to \CRAN.
 
-One good way of learning how the extensions provided by a package work, is by experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features will expand your ``toolbox''. How much documentation is included with packages varies, while documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based on the quality of available documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000}, \citebooktitle{Sarkar2008} \autocite{Sarkar2008} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
+A good way of learning how the extensions provided by a package work, is experimenting with them. When using a function we are not yet familiar with, looking at its help to check all its features expands our ``toolbox''. While documentation of exported objects is enforced, many packages include, in addition, comprehensive user guides or articles as \emph{vignettes}. It is not unusual to decide which package to use from a set of alternatives based its documentation. In the case of packages adding extensive new functionality, they may be documented in depth in a book. Well-known examples are \citebooktitle{Pinheiro2000} \autocite{Pinheiro2000} and \citebooktitle{Wickham2016} \autocite{Wickham2016}.
 
 \subsection{Download, installation and use}\label{sec:packages:install}
 
@@ -470,35 +468,36 @@ The instructions below assume that the user has access to repositories on the in
 \begin{faqbox}{How to install or update a package from CRAN?}
 \CRAN is the default repository for \Rlang packages. If you use \RStudio or another IDE as a front end on any operating system or \pgrmname{RGUI} under \pgrmname{MS-Windows}, installation and updates can be done through a menu or GUI `button'. These menus use calls to \Rfunction{install.packages()} and \Rfunction{update.packages()} behind the scenes.
 
-Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can called with the name of the package as argument. For example, to install package \pkgname{learnrbook} we use
+Alternatively, at the \Rpgrm command line, or in a script, \Rfunction{install.packages()} can be called with the name of the package as an argument. For example, to install package \pkgname{learnrbook} one can use
 
 <<pkg-00, eval=FALSE>>=
 install.packages("learnrbook")
 @
 
-or alternatively, using package \pkgname{pak}.
+\noindent
+and to update already installed packages
 
-<<pak-01, eval=FALSE>>=
-pak::pkg_install("learnrbook")
+<<pkg-00x, eval=FALSE>>=
+update.packages()
 @
-
-Already installed packages are updated with function \Rfunction{update.packages()}.
 \end{faqbox}
 
-\begin{faqbox}{How to install or update \Rlang package from GitHub?}
-Package \pkgname{remotes} makes it possible to install packages directly from \GitHub, \Bitbucket and other code repositories based on \pgrmname{Git}. The code in the next chunk (not run here) can be used to install the latest, possibly, still under development, version of package \pkgname{learnrbook}.
+\begin{faqbox}{How to install or update a package from GitHub?}
+Package \pkgname{remotes} makes it possible to install packages directly from \GitHub, \Bitbucket and other repositories based on \pgrmname{Git}. The code in the next chunk (not run here) can be used to install the latest, possibly, still under development, version of package \pkgname{learnrbook}.
 
-<<remotes-01, eval=FALSE>>=
+<<remotes-00y, eval=FALSE>>=
 remotes::install_github("aphalo/learnrbook-pkg")
 @
-
-Alternatively, the newer package \pkgname{pak} can be used.
-
-<<pak-02, eval=FALSE>>=
-pak::pkg_install("aphalo/learnrbook-pkg")
-@
-
 \end{faqbox}
+
+\begin{explainbox}
+Function \Rfunction{pkg\_install()} from \pkgname{pak} can install packages, both from CRAN and Bioconductor repositories, and from \pgrmname{Git} repositories. The same function can be used to update specific already installed packages and dependencies.
+
+<<pak-00z, eval=FALSE>>=
+pak::pkg_install("learnrbook") # from CRAN
+pak::pkg_install("aphalo/learnrbook-pkg") # from GitHub
+@
+\end{explainbox}
 
 \Rpgrm packages can be installed either from sources, or from already built ``binaries''. Installing from sources, depending on the package, may require additional software to be available. This is because some \Rlang packages contain source code in other languages such as \Clang, \Cpplang or \langname{FORTRAN} that needs to be compiled into machine code during installation. Under \pgrmname{MS-Windows}, the needed shell, commands and compilers are not available as part of the operating system. Installing them is not difficult as they are available prepackaged in an installer under the name \pgrmname{RTools} (available from \CRAN). \pgrmnameTwo{\hologo{MiKTeX}}{MiKTeX}) is usually needed to build the PDF of the package's manual.
 
@@ -586,6 +585,9 @@ Namespaces isolate the names defined within them from those in other namespaces.
 class(cars)
 head(cars, 3)
 getAnywhere("cars")$where # defined in package
+@
+
+<<pkg-01a, eval=eval_playground>>=
 cars <- 1:10
 class(cars)
 head(cars, 3) # prints 'cars' defined in the global environment
@@ -593,6 +595,7 @@ rm(cars) # clean up
 head(cars, 3)
 getAnywhere("cars")$where # the first visible definition is in the global environemnt
 @
+
 \end{playground}
 
 \begin{warningbox}
