@@ -193,7 +193,7 @@ There are some statistics in \pkgname{ggplot2} that have companion geometries th
 A ggplot can have a single layer or many layers, but when ggplots have more than one layer, the data flow, computations and generation of graphical objects takes place independently for each layer. As mentioned above, most ggplots do not have fully independent layers, but the layers share the same data and aesthetic mappings at the \textbf{start}. Ahead of this point computations in layers are always independent of those in other layers, except that for a given aesthetic only one scale is allowed per plot.
 
 \begin{explainbox}
- make it possible 
+ make it possible
 \end{explainbox}
 
 \index{grammar of graphics!plot workings|)}
@@ -644,8 +644,6 @@ Mainly for historical reasons, \emph{geometries} accept a \emph{statistic} as an
      \code{geom\_abline} & \pkgnameNI{ggplot2} & intercept, slope, linetype, linewidth, colour, alpha  \\
      \code{geom\_text} & \pkgnameNI{ggplot2} & x, y, label, face, family, angle, size, colour, alpha \\
      \code{geom\_label} & \pkgnameNI{ggplot2} & x, y, label, face, family, (angle), size, fill, colour, alpha  \\
-     \code{geom\_text\_npc} & \pkgnameNI{ggpp} & x, y, label, face, family, angle, size, colour, alpha \\
-     \code{geom\_label\_npc} & \pkgnameNI{ggpp} & x, y, label, face, family, (angle), size, fill, colour, alpha  \\
      \code{geom\_text\_repel} & \pkgnameNI{ggrepel} & x, y, label, face, family, angle, size, colour, alpha \\
      \code{geom\_label\_repel} & \pkgnameNI{ggrepel} & x, y, label, face, family, size, fill, colour, alpha  \\
      \code{geom\_sf} & \pkgnameNI{ggplot2} & fill, colour \\
@@ -1087,7 +1085,7 @@ ggplot(data = my.data,
   geom_point()
 @
 
-As \gggeom{geom\_label()} obeys the same aesthetics as \gggeom{geom\_text()} (except for \code{angle} in \ggplot versions before 3.5.0) and additionally \code{label.size} for the width of the border line, \code{label.r} for the roundness of the box corners, \code{label.padding} for the space between the text boundary and the box boundary, and \code{fill} for the colour used to fill the boxes' background.
+As \gggeom{geom\_label()} obeys the same aesthetics as \gggeom{geom\_text()} (except for \code{angle} in \ggplot <\,3.5.0) and additionally \code{label.size} for the width of the border line, \code{label.r} for the roundness of the box corners, \code{label.padding} for the space between the text boundary and the box boundary, and \code{fill} for the colour used to fill the boxes' background.
 
 \label{start:plot:label}
 <<label-plot-01>>=
@@ -1266,15 +1264,25 @@ ggplot() +
 \index{plots!inset graphical objects|)}
 
 \begin{explainbox}
-Grid graphics\index{grid graphics coordinate systems} provide the low-level functions that \pkgname{ggplot2} uses under the hood. Package \pkgname{grid} supports different types of units for expressing the coordinates of positions. In the \pkgname{ggplot2} user interface \code{"native"} data coordinates are used with only a few exceptions. Package \pkgname{grid} supports the use of physical units like \code{"mm"} as well as relative units like "npc" \emph{normalised parent coordinates}. Positions expressed as npc are numbers in the range 0 to 1, relative to the dimensions of current \emph{viewport}, with origin at the lower left corner.
+Grid graphics\index{grid graphics coordinate systems} provide the low-level functions that \pkgname{ggplot2} uses under the hood. Package \pkgname{grid} supports different types of units for expressing the coordinates of positions. In the \pkgname{ggplot2} user interface \code{"native"} data coordinates are used with only a few exceptions. Package \pkgname{grid} supports the use of physical units like \code{"mm"} as well as relative units like "npc" \emph{normalised parent coordinates}. Positions expressed as npc are numbers in the range 0 to 1, relative to the dimensions of current \emph{viewport}, with origin at the lower left corner. Normalised parent coordinates ("npc") are useful when annotating plots and adding insets at positions relative to the plotting area, as these positions remain always consistent across different plots, or across panels when using facets with free axis limits.
 
-Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} data coordinates. A rather general solution is provided by package \pkgname{ggpp} through \emph{aesthetics} \code{npcx} and \code{npcy} and \emph{geometries} that support them. At the time of writing, \gggeom{geom\_text\_npc()}, \gggeom{geom\_label\_npc()}, \gggeom{geom\_table\_npc()}, \gggeom{geom\_plot\_npc()} and \gggeom{geom\_grob\_npc()}. These \emph{geometries} are useful for annotating plots and adding insets at positions relative to the plotting area that remain always consistent across different plots, or across panels when using facets with free axis limits. Being geometries they provide freedom in the elements added to different panels and their positions.
+Package \pkgname{ggplot2} interprets $x$ and $y$ coordinates in \code{"native"} data coordinates. Newly, \pkgname{ggplot2} >= 3.5.0 interprets ``mappings'' of variables and constant values enclosed in function \Rfunction{I()} as expressed using "npc" coordinates, skipping the usual mapping based on scales.
 
-<<plot-npc-eb-01>>=
+<<plot-npc-eb-02>>=
 ggplot(data = mtcars,
        mapping = aes(x = disp, y = mpg, colour = factor(cyl))) +
   geom_point() +
-  geom_label_npc(npcx = 0.5, npcy = 0.9, label = "a label", colour = "black")
+  geom_label(x = I(0.5), y = I(0.9), label = "a label", colour = "black")
+@
+
+An earlier approach was provided by package \pkgname{ggpp} through \emph{pseudo aesthetics} \code{npcx} and \code{npcy} and \emph{geometries} that support them can be used with \pkgname{ggplot2} <= 3.4.4.
+
+<<plot-npc-eb-01, eval=eval_plots_all>>=
+ggplot(data = mtcars,
+       mapping = aes(x = disp, y = mpg, colour = factor(cyl))) +
+  geom_point() +
+  geom_label_npc(npcx = 0.5, npcy = 0.9, label = "a label", colour = "black",
+             vjust = "center")
 @
 
 \end{explainbox}
@@ -1403,13 +1411,13 @@ Below, is code for a similar plot, with means highlighted in red, using \gggeom{
 
 <<summary-plot-03>>=
 p1.base +
-  stat_summary(fun = "mean", geom = "point", 
+  stat_summary(fun = "mean", geom = "point",
                colour = "red", shape = "-", size = 15)
 @
 
 Below, confidence intervals for $P = 0.99$ computed assuming normality are added.
 Intervals can be also computed without assuming normality, using the empirical distribution estimated from the data by bootstrap using \code{"mean\_cl\_boot"} instead of \code{"mean\_cl\_normal"}.
- 
+
 <<summary-plot-04>>=
 p1.base +
   stat_summary(fun.data = "mean_cl_normal", fun.args = list(conf.int = 0.99),
@@ -1420,7 +1428,7 @@ p1.base +
 It is possible to use user-defined functions instead of the functions exported by package \ggplot (based on those in package \Hmisc). Additional named arguments can be passed to the summary function through parameter \code{fun.args} of \ggstat{stat\_summary()}.
 \end{explainbox}
 
-Means, or other summaries, computed by groups based on the factor mapped to the \code{x} aesthetic (\code{class} in this example) can be plotted as columns by passing \code{"col"} as an argument to parameter \code{geom}. With this approach there is no need to compute the summaries in advance of plotting (plot shown farther down, with error bars added).
+Means, or other summaries, computed by groups based on the factor mapped to the \code{x} aesthetic (\code{class} in this example) can be plotted as columns by passing \code{"col"} as an argument to parameter \code{geom}.
 
 <<summary-plot-09a>>=
 p2.base <-
@@ -1518,8 +1526,8 @@ ggplot(data = Puromycin,
        mapping = aes(conc, rate, colour = state)) +
   geom_point() +
   geom_smooth(method = "nls",
-              method.args = list(formula =  y ~ (Vmax * x) / (k + x),
-                                 start = list(Vmax = 200, k = 0.05)),
+              formula =  y ~ (Vmax * x) / (k + x),
+              method.args = list(start = list(Vmax = 200, k = 0.05)),
               se = FALSE)
 @
 \end{explainbox}
@@ -1534,7 +1542,7 @@ p3 + aes(colour = factor(cyl)) +
                colour = "black", label.x = "right")
 @
 
-This same package makes it possible to annotate plots with summary tables from a model fit. The argument passed to \code{tb.vars} substitutes the names of the columns in the table.
+Package \pkgname{ggpmisc} also makes it possible to annotate plots with summary tables from a model fit. The argument passed to \code{tb.vars} substitutes the names of the columns in the table.
 
 <<smooth-plot-13>>=
 ggplot(data = mtcars,
@@ -2807,62 +2815,54 @@ When using polar coordinates, the \code{x} and \code{y} \textit{aesthetics} corr
 
 \subsection{Wind-rose plots}
 \index{plots!wind rose|(}
-Some types of data are more naturally expressed on polar coordinates than on cartesian coordinates. The clearest example is wind direction, from which the name derives. In some cases of time series data with a strong periodic variation, polar coordinates can be used to highlight any phase shifts or changes in frequency. A more mundane application is to plot variation in a response variable through the day with a clock-face-like representation of time of day.
+Some types of data are more naturally expressed as angles using polar coordinates than on cartesian coordinates. The clearest example is wind direction, from which the name \textit{wind-rose} derives. In some cases of time series data with a strong periodic variation, polar coordinates can be used to highlight phase shifts or changes in frequency. A more mundane application is to plot variation in a response variable through the day with a clock-face-like representation of time of day.
 
-Wind rose plots are frequently histograms or density plots drawn on a polar system of coordinates (see sections \ref{sec:plot:histogram} and \ref{sec:plot:density} on pages \pageref{sec:plot:histogram} and \pageref{sec:plot:density}, respectively for a description of the use of these \emph{statistics} and \emph{geometries}). We will use them for examples where we plot wind speed and direction data, measured once per minute during 24~h (from package \pkgname{learnrbook}).
+Wind rose plots are frequently histograms drawn on a polar system of coordinates (see section \ref{sec:plot:histogram} on page \pageref{sec:plot:histogram}). In the examples we plot wind direction data, measured once per minute during 24~h (dataset \code{viikki\_d29.dat} from package \pkgname{learnrbook}).
 
-A circular histogram of wind directions with 30-degree-wide bins is create using \ggstat{stat\_bin()}. The counts represent the number of minutes during 24~h when the wind direction was within each bin.
+A circular histogram of wind directions with 30-degree-wide bins can be created using \ggstat{stat\_bin()}. The counts represent the number of minutes during 24~h when the wind direction was within each bin, as the data set contains one observation per minute.
 
 <<wind-05>>=
-p.base <-
+p.wind <-
   ggplot(data = viikki_d29.dat,
-         mapping = aes(x = WindDir_D1_WVT))  +
-  coord_polar() +
-  scale_x_continuous(breaks = c(0, 90, 180, 270),
-                     labels = c("N", "E", "S", "W"),
-                     limits = c(0, 360),
-                     expand = c(0, 0),
-                     name = "Wind direction")
-
-p.base +
+       mapping = aes(x = WindDir_D1_WVT))  +
   stat_bin(colour = "black", fill = "gray50", geom = "bar",
-           binwidth = 30, na.rm = TRUE) +
-           labs(y = "Frequency (min/d)")
-@
-
-For an equivalent plot, using an empirical density, \ggstat{stat\_density()} is used instead of \ggstat{stat\_bin()}, and \gggeom{geom\_polygon()} instead of \gggeom{geom\_bar()}. The \code{name} of the \code{y} scale is also updated.
-
-<<wind-06>>=
-p.base +
-  stat_density(colour = "black", fill = "gray50",
-               geom = "polygon", linewidth = 1) +
-               labs(y = "Density (/1)")
-@
-
-The final wind-rose plot example, is a 2D density plot with facets, using \Rfunction{facet\_wrap()} to create separate panels for AM and PM. This plot uses fill to describe the density of observations for different combinations wind directions and speeds, the radius ($y$ \emph{aesthetic}) to represent wind speeds and the angle ($x$ \emph{aesthetic}) to represent wind direction.
-
-<<echo=FALSE>>=
-opts_chunk$set(opts_fig_very_wide)
-@
-
-<<wind-08>>=
-ggplot(data = viikki_d29.dat,
-       mapping = aes(x = WindDir_D1_WVT, y = WindSpd_S_WVT)) +
+           binwidth = 30, boundary = 0, na.rm = TRUE) +
   coord_polar() +
-  stat_density_2d(mapping = aes(fill = after_stat(level)),
-                  geom = "polygon") +
   scale_x_continuous(breaks = c(0, 90, 180, 270),
                      labels = c("N", "E", "S", "W"),
                      limits = c(0, 360),
                      expand = c(0, 0),
                      name = "Wind direction") +
-  scale_y_continuous(name = "Wind speed (m/s)") +
+  scale_y_continuous(name = "Frequency (min/d)")
+p.wind
+@
+
+\begin{playground}
+  In the example above, \gggeom{geom\_bar()} was used. Edit the code to use other geometries, e.g., \code{geom\_line()} and \code{geom\_area()}.
+\end{playground}
+
+\begin{warningbox}
+A plot created using polar coordinates is not truly circular, but resembles a plot based on cartesian coordinates rolled into a circle. The difference is crucial in the case of some wind-rose plots. In a true circular plot the data would have to be projected onto a cylinder without any discontinuity. The plot we obtain using \ggcoordinate{coord\_polar()} retains a discontinuity at the North, at the boundary between 0 and 360 degrees. Thus for a histogram computed with \ggstat{stat\_bin()}, one boundary between bins must normally coincide with this divide. In a density plot, the densities on both sides of the North divide are fitted separately, frequently resulting in odd looking plots.
+
+One approach to centring the bins on the cardinal directions would to pre-compute the frequencies, adding up the frequencies for 345--360 and 0-15 degrees, and plotting them using \gggeom{geom\_col()} (not shown).
+\end{warningbox}
+
+<<echo=FALSE>>=
+opts_chunk$set(opts_fig_very_wide)
+@
+
+As when using other coordinates we can add facets. In this example we create a factor based on solar time, to plot separately the observations from before or after local solar noon.
+
+<<wind-08>>=
+p.wind +
   facet_wrap(~factor(ifelse(hour(solar_time) < 12, "AM", "PM")))
 @
+
 \index{plots!wind rose|)}
 <<echo=FALSE>>=
 opts_chunk$set(opts_fig_narrow)
 @
+\pagebreak
 
 \subsection{Pie charts}
 \index{plots!pie charts|(}
@@ -2936,7 +2936,6 @@ It is also possible to change the theme used by default in the current \Rlang se
 <<themes-05, eval=eval_plots_all>>=
 old_theme <- theme_set(theme_bw(15))
 @%
-\pagebreak
 
 Similar to other functions used to change options in \Rlang, \Rfunction{theme\_set()} returns the previous setting. By saving this value to a variable, here \code{old\_theme}, we are able to restore the previous default, or undo the change.
 
@@ -2966,7 +2965,6 @@ Play with the code in the last chunk above, modifying the values used for \code{
 \end{playground}
 
 A less elegant approach is to use a smaller font size. Within \Rfunction{theme()}, function \Rfunction{rel()} can be used to set size relative to the base size. In this example, we use \code{axis.text.x} so as to change the size of tick labels only for the $x$ axis.
-\pagebreak
 
 <<themes-12, eval=eval_plots_all>>=
 ggplot(fake2.data, aes(z + 100, y)) +
