@@ -8,7 +8,7 @@ This repository contains the LaTeX source of the book titled [_Learn R: As a Lan
 
 This is Copyrighted material by CRC/Taylor & Francis, 2020 and 2024. Made available on-line in good faith as allowed by my contract with the publisher, but with all republication and reuse rights reserved by the publisher and/or myself. You can study the code and contribute edits, which will be acknowleged. Please be aware, that you are not allowed to redistribute any files or make any forks public or to remove this copyright note from private forks, or create a derived version of the text. In case of doubt, the copyright notice on the published book prevails. However, you are welcome to share the link to this repository. Contact CRC/Taylor & Francis for permission requests.
 
-In contrast to the text, the R code in the chunks, and all files used in examples, data and R scripts are available under GPL >= 2.0.0 as part of R Package 'learnrbook' both through CRAN and the R-Universe, and also in a separate repository here at GitHub: [https://github.com/aphalo/learnrbook-pkg}(https://github.com/aphalo/learnrbook-pkg). These can be reused as allowed by the GPL.
+In contrast to the text, the R code in the chunks, and all files used in examples, data and R scripts are available under GPL >= 2.0.0 as part of R Package 'learnrbook' both through CRAN and the R-Universe, and also in a separate repository here at GitHub: [https://github.com/aphalo/learnrbook-pkg](https://github.com/aphalo/learnrbook-pkg). These can be reused as allowed by the GPL.
 
 ### Building the PDF
 
