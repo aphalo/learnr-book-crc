@@ -2,30 +2,20 @@
 
 ### What is this repository for? ###
 
-This repository contains draft chapters of a book titled _Learning R... as you learnt your mother tongue_. 
-Some of these chapters started as teaching notes and others as appendixes to a handbook. However, they grew too big to be appendixes. 
+This repository contains the LaTeX source of the book titled [_Learn R: As a Langauge_](https://www.learnr-book.info/) published in _The R Series_.
 
-### Is the book available as a PDF file for download? ###
+This is Copyrighted material by CRC/Taylor & Francis, 2020 and 2024. Made available on-line in good faith as allowed by my contract with the publisher, but with all republication and reuse rights reserved by the publisher and/or myself. You can study the code and contribute edits, which will be acknowleged. Please be aware, that you are not allowed to redistribute any files or make any forks public or to remove this copyright note from private forks, or create a derived version of the text. In case of doubt, the copyright notice on the published book prevails. However, you are welcome to share the link to this repository.
 
-Yes, the book draft is available for download at (http://leanpub.com/learnr).
+In contrast to the text, the R code in the chunks, and all files used in examples, data and R scripts are available under GPL >= 2.0.0 as part of R Package 'learnrbook' both through CRAN and the R-Universe, and also in a separate repository here at GitHub: [https://github.com/aphalo/learnrbook-pkg}(https://github.com/aphalo/learnrbook-pkg). These can be reused as allowed by the GPL.
 
-### Just clone the repository ###
+### Building the PDF
 
-To build the pdf you will need XeLaTeX and the KOMA script classes, and current versions of R and knitr. 
-The source files are in Rnw format using 'knitr'.
-As many different packages are used, R's limit of 100 loaded DLLs is reached. 
-To increase this limit operating system variable `R_MAX_NUM_DLLS` needs to be
-set to a higher value. Using 120 or larger should be more than enough. Be aware that
-this variable is recognized only by R (>= 3.4.0).
+Building the PDF requires knitr, XeLaTeX, LaTeX packages available at CTAN, the Lucida fonts as distributed by TUG, several R packages, and to diasble evaluation of the code in one section of Chapter 10 that connects via USB to a YoctoPuce sensor and logger module. The code is known to work with MikTeX but other distributions should also work.
 
 ### Contribution guidelines ###
 
-You are welcome to contribute pull requests and through issues.
+You are welcome to contribute pull requests and also to report errors and propose enhancements by opeining an issue.
 
 ### Who do I talk to? ###
 
-* Pedro J. Aphalo 
-
-* [pedro.aphalo@r4photobiology.info](mailto:pedro.aphalo@r4photobiology.info)
-
-* [www.r4photobiology.info](http://www.r4photobiology.info/)
+* Pedro J. Aphalo pedro.aphalo@helsinki.fi
